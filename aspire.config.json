@@ -1,0 +1,5 @@
+{
+    "appHost": {
+        "path": "apps\\ABPmicroservice.AppHost\\ABPmicroservice.AppHost.csproj"
+    }
+}

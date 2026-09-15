@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "ABPmicroservice.IdentityService": {
+      "path": "ABPmicroservice.IdentityService.abpmdl.json"
+    }
+  }
+}

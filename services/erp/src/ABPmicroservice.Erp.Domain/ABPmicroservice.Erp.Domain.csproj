@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Erp</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.Ddd.Domain" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.Erp.Domain.Shared\ABPmicroservice.Erp.Domain.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "ABPmicroservice.SaaS": {
+      "path": "ABPmicroservice.SaaS.abpmdl.json"
+    }
+  }
+}

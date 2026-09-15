@@ -1,0 +1,79 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "host": {}
+    }
+  },
+  "packages": {
+    "ABPmicroservice.IdentityService.Domain.Shared": {
+      "path": "src/ABPmicroservice.IdentityService.Domain.Shared/ABPmicroservice.IdentityService.Domain.Shared.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.Domain": {
+      "path": "src/ABPmicroservice.IdentityService.Domain/ABPmicroservice.IdentityService.Domain.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.Application.Contracts": {
+      "path": "src/ABPmicroservice.IdentityService.Application.Contracts/ABPmicroservice.IdentityService.Application.Contracts.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.Application": {
+      "path": "src/ABPmicroservice.IdentityService.Application/ABPmicroservice.IdentityService.Application.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.EntityFrameworkCore": {
+      "path": "src/ABPmicroservice.IdentityService.EntityFrameworkCore/ABPmicroservice.IdentityService.EntityFrameworkCore.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.MongoDB": {
+      "path": "src/ABPmicroservice.IdentityService.MongoDB/ABPmicroservice.IdentityService.MongoDB.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.HttpApi": {
+      "path": "src/ABPmicroservice.IdentityService.HttpApi/ABPmicroservice.IdentityService.HttpApi.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.HttpApi.Client": {
+      "path": "src/ABPmicroservice.IdentityService.HttpApi.Client/ABPmicroservice.IdentityService.HttpApi.Client.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.IdentityService.TestBase": {
+      "path": "test/ABPmicroservice.IdentityService.TestBase/ABPmicroservice.IdentityService.TestBase.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.EntityFrameworkCore.Tests": {
+      "path": "test/ABPmicroservice.IdentityService.EntityFrameworkCore.Tests/ABPmicroservice.IdentityService.EntityFrameworkCore.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.MongoDB.Tests": {
+      "path": "test/ABPmicroservice.IdentityService.MongoDB.Tests/ABPmicroservice.IdentityService.MongoDB.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.Domain.Tests": {
+      "path": "test/ABPmicroservice.IdentityService.Domain.Tests/ABPmicroservice.IdentityService.Domain.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.Application.Tests": {
+      "path": "test/ABPmicroservice.IdentityService.Application.Tests/ABPmicroservice.IdentityService.Application.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.HttpApi.Host": {
+      "path": "host/ABPmicroservice.IdentityService.HttpApi.Host/ABPmicroservice.IdentityService.HttpApi.Host.abppkg.json",
+      "folder": "host"
+    },
+    "ABPmicroservice.IdentityService.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/ABPmicroservice.IdentityService.HttpApi.Client.ConsoleTestApp/ABPmicroservice.IdentityService.HttpApi.Client.ConsoleTestApp.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.IdentityService.IdentityServer": {
+      "path": "host/ABPmicroservice.IdentityService.IdentityServer/ABPmicroservice.IdentityService.IdentityServer.abppkg.json",
+      "folder": "host"
+    },
+    "ABPmicroservice.IdentityService.Host.Shared": {
+      "path": "host/ABPmicroservice.IdentityService.Host.Shared/ABPmicroservice.IdentityService.Host.Shared.abppkg.json",
+      "folder": "host"
+    }
+  }
+}

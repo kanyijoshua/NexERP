@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Administration</RootNamespace>
+        <PreserveCompilationReferences>true</PreserveCompilationReferences>
+        <UserSecretsId>ABPmicroservice.Administration-c2d31439-b723-48e2-b061-5ebd7aeb6010</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <DockerfileContext>..\..\..\..</DockerfileContext>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\shared\ABPmicroservice.Microservice.Shared\ABPmicroservice.Microservice.Shared.csproj" />
+        <ProjectReference Include="..\..\..\..\shared\ABPmicroservice.ServiceDefaults\ABPmicroservice.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\..\..\identity\src\ABPmicroservice.IdentityService.Application.Contracts\ABPmicroservice.IdentityService.Application.Contracts.csproj" />
+        <ProjectReference Include="..\..\..\identity\src\ABPmicroservice.IdentityService.EntityFrameworkCore\ABPmicroservice.IdentityService.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\..\..\saas\src\ABPmicroservice.SaaS.Application.Contracts\ABPmicroservice.SaaS.Application.Contracts.csproj" />
+        <ProjectReference Include="..\..\src\ABPmicroservice.Administration.HttpApi\ABPmicroservice.Administration.HttpApi.csproj" />
+        <ProjectReference Include="..\..\src\ABPmicroservice.Administration.Application\ABPmicroservice.Administration.Application.csproj" />
+        <ProjectReference Include="..\..\src\ABPmicroservice.Administration.EntityFrameworkCore\ABPmicroservice.Administration.EntityFrameworkCore.csproj" />
+    </ItemGroup><ItemGroup>
+      <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    </ItemGroup>
+
+</Project>

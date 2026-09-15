@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Administration</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.AutoMapper" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.Administration.Application.Contracts\ABPmicroservice.Administration.Application.Contracts.csproj" />
+        <ProjectReference Include="..\ABPmicroservice.Administration.Domain\ABPmicroservice.Administration.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

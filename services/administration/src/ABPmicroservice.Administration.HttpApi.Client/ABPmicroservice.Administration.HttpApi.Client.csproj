@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Administration</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.FeatureManagement.HttpApi.Client" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.Http.Client" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.HttpApi.Client" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.SettingManagement.HttpApi.Client" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.Administration.Application.Contracts\ABPmicroservice.Administration.Application.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="**\*generate-proxy.json" />
+        <Content Remove="**\*generate-proxy.json" />
+    </ItemGroup>
+
+</Project>

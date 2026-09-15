@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ABPmicroservice.SaaS</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.0" />
+    <ProjectReference Include="..\..\src\ABPmicroservice.SaaS.EntityFrameworkCore\ABPmicroservice.SaaS.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\ABPmicroservice.SaaS.TestBase\ABPmicroservice.SaaS.TestBase.csproj" />
+    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

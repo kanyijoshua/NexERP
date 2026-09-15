@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.SaaS</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.EntityFrameworkCore" Version="9.0.0" />
+        <ProjectReference Include="..\..\..\..\shared\ABPmicroservice.Shared\ABPmicroservice.Shared.csproj" />
+        <ProjectReference Include="..\ABPmicroservice.SaaS.Domain\ABPmicroservice.SaaS.Domain.csproj" />
+        <PackageReference Include="Volo.Abp.TenantManagement.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Volo.Abp.EntityFrameworkCore.PostgreSql" Version="9.0.0" />
+    </ItemGroup></Project>

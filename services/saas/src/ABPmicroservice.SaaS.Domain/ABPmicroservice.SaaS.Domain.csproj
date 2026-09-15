@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.SaaS</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.Ddd.Domain" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.TenantManagement.Domain" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.SaaS.Domain.Shared\ABPmicroservice.SaaS.Domain.Shared.csproj" />
+    </ItemGroup></Project>

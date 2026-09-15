@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Erp</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.AutoMapper" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.Ddd.Application" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.Erp.Application.Contracts\ABPmicroservice.Erp.Application.Contracts.csproj" />
+        <ProjectReference Include="..\ABPmicroservice.Erp.Domain\ABPmicroservice.Erp.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

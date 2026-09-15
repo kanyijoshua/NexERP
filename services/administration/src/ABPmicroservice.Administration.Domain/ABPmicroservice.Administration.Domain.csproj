@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>ABPmicroservice.Administration</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Volo.Abp.AuditLogging.Domain" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.FeatureManagement.Domain" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.Domain" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.Domain.OpenIddict" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.Domain.Identity" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.SettingManagement.Domain" Version="9.0.0" />
+        <ProjectReference Include="..\ABPmicroservice.Administration.Domain.Shared\ABPmicroservice.Administration.Domain.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

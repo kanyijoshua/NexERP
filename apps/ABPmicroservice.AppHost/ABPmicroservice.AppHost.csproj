@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsAspireHost>true</IsAspireHost>
+        <UserSecretsId>0aae16e2-bc34-40f6-b9c4-10379cc46b10</UserSecretsId>
+    </PropertyGroup>
+
+    <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0" />
+        <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="9.0.0" />
+        <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0" />
+        <PackageReference Include="Aspire.Hosting.Seq" Version="9.0.0" />
+        <PackageReference Include="IdentityModel" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\apps\ABPmicroservice.AuthServer\ABPmicroservice.AuthServer.csproj" />
+        <ProjectReference Include="..\..\gateway\ABPmicroservice.Gateway\ABPmicroservice.Gateway.csproj" />
+        <ProjectReference Include="..\..\services\administration\host\ABPmicroservice.Administration.HttpApi.Host\ABPmicroservice.Administration.HttpApi.Host.csproj" />
+        <ProjectReference Include="..\..\services\identity\host\ABPmicroservice.IdentityService.HttpApi.Host\ABPmicroservice.IdentityService.HttpApi.Host.csproj" />
+        <ProjectReference Include="..\..\services\projects\host\ABPmicroservice.Projects.HttpApi.Host\ABPmicroservice.Projects.HttpApi.Host.csproj" />
+        <ProjectReference Include="..\..\services\saas\host\ABPmicroservice.SaaS.HttpApi.Host\ABPmicroservice.SaaS.HttpApi.Host.csproj" />
+        <ProjectReference Include="..\..\services\erp\host\ABPmicroservice.Erp.HttpApi.Host\ABPmicroservice.Erp.HttpApi.Host.csproj" />
+        <ProjectReference Include="..\ABPmicroservice.WebApp\src\ABPmicroservice.WebApp.Blazor\ABPmicroservice.WebApp.Blazor.csproj" />
+        <ProjectReference Include="..\..\shared\ABPmicroservice.DbMigrator\ABPmicroservice.DbMigrator.csproj" />
+        <ProjectReference Include="..\..\shared\ABPmicroservice.Shared\ABPmicroservice.Shared.csproj" IsAspireProjectResource="false" />
+    </ItemGroup>
+
+</Project>

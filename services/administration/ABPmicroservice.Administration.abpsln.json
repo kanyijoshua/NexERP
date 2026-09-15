@@ -1,0 +1,7 @@
+{
+  "modules": {
+    "ABPmicroservice.Administration": {
+      "path": "ABPmicroservice.Administration.abpmdl.json"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {},
+      "host": {}
+    }
+  },
+  "packages": {
+    "ABPmicroservice.SaaS.Domain.Shared": {
+      "path": "src/ABPmicroservice.SaaS.Domain.Shared/ABPmicroservice.SaaS.Domain.Shared.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.Domain": {
+      "path": "src/ABPmicroservice.SaaS.Domain/ABPmicroservice.SaaS.Domain.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.Application.Contracts": {
+      "path": "src/ABPmicroservice.SaaS.Application.Contracts/ABPmicroservice.SaaS.Application.Contracts.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.Application": {
+      "path": "src/ABPmicroservice.SaaS.Application/ABPmicroservice.SaaS.Application.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.EntityFrameworkCore": {
+      "path": "src/ABPmicroservice.SaaS.EntityFrameworkCore/ABPmicroservice.SaaS.EntityFrameworkCore.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.MongoDB": {
+      "path": "src/ABPmicroservice.SaaS.MongoDB/ABPmicroservice.SaaS.MongoDB.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.HttpApi": {
+      "path": "src/ABPmicroservice.SaaS.HttpApi/ABPmicroservice.SaaS.HttpApi.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.HttpApi.Client": {
+      "path": "src/ABPmicroservice.SaaS.HttpApi.Client/ABPmicroservice.SaaS.HttpApi.Client.abppkg.json",
+      "folder": "src"
+    },
+    "ABPmicroservice.SaaS.TestBase": {
+      "path": "test/ABPmicroservice.SaaS.TestBase/ABPmicroservice.SaaS.TestBase.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.EntityFrameworkCore.Tests": {
+      "path": "test/ABPmicroservice.SaaS.EntityFrameworkCore.Tests/ABPmicroservice.SaaS.EntityFrameworkCore.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.MongoDB.Tests": {
+      "path": "test/ABPmicroservice.SaaS.MongoDB.Tests/ABPmicroservice.SaaS.MongoDB.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.Domain.Tests": {
+      "path": "test/ABPmicroservice.SaaS.Domain.Tests/ABPmicroservice.SaaS.Domain.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.Application.Tests": {
+      "path": "test/ABPmicroservice.SaaS.Application.Tests/ABPmicroservice.SaaS.Application.Tests.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.HttpApi.Host": {
+      "path": "host/ABPmicroservice.SaaS.HttpApi.Host/ABPmicroservice.SaaS.HttpApi.Host.abppkg.json",
+      "folder": "host"
+    },
+    "ABPmicroservice.SaaS.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/ABPmicroservice.SaaS.HttpApi.Client.ConsoleTestApp/ABPmicroservice.SaaS.HttpApi.Client.ConsoleTestApp.abppkg.json",
+      "folder": "test"
+    },
+    "ABPmicroservice.SaaS.IdentityServer": {
+      "path": "host/ABPmicroservice.SaaS.IdentityServer/ABPmicroservice.SaaS.IdentityServer.abppkg.json",
+      "folder": "host"
+    },
+    "ABPmicroservice.SaaS.Host.Shared": {
+      "path": "host/ABPmicroservice.SaaS.Host.Shared/ABPmicroservice.SaaS.Host.Shared.abppkg.json",
+      "folder": "host"
+    }
+  }
+}
