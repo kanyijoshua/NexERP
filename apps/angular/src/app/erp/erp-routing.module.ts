@@ -1,3 +1,4 @@
+import { permissionGuard } from '@abp/ng.core';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
@@ -13,6 +14,13 @@ const routes: Routes = [
   { path: 'sales-invoices', component: SalesInvoicesComponent },
   { path: 'purchase-invoices', component: PurchaseInvoicesComponent },
   { path: 'financial-reports', component: FinancialReportsComponent },
+  {
+    path: 'approvals',
+    loadChildren: () => import('./approvals/approvals.module').then(m => m.ApprovalsModule),
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Workflows' },
+  },
+  { path: 'setup', loadChildren: () => import('./setup/setup.module').then(m => m.SetupModule) },
 ];
 
 @NgModule({

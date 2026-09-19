@@ -1,0 +1,112 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:RequestsToApprove"
+  icon="fas fa-clipboard-check"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <button type="button" class="nav-link" [class.active]="view === 'toApprove'" (click)="setView('toApprove')">
+      {{ 'Erp::RequestsToApprove' | abpLocalization }}
+    </button>
+  </li>
+  <li class="nav-item">
+    <button type="button" class="nav-link" [class.active]="view === 'sentByMe'" (click)="setView('sentByMe')">
+      {{ 'Erp::RequestsSentByMe' | abpLocalization }}
+    </button>
+  </li>
+  <li class="nav-item">
+    <button type="button" class="nav-link" [class.active]="view === 'all'" (click)="setView('all')">
+      {{ 'Erp::ApprovalLog' | abpLocalization }}
+    </button>
+  </li>
+</ul>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::Document' | abpLocalization" prop="documentNo" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <a [routerLink]="documentRoute(row)" [queryParams]="{ id: row.documentId }" class="fw-bold">{{ row.documentNo }}</a>
+          <div class="small text-muted">{{ 'Erp::Enum:ApprovalDocumentKind.' + kindName(row) | abpLocalization }}</div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Amount' | abpLocalization" prop="amount" [width]="120" headerClass="text-end" cellClass="text-end">
+        <ng-template let-value="value" ngx-datatable-cell-template>{{ value | erpAmount }}</ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Sender' | abpLocalization" prop="senderUserName" [width]="120"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Approver' | abpLocalization" prop="approverUserName" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.approverUserName }} <span class="text-muted small">#{{ row.sequenceNo }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Status' | abpLocalization" prop="status" [width]="110">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="badge" [ngClass]="statusClass(row.status)">{{ 'Erp::Enum:ApprovalStatus.' + statusName(row.status) | abpLocalization }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::DueDate' | abpLocalization" prop="dueDate" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span [class.text-danger]="isOverdue(row)" [class.fw-bold]="isOverdue(row)">{{ row.dueDate ? (row.dueDate | date: 'mediumDate') : '—' }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Comment' | abpLocalization" prop="comment" [sortable]="false" [width]="200">
+        <ng-template let-value="value" ngx-datatable-cell-template><span class="small">{{ value }}</span></ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="250">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <ng-container *ngIf="row.canAct">
+            <ng-container *abpPermission="'Erp.Workflows.Approve'">
+              <button type="button" class="btn btn-sm btn-success me-1" (click)="open('approve', row)">
+                <i class="fas fa-check me-1"></i>{{ 'Erp::Approve' | abpLocalization }}
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger me-1" (click)="open('reject', row)">
+                <i class="fas fa-times me-1"></i>{{ 'Erp::Reject' | abpLocalization }}
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" [title]="'Erp::DelegateHelp' | abpLocalization" (click)="delegate(row)">
+                <i class="fas fa-share me-1"></i>{{ 'Erp::Delegate' | abpLocalization }}
+              </button>
+            </ng-container>
+          </ng-container>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (action === 'approve' ? 'Erp::ApproveRequest' : 'Erp::RejectRequest') | abpLocalization }}
+      <span class="text-muted">· {{ entry?.documentNo }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <dl class="row mb-3">
+      <dt class="col-sm-4">{{ 'Erp::Sender' | abpLocalization }}</dt>
+      <dd class="col-sm-8">{{ entry?.senderUserName }}</dd>
+      <dt class="col-sm-4">{{ 'Erp::Amount' | abpLocalization }}</dt>
+      <dd class="col-sm-8">{{ entry?.amount | erpAmount }}</dd>
+    </dl>
+    <label class="form-label" for="approval-comment">
+      {{ (action === 'approve' ? 'Erp::CommentOptional' : 'Erp::ReasonForRejection') | abpLocalization }}
+    </label>
+    <textarea id="approval-comment" class="form-control" rows="3" maxlength="500" [(ngModel)]="comment" autofocus></textarea>
+    <div *ngIf="action === 'reject'" class="form-text">{{ 'Erp::RejectHelp' | abpLocalization }}</div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button
+      [iconClass]="action === 'approve' ? 'fa fa-check' : 'fa fa-times'"
+      [buttonClass]="action === 'approve' ? 'btn btn-success' : 'btn btn-danger'"
+      (click)="confirmAction()"
+    >
+      {{ (action === 'approve' ? 'Erp::Approve' : 'Erp::Reject') | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

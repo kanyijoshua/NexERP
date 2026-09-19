@@ -40,4 +40,13 @@ public interface IPurchaseDocumentAppService
     /// Routed as POST /api/erp/purchase-document/{id}/run-posting.
     /// </summary>
     Task<PurchaseHeaderDto> RunPostingAsync(Guid id);
+
+    /// <summary>
+    /// Asks for approval under the workflow in force: the document becomes Pending Approval and is
+    /// released by the last approval. Routed as POST .../{id}/send-approval-request.
+    /// </summary>
+    Task<ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto> SendApprovalRequestAsync(Guid id);
+
+    /// <summary>Withdraws a pending request and reopens the document. Routed as POST .../{id}/cancel-approval-request.</summary>
+    Task CancelApprovalRequestAsync(Guid id);
 }

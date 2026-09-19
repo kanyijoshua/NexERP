@@ -1,0 +1,147 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:Workflows"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-project-diagram"
+  [showSearch]="false"
+  permission="Erp.Workflows.Manage"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::WorkflowsHelp' | abpLocalization }}</p>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 40px"></th>
+          <th>{{ 'Erp::Code' | abpLocalization }}</th>
+          <th>{{ 'Erp::Description' | abpLocalization }}</th>
+          <th>{{ 'Erp::AppliesTo' | abpLocalization }}</th>
+          <th class="text-end">{{ 'Erp::MinimumAmount' | abpLocalization }}</th>
+          <th>{{ 'Erp::ApproverLimitType' | abpLocalization }}</th>
+          <th class="text-end">{{ 'Erp::DueDays' | abpLocalization }}</th>
+          <th>{{ 'Erp::Enabled' | abpLocalization }}</th>
+          <th style="width: 110px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let w of workflows">
+          <tr>
+            <td>
+              <button type="button" class="btn btn-sm btn-link p-0" [attr.aria-expanded]="expandedId === w.id" (click)="toggleSteps(w)">
+                <i class="fas" [ngClass]="expandedId === w.id ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+              </button>
+            </td>
+            <td class="fw-bold">{{ w.code }}</td>
+            <td>{{ w.description }}</td>
+            <td>{{ 'Erp::Enum:ApprovalDocumentKind.' + kindName(w) | abpLocalization }}</td>
+            <td class="text-end">{{ w.minimumAmount ? (w.minimumAmount | erpAmount) : ('Erp::AnyAmount' | abpLocalization) }}</td>
+            <td>{{ 'Erp::Enum:ApproverLimitType.' + limitTypeName(w) | abpLocalization }}</td>
+            <td class="text-end">{{ w.dueDays || '—' }}</td>
+            <td>
+              <div class="form-check form-switch mb-0">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="w.enabled"
+                  [disabled]="!canManage"
+                  [attr.aria-label]="'Erp::Enabled' | abpLocalization"
+                  (change)="setEnabled(w, $any($event.target).checked)"
+                />
+              </div>
+            </td>
+            <td class="text-end">
+              <ng-container *abpPermission="'Erp.Workflows.Manage'">
+                <!-- As in Business Central, an enabled workflow is read-only. -->
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="w.enabled" [title]="'Erp::Edit' | abpLocalization" (click)="openEdit(w)">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="w.enabled" [title]="'Erp::Delete' | abpLocalization" (click)="remove(w)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="expandedId === w.id" class="table-light">
+            <td></td>
+            <td colspan="8">
+              <table class="table table-sm mb-0 bg-white">
+                <thead>
+                  <tr>
+                    <th style="width: 40px">#</th>
+                    <th>{{ 'Erp::WhenEvent' | abpLocalization }}</th>
+                    <th>{{ 'Erp::OnCondition' | abpLocalization }}</th>
+                    <th>{{ 'Erp::ThenResponse' | abpLocalization }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let step of w.steps">
+                    <td>{{ step.sequenceNo }}</td>
+                    <td>{{ step.eventName }}</td>
+                    <td>{{ step.conditionRule }}</td>
+                    <td>{{ step.responseAction }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </ng-container>
+        <tr *ngIf="!loading && workflows.length === 0">
+          <td colspan="9" class="text-center text-muted py-4">{{ 'Erp::NoDataAvailable' | abpLocalization }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ (selected ? 'Erp::EditWorkflow' : 'Erp::NewWorkflow') | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="mb-3">
+        <label class="form-label" for="wf-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+        <input id="wf-code" type="text" class="form-control text-uppercase" formControlName="code" autofocus />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="wf-description">{{ 'Erp::Description' | abpLocalization }}</label>
+        <input id="wf-description" type="text" class="form-control" formControlName="description" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="wf-kind">{{ 'Erp::AppliesTo' | abpLocalization }} *</label>
+        <select id="wf-kind" class="form-select" formControlName="documentKind">
+          <option *ngFor="let o of documentKinds" [ngValue]="o.value">{{ 'Erp::Enum:ApprovalDocumentKind.' + o.key | abpLocalization }}</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="wf-min">{{ 'Erp::MinimumAmount' | abpLocalization }}</label>
+          <input id="wf-min" type="number" min="0" step="0.01" class="form-control" formControlName="minimumAmount" />
+          <div class="form-text">{{ 'Erp::MinimumAmountHelp' | abpLocalization }}</div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="wf-due">{{ 'Erp::DueDays' | abpLocalization }}</label>
+          <input id="wf-due" type="number" min="0" step="1" class="form-control" formControlName="dueDays" />
+          <div class="form-text">{{ 'Erp::DueDaysHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+      <div class="mb-2">
+        <label class="form-label" for="wf-limit">{{ 'Erp::ApproverLimitType' | abpLocalization }} *</label>
+        <select id="wf-limit" class="form-select" formControlName="approverLimitType">
+          <option *ngFor="let o of limitTypes" [ngValue]="o.value">{{ 'Erp::Enum:ApproverLimitType.' + o.key | abpLocalization }}</option>
+        </select>
+        <div class="form-text">{{ 'Erp::ApproverLimitTypeHelp' | abpLocalization }}</div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

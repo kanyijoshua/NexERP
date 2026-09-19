@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class item-ledger-entryService {
+export class ItemLedgerEntryService {
   apiName = 'Erp';
   
 

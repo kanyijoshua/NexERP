@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class gl-entryService {
+export class GlEntryService {
   apiName = 'Erp';
   
 

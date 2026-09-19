@@ -12,6 +12,38 @@ public static class ErpErrorCodes
         public const string CompanyNotFound = Prefix + ":Companies:00003";
     }
 
+    public static class NoSeries
+    {
+        public const string NoSeriesNotFound = Prefix + ":NoSeries:00001";
+        public const string NoOpenLine = Prefix + ":NoSeries:00002";
+        public const string SeriesExhausted = Prefix + ":NoSeries:00003";
+        public const string ManualNumbersNotAllowed = Prefix + ":NoSeries:00004";
+        public const string DateOrderViolation = Prefix + ":NoSeries:00005";
+        public const string NumberCannotBeIncremented = Prefix + ":NoSeries:00006";
+        public const string NoSeriesCodeAlreadyExists = Prefix + ":NoSeries:00007";
+        public const string NumberRequired = Prefix + ":NoSeries:00008";
+        public const string InvalidLine = Prefix + ":NoSeries:00009";
+    }
+
+    public static class Approvals
+    {
+        public const string UserNotInApprovalSetup = Prefix + ":Approvals:00001";
+        public const string NoApproverDefined = Prefix + ":Approvals:00002";
+        public const string NoQualifiedApprover = Prefix + ":Approvals:00003";
+        public const string ApprovalAlreadyRequested = Prefix + ":Approvals:00004";
+        public const string ApprovalRequired = Prefix + ":Approvals:00005";
+        public const string EntryNotOpen = Prefix + ":Approvals:00006";
+        public const string NotTheApprover = Prefix + ":Approvals:00007";
+        public const string NothingToCancel = Prefix + ":Approvals:00008";
+        public const string OnlySenderCanCancel = Prefix + ":Approvals:00009";
+        public const string NoSubstituteOrApprover = Prefix + ":Approvals:00010";
+        public const string PendingApproval = Prefix + ":Approvals:00011";
+        public const string ApprovalChainLoop = Prefix + ":Approvals:00012";
+        public const string WorkflowCodeAlreadyExists = Prefix + ":Approvals:00013";
+        public const string UserSetupAlreadyExists = Prefix + ":Approvals:00014";
+        public const string NoWorkflowApplies = Prefix + ":Approvals:00015";
+    }
+
     public static class Dimensions
     {
         public const string DimensionCodeAlreadyExists = Prefix + ":Dimensions:00001";

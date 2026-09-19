@@ -140,6 +140,34 @@ public class ErpPermissions
         public const string Manage = Default + ".Manage";
     }
 
+    public static class NoSeries
+    {
+        public const string Default = GroupName + ".NoSeries";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class SalesSetup
+    {
+        public const string Default = GroupName + ".SalesSetup";
+        public const string Update = Default + ".Update";
+    }
+
+    public static class PurchaseSetup
+    {
+        public const string Default = GroupName + ".PurchaseSetup";
+        public const string Update = Default + ".Update";
+    }
+
+    public static class ApprovalUserSetup
+    {
+        public const string Default = GroupName + ".ApprovalUserSetup";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
     public static string[] GetAll()
     {
         return ReflectionHelper.GetPublicConstantsRecursively(typeof(ErpPermissions));

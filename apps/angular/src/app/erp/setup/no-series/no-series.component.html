@@ -1,0 +1,131 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:NoSeries"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-list-ol"
+  [(filter)]="filter"
+  permission="Erp.NoSeries.Create"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::Code' | abpLocalization" prop="code" [width]="120"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Description' | abpLocalization" prop="description" [width]="220"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::StartingNo' | abpLocalization" prop="startingNo" [sortable]="false" [width]="130"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::LastNoUsed' | abpLocalization" prop="lastNoUsed" [sortable]="false" [width]="130"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::NextNo' | abpLocalization" [sortable]="false" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.nextNo; else usedUp" class="font-monospace">{{ row.nextNo }}</span>
+          <ng-template #usedUp>
+            <span class="badge bg-danger">{{ 'Erp::SeriesUsedUp' | abpLocalization }}</span>
+          </ng-template>
+          <i
+            *ngIf="row.warning && row.nextNo"
+            class="fas fa-exclamation-triangle text-warning ms-1"
+            [title]="'Erp::SeriesWarning' | abpLocalization"
+          ></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::DefaultNos' | abpLocalization" prop="defaultNos" [width]="100">
+        <ng-template let-value="value" ngx-datatable-cell-template>
+          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::ManualNos' | abpLocalization" prop="manualNos" [width]="100">
+        <ng-template let-value="value" ngx-datatable-cell-template>
+          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::DateOrder' | abpLocalization" prop="dateOrder" [width]="100">
+        <ng-template let-value="value" ngx-datatable-cell-template>
+          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            *abpPermission="'Erp.NoSeries.Update'"
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEdit(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.NoSeries.Delete'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [title]="'Erp::Delete' | abpLocalization"
+            (click)="remove(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (selected ? 'Erp::EditNoSeries' : 'Erp::NewNoSeries') | abpLocalization }}
+      <span *ngIf="selected" class="text-muted">· {{ selected.code }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label" for="ns-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+          <input id="ns-code" type="text" class="form-control text-uppercase" formControlName="code" autofocus />
+        </div>
+        <div class="col-md-9">
+          <label class="form-label" for="ns-description">{{ 'Erp::Description' | abpLocalization }}</label>
+          <input id="ns-description" type="text" class="form-control" formControlName="description" />
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-check form-switch">
+            <input id="ns-default" type="checkbox" class="form-check-input" formControlName="defaultNos" />
+            <label class="form-check-label" for="ns-default">{{ 'Erp::DefaultNos' | abpLocalization }}</label>
+          </div>
+          <div class="form-text">{{ 'Erp::DefaultNosHelp' | abpLocalization }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-check form-switch">
+            <input id="ns-manual" type="checkbox" class="form-check-input" formControlName="manualNos" />
+            <label class="form-check-label" for="ns-manual">{{ 'Erp::ManualNos' | abpLocalization }}</label>
+          </div>
+          <div class="form-text">{{ 'Erp::ManualNosHelp' | abpLocalization }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-check form-switch">
+            <input id="ns-dateorder" type="checkbox" class="form-check-input" formControlName="dateOrder" />
+            <label class="form-check-label" for="ns-dateorder">{{ 'Erp::DateOrder' | abpLocalization }}</label>
+          </div>
+          <div class="form-text">{{ 'Erp::DateOrderHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+
+      <h6 class="mt-4 mb-2">{{ 'Erp::Lines' | abpLocalization }}</h6>
+      <p class="form-text mt-0">{{ 'Erp::NoSeriesLinesHelp' | abpLocalization }}</p>
+      <erp-line-grid
+        [lines]="lines"
+        [columns]="lineColumns"
+        (addLine)="addLine()"
+        (removeLine)="removeLine($event)"
+      ></erp-line-grid>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

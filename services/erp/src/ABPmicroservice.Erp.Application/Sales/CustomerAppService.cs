@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
@@ -22,14 +23,20 @@ public class CustomerAppService
         ICustomerAppService
 {
     private readonly CustomerManager _customerManager;
+    private readonly SalesReceivablesSetupManager _setupManager;
+    private readonly NoSeriesManager _noSeriesManager;
 
     public CustomerAppService(
         IRepository<Customer, Guid> repository,
-        CustomerManager customerManager
+        CustomerManager customerManager,
+        SalesReceivablesSetupManager setupManager,
+        NoSeriesManager noSeriesManager
     )
         : base(repository)
     {
         _customerManager = customerManager;
+        _setupManager = setupManager;
+        _noSeriesManager = noSeriesManager;
         GetPolicyName = ErpPermissions.Customers.Default;
         GetListPolicyName = ErpPermissions.Customers.Default;
         CreatePolicyName = ErpPermissions.Customers.Create;
@@ -39,7 +46,11 @@ public class CustomerAppService
 
     public override async Task<CustomerDto> CreateAsync(CreateUpdateCustomerDto input)
     {
-        var customer = await _customerManager.CreateAsync(input.No, input.Name);
+        // Blank takes the next number of the Customer Nos. series (BC: InitSeries).
+        var setup = await _setupManager.GetAsync();
+        var no = await _noSeriesManager.ResolveNoAsync(setup.CustomerNos, input.No, Clock.Now);
+
+        var customer = await _customerManager.CreateAsync(no, input.Name);
         ApplyInput(customer, input);
 
         await Repository.InsertAsync(customer, autoSave: true);

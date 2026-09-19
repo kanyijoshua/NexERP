@@ -40,7 +40,7 @@ public class ErpHttpApiHostModule : AbpModule
                 {
                     settings.RootPath = ErpRemoteServiceConsts.ModuleName;
                     settings.RemoteServiceName = ErpRemoteServiceConsts.RemoteServiceName;
-                    settings.UrlControllerNameNormalizer = c => ErpUrlNames.Kebab(c.ControllerName);
+                    settings.UrlControllerNameNormalizer = c => ErpUrlNames.NormalizeAcronyms(c.ControllerName);
                 }
             );
         });

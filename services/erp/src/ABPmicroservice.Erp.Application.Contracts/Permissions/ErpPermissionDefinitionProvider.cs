@@ -130,6 +130,29 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
 
         var reportLayouts = erpGroup.AddPermission(ErpPermissions.ReportLayouts.Default, L("Permission:Erp:ReportLayouts"));
         reportLayouts.AddChild(ErpPermissions.ReportLayouts.Manage, L("Permission:Erp:ReportLayouts:Manage"));
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.NoSeries.Default,
+            ErpPermissions.NoSeries.Create,
+            ErpPermissions.NoSeries.Update,
+            ErpPermissions.NoSeries.Delete,
+            "NoSeries"
+        );
+        AddCrud(
+            erpGroup,
+            ErpPermissions.ApprovalUserSetup.Default,
+            ErpPermissions.ApprovalUserSetup.Create,
+            ErpPermissions.ApprovalUserSetup.Update,
+            ErpPermissions.ApprovalUserSetup.Delete,
+            "ApprovalUserSetup"
+        );
+
+        var salesSetup = erpGroup.AddPermission(ErpPermissions.SalesSetup.Default, L("Permission:Erp:SalesSetup"));
+        salesSetup.AddChild(ErpPermissions.SalesSetup.Update, L("Permission:Erp:SalesSetup:Update"));
+
+        var purchaseSetup = erpGroup.AddPermission(ErpPermissions.PurchaseSetup.Default, L("Permission:Erp:PurchaseSetup"));
+        purchaseSetup.AddChild(ErpPermissions.PurchaseSetup.Update, L("Permission:Erp:PurchaseSetup:Update"));
     }
 
     private static void AddCrud(

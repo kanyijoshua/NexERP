@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { RestService } from '@abp/ng.core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, map } from 'rxjs';
 
 export interface CompanyDto {
   id: string;
   name: string;
   displayName: string;
   evaluationCompany: boolean;
+  isDefault: boolean;
 }
 
 @Injectable({
@@ -41,18 +42,36 @@ export class CompanyService {
     }
   }
 
+  /** The tenant's companies, default first (the API returns an ABP list result). */
   getCompanies(): Observable<CompanyDto[]> {
-    return this.restService.request<void, CompanyDto[]>({
-      method: 'GET',
-      url: '/api/erp/company',
-    });
+    return this.restService
+      .request<void, { items: CompanyDto[] }>({ method: 'GET', url: '/api/erp/company' }, { apiName: 'Erp' })
+      .pipe(map(result => result.items ?? []));
+  }
+
+  /**
+   * Keeps the remembered company if it still exists, otherwise falls back to the default one.
+   * A remembered id goes stale when the database is recreated or the company is deleted.
+   */
+  ensureValidActiveCompany(companies: CompanyDto[]): string | null {
+    const current = this.getActiveCompanyId();
+    if (current && companies.some(c => c.id === current)) {
+      return current;
+    }
+
+    const fallback = companies.find(c => c.isDefault) ?? companies[0];
+    if (!fallback) {
+      return null;
+    }
+
+    this.setActiveCompany(fallback.id);
+    return fallback.id;
   }
 
   copyCompany(sourceCompanyId: string, newCompanyName: string, newDisplayName: string): Observable<CompanyDto> {
-    return this.restService.request<any, CompanyDto>({
-      method: 'POST',
-      url: `/api/erp/company/copy`,
-      body: { sourceCompanyId, newCompanyName, newDisplayName },
-    });
+    return this.restService.request<unknown, CompanyDto>(
+      { method: 'POST', url: '/api/erp/company/copy', body: { sourceCompanyId, newCompanyName, newDisplayName } },
+      { apiName: 'Erp' },
+    );
   }
 }

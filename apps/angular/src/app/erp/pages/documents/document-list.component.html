@@ -1,0 +1,176 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  [title]="titleKey"
+  [icon]="icon"
+  [(filter)]="filter"
+  [permission]="permissionPrefix + '.Create'"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <ngx-datatable
+          [rows]="data.items"
+          [count]="data.totalCount"
+          [list]="list"
+          [selected]="selected ? [selected] : []"
+          selectionType="single"
+          default
+          (activate)="$event.type === 'click' && select($event.row)"
+        >
+          <ngx-datatable-column [name]="'Erp::No' | abpLocalization" prop="no" [width]="130">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span class="fw-bold">{{ row.no }}</span>
+              <div *ngIf="row.postedDocumentNo" class="small text-muted">→ {{ row.postedDocumentNo }}</div>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="partyLabelKey | abpLocalization" [sortable]="false" [width]="200">
+            <ng-template let-row="row" ngx-datatable-cell-template>{{ nameOf(row) }}</ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'Erp::PostingDate' | abpLocalization" prop="postingDate" [width]="120">
+            <ng-template let-value="value" ngx-datatable-cell-template>{{ value | date: 'mediumDate' }}</ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'Erp::Amount' | abpLocalization" prop="totalAmount" [width]="120" headerClass="text-end" cellClass="text-end">
+            <ng-template let-value="value" ngx-datatable-cell-template>{{ value | erpAmount }}</ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'Erp::Status' | abpLocalization" prop="status" [width]="140">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <span class="badge" [ngClass]="statusClass(row.status)">{{ 'Erp::Enum:DocumentStatus.' + statusName(row.status) | abpLocalization }}</span>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="330">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <ng-container *ngIf="!row.posted">
+                <ng-container *abpPermission="permissionPrefix + '.Update'">
+                  <ng-container *ngIf="row.status === DocumentStatus.Open">
+                    <button type="button" class="btn btn-sm btn-outline-warning me-1" [disabled]="busyId === row.id" (click)="act('sendApprovalRequest', row, $event)">
+                      <i class="fas fa-paper-plane me-1"></i>{{ 'Erp::SendApprovalRequest' | abpLocalization }}
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="busyId === row.id" (click)="act('release', row, $event)">
+                      <i class="fas fa-lock me-1"></i>{{ 'Erp::Release' | abpLocalization }}
+                    </button>
+                  </ng-container>
+                  <button
+                    *ngIf="row.status === DocumentStatus.PendingApproval"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary me-1"
+                    [disabled]="busyId === row.id"
+                    (click)="act('cancelApprovalRequest', row, $event)"
+                  >
+                    <i class="fas fa-undo me-1"></i>{{ 'Erp::CancelApprovalRequest' | abpLocalization }}
+                  </button>
+                  <button
+                    *ngIf="row.status === DocumentStatus.Released"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary me-1"
+                    [disabled]="busyId === row.id"
+                    (click)="act('reopen', row, $event)"
+                  >
+                    <i class="fas fa-lock-open me-1"></i>{{ 'Erp::Reopen' | abpLocalization }}
+                  </button>
+                </ng-container>
+                <ng-container *abpPermission="permissionPrefix + '.Post'">
+                  <button
+                    *ngIf="row.status === DocumentStatus.Released"
+                    type="button"
+                    class="btn btn-sm btn-success me-1"
+                    [disabled]="busyId === row.id"
+                    (click)="act('runPosting', row, $event)"
+                  >
+                    <i class="fas fa-check-circle me-1"></i>{{ 'Erp::Post' | abpLocalization }}
+                  </button>
+                </ng-container>
+                <ng-container *abpPermission="permissionPrefix + '.Delete'">
+                  <button
+                    *ngIf="row.status === DocumentStatus.Open"
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    [title]="'Erp::Delete' | abpLocalization"
+                    [disabled]="busyId === row.id"
+                    (click)="act('delete', row, $event)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </ng-container>
+              </ng-container>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <ng-container *ngIf="selected; else nothingSelected">
+      <div *ngIf="canSeeApprovals && history.length" class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold text-secondary">
+          <i class="fas fa-clipboard-check text-primary me-2"></i>{{ 'Erp::ApprovalHistory' | abpLocalization }} · {{ selected.no }}
+        </div>
+        <ul class="list-group list-group-flush small">
+          <li *ngFor="let e of history" class="list-group-item d-flex justify-content-between align-items-start">
+            <div>
+              <span class="text-muted">#{{ e.sequenceNo }}</span> {{ e.approverUserName }}
+              <div *ngIf="e.comment" class="text-muted fst-italic">“{{ e.comment }}”</div>
+            </div>
+            <span class="badge" [ngClass]="e.status === ApprovalStatus.Approved ? 'bg-success' : e.status === ApprovalStatus.Rejected ? 'bg-danger' : e.status === ApprovalStatus.Open ? 'bg-warning text-dark' : 'bg-secondary'">
+              {{ 'Erp::Enum:ApprovalStatus.' + approvalStatusName(e.status) | abpLocalization }}
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <app-chatter-widget
+        *abpPermission="'Erp.Chatter'"
+        [entityType]="chatterEntityType"
+        [entityId]="selected.id!"
+        [entityNo]="selected.no!"
+      ></app-chatter-widget>
+    </ng-container>
+    <ng-template #nothingSelected>
+      <div class="card border-0 shadow-sm p-4 text-center text-muted">
+        <i class="fas fa-mouse-pointer fa-2x mb-2 text-secondary"></i>
+        <p class="mb-0 small">{{ 'Erp::SelectADocument' | abpLocalization }}</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ 'Erp::NewDocument' | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label" for="doc-no">{{ 'Erp::No' | abpLocalization }}</label>
+          <input id="doc-no" type="text" class="form-control" formControlName="no" [placeholder]="'Erp::NextFromSeries' | abpLocalization" />
+          <div class="form-text">{{ 'Erp::DocumentNoHelp' | abpLocalization }}</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="doc-party">{{ partyLabelKey | abpLocalization }} *</label>
+          <erp-lookup inputId="doc-party" formControlName="partyId" valueField="id" [source]="partySource"></erp-lookup>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="doc-date">{{ 'Erp::PostingDate' | abpLocalization }} *</label>
+          <input id="doc-date" type="date" class="form-control" formControlName="postingDate" />
+        </div>
+      </div>
+
+      <erp-line-grid [lines]="lines" [columns]="lineColumns" (addLine)="addLine()" (removeLine)="removeLine($event)"></erp-line-grid>
+
+      <div class="text-end fw-bold mt-2">
+        {{ 'Erp::Amount' | abpLocalization }}: {{ totals.amountExclVat | erpAmount }}
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

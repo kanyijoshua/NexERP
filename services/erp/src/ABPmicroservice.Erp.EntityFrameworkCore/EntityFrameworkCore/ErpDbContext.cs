@@ -11,6 +11,7 @@ using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Profiles;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
@@ -75,6 +76,12 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<Workflow> Workflows { get; set; }
     public DbSet<WorkflowStep> WorkflowSteps { get; set; }
     public DbSet<ApprovalEntry> ApprovalEntries { get; set; }
+    public DbSet<ApprovalUserSetup> ApprovalUserSetups { get; set; }
+
+    public DbSet<NoSeries> NumberSeries { get; set; }
+    public DbSet<NoSeriesLine> NumberSeriesLines { get; set; }
+    public DbSet<SalesReceivablesSetup> SalesReceivablesSetups { get; set; }
+    public DbSet<PurchasesPayablesSetup> PurchasesPayablesSetups { get; set; }
 
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<UserRoleCenter> UserRoleCenters { get; set; }

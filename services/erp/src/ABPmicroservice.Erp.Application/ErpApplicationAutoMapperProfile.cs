@@ -4,6 +4,7 @@ using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
@@ -41,6 +42,17 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<PurchaseHeader, PurchaseHeaderDto>();
         CreateMap<PurchaseLine, PurchaseLineDto>();
 
+        // Number series: the summary fields are filled by NoSeriesAppService from the line in force.
+        CreateMap<NoSeries, NoSeriesDto>()
+            .ForMember(d => d.StartingNo, o => o.Ignore())
+            .ForMember(d => d.EndingNo, o => o.Ignore())
+            .ForMember(d => d.LastNoUsed, o => o.Ignore())
+            .ForMember(d => d.NextNo, o => o.Ignore())
+            .ForMember(d => d.Warning, o => o.Ignore());
+        CreateMap<NoSeriesLine, NoSeriesLineDto>();
+        CreateMap<SalesReceivablesSetup, SalesReceivablesSetupDto>();
+        CreateMap<PurchasesPayablesSetup, PurchasesPayablesSetupDto>();
+
         // Dimensions
         CreateMap<Dimension, DimensionDto>();
         CreateMap<DimensionValue, DimensionValueDto>();
@@ -48,7 +60,10 @@ public class ErpApplicationAutoMapperProfile : Profile
         // Workflows
         CreateMap<Workflow, WorkflowDto>();
         CreateMap<WorkflowStep, WorkflowStepDto>();
-        CreateMap<ApprovalEntry, ApprovalEntryDto>();
+        CreateMap<ApprovalEntry, ApprovalEntryDto>().ForMember(d => d.CanAct, o => o.Ignore());
+        CreateMap<ApprovalUserSetup, ApprovalUserSetupDto>()
+            .ForMember(d => d.ApproverUserName, o => o.Ignore())
+            .ForMember(d => d.SubstituteUserName, o => o.Ignore());
 
         // Reporting
         CreateMap<FinancialReportResultDto, FinancialReportDto>();

@@ -90,6 +90,16 @@ export interface PurchaseLineInputDto {
   unitOfMeasureCode?: string;
 }
 
+export interface PurchasesPayablesSetupDto {
+  vendorNos?: string;
+  quoteNos?: string;
+  orderNos?: string;
+  invoiceNos?: string;
+  creditMemoNos?: string;
+  postedInvoiceNos?: string;
+  postedCreditMemoNos?: string;
+}
+
 export interface VendorDto extends FullAuditedEntityDto<string> {
   no?: string;
   name?: string;

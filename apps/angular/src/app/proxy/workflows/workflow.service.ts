@@ -1,19 +1,28 @@
-import type { ApprovalEntryDto, GetApprovalEntriesInput, WorkflowDto } from './models';
+import type { CreateUpdateWorkflowDto, WorkflowDto } from './models';
 import { RestService, Rest } from '@abp/ng.core';
-import type { ListResultDto, PagedResultDto } from '@abp/ng.core';
+import type { ListResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
-export class workflowService {
+export class WorkflowService {
   apiName = 'Erp';
   
 
-  approve = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
+  create = (input: CreateUpdateWorkflowDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, WorkflowDto>({
       method: 'POST',
-      url: `/api/erp/workflow/${id}/approve`,
+      url: '/api/erp/workflow',
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  delete = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'DELETE',
+      url: `/api/erp/workflow/${id}`,
     },
     { apiName: this.apiName,...config });
   
@@ -34,11 +43,10 @@ export class workflowService {
     { apiName: this.apiName,...config });
   
 
-  getApprovalEntries = (input: GetApprovalEntriesInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, PagedResultDto<ApprovalEntryDto>>({
+  get = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, WorkflowDto>({
       method: 'GET',
-      url: '/api/erp/workflow/approval-entries',
-      params: { status: input.status, onlyMine: input.onlyMine, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      url: `/api/erp/workflow/${id}`,
     },
     { apiName: this.apiName,...config });
   
@@ -51,10 +59,11 @@ export class workflowService {
     { apiName: this.apiName,...config });
   
 
-  reject = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
-      method: 'POST',
-      url: `/api/erp/workflow/${id}/reject`,
+  update = (id: string, input: CreateUpdateWorkflowDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, WorkflowDto>({
+      method: 'PUT',
+      url: `/api/erp/workflow/${id}`,
+      body: input,
     },
     { apiName: this.apiName,...config });
 

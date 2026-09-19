@@ -60,14 +60,11 @@ export class CompanySwitcherComponent implements OnInit {
   constructor(private companyService: CompanyService) {}
 
   ngOnInit(): void {
+    this.activeCompanyId = this.companyService.getActiveCompanyId();
     this.companyService.getCompanies().subscribe(list => {
       this.companies = list;
-      if (list.length > 0 && !this.activeCompanyId) {
-        this.activeCompanyId = list[0].id;
-        this.companyService.setActiveCompany(list[0].id);
-      }
+      this.activeCompanyId = this.companyService.ensureValidActiveCompany(list);
     });
-    this.activeCompanyId = this.companyService.getActiveCompanyId();
   }
 
   onCompanyChange(event: any): void {

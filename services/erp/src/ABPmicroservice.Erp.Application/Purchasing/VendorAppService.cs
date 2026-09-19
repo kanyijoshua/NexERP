@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
@@ -22,11 +23,20 @@ public class VendorAppService
         IVendorAppService
 {
     private readonly VendorManager _vendorManager;
+    private readonly PurchasesPayablesSetupManager _setupManager;
+    private readonly NoSeriesManager _noSeriesManager;
 
-    public VendorAppService(IRepository<Vendor, Guid> repository, VendorManager vendorManager)
+    public VendorAppService(
+        IRepository<Vendor, Guid> repository,
+        VendorManager vendorManager,
+        PurchasesPayablesSetupManager setupManager,
+        NoSeriesManager noSeriesManager
+    )
         : base(repository)
     {
         _vendorManager = vendorManager;
+        _setupManager = setupManager;
+        _noSeriesManager = noSeriesManager;
         GetPolicyName = ErpPermissions.Vendors.Default;
         GetListPolicyName = ErpPermissions.Vendors.Default;
         CreatePolicyName = ErpPermissions.Vendors.Create;
@@ -36,7 +46,11 @@ public class VendorAppService
 
     public override async Task<VendorDto> CreateAsync(CreateUpdateVendorDto input)
     {
-        var vendor = await _vendorManager.CreateAsync(input.No, input.Name);
+        // Blank takes the next number of the Vendor Nos. series (BC: InitSeries).
+        var setup = await _setupManager.GetAsync();
+        var no = await _noSeriesManager.ResolveNoAsync(setup.VendorNos, input.No, Clock.Now);
+
+        var vendor = await _vendorManager.CreateAsync(no, input.Name);
         ApplyInput(vendor, input);
 
         await Repository.InsertAsync(vendor, autoSave: true);

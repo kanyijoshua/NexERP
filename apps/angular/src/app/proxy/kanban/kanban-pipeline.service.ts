@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class kanban-pipelineService {
+export class KanbanPipelineService {
   apiName = 'Erp';
   
 

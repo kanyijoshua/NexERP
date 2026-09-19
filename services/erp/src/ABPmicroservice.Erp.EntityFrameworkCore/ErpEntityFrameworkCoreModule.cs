@@ -1,4 +1,5 @@
 using System;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
 using ABPmicroservice.Erp.Reporting;
@@ -50,6 +51,7 @@ public class ErpEntityFrameworkCoreModule : AbpModule
             options.Entity<PurchaseHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<PostedSalesHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<PostedPurchaseHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<NoSeries>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<Workflow>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Steps));
             options.Entity<AccountSchedule>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<ConfigPackage>(e =>

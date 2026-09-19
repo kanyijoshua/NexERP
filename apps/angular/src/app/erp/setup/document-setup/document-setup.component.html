@@ -1,0 +1,68 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::DocumentNumbering"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-hashtag"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::DocumentNumberingHelp' | abpLocalization }}</p>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">
+        <i class="fas fa-file-invoice-dollar text-primary me-2"></i>{{ 'Erp::Menu:SalesSetup' | abpLocalization }}
+      </div>
+      <form class="card-body" [formGroup]="salesForm" (ngSubmit)="saveSales()">
+        <ng-container
+          *ngTemplateOutlet="seriesFields; context: { form: salesForm, fields: salesFields, prefix: 'sales' }"
+        ></ng-container>
+        <div *abpPermission="'Erp.SalesSetup.Update'" class="text-end mt-3">
+          <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="savingSales" [disabled]="salesForm.pristine">
+            {{ 'Erp::Save' | abpLocalization }}
+          </abp-button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">
+        <i class="fas fa-shopping-cart text-primary me-2"></i>{{ 'Erp::Menu:PurchaseSetup' | abpLocalization }}
+      </div>
+      <form class="card-body" [formGroup]="purchaseForm" (ngSubmit)="savePurchase()">
+        <ng-container
+          *ngTemplateOutlet="seriesFields; context: { form: purchaseForm, fields: purchaseFields, prefix: 'purchase' }"
+        ></ng-container>
+        <div *abpPermission="'Erp.PurchaseSetup.Update'" class="text-end mt-3">
+          <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="savingPurchase" [disabled]="purchaseForm.pristine">
+            {{ 'Erp::Save' | abpLocalization }}
+          </abp-button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<ng-template #seriesFields let-form="form" let-fields="fields" let-prefix="prefix">
+  <div [formGroup]="form">
+    <div *ngFor="let field of fields" class="row align-items-center mb-2">
+      <label class="col-sm-5 col-form-label" [for]="prefix + '-' + field.control">{{ field.labelKey | abpLocalization }}</label>
+      <div class="col-sm-4">
+        <select class="form-select form-select-sm" [id]="prefix + '-' + field.control" [formControlName]="field.control">
+          <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+          <option *ngFor="let s of series" [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+        </select>
+      </div>
+      <div class="col-sm-3 small text-muted font-monospace">
+        <ng-container *ngIf="nextNo(form.get(field.control)?.value) as next">
+          <i class="fas fa-arrow-right me-1"></i>{{ next }}
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</ng-template>

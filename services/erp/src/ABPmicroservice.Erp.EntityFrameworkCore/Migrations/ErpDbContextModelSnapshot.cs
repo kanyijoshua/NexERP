@@ -1586,6 +1586,137 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpKanbanStages", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Numbering.NoSeries", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<bool>("DateOrder")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("DefaultNos")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<bool>("ManualNos")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpNoSeries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Numbering.NoSeriesLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EndingNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("IncrementByNo")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastDateUsed")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastNoUsed")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("NoSeriesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Open")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("StartingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StartingNo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("WarningNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoSeriesId");
+
+                    b.ToTable("ErpNoSeriesLines", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Profiles.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1955,6 +2086,80 @@ namespace ABPmicroservice.Erp.Migrations
                     b.HasIndex("PurchaseHeaderId");
 
                     b.ToTable("ErpPurchaseLines", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<string>("CreditMemoNos")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("InvoiceNos")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("OrderNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostedCreditMemoNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostedInvoiceNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuoteNos")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<string>("VendorNos")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
+
+                    b.ToTable("ErpPurchasesPayablesSetups", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Purchasing.Vendor", b =>
@@ -3096,6 +3301,80 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpSalesLines", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Sales.SalesReceivablesSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<string>("CreditMemoNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CustomerNos")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("InvoiceNos")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("OrderNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostedCreditMemoNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostedInvoiceNos")
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuoteNos")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
+
+                    b.ToTable("ErpSalesReceivablesSetups", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.WebServices.PublishedWebService", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3161,6 +3440,14 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid>("ApproverId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ApproverUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
@@ -3183,8 +3470,14 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("DocumentKind")
+                        .HasColumnType("integer");
+
                     b.Property<string>("DocumentNo")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -3200,28 +3493,129 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<DateTime?>("LastStatusChangeTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("text");
+                    b.Property<string>("SenderUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
-                    b.Property<string>("TableName")
-                        .HasColumnType("text");
+                    b.Property<int>("SequenceNo")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
 
+                    b.Property<string>("WorkflowCode")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ApproverId", "Status");
+
+                    b.HasIndex("DocumentKind", "DocumentId");
+
                     b.ToTable("ErpApprovalEntries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Workflows.ApprovalUserSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApproverUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("IsApprovalAdministrator")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("PurchaseAmountApprovalLimit")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("SalesAmountApprovalLimit")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid?>("SubstituteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<bool>("UnlimitedPurchaseApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("UnlimitedSalesApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "UserId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "UserId"), false);
+
+                    b.ToTable("ErpApprovalUserSetups", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Workflows.Workflow", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("ApproverLimitType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Category")
                         .HasColumnType("text");
@@ -3258,6 +3652,12 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<int>("DocumentKind")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DueDays")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("Enabled")
                         .HasColumnType("boolean");
 
@@ -3280,11 +3680,21 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<decimal>("MinimumAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
 
                     b.ToTable("ErpWorkflows", (string)null);
                 });
@@ -3344,6 +3754,15 @@ namespace ABPmicroservice.Erp.Migrations
                     b.HasIndex("WorkflowId");
 
                     b.ToTable("ErpWorkflowSteps", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Numbering.NoSeriesLine", b =>
+                {
+                    b.HasOne("ABPmicroservice.Erp.Numbering.NoSeries", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("NoSeriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Purchasing.PostedPurchaseLine", b =>
@@ -3416,6 +3835,11 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasForeignKey("WorkflowId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Numbering.NoSeries", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Purchasing.PostedPurchaseHeader", b =>

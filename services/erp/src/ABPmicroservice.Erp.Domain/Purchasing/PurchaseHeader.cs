@@ -12,7 +12,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Purchase document header. Mirrors Business Central table 38 "Purchase Header".
 /// Aggregate root that owns its <see cref="PurchaseLine"/> collection.
 /// </summary>
-public class PurchaseHeader : CompanyAggregateRoot
+public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
 {
     public PurchaseDocumentType DocumentType { get; private set; }
 
@@ -188,6 +188,18 @@ public class PurchaseHeader : CompanyAggregateRoot
     {
         TotalAmount = Lines.Sum(l => l.LineAmount);
         TotalAmountIncludingVat = Lines.Sum(l => l.LineAmountIncludingVat);
+    }
+
+    public bool HasLines => Lines.Count > 0;
+
+    public decimal ApprovalAmount => TotalAmount;
+
+    /// <summary>Open -> Pending Approval. The document is frozen until the request is settled.</summary>
+    public void SendForApproval()
+    {
+        EnsureNotPosted();
+        EnsureOpen();
+        Status = DocumentStatus.PendingApproval;
     }
 
     public void Release()

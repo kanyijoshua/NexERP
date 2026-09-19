@@ -1,0 +1,125 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:ApprovalUserSetup"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-user-check"
+  [showSearch]="false"
+  permission="Erp.ApprovalUserSetup.Create"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::ApprovalUserSetupHelp' | abpLocalization }}</p>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::User' | abpLocalization" prop="userName" [width]="160">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="fw-bold">{{ row.userName }}</span>
+          <span *ngIf="row.isApprovalAdministrator" class="badge bg-info ms-1">{{ 'Erp::Administrator' | abpLocalization }}</span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Approver' | abpLocalization" prop="approverUserName" [sortable]="false" [width]="140">
+        <ng-template let-value="value" ngx-datatable-cell-template>{{ value || '—' }}</ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Substitute' | abpLocalization" prop="substituteUserName" [sortable]="false" [width]="140">
+        <ng-template let-value="value" ngx-datatable-cell-template>{{ value || '—' }}</ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::SalesAmountApprovalLimit' | abpLocalization" prop="salesAmountApprovalLimit" [width]="170">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.unlimitedSalesApproval ? ('Erp::Unlimited' | abpLocalization) : (row.salesAmountApprovalLimit | erpAmount) }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::PurchaseAmountApprovalLimit' | abpLocalization" prop="purchaseAmountApprovalLimit" [width]="180">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.unlimitedPurchaseApproval ? ('Erp::Unlimited' | abpLocalization) : (row.purchaseAmountApprovalLimit | erpAmount) }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button *abpPermission="'Erp.ApprovalUserSetup.Update'" type="button" class="btn btn-sm btn-outline-primary me-1" [title]="'Erp::Edit' | abpLocalization" (click)="openEdit(row)">
+            <i class="fas fa-pen"></i>
+          </button>
+          <button *abpPermission="'Erp.ApprovalUserSetup.Delete'" type="button" class="btn btn-sm btn-outline-danger" [title]="'Erp::Delete' | abpLocalization" (click)="remove(row)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (selected ? 'Erp::EditApprovalUser' : 'Erp::NewApprovalUser') | abpLocalization }}
+      <span *ngIf="selected" class="text-muted">· {{ selected.userName }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div *ngIf="!selected" class="mb-3">
+        <label class="form-label" for="aus-user">{{ 'Erp::User' | abpLocalization }} *</label>
+        <erp-lookup
+          inputId="aus-user"
+          formControlName="userId"
+          valueField="id"
+          [source]="searchUsers"
+          [placeholder]="'Erp::SearchUsers' | abpLocalization"
+          (selected)="onUserSelected($event)"
+        ></erp-lookup>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="aus-approver">{{ 'Erp::Approver' | abpLocalization }}</label>
+          <select id="aus-approver" class="form-select" formControlName="approverUserId">
+            <option [ngValue]="null">{{ 'Erp::NoApprover' | abpLocalization }}</option>
+            <option *ngFor="let s of othersThan(form.getRawValue().userId)" [ngValue]="s.userId">{{ s.userName }}</option>
+          </select>
+          <div class="form-text">{{ 'Erp::ApproverHelp' | abpLocalization }}</div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="aus-substitute">{{ 'Erp::Substitute' | abpLocalization }}</label>
+          <select id="aus-substitute" class="form-select" formControlName="substituteUserId">
+            <option [ngValue]="null">{{ 'Erp::NoSubstitute' | abpLocalization }}</option>
+            <option *ngFor="let s of othersThan(form.getRawValue().userId)" [ngValue]="s.userId">{{ s.userName }}</option>
+          </select>
+          <div class="form-text">{{ 'Erp::SubstituteHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="aus-sales">{{ 'Erp::SalesAmountApprovalLimit' | abpLocalization }}</label>
+          <input id="aus-sales" type="number" min="0" step="0.01" class="form-control" formControlName="salesAmountApprovalLimit" />
+          <div class="form-check mt-1">
+            <input id="aus-sales-unl" type="checkbox" class="form-check-input" formControlName="unlimitedSalesApproval" />
+            <label class="form-check-label" for="aus-sales-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="aus-purch">{{ 'Erp::PurchaseAmountApprovalLimit' | abpLocalization }}</label>
+          <input id="aus-purch" type="number" min="0" step="0.01" class="form-control" formControlName="purchaseAmountApprovalLimit" />
+          <div class="form-check mt-1">
+            <input id="aus-purch-unl" type="checkbox" class="form-check-input" formControlName="unlimitedPurchaseApproval" />
+            <label class="form-check-label" for="aus-purch-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-check form-switch">
+        <input id="aus-admin" type="checkbox" class="form-check-input" formControlName="isApprovalAdministrator" />
+        <label class="form-check-label" for="aus-admin">{{ 'Erp::ApprovalAdministrator' | abpLocalization }}</label>
+      </div>
+      <div class="form-text">{{ 'Erp::ApprovalAdministratorHelp' | abpLocalization }}</div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

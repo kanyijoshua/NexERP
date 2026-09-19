@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class unit-of-measureService {
+export class UnitOfMeasureService {
   apiName = 'Erp';
   
 

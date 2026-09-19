@@ -2,10 +2,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
+using ABPmicroservice.Erp.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Purchasing;
@@ -24,16 +27,25 @@ public class PurchaseDocumentAppService
 {
     private readonly IRepository<Vendor, Guid> _vendorRepository;
     private readonly PurchasePostingEngine _purchasePostingEngine;
+    private readonly PurchasesPayablesSetupManager _setupManager;
+    private readonly NoSeriesManager _noSeriesManager;
+    private readonly ApprovalsManager _approvalsManager;
 
     public PurchaseDocumentAppService(
         IRepository<PurchaseHeader, Guid> repository,
         IRepository<Vendor, Guid> vendorRepository,
-        PurchasePostingEngine purchasePostingEngine
+        PurchasePostingEngine purchasePostingEngine,
+        PurchasesPayablesSetupManager setupManager,
+        NoSeriesManager noSeriesManager,
+        ApprovalsManager approvalsManager
     )
         : base(repository)
     {
         _vendorRepository = vendorRepository;
         _purchasePostingEngine = purchasePostingEngine;
+        _setupManager = setupManager;
+        _noSeriesManager = noSeriesManager;
+        _approvalsManager = approvalsManager;
 
         GetPolicyName = ErpPermissions.PurchaseDocuments.Default;
         GetListPolicyName = ErpPermissions.PurchaseDocuments.Default;
@@ -48,15 +60,19 @@ public class PurchaseDocumentAppService
 
         var vendor = await GetPurchasableVendorAsync(input.VendorId);
 
-        if (await Repository.AnyAsync(x => x.DocumentType == input.DocumentType && x.No == input.No))
+        // Blank takes the next number of the series set up for this document type (BC: InitSeries).
+        var setup = await _setupManager.GetAsync();
+        var no = await _noSeriesManager.ResolveNoAsync(setup.GetDocumentNos(input.DocumentType), input.No, input.PostingDate);
+
+        if (await Repository.AnyAsync(x => x.DocumentType == input.DocumentType && x.No == no))
         {
-            throw new BusinessException(ErpErrorCodes.Documents.DocumentNoAlreadyExists).WithData("documentNo", input.No);
+            throw new BusinessException(ErpErrorCodes.Documents.DocumentNoAlreadyExists).WithData("documentNo", no);
         }
 
         var header = new PurchaseHeader(
             GuidGenerator.Create(),
             input.DocumentType,
-            input.No,
+            no,
             vendor.Id,
             vendor.No,
             vendor.Name,
@@ -111,6 +127,9 @@ public class PurchaseDocumentAppService
             throw new BusinessException(ErpErrorCodes.Documents.DocumentHasNoLines).WithData("documentNo", header.No);
         }
 
+        // With an approval workflow in force, only a completed approval releases the document.
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, header);
+
         header.Release();
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -120,6 +139,13 @@ public class PurchaseDocumentAppService
     public async Task<PurchaseHeaderDto> ReopenAsync(Guid id)
     {
         var header = await GetEntityByIdAsync(id);
+
+        // A pending request has to be canceled, not bypassed by reopening.
+        if (header.Status == DocumentStatus.PendingApproval)
+        {
+            throw new BusinessException(ErpErrorCodes.Approvals.PendingApproval).WithData("documentNo", header.No);
+        }
+
         header.Reopen();
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -130,8 +156,37 @@ public class PurchaseDocumentAppService
     [Authorize(ErpPermissions.PurchaseDocuments.Post)]
     public async Task<PurchaseHeaderDto> RunPostingAsync(Guid id)
     {
+        // Posting releases an open document first, so the same approval rule applies.
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, await GetEntityByIdAsync(id));
+
         await _purchasePostingEngine.PostAsync(id);
         return await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id));
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<ApprovalRequestResultDto> SendApprovalRequestAsync(Guid id)
+    {
+        var result = await _approvalsManager.SendApprovalRequestAsync(ApprovalKind, id, GetUserId());
+
+        return new ApprovalRequestResultDto
+        {
+            AutoApproved = result.AutoApproved,
+            ApproverCount = result.ApproverCount,
+            FirstApproverUserName = result.FirstApproverUserName,
+        };
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task CancelApprovalRequestAsync(Guid id)
+    {
+        await _approvalsManager.CancelApprovalRequestAsync(ApprovalKind, id, GetUserId());
+    }
+
+    private const ApprovalDocumentKind ApprovalKind = ApprovalDocumentKind.PurchaseDocument;
+
+    private Guid GetUserId()
+    {
+        return CurrentUser.Id ?? throw new AbpAuthorizationException();
     }
 
     protected override async Task<PurchaseHeader> GetEntityByIdAsync(Guid id)

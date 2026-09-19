@@ -56,6 +56,11 @@ public class CompanyResolutionMiddleware : IMiddleware, ITransientDependency
         {
             company = await _companyResolver.ResolveAsync(requestedCompanyId);
         }
+        catch (BusinessException) when (IsCompanyListRequest(context))
+        {
+            // A client holding a stale company id must still be able to list the companies it can switch to.
+            company = await _companyResolver.ResolveAsync(null);
+        }
         catch (BusinessException ex) when (ex.Code == ErpErrorCodes.Companies.CompanyNotFound)
         {
             // Thrown before MVC runs, so ABP's exception filter would not shape it.
@@ -72,6 +77,11 @@ public class CompanyResolutionMiddleware : IMiddleware, ITransientDependency
         {
             await next(context);
         }
+    }
+
+    private static bool IsCompanyListRequest(HttpContext context)
+    {
+        return HttpMethods.IsGet(context.Request.Method) && context.Request.Path.Equals("/api/erp/company", StringComparison.OrdinalIgnoreCase);
     }
 
     // Same envelope ABP uses for remote service errors, so clients handle it uniformly.

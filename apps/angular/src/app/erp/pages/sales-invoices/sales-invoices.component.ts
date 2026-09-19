@@ -1,101 +1,60 @@
-import { Component, OnInit } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CompanyService } from '../../services/company.service';
-import { ErpApiService, SalesHeaderDto } from '../../services/erp-api.service';
+import { ABP, ListService } from '@abp/ng.core';
+import { Component } from '@angular/core';
+import { CustomerService, SalesDocumentService, SalesDocumentType, SalesHeaderDto } from '@proxy/sales';
+import { Observable, map } from 'rxjs';
+import { LookupItem } from '../../erp-shared';
+import { DocumentAction, DocumentListBase, NewDocumentInput } from '../documents/document-list.base';
 
+/** Sales invoices (Business Central table 36, document type Invoice). */
 @Component({
   selector: 'app-sales-invoices',
-  template: `
-    <div class="container-fluid py-3">
-      <app-company-switcher></app-company-switcher>
-
-      <div class="row">
-        <div class="col-md-8">
-          <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-              <h5 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Sales Invoices (BC Table 36/112)</h5>
-              <button class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i> New Sales Invoice</button>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Invoice No</th>
-                    <th>Customer</th>
-                    <th>Posting Date</th>
-                    <th class="text-end">Total Amount</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let inv of invoices" [class.table-active]="selectedInvoice?.id === inv.id" (click)="selectInvoice(inv)">
-                    <td class="fw-bold">{{ inv.no }}</td>
-                    <td>{{ inv.sellToCustomerName }}</td>
-                    <td>{{ inv.postingDate | date: 'mediumDate' }}</td>
-                    <td class="text-end fw-bold">{{ inv.totalAmountIncludingVat | currency }}</td>
-                    <td>
-                      <span class="badge" [class.bg-success]="inv.posted" [class.bg-warning]="!inv.posted">
-                        {{ inv.posted ? 'Posted' : 'Open Draft' }}
-                      </span>
-                    </td>
-                    <td class="text-end">
-                      <button *ngIf="!inv.posted" class="btn btn-sm btn-success me-1" (click)="postInvoice(inv.id)">
-                        <i class="fas fa-check-circle me-1"></i> Post (CU 80)
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <app-chatter-widget
-            *ngIf="selectedInvoice"
-            entityType="SalesHeader"
-            [entityId]="selectedInvoice.id"
-            [entityNo]="selectedInvoice.no"
-          ></app-chatter-widget>
-          <div *ngIf="!selectedInvoice" class="card border-0 shadow-sm p-4 text-center text-muted">
-            <i class="fas fa-mouse-pointer fa-2x mb-2 text-secondary"></i>
-            <p class="mb-0 small">Select a sales invoice to view Odoo Chatter activity feed & internal notes.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: '../documents/document-list.component.html',
+  providers: [ListService],
 })
-export class SalesInvoicesComponent implements OnInit {
-  invoices: SalesHeaderDto[] = [];
-  selectedInvoice: SalesHeaderDto | null = null;
+export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
+  readonly titleKey = 'Erp::SalesInvoices';
+  readonly icon = 'fas fa-file-invoice-dollar';
+  readonly partyLabelKey = 'Erp::Customer';
+  readonly unitAmountLabelKey = 'Erp::UnitPrice';
+  readonly permissionPrefix = 'Erp.SalesDocuments';
+  readonly chatterEntityType = 'SalesHeader';
 
-  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
-    // Re-query when the active company changes (replaces the old full page reload).
-    companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
+  constructor(
+    private readonly documents: SalesDocumentService,
+    private readonly customers: CustomerService,
+  ) {
+    super();
   }
 
-  ngOnInit(): void {
-    this.loadInvoices();
+  protected getList = (query: ABP.PageQueryParams) =>
+    this.documents.getList({ ...query, documentType: SalesDocumentType.Invoice } as never);
+
+  protected partyName = (row: SalesHeaderDto) => `${row.sellToCustomerNo ?? ''} ${row.sellToCustomerName ?? ''}`.trim();
+
+  protected searchParties(term: string): Observable<LookupItem[]> {
+    return this.customers
+      .getList({ filter: term, blocked: false, maxResultCount: 20, skipCount: 0 } as never)
+      .pipe(map(result => (result.items ?? []).map(c => ({ id: c.id, code: c.no ?? '', name: c.name ?? undefined }))));
   }
 
-  loadInvoices(): void {
-    this.erpApi.getSalesInvoices().subscribe(data => {
-      this.invoices = data;
-      if (data.length > 0 && !this.selectedInvoice) {
-        this.selectedInvoice = data[0];
-      }
-    });
+  protected createDocument(input: NewDocumentInput): Observable<SalesHeaderDto> {
+    return this.documents.create({
+      documentType: SalesDocumentType.Invoice,
+      no: input.no,
+      customerId: input.partyId,
+      postingDate: input.postingDate,
+      lines: input.lines.map(l => ({
+        type: l.type,
+        no: l.no,
+        description: l.description,
+        quantity: l.quantity,
+        unitPrice: l.unitAmount,
+        lineDiscountPercent: 0,
+      })),
+    } as never);
   }
 
-  selectInvoice(inv: SalesHeaderDto): void {
-    this.selectedInvoice = inv;
-  }
-
-  postInvoice(id: string): void {
-    this.erpApi.postSalesInvoice(id).subscribe(() => {
-      this.loadInvoices();
-    });
+  protected run(action: DocumentAction, id: string): Observable<unknown> {
+    return action === 'delete' ? this.documents.delete(id) : this.documents[action](id);
   }
 }

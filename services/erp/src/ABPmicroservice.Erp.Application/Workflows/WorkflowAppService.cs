@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 
@@ -13,65 +13,70 @@ namespace ABPmicroservice.Erp.Workflows;
 [Authorize(ErpPermissions.Workflows.Default)]
 public class WorkflowAppService : ErpAppService, IWorkflowAppService
 {
-    private const string OpenStatus = "Open";
-
     private readonly IRepository<Workflow, Guid> _workflowRepository;
-    private readonly IRepository<ApprovalEntry, Guid> _approvalEntryRepository;
 
-    public WorkflowAppService(
-        IRepository<Workflow, Guid> workflowRepository,
-        IRepository<ApprovalEntry, Guid> approvalEntryRepository
-    )
+    public WorkflowAppService(IRepository<Workflow, Guid> workflowRepository)
     {
         _workflowRepository = workflowRepository;
-        _approvalEntryRepository = approvalEntryRepository;
     }
 
     public async Task<ListResultDto<WorkflowDto>> GetListAsync()
     {
         var workflows = await _workflowRepository.GetListAsync(includeDetails: true);
 
-        return new ListResultDto<WorkflowDto>(
-            ObjectMapper.Map<List<Workflow>, List<WorkflowDto>>(workflows.OrderBy(w => w.Code).ToList())
-        );
+        return new ListResultDto<WorkflowDto>(workflows.OrderBy(w => w.Code).Select(Map).ToList());
     }
 
-    public async Task<PagedResultDto<ApprovalEntryDto>> GetApprovalEntriesAsync(GetApprovalEntriesInput input)
+    public async Task<WorkflowDto> GetAsync(Guid id)
     {
-        var status = input.Status.IsNullOrWhiteSpace() ? OpenStatus : input.Status;
-
-        var query = (await _approvalEntryRepository.GetQueryableAsync())
-            .Where(a => a.Status == status)
-            .WhereIf(input.OnlyMine && CurrentUser.Id.HasValue, a => a.ApproverId == CurrentUser.Id.Value);
-
-        var totalCount = await AsyncExecuter.CountAsync(query);
-
-        query = input.Sorting.IsNullOrWhiteSpace()
-            ? query.OrderByDescending(a => a.CreationTime)
-            : query.OrderBy(input.Sorting);
-
-        var entries = await AsyncExecuter.ToListAsync(query.PageBy(input));
-
-        return new PagedResultDto<ApprovalEntryDto>(
-            totalCount,
-            ObjectMapper.Map<List<ApprovalEntry>, List<ApprovalEntryDto>>(entries)
-        );
+        return Map(await _workflowRepository.GetAsync(id));
     }
 
-    [Authorize(ErpPermissions.Workflows.Approve)]
-    public async Task ApproveAsync(Guid id)
+    [Authorize(ErpPermissions.Workflows.Manage)]
+    public async Task<WorkflowDto> CreateAsync(CreateUpdateWorkflowDto input)
     {
-        var entry = await _approvalEntryRepository.GetAsync(id);
-        entry.Approve();
-        await _approvalEntryRepository.UpdateAsync(entry);
+        var code = input.Code.Trim().ToUpperInvariant();
+        if (await _workflowRepository.AnyAsync(w => w.Code == code))
+        {
+            throw new BusinessException(ErpErrorCodes.Approvals.WorkflowCodeAlreadyExists).WithData("code", code);
+        }
+
+        var workflow = new Workflow(GuidGenerator.Create(), code, input.Description, input.DocumentKind,
+            input.MinimumAmount, input.ApproverLimitType, input.DueDays);
+        workflow.RebuildSteps(GuidGenerator.Create);
+
+        await _workflowRepository.InsertAsync(workflow, autoSave: true);
+        return Map(workflow);
     }
 
-    [Authorize(ErpPermissions.Workflows.Approve)]
-    public async Task RejectAsync(Guid id)
+    [Authorize(ErpPermissions.Workflows.Manage)]
+    public async Task<WorkflowDto> UpdateAsync(Guid id, CreateUpdateWorkflowDto input)
     {
-        var entry = await _approvalEntryRepository.GetAsync(id);
-        entry.Reject();
-        await _approvalEntryRepository.UpdateAsync(entry);
+        var workflow = await _workflowRepository.GetAsync(id);
+
+        // As in Business Central, an enabled workflow is read-only: requests may be in flight under its rules.
+        if (workflow.Enabled)
+        {
+            throw new UserFriendlyException(L["Workflow:DisableBeforeEditing"]);
+        }
+
+        workflow.Update(input.Description, input.DocumentKind, input.MinimumAmount, input.ApproverLimitType, input.DueDays);
+        workflow.RebuildSteps(GuidGenerator.Create);
+
+        await _workflowRepository.UpdateAsync(workflow, autoSave: true);
+        return Map(workflow);
+    }
+
+    [Authorize(ErpPermissions.Workflows.Manage)]
+    public async Task DeleteAsync(Guid id)
+    {
+        var workflow = await _workflowRepository.GetAsync(id);
+        if (workflow.Enabled)
+        {
+            throw new UserFriendlyException(L["Workflow:DisableBeforeEditing"]);
+        }
+
+        await _workflowRepository.DeleteAsync(workflow);
     }
 
     [Authorize(ErpPermissions.Workflows.Manage)]
@@ -88,5 +93,12 @@ public class WorkflowAppService : ErpAppService, IWorkflowAppService
         var workflow = await _workflowRepository.GetAsync(id);
         workflow.Disable();
         await _workflowRepository.UpdateAsync(workflow);
+    }
+
+    private WorkflowDto Map(Workflow workflow)
+    {
+        var dto = ObjectMapper.Map<Workflow, WorkflowDto>(workflow);
+        dto.Steps = dto.Steps.OrderBy(s => s.SequenceNo).ToList();
+        return dto;
     }
 }

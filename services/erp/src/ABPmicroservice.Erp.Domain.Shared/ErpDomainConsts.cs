@@ -27,6 +27,9 @@ public static class ErpDomainConsts
     public const int MaxDimensionCodeLength = 20;
     public const int MaxDimensionValueCodeLength = 20;
     public const int MaxWorkflowCodeLength = 30;
+    public const int MaxNoSeriesCodeLength = 20;
+    public const int MaxUserNameLength = 256;
+    public const int MaxCommentLength = 500;
     public const int MaxProfileIdLength = 30;
     public const int MaxPackageCodeLength = 20;
 }

@@ -344,7 +344,7 @@
       "remoteServiceName": "Erp",
       "controllers": {
         "ABPmicroservice.Erp.Chatter.ChatterAppService": {
-          "controllerName": "chatter",
+          "controllerName": "Chatter",
           "controllerGroupName": "Chatter",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -668,7 +668,7 @@
           }
         },
         "ABPmicroservice.Erp.Companies.CompanyAppService": {
-          "controllerName": "company",
+          "controllerName": "Company",
           "controllerGroupName": "Company",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -871,7 +871,7 @@
           }
         },
         "ABPmicroservice.Erp.Dimensions.DimensionAppService": {
-          "controllerName": "dimension",
+          "controllerName": "Dimension",
           "controllerGroupName": "Dimension",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -1074,7 +1074,7 @@
           }
         },
         "ABPmicroservice.Erp.Finance.GeneralJournalAppService": {
-          "controllerName": "general-journal",
+          "controllerName": "GeneralJournal",
           "controllerGroupName": "GeneralJournal",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -1385,7 +1385,7 @@
           }
         },
         "ABPmicroservice.Erp.Finance.GLAccountAppService": {
-          "controllerName": "gl-account",
+          "controllerName": "GlAccount",
           "controllerGroupName": "GLAccount",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -1923,7 +1923,7 @@
           }
         },
         "ABPmicroservice.Erp.Finance.GLEntryAppService": {
-          "controllerName": "gl-entry",
+          "controllerName": "GlEntry",
           "controllerGroupName": "GLEntry",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -2175,7 +2175,7 @@
           }
         },
         "ABPmicroservice.Erp.Inventory.ItemAppService": {
-          "controllerName": "item",
+          "controllerName": "Item",
           "controllerGroupName": "Item",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -2713,7 +2713,7 @@
           }
         },
         "ABPmicroservice.Erp.Inventory.ItemCategoryAppService": {
-          "controllerName": "item-category",
+          "controllerName": "ItemCategory",
           "controllerGroupName": "ItemCategory",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -3053,7 +3053,7 @@
           }
         },
         "ABPmicroservice.Erp.Inventory.ItemLedgerEntryAppService": {
-          "controllerName": "item-ledger-entry",
+          "controllerName": "ItemLedgerEntry",
           "controllerGroupName": "ItemLedgerEntry",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -3239,7 +3239,7 @@
           }
         },
         "ABPmicroservice.Erp.Inventory.UnitOfMeasureAppService": {
-          "controllerName": "unit-of-measure",
+          "controllerName": "UnitOfMeasure",
           "controllerGroupName": "UnitOfMeasure",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -3579,7 +3579,7 @@
           }
         },
         "ABPmicroservice.Erp.Kanban.KanbanPipelineAppService": {
-          "controllerName": "kanban-pipeline",
+          "controllerName": "KanbanPipeline",
           "controllerGroupName": "KanbanPipeline",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -3650,8 +3650,426 @@
             }
           }
         },
+        "ABPmicroservice.Erp.Numbering.NoSeriesAppService": {
+          "controllerName": "NoSeries",
+          "controllerGroupName": "NoSeries",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "ABPmicroservice.Erp.Numbering.NoSeriesAppService",
+          "interfaces": [
+            {
+              "type": "ABPmicroservice.Erp.Numbering.INoSeriesAppService",
+              "name": "INoSeriesAppService",
+              "methods": [
+                {
+                  "name": "GetNextNoPreviewAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput",
+                      "typeSimple": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Numbering.NextNoPreviewDto",
+                    "typeSimple": "ABPmicroservice.Erp.Numbering.NextNoPreviewDto"
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                    "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput",
+                      "typeSimple": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Numbering.NoSeriesDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Numbering.NoSeriesDto>"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                      "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                    "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                      "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                    "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/no-series",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.ICreateAppService<ABPmicroservice.Erp.Numbering.NoSeriesDto,ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto>"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/erp/no-series/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IUpdateAppService<ABPmicroservice.Erp.Numbering.NoSeriesDto,System.Guid,ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto>"
+            },
+            "GetNextNoPreviewAsyncByInput": {
+              "uniqueName": "GetNextNoPreviewAsyncByInput",
+              "name": "GetNextNoPreviewAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/no-series/next-no-preview",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.NextNoPreviewInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Code",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Date",
+                  "jsonName": null,
+                  "type": "System.DateTime?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Numbering.NextNoPreviewDto",
+                "typeSimple": "ABPmicroservice.Erp.Numbering.NextNoPreviewDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Numbering.INoSeriesAppService"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/erp/no-series/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+            },
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/no-series/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Numbering.NoSeriesDto",
+                "typeSimple": "ABPmicroservice.Erp.Numbering.NoSeriesDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<ABPmicroservice.Erp.Numbering.NoSeriesDto,ABPmicroservice.Erp.Numbering.NoSeriesDto,System.Guid,ABPmicroservice.Erp.Numbering.GetNoSeriesListInput>"
+            },
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/no-series",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput",
+                  "typeSimple": "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Filter",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Numbering.NoSeriesDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Numbering.NoSeriesDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<ABPmicroservice.Erp.Numbering.NoSeriesDto,ABPmicroservice.Erp.Numbering.NoSeriesDto,System.Guid,ABPmicroservice.Erp.Numbering.GetNoSeriesListInput>"
+            }
+          }
+        },
         "ABPmicroservice.Erp.Purchasing.PurchaseDocumentAppService": {
-          "controllerName": "purchase-document",
+          "controllerName": "PurchaseDocument",
           "controllerGroupName": "PurchaseDocument",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -3711,6 +4129,40 @@
                   "returnValue": {
                     "type": "ABPmicroservice.Erp.Purchasing.PurchaseHeaderDto",
                     "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchaseHeaderDto"
+                  }
+                },
+                {
+                  "name": "SendApprovalRequestAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto"
+                  }
+                },
+                {
+                  "name": "CancelApprovalRequestAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
                   }
                 },
                 {
@@ -4052,6 +4504,80 @@
               "allowAnonymous": false,
               "implementFrom": "ABPmicroservice.Erp.Purchasing.IPurchaseDocumentAppService"
             },
+            "SendApprovalRequestAsyncById": {
+              "uniqueName": "SendApprovalRequestAsyncById",
+              "name": "SendApprovalRequestAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/purchase-document/{id}/send-approval-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Purchasing.IPurchaseDocumentAppService"
+            },
+            "CancelApprovalRequestAsyncById": {
+              "uniqueName": "CancelApprovalRequestAsyncById",
+              "name": "CancelApprovalRequestAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/purchase-document/{id}/cancel-approval-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Purchasing.IPurchaseDocumentAppService"
+            },
             "GetAsyncById": {
               "uniqueName": "GetAsyncById",
               "name": "GetAsync",
@@ -4200,8 +4726,103 @@
             }
           }
         },
+        "ABPmicroservice.Erp.Purchasing.PurchaseSetupAppService": {
+          "controllerName": "PurchaseSetup",
+          "controllerGroupName": "PurchaseSetup",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "ABPmicroservice.Erp.Purchasing.PurchaseSetupAppService",
+          "interfaces": [
+            {
+              "type": "ABPmicroservice.Erp.Purchasing.IPurchaseSetupAppService",
+              "name": "IPurchaseSetupAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                      "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsync": {
+              "uniqueName": "GetAsync",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/purchase-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Purchasing.IPurchaseSetupAppService"
+            },
+            "UpdateAsyncByInput": {
+              "uniqueName": "UpdateAsyncByInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/erp/purchase-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Purchasing.IPurchaseSetupAppService"
+            }
+          }
+        },
         "ABPmicroservice.Erp.Purchasing.VendorAppService": {
-          "controllerName": "vendor",
+          "controllerName": "Vendor",
           "controllerGroupName": "Vendor",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -4727,7 +5348,7 @@
           }
         },
         "ABPmicroservice.Erp.Reporting.FinancialReportAppService": {
-          "controllerName": "financial-report",
+          "controllerName": "FinancialReport",
           "controllerGroupName": "FinancialReport",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -4811,7 +5432,7 @@
           }
         },
         "ABPmicroservice.Erp.Reporting.ReportLayoutAppService": {
-          "controllerName": "report-layout",
+          "controllerName": "ReportLayout",
           "controllerGroupName": "ReportLayout",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -4991,7 +5612,7 @@
           }
         },
         "ABPmicroservice.Erp.Sales.CustomerAppService": {
-          "controllerName": "customer",
+          "controllerName": "Customer",
           "controllerGroupName": "Customer",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -5517,7 +6138,7 @@
           }
         },
         "ABPmicroservice.Erp.Sales.SalesDocumentAppService": {
-          "controllerName": "sales-document",
+          "controllerName": "SalesDocument",
           "controllerGroupName": "SalesDocument",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -5577,6 +6198,40 @@
                   "returnValue": {
                     "type": "ABPmicroservice.Erp.Sales.SalesHeaderDto",
                     "typeSimple": "ABPmicroservice.Erp.Sales.SalesHeaderDto"
+                  }
+                },
+                {
+                  "name": "SendApprovalRequestAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto"
+                  }
+                },
+                {
+                  "name": "CancelApprovalRequestAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
                   }
                 },
                 {
@@ -5918,6 +6573,80 @@
               "allowAnonymous": false,
               "implementFrom": "ABPmicroservice.Erp.Sales.ISalesDocumentAppService"
             },
+            "SendApprovalRequestAsyncById": {
+              "uniqueName": "SendApprovalRequestAsyncById",
+              "name": "SendApprovalRequestAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/sales-document/{id}/send-approval-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Sales.ISalesDocumentAppService"
+            },
+            "CancelApprovalRequestAsyncById": {
+              "uniqueName": "CancelApprovalRequestAsyncById",
+              "name": "CancelApprovalRequestAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/sales-document/{id}/cancel-approval-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Sales.ISalesDocumentAppService"
+            },
             "GetAsyncById": {
               "uniqueName": "GetAsyncById",
               "name": "GetAsync",
@@ -6066,8 +6795,840 @@
             }
           }
         },
+        "ABPmicroservice.Erp.Sales.SalesSetupAppService": {
+          "controllerName": "SalesSetup",
+          "controllerGroupName": "SalesSetup",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "ABPmicroservice.Erp.Sales.SalesSetupAppService",
+          "interfaces": [
+            {
+              "type": "ABPmicroservice.Erp.Sales.ISalesSetupAppService",
+              "name": "ISalesSetupAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                      "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsync": {
+              "uniqueName": "GetAsync",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/sales-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Sales.ISalesSetupAppService"
+            },
+            "UpdateAsyncByInput": {
+              "uniqueName": "UpdateAsyncByInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/erp/sales-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Sales.ISalesSetupAppService"
+            }
+          }
+        },
+        "ABPmicroservice.Erp.Workflows.ApprovalEntryAppService": {
+          "controllerName": "ApprovalEntry",
+          "controllerGroupName": "ApprovalEntry",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalEntryAppService",
+          "interfaces": [
+            {
+              "type": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService",
+              "name": "IApprovalEntryAppService",
+              "methods": [
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>"
+                  }
+                },
+                {
+                  "name": "GetMyOpenCountAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "System.Int32",
+                    "typeSimple": "number"
+                  }
+                },
+                {
+                  "name": "ApproveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "RejectAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "DelegateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/approval-entry",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Status",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "AllStatuses",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "OnlyMine",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SentByMe",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "DocumentId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService"
+            },
+            "GetMyOpenCountAsync": {
+              "uniqueName": "GetMyOpenCountAsync",
+              "name": "GetMyOpenCountAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/approval-entry/my-open-count",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "System.Int32",
+                "typeSimple": "number"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService"
+            },
+            "ApproveAsyncByIdAndInput": {
+              "uniqueName": "ApproveAsyncByIdAndInput",
+              "name": "ApproveAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/approval-entry/{id}/approve",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService"
+            },
+            "RejectAsyncByIdAndInput": {
+              "uniqueName": "RejectAsyncByIdAndInput",
+              "name": "RejectAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/approval-entry/{id}/reject",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalCommentInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService"
+            },
+            "DelegateAsyncById": {
+              "uniqueName": "DelegateAsyncById",
+              "name": "DelegateAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/approval-entry/{id}/delegate",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IApprovalEntryAppService"
+            }
+          }
+        },
+        "ABPmicroservice.Erp.Workflows.ApprovalUserSetupAppService": {
+          "controllerName": "ApprovalUserSetup",
+          "controllerGroupName": "ApprovalUserSetup",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupAppService",
+          "interfaces": [
+            {
+              "type": "ABPmicroservice.Erp.Workflows.IApprovalUserSetupAppService",
+              "name": "IApprovalUserSetupAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto, Volo.Abp.Ddd.Application.Contracts",
+                      "type": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                      "typeSimple": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto>"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/erp/approval-user-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.ICreateAppService<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto>"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/erp/approval-user-setup/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IUpdateAppService<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,System.Guid,ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto>"
+            },
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/approval-user-setup/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,System.Guid,Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto>"
+            },
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/erp/approval-user-setup",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto, Volo.Abp.Ddd.Application.Contracts",
+                  "type": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                  "typeSimple": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto,System.Guid,Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto>"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/erp/approval-user-setup/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+            }
+          }
+        },
         "ABPmicroservice.Erp.Workflows.WorkflowAppService": {
-          "controllerName": "workflow",
+          "controllerName": "Workflow",
           "controllerGroupName": "Workflow",
           "isRemoteService": true,
           "isIntegrationService": false,
@@ -6087,24 +7648,7 @@
                   }
                 },
                 {
-                  "name": "GetApprovalEntriesAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "input",
-                      "typeAsString": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput, ABPmicroservice.Erp.Application.Contracts",
-                      "type": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
-                      "typeSimple": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>"
-                  }
-                },
-                {
-                  "name": "ApproveAsync",
+                  "name": "GetAsync",
                   "parametersOnMethod": [
                     {
                       "name": "id",
@@ -6116,12 +7660,54 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Void",
-                    "typeSimple": "System.Void"
+                    "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
                   }
                 },
                 {
-                  "name": "RejectAsync",
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto, ABPmicroservice.Erp.Application.Contracts",
+                      "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                      "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                    "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
                   "parametersOnMethod": [
                     {
                       "name": "id",
@@ -6190,96 +7776,11 @@
               "allowAnonymous": false,
               "implementFrom": "ABPmicroservice.Erp.Workflows.IWorkflowAppService"
             },
-            "GetApprovalEntriesAsyncByInput": {
-              "uniqueName": "GetApprovalEntriesAsyncByInput",
-              "name": "GetApprovalEntriesAsync",
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
               "httpMethod": "GET",
-              "url": "api/erp/workflow/approval-entries",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput, ABPmicroservice.Erp.Application.Contracts",
-                  "type": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
-                  "typeSimple": "ABPmicroservice.Erp.Workflows.GetApprovalEntriesInput",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "Status",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "OnlyMine",
-                  "jsonName": null,
-                  "type": "System.Boolean",
-                  "typeSimple": "boolean",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Sorting",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "SkipCount",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MaxResultCount",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                }
-              ],
-              "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<ABPmicroservice.Erp.Workflows.ApprovalEntryDto>"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "ABPmicroservice.Erp.Workflows.IWorkflowAppService"
-            },
-            "ApproveAsyncById": {
-              "uniqueName": "ApproveAsyncById",
-              "name": "ApproveAsync",
-              "httpMethod": "POST",
-              "url": "api/erp/workflow/{id}/approve",
+              "url": "api/erp/workflow/{id}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -6306,17 +7807,111 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Void",
-                "typeSimple": "System.Void"
+                "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
               },
               "allowAnonymous": false,
               "implementFrom": "ABPmicroservice.Erp.Workflows.IWorkflowAppService"
             },
-            "RejectAsyncById": {
-              "uniqueName": "RejectAsyncById",
-              "name": "RejectAsync",
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
               "httpMethod": "POST",
-              "url": "api/erp/workflow/{id}/reject",
+              "url": "api/erp/workflow",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IWorkflowAppService"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/erp/workflow/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto, ABPmicroservice.Erp.Application.Contracts",
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "typeSimple": "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "ABPmicroservice.Erp.Workflows.WorkflowDto",
+                "typeSimple": "ABPmicroservice.Erp.Workflows.WorkflowDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "ABPmicroservice.Erp.Workflows.IWorkflowAppService"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/erp/workflow/{id}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -9047,6 +10642,537 @@
         }
       ]
     },
+    "ABPmicroservice.Erp.Numbering.CreateUpdateNoSeriesDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 250,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DefaultNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ManualNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DateOrder",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Lines",
+          "jsonName": null,
+          "type": "[ABPmicroservice.Erp.Numbering.NoSeriesLineInputDto]",
+          "typeSimple": "[ABPmicroservice.Erp.Numbering.NoSeriesLineInputDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.GetNoSeriesListInput": {
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Filter",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.NextNoPreviewDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "NextNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ManualNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DefaultNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.NextNoPreviewInput": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Date",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.NoSeriesDto": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DefaultNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ManualNos",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DateOrder",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "StartingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "EndingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LastNoUsed",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "NextNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Warning",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Lines",
+          "jsonName": null,
+          "type": "[ABPmicroservice.Erp.Numbering.NoSeriesLineDto]",
+          "typeSimple": "[ABPmicroservice.Erp.Numbering.NoSeriesLineDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.NoSeriesLineDto": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "LineNo",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "StartingDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "StartingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "EndingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WarningNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IncrementByNo",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LastNoUsed",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LastDateUsed",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Open",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Numbering.NoSeriesLineInputDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "StartingDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "StartingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "EndingNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WarningNo",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IncrementByNo",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "1",
+          "maximum": "1000000",
+          "regex": null
+        }
+      ]
+    },
     "ABPmicroservice.Erp.Purchasing.CreateUpdatePurchaseHeaderDto": {
       "baseType": null,
       "isEnum": false,
@@ -9918,6 +12044,99 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Purchasing.PurchasesPayablesSetupDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "VendorNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "QuoteNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "OrderNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "InvoiceNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreditMemoNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PostedInvoiceNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PostedCreditMemoNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -11470,6 +13689,134 @@
         }
       ]
     },
+    "ABPmicroservice.Erp.Sales.SalesReceivablesSetupDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "CustomerNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "QuoteNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "OrderNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "InvoiceNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreditMemoNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PostedInvoiceNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PostedCreditMemoNos",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.ApprovalCommentInput": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Comment",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "SalesDocument",
+        "PurchaseDocument"
+      ],
+      "enumValues": [
+        0,
+        1
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
     "ABPmicroservice.Erp.Workflows.ApprovalEntryDto": {
       "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
@@ -11478,10 +13825,10 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "TableName",
+          "name": "DocumentKind",
           "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -11514,9 +13861,45 @@
           "regex": null
         },
         {
+          "name": "WorkflowCode",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SequenceNo",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
           "name": "SenderId",
           "jsonName": null,
           "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SenderUserName",
+          "jsonName": null,
+          "type": "System.String",
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
@@ -11538,10 +13921,22 @@
           "regex": null
         },
         {
-          "name": "Status",
+          "name": "ApproverUserName",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalStatus",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalStatus",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -11562,6 +13957,30 @@
           "regex": null
         },
         {
+          "name": "DueDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Comment",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
           "name": "CreationTime",
           "jsonName": null,
           "type": "System.DateTime",
@@ -11571,6 +13990,450 @@
           "maxLength": null,
           "minimum": null,
           "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LastStatusChangeTime",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CanAct",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.ApprovalRequestResultDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "AutoApproved",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ApproverCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FirstApproverUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.ApprovalStatus": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Created",
+        "Open",
+        "Canceled",
+        "Rejected",
+        "Approved"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "ABPmicroservice.Erp.Workflows.ApprovalUserSetupDto": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "UserId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "UserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ApproverUserId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ApproverUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SubstituteUserId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SubstituteUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SalesAmountApprovalLimit",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "UnlimitedSalesApproval",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PurchaseAmountApprovalLimit",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "UnlimitedPurchaseApproval",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IsApprovalAdministrator",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.ApproverLimitType": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "ApproverChain",
+        "DirectApprover",
+        "FirstQualifiedApprover"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "ABPmicroservice.Erp.Workflows.CreateUpdateApprovalUserSetupDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "UserId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "UserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": 0,
+          "maxLength": 256,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ApproverUserId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SubstituteUserId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SalesAmountApprovalLimit",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "UnlimitedSalesApproval",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PurchaseAmountApprovalLimit",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "UnlimitedPurchaseApproval",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IsApprovalAdministrator",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "ABPmicroservice.Erp.Workflows.CreateUpdateWorkflowDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": 0,
+          "maxLength": 30,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": 0,
+          "maxLength": 250,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DocumentKind",
+          "jsonName": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "MinimumAmount",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "ApproverLimitType",
+          "jsonName": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApproverLimitType",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApproverLimitType",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DueDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "3650",
           "regex": null
         }
       ]
@@ -11585,8 +14448,20 @@
         {
           "name": "Status",
           "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalStatus?",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalStatus?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AllStatuses",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -11599,6 +14474,30 @@
           "jsonName": null,
           "type": "System.Boolean",
           "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SentByMe",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DocumentId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -11656,6 +14555,54 @@
           "jsonName": null,
           "type": "System.Boolean",
           "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DocumentKind",
+          "jsonName": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApprovalDocumentKind",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "MinimumAmount",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ApproverLimitType",
+          "jsonName": null,
+          "type": "ABPmicroservice.Erp.Workflows.ApproverLimitType",
+          "typeSimple": "ABPmicroservice.Erp.Workflows.ApproverLimitType",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "DueDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,

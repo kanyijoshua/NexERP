@@ -2,12 +2,21 @@ import type { CreateUpdatePurchaseHeaderDto, GetPurchaseDocumentListInput, Purch
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
+import type { ApprovalRequestResultDto } from '../workflows/models';
 
 @Injectable({
   providedIn: 'root',
 })
-export class purchase-documentService {
+export class PurchaseDocumentService {
   apiName = 'Erp';
+  
+
+  cancelApprovalRequest = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'POST',
+      url: `/api/erp/purchase-document/${id}/cancel-approval-request`,
+    },
+    { apiName: this.apiName,...config });
   
 
   create = (input: CreateUpdatePurchaseHeaderDto, config?: Partial<Rest.Config>) =>
@@ -64,6 +73,14 @@ export class purchase-documentService {
     this.restService.request<any, PurchaseHeaderDto>({
       method: 'POST',
       url: `/api/erp/purchase-document/${id}/run-posting`,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  sendApprovalRequest = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ApprovalRequestResultDto>({
+      method: 'POST',
+      url: `/api/erp/purchase-document/${id}/send-approval-request`,
     },
     { apiName: this.apiName,...config });
   

@@ -5,6 +5,7 @@ using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Profiles;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
@@ -236,6 +237,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "Workflows", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
             b.HasMany(x => x.Steps).WithOne().HasForeignKey(x => x.WorkflowId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -249,6 +251,57 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ApprovalEntries", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.SenderUserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.ApproverUserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.Comment).HasMaxLength(ErpDomainConsts.MaxCommentLength);
+            b.Ignore(x => x.IsPending);
+            // "Requests to approve" and "pending entries of a document" are the two hot lookups.
+            b.HasIndex(x => new { x.ApproverId, x.Status });
+            b.HasIndex(x => new { x.DocumentKind, x.DocumentId });
+        });
+
+        builder.Entity<ApprovalUserSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ApprovalUserSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.UserName).IsRequired().HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.HasCompanyUniqueIndex("UserId");
+        });
+
+        builder.Entity<NoSeries>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "NoSeries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.NoSeriesId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<NoSeriesLine>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "NoSeriesLines", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.StartingNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.EndingNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.WarningNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            // Two transactions that read the same last number cannot both take the next one.
+            b.Property(x => x.LastNoUsed).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength).IsConcurrencyToken();
+        });
+
+        builder.Entity<SalesReceivablesSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "SalesReceivablesSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            // One setup row per company.
+            b.HasCompanyUniqueIndex();
+        });
+
+        builder.Entity<PurchasesPayablesSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PurchasesPayablesSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex();
         });
 
         builder.Entity<UserProfile>(b =>

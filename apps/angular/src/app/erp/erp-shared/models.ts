@@ -18,6 +18,7 @@ export interface DocumentLineOption {
 export type DocumentLineColumnType =
   | 'text'
   | 'number'
+  | 'date'
   | 'select'
   | 'lookup'
   | 'readonly'

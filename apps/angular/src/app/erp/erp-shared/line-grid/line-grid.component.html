@@ -46,6 +46,14 @@
                   (change)="onCellChange(i, column.field)"
                 />
                 <input
+                  *ngSwitchCase="'date'"
+                  type="date"
+                  class="form-control form-control-sm"
+                  [formControlName]="column.field"
+                  [attr.aria-label]="column.labelKey | abpLocalization"
+                  (change)="onCellChange(i, column.field)"
+                />
+                <input
                   *ngSwitchCase="'number'"
                   type="number"
                   class="form-control form-control-sm text-end"

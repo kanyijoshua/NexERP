@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.Numbering;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
@@ -23,6 +24,8 @@ public class SalesPostingEngine : DomainService
     private readonly IRepository<GeneralPostingSetup, Guid> _generalPostingSetupRepository;
     private readonly GenJnlPostLine _genJnlPostLine;
     private readonly ItemJnlPostLine _itemJnlPostLine;
+    private readonly SalesReceivablesSetupManager _setupManager;
+    private readonly NoSeriesManager _noSeriesManager;
 
     public SalesPostingEngine(
         IRepository<SalesHeader, Guid> salesHeaderRepository,
@@ -30,7 +33,9 @@ public class SalesPostingEngine : DomainService
         IRepository<CustomerPostingGroup, Guid> customerPostingGroupRepository,
         IRepository<GeneralPostingSetup, Guid> generalPostingSetupRepository,
         GenJnlPostLine genJnlPostLine,
-        ItemJnlPostLine itemJnlPostLine
+        ItemJnlPostLine itemJnlPostLine,
+        SalesReceivablesSetupManager setupManager,
+        NoSeriesManager noSeriesManager
     )
     {
         _salesHeaderRepository = salesHeaderRepository;
@@ -39,6 +44,8 @@ public class SalesPostingEngine : DomainService
         _generalPostingSetupRepository = generalPostingSetupRepository;
         _genJnlPostLine = genJnlPostLine;
         _itemJnlPostLine = itemJnlPostLine;
+        _setupManager = setupManager;
+        _noSeriesManager = noSeriesManager;
     }
 
     public async Task<PostedSalesHeader> PostAsync(Guid salesHeaderId)
@@ -53,7 +60,12 @@ public class SalesPostingEngine : DomainService
             throw new UserFriendlyException($"Sales document '{header.No}' has no lines.");
         }
 
-        string postedDocNo = $"PSI-{header.No}";
+        // Posted documents get their own number from the posted series; the derived number is the
+        // fallback for a company that has not set one up.
+        var postedNos = (await _setupManager.GetAsync()).GetPostedDocumentNos(header.DocumentType);
+        string postedDocNo = postedNos.IsNullOrWhiteSpace()
+            ? $"PSI-{header.No}"
+            : await _noSeriesManager.GetNextNoAsync(postedNos, header.PostingDate);
 
         // 1. Create Posted Sales Invoice
         var postedHeader = new PostedSalesHeader(

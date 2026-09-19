@@ -106,3 +106,13 @@ export interface SalesLineInputDto {
   lineDiscountPercent: number;
   unitOfMeasureCode?: string;
 }
+
+export interface SalesReceivablesSetupDto {
+  customerNos?: string;
+  quoteNos?: string;
+  orderNos?: string;
+  invoiceNos?: string;
+  creditMemoNos?: string;
+  postedInvoiceNos?: string;
+  postedCreditMemoNos?: string;
+}

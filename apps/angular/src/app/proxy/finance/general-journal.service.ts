@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class general-journalService {
+export class GeneralJournalService {
   apiName = 'Erp';
   
 

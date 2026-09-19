@@ -6,9 +6,11 @@ using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
+using ABPmicroservice.Erp.Workflows;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -35,6 +37,11 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
     private readonly IRepository<Dimension, Guid> _dimensionRepository;
     private readonly IRepository<DimensionValue, Guid> _dimensionValueRepository;
 
+    private readonly IRepository<NoSeries, Guid> _noSeriesRepository;
+    private readonly IRepository<SalesReceivablesSetup, Guid> _salesSetupRepository;
+    private readonly IRepository<PurchasesPayablesSetup, Guid> _purchaseSetupRepository;
+    private readonly IRepository<Workflow, Guid> _workflowRepository;
+
     private readonly IGuidGenerator _guidGenerator;
     private readonly ICurrentTenant _currentTenant;
     private readonly ICurrentCompany _currentCompany;
@@ -54,6 +61,10 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         IRepository<Item, Guid> itemRepository,
         IRepository<Dimension, Guid> dimensionRepository,
         IRepository<DimensionValue, Guid> dimensionValueRepository,
+        IRepository<NoSeries, Guid> noSeriesRepository,
+        IRepository<SalesReceivablesSetup, Guid> salesSetupRepository,
+        IRepository<PurchasesPayablesSetup, Guid> purchaseSetupRepository,
+        IRepository<Workflow, Guid> workflowRepository,
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
         ICurrentCompany currentCompany,
@@ -74,6 +85,11 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         _itemRepository = itemRepository;
         _dimensionRepository = dimensionRepository;
         _dimensionValueRepository = dimensionValueRepository;
+
+        _noSeriesRepository = noSeriesRepository;
+        _salesSetupRepository = salesSetupRepository;
+        _purchaseSetupRepository = purchaseSetupRepository;
+        _workflowRepository = workflowRepository;
 
         _guidGenerator = guidGenerator;
         _currentTenant = currentTenant;
@@ -109,6 +125,8 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
                 using (_currentCompany.Change(company.Id, company.Name))
                 {
                     await SeedCompanySetupAsync();
+                    await SeedNumberSeriesAsync();
+                    await SeedApprovalWorkflowTemplatesAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {
@@ -165,6 +183,78 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         var deptDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "DEPARTMENT", "Department"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "SALES", "Sales"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "ADMIN", "Administration"));
+    }
+
+    // The CRONUS set: documents may also be numbered by hand; posted documents may not,
+    // and posted invoices must run in date order.
+    private async Task SeedNumberSeriesAsync()
+    {
+        if (await _noSeriesRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        await AddSeriesAsync("CUST", "Customers", "C00020", manualNos: true, incrementByNo: 10);
+        await AddSeriesAsync("VEND", "Vendors", "V00020", manualNos: true, incrementByNo: 10);
+
+        await AddSeriesAsync("S-QUO", "Sales Quotes", "SQ-00001", manualNos: true);
+        await AddSeriesAsync("S-ORD", "Sales Orders", "SO-00001", manualNos: true);
+        await AddSeriesAsync("S-INV", "Sales Invoices", "SI-00001", manualNos: true);
+        await AddSeriesAsync("S-CR", "Sales Credit Memos", "SCM-00001", manualNos: true);
+        await AddSeriesAsync("S-INV+", "Posted Sales Invoices", "PSI-00001", dateOrder: true);
+        await AddSeriesAsync("S-CR+", "Posted Sales Credit Memos", "PSCM-00001", dateOrder: true);
+
+        await AddSeriesAsync("P-QUO", "Purchase Quotes", "PQ-00001", manualNos: true);
+        await AddSeriesAsync("P-ORD", "Purchase Orders", "PO-00001", manualNos: true);
+        await AddSeriesAsync("P-INV", "Purchase Invoices", "PI-00001", manualNos: true);
+        await AddSeriesAsync("P-CR", "Purchase Credit Memos", "PCM-00001", manualNos: true);
+        await AddSeriesAsync("P-INV+", "Posted Purchase Invoices", "PPI-00001", dateOrder: true);
+        await AddSeriesAsync("P-CR+", "Posted Purchase Credit Memos", "PPCM-00001", dateOrder: true);
+
+        if (await _salesSetupRepository.GetCountAsync() == 0)
+        {
+            var salesSetup = new SalesReceivablesSetup(NewId());
+            salesSetup.SetNumberSeries("CUST", "S-QUO", "S-ORD", "S-INV", "S-CR", "S-INV+", "S-CR+");
+            await _salesSetupRepository.InsertAsync(salesSetup);
+        }
+
+        if (await _purchaseSetupRepository.GetCountAsync() == 0)
+        {
+            var purchaseSetup = new PurchasesPayablesSetup(NewId());
+            purchaseSetup.SetNumberSeries("VEND", "P-QUO", "P-ORD", "P-INV", "P-CR", "P-INV+", "P-CR+");
+            await _purchaseSetupRepository.InsertAsync(purchaseSetup);
+        }
+    }
+
+    private async Task AddSeriesAsync(
+        string code,
+        string description,
+        string startingNo,
+        bool manualNos = false,
+        bool dateOrder = false,
+        int incrementByNo = 1
+    )
+    {
+        var series = new NoSeries(NewId(), code, description, defaultNos: true, manualNos, dateOrder);
+        series.AddLine(NewId(), null, startingNo, incrementByNo: incrementByNo);
+        await _noSeriesRepository.InsertAsync(series);
+    }
+
+    // Templates only: they stay disabled until an administrator has filled in the Approval User Setup.
+    private async Task SeedApprovalWorkflowTemplatesAsync()
+    {
+        if (await _workflowRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        var sales = new Workflow(NewId(), "SIAPW", "Sales Document Approval Workflow", ApprovalDocumentKind.SalesDocument, dueDays: 3);
+        sales.RebuildSteps(NewId);
+        await _workflowRepository.InsertAsync(sales);
+
+        var purchase = new Workflow(NewId(), "PIAPW", "Purchase Document Approval Workflow", ApprovalDocumentKind.PurchaseDocument, dueDays: 3);
+        purchase.RebuildSteps(NewId);
+        await _workflowRepository.InsertAsync(purchase);
     }
 
     private async Task SeedSampleMasterDataAsync()
