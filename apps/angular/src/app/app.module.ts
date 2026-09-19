@@ -8,6 +8,7 @@ import { provideAccountConfig } from '@abp/ng.account/config';
 import { provideTenantManagementConfig } from '@abp/ng.tenant-management/config';
 import { registerLocale } from '@abp/ng.core/locale';
 import { ThemeBasicModule, provideThemeBasicConfig } from '@abp/ng.theme.basic';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -15,6 +16,7 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { APP_ROUTE_PROVIDER } from './route.provider';
+import { CompanyInterceptor } from './erp/services/company.interceptor';
 
 @NgModule({
   declarations: [AppComponent],
@@ -29,6 +31,8 @@ import { APP_ROUTE_PROVIDER } from './route.provider';
   ],
   providers: [
     APP_ROUTE_PROVIDER,
+    // Root level so that every lazy ERP module sends X-Company-Id.
+    { provide: HTTP_INTERCEPTORS, useClass: CompanyInterceptor, multi: true },
 
     provideAbpCore(
       withOptions({

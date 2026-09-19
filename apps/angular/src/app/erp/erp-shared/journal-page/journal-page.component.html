@@ -1,0 +1,106 @@
+<div class="erp-journal-page">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h4 class="mb-0 fw-bold me-auto">
+      {{ title?.includes('::') ? (title | abpLocalization) : title }}
+    </h4>
+
+    <div class="input-group input-group-sm w-auto">
+      <label class="input-group-text" for="erp-journal-batch">{{
+        'Erp::Batch' | abpLocalization
+      }}</label>
+      <select
+        id="erp-journal-batch"
+        class="form-select"
+        [disabled]="busy"
+        [ngModel]="selectedBatchId"
+        (ngModelChange)="onBatchChange($event)"
+      >
+        <option *ngFor="let batch of batches" [ngValue]="batch.id">{{ batch.name }}</option>
+      </select>
+    </div>
+
+    <ng-content select="[actions]"></ng-content>
+
+    <button
+      *abpPermission="savePermission"
+      type="button"
+      class="btn btn-sm btn-outline-primary"
+      [disabled]="!canSave"
+      (click)="save.emit()"
+    >
+      <i class="fas fa-save me-1"></i>{{ 'Erp::Save' | abpLocalization }}
+    </button>
+    <button
+      *abpPermission="postPermission"
+      type="button"
+      class="btn btn-sm btn-primary"
+      [disabled]="!canPost"
+      (click)="requestPost()"
+    >
+      <i class="fas fa-paper-plane me-1"></i>{{ 'Erp::Post' | abpLocalization }}
+    </button>
+  </div>
+
+  <div class="row g-3">
+    <div [ngClass]="requireBalance ? 'col-12 col-xl-9' : 'col-12'">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <erp-line-grid
+            [lines]="lines"
+            [columns]="lineColumns"
+            [readonly]="readonly"
+            (addLine)="addLine.emit()"
+            (removeLine)="removeLine.emit($event)"
+            (lineChange)="lineChange.emit($event)"
+          ></erp-line-grid>
+        </div>
+      </div>
+      <ng-content></ng-content>
+    </div>
+
+    <div *ngIf="requireBalance" class="col-12 col-xl-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">{{ 'Erp::Balance' | abpLocalization }}</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <span class="text-muted">{{ 'Erp::TotalBalance' | abpLocalization }}</span>
+            <span
+              class="fs-5 fw-bold"
+              [class.text-danger]="balance.total !== 0"
+              [class.text-success]="balance.total === 0"
+              >{{ balance.total | erpAmount: currencyCode }}</span
+            >
+          </div>
+
+          <div
+            *ngIf="lines.length > 0 && !balance.isBalanced"
+            class="alert alert-danger py-1 px-2 small mt-2 mb-0"
+            role="alert"
+          >
+            <i class="fas fa-exclamation-triangle me-1"></i>{{ 'Erp::OutOfBalance' | abpLocalization }}
+          </div>
+
+          <table *ngIf="balance.byDocument.length" class="table table-sm mt-3 mb-0">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+                <th scope="col" class="text-end">{{ 'Erp::Balance' | abpLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let document of balance.byDocument" [class.fw-bold]="document.balance !== 0">
+                <!-- Bootstrap 5 colours table cells, not rows: the class must sit on the cells. -->
+                <td [class.text-danger]="document.balance !== 0">
+                  {{ document.documentNo || ('Erp::NoDocumentNo' | abpLocalization) }}
+                </td>
+                <td class="text-end" [class.text-danger]="document.balance !== 0">
+                  {{ document.balance | erpAmount }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

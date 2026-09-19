@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,9 +9,8 @@ namespace ABPmicroservice.Erp.Inventory;
 /// Item Ledger Entry. Mirrors Business Central table 32 "Item Ledger Entry".
 /// Immutable once created (posted).
 /// </summary>
-public class ItemLedgerEntry : Entity<Guid>
+public class ItemLedgerEntry : LedgerEntryBase
 {
-    public long EntryNo { get; internal set; }
 
     public Guid ItemId { get; private set; }
 

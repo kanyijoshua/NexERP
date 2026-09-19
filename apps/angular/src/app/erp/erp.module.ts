@@ -1,11 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { SharedModule } from '../shared/shared.module';
 
 import { ErpRoutingModule } from './erp-routing.module';
-import { CompanyInterceptor } from './services/company.interceptor';
+import { ErpSharedModule } from './erp-shared/erp-shared.module';
 
 import { CompanySwitcherComponent } from './components/company-switcher/company-switcher.component';
 import { ChatterWidgetComponent } from './components/chatter-widget/chatter-widget.component';
@@ -30,14 +29,8 @@ import { FinancialReportsComponent } from './pages/financial-reports/financial-r
     CommonModule,
     FormsModule,
     SharedModule,
+    ErpSharedModule,
     ErpRoutingModule,
-  ],
-  providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CompanyInterceptor,
-      multi: true,
-    },
   ],
 })
 export class ErpModule {}

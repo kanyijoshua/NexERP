@@ -11,7 +11,10 @@ import { AuthService } from '@abp/ng.core';
 describe("HomeComponent", () => {
   let fixture: ComponentFixture<HomeComponent>;
   const mockOAuthService = jasmine.createSpyObj('OAuthService', ['hasValidAccessToken'])
-  const mockAuthService = jasmine.createSpyObj('AuthService', ['navigateToLogin'])
+  // The component reads AuthService.isAuthenticated; each block below sets it.
+  const mockAuthService = jasmine.createSpyObj('AuthService', ['navigateToLogin'], { isAuthenticated: false })
+  const setAuthenticated = (value: boolean) =>
+    (Object.getOwnPropertyDescriptor(mockAuthService, 'isAuthenticated')!.get as jasmine.Spy).and.returnValue(value)
   beforeEach(
     waitForAsync(() => {
       TestBed.configureTestingModule({
@@ -49,13 +52,12 @@ describe("HomeComponent", () => {
 
   describe('when login state is true', () => {
     beforeAll(() => {
-      mockOAuthService.hasValidAccessToken.and.returnValue(true)
+      setAuthenticated(true)
     });
 
     it("hasLoggedIn should be true", () => {
 
       expect(fixture.componentInstance.hasLoggedIn).toBeTrue();
-      expect(mockOAuthService.hasValidAccessToken).toHaveBeenCalled()
     })
 
     it("button should not be exists", () => {
@@ -68,13 +70,12 @@ describe("HomeComponent", () => {
 
   describe('when login state is false', () => {
     beforeAll(() => {
-      mockOAuthService.hasValidAccessToken.and.returnValue(false)
+      setAuthenticated(false)
     });
 
     it("hasLoggedIn should be false", () => {
 
       expect(fixture.componentInstance.hasLoggedIn).toBeFalse();
-      expect(mockOAuthService.hasValidAccessToken).toHaveBeenCalled()
     })
 
     it("button should be exists", () => {

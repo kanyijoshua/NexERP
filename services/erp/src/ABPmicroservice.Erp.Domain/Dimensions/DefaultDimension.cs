@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,7 +9,7 @@ namespace ABPmicroservice.Erp.Dimensions;
 /// Default Dimension. Mirrors Business Central table 352 "Default Dimension".
 /// Links entities (Customer, Vendor, Item, GLAccount) to default dimensions.
 /// </summary>
-public class DefaultDimension : Entity<Guid>
+public class DefaultDimension : CompanyBasicEntity
 {
     public string TableName { get; private set; }
     public Guid EntityId { get; private set; }

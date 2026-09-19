@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,7 +9,7 @@ namespace ABPmicroservice.Erp.Dimensions;
 /// Dimension Set Entry. Mirrors Business Central table 480 "Dimension Set Entry".
 /// Immutable combination of dimension codes & value codes grouped by a unique DimensionSetId.
 /// </summary>
-public class DimensionSetEntry : Entity<Guid>
+public class DimensionSetEntry : CompanyBasicEntity
 {
     public Guid DimensionSetId { get; private set; }
     public string DimensionCode { get; private set; }

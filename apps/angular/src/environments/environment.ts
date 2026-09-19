@@ -14,13 +14,18 @@ export const environment = {
     redirectUri: baseUrl,
     clientId: 'ABPmicroservice_Angular',
     responseType: 'code',
-    scope: 'ABPmicroserviceIdentityService ABPmicroserviceAdministration ABPmicroserviceSaaS',
+    scope:
+      'ABPmicroserviceIdentityService ABPmicroserviceAdministration ABPmicroserviceSaaS ABPmicroserviceErp',
     requireHttps: false,
   },
   apis: {
     default: {
       url: 'https://localhost:7500',
       rootNamespace: 'ABPmicroservice',
+    },
+    Erp: {
+      url: 'https://localhost:7500',
+      rootNamespace: 'ABPmicroservice.Erp',
     },
   },
 } as Environment;

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CompanyService } from '../../services/company.service';
 import { ErpApiService, PurchaseHeaderDto } from '../../services/erp-api.service';
 
 @Component({
@@ -45,7 +47,7 @@ import { ErpApiService, PurchaseHeaderDto } from '../../services/erp-api.service
 
         <div class="col-md-4">
           <app-chatter-widget
-            *if="selectedInvoice"
+            *ngIf="selectedInvoice"
             entityType="PurchaseHeader"
             [entityId]="selectedInvoice.id"
             [entityNo]="selectedInvoice.no"
@@ -59,7 +61,10 @@ export class PurchaseInvoicesComponent implements OnInit {
   invoices: PurchaseHeaderDto[] = [];
   selectedInvoice: PurchaseHeaderDto | null = null;
 
-  constructor(private erpApi: ErpApiService) {}
+  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
+    // Re-query when the active company changes (replaces the old full page reload).
+    companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
+  }
 
   ngOnInit(): void {
     this.erpApi.getPurchaseInvoices().subscribe(data => {

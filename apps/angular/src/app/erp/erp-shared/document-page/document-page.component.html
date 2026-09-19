@@ -1,0 +1,75 @@
+<div class="erp-document-page">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="me-auto">
+      <h4 class="mb-0 fw-bold">
+        {{ title?.includes('::') ? (title | abpLocalization) : title }}
+        <span *ngIf="status" class="badge ms-2 align-middle" [ngClass]="statusClass">{{
+          status?.includes('::') ? (status | abpLocalization) : status
+        }}</span>
+      </h4>
+      <div *ngIf="subtitle" class="small text-muted">{{ subtitle?.includes('::') ? (subtitle | abpLocalization) : subtitle }}</div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2" role="toolbar">
+      <ng-container *ngFor="let item of actions; trackBy: trackByKey">
+        <button
+          *abpPermission="item.permission"
+          type="button"
+          class="btn btn-sm"
+          [ngClass]="item.cssClass || 'btn-outline-primary'"
+          [disabled]="isActionDisabled(item)"
+          (click)="runAction(item)"
+        >
+          <i [class]="item.icon + ' me-1'"></i>{{ item.labelKey | abpLocalization }}
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <ng-content select="[smartButtons]"></ng-content>
+  </div>
+
+  <div class="row g-3">
+    <div [ngClass]="showSide ? 'col-12 col-xl-8' : 'col-12'">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <ng-content select="[header]"></ng-content>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">{{ linesTitleKey | abpLocalization }}</div>
+        <div class="card-body">
+          <erp-line-grid
+            [lines]="lines"
+            [columns]="lineColumns"
+            [readonly]="readonly"
+            (addLine)="addLine.emit()"
+            (removeLine)="removeLine.emit($event)"
+            (lineChange)="lineChange.emit($event)"
+          ></erp-line-grid>
+
+          <div *ngIf="totals.length" class="row justify-content-end mt-3">
+            <div class="col-12 col-md-6 col-lg-5">
+              <table class="table table-sm table-borderless mb-0">
+                <tbody>
+                  <tr *ngFor="let total of totals" [class.fw-bold]="total.emphasis">
+                    <td class="text-muted">{{ total.labelKey | abpLocalization }}</td>
+                    <td class="text-end">{{ total.value | erpAmount: currencyCode }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-content></ng-content>
+    </div>
+
+    <div *ngIf="showSide" class="col-12 col-xl-4">
+      <ng-content select="[side]"></ng-content>
+    </div>
+  </div>
+</div>

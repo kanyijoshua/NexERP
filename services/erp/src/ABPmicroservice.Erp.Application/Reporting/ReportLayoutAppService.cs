@@ -2,20 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Volo.Abp.Application.Services;
+using ABPmicroservice.Erp.Permissions;
+using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Reporting;
 
-public class CreateReportLayoutDto
-{
-    public string ReportName { get; set; }
-    public string LayoutName { get; set; }
-    public string LayoutType { get; set; }
-    public string Description { get; set; }
-}
-
-public class ReportLayoutAppService : ApplicationService
+[Authorize(ErpPermissions.ReportLayouts.Default)]
+public class ReportLayoutAppService : ErpAppService, IReportLayoutAppService
 {
     private readonly IRepository<CustomReportLayout, Guid> _layoutRepository;
     private readonly IRepository<ReportLayoutSelection, Guid> _selectionRepository;
@@ -29,12 +25,19 @@ public class ReportLayoutAppService : ApplicationService
         _selectionRepository = selectionRepository;
     }
 
-    public async Task<List<CustomReportLayout>> GetLayoutsAsync(string reportName)
+    public async Task<ListResultDto<ReportLayoutDto>> GetListAsync(GetReportLayoutsInput input)
     {
-        return await _layoutRepository.GetListAsync(l => l.ReportName == reportName);
+        var layouts = await _layoutRepository.GetListAsync(l => l.ReportName == input.ReportName);
+
+        return new ListResultDto<ReportLayoutDto>(
+            ObjectMapper.Map<List<CustomReportLayout>, List<ReportLayoutDto>>(
+                layouts.OrderByDescending(l => l.IsDefault).ThenBy(l => l.LayoutName).ToList()
+            )
+        );
     }
 
-    public async Task<CustomReportLayout> CreateLayoutAsync(CreateReportLayoutDto input)
+    [Authorize(ErpPermissions.ReportLayouts.Manage)]
+    public async Task<ReportLayoutDto> CreateAsync(CreateReportLayoutDto input)
     {
         var layout = new CustomReportLayout(
             GuidGenerator.Create(),
@@ -43,32 +46,41 @@ public class ReportLayoutAppService : ApplicationService
             input.LayoutType,
             input.Description
         );
-        return await _layoutRepository.InsertAsync(layout, autoSave: true);
+
+        await _layoutRepository.InsertAsync(layout, autoSave: true);
+        return ObjectMapper.Map<CustomReportLayout, ReportLayoutDto>(layout);
     }
 
-    public async Task SetDefaultLayoutAsync(string reportName, Guid layoutId)
+    [Authorize(ErpPermissions.ReportLayouts.Manage)]
+    public async Task SetDefaultAsync(SetDefaultReportLayoutInput input)
     {
-        var layouts = await _layoutRepository.GetListAsync(l => l.ReportName == reportName);
-        foreach (var l in layouts)
+        var layouts = await _layoutRepository.GetListAsync(l => l.ReportName == input.ReportName);
+
+        var selected = layouts.FirstOrDefault(l => l.Id == input.LayoutId);
+        if (selected == null)
         {
-            l.SetDefault(l.Id == layoutId);
-            await _layoutRepository.UpdateAsync(l);
+            throw new UserFriendlyException(
+                $"Layout '{input.LayoutId}' does not belong to report '{input.ReportName}'."
+            );
         }
 
-        var selected = layouts.FirstOrDefault(l => l.Id == layoutId);
-        if (selected != null)
+        foreach (var layout in layouts.Where(l => l.IsDefault != (l.Id == input.LayoutId)))
         {
-            var selection = await _selectionRepository.FirstOrDefaultAsync(s => s.ReportName == reportName);
-            if (selection == null)
-            {
-                selection = new ReportLayoutSelection(GuidGenerator.Create(), reportName, layoutId, selected.LayoutType);
-                await _selectionRepository.InsertAsync(selection);
-            }
-            else
-            {
-                selection.SetSelectedLayout(layoutId, selected.LayoutType);
-                await _selectionRepository.UpdateAsync(selection);
-            }
+            layout.SetDefault(layout.Id == input.LayoutId);
+            await _layoutRepository.UpdateAsync(layout);
+        }
+
+        var selection = await _selectionRepository.FirstOrDefaultAsync(s => s.ReportName == input.ReportName);
+        if (selection == null)
+        {
+            await _selectionRepository.InsertAsync(
+                new ReportLayoutSelection(GuidGenerator.Create(), input.ReportName, selected.Id, selected.LayoutType)
+            );
+        }
+        else
+        {
+            selection.SetSelectedLayout(selected.Id, selected.LayoutType);
+            await _selectionRepository.UpdateAsync(selection);
         }
     }
 }

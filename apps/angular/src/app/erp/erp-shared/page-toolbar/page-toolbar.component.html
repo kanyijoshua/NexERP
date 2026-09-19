@@ -1,0 +1,43 @@
+<div class="erp-page-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <div *ngIf="breadcrumb" class="small text-muted">{{ breadcrumb?.includes('::') ? (breadcrumb | abpLocalization) : breadcrumb }}</div>
+    <h4 class="mb-0 fw-bold">
+      <i *ngIf="icon" [class]="icon + ' text-primary me-2'"></i>{{ title?.includes('::') ? (title | abpLocalization) : title }}
+    </h4>
+  </div>
+
+  <div *ngIf="showSearch" class="input-group input-group-sm w-auto">
+    <span class="input-group-text"><i class="fas fa-search"></i></span>
+    <input
+      type="search"
+      class="form-control"
+      [attr.aria-label]="'Erp::Search' | abpLocalization"
+      [placeholder]="'Erp::Search' | abpLocalization"
+      [ngModel]="filter"
+      (ngModelChange)="onFilterChange($event)"
+    />
+    <button
+      *ngIf="filter"
+      type="button"
+      class="btn btn-outline-secondary"
+      [attr.aria-label]="'Erp::Clear' | abpLocalization"
+      [title]="'Erp::Clear' | abpLocalization"
+      (click)="clearFilter()"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <ng-content></ng-content>
+
+  <ng-container *ngIf="showCreate">
+    <button
+      *abpPermission="permission"
+      type="button"
+      class="btn btn-sm btn-primary"
+      (click)="create.emit()"
+    >
+      <i class="fas fa-plus me-1"></i>{{ createLabelKey | abpLocalization }}
+    </button>
+  </ng-container>
+</div>

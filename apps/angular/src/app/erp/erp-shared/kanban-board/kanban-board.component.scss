@@ -1,0 +1,96 @@
+.erp-kanban {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  min-height: 60vh;
+
+  &__column {
+    flex: 0 0 18rem;
+    display: flex;
+    flex-direction: column;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border-top: 3px solid var(--bs-secondary, #6c757d);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+
+    &--won {
+      border-top-color: var(--bs-success, #198754);
+    }
+
+    &--lost {
+      border-top-color: var(--bs-danger, #dc3545);
+    }
+
+    &--folded {
+      flex-basis: 3rem;
+
+      .erp-kanban__header {
+        flex-direction: column;
+      }
+
+      .erp-kanban__title {
+        writing-mode: vertical-rl;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__aggregate {
+    margin-bottom: 0.5rem;
+  }
+
+  &__cards {
+    flex: 1 1 auto;
+    min-height: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__card {
+    cursor: grab;
+
+    &.cdk-drag-disabled {
+      cursor: default;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 1rem 0;
+  }
+}
+
+// The component uses ViewEncapsulation.None because the CDK renders the drag preview in <body>;
+// every rule is therefore scoped by an erp-kanban class.
+.erp-kanban__card.cdk-drag-preview {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+  border-radius: 0.375rem;
+}
+
+.erp-kanban__card.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.erp-kanban__card.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.erp-kanban__cards.cdk-drop-list-dragging .erp-kanban__card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}

@@ -1,5 +1,6 @@
 using Serilog;
 using ABPmicroservice.Administration.EntityFrameworkCore;
+using ABPmicroservice.Erp.EntityFrameworkCore;
 using ABPmicroservice.Projects.EntityFrameworkCore;
 using ABPmicroservice.SaaS.EntityFrameworkCore;
 using Volo.Abp.Identity.EntityFrameworkCore;
@@ -22,6 +23,7 @@ internal class Program
         builder.AddNpgsqlDbContext<IdentityDbContext>(connectionName: ABPmicroserviceNames.IdentityServiceDb);
         builder.AddNpgsqlDbContext<SaaSDbContext>(connectionName: ABPmicroserviceNames.SaaSDb);
         builder.AddNpgsqlDbContext<ProjectsDbContext>(connectionName: ABPmicroserviceNames.ProjectsDb);
+        builder.AddNpgsqlDbContext<ErpDbContext>(connectionName: ABPmicroserviceNames.ErpDb);
 
         builder.Configuration.AddAppSettingsSecretsJson();
 

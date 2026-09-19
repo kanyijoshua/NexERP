@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Volo.Abp.Application.Services;
+using ABPmicroservice.Erp.Permissions;
+using Microsoft.AspNetCore.Authorization;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Kanban;
 
-public class KanbanPipelineAppService : ApplicationService
+[Authorize(ErpPermissions.Kanban.Default)]
+public class KanbanPipelineAppService : ErpAppService, IKanbanPipelineAppService
 {
     private readonly IRepository<KanbanStage, Guid> _stageRepository;
 
@@ -15,8 +19,12 @@ public class KanbanPipelineAppService : ApplicationService
         _stageRepository = stageRepository;
     }
 
-    public async Task<List<KanbanStage>> GetStagesAsync(string pipelineType)
+    public async Task<ListResultDto<KanbanStageDto>> GetStagesAsync(GetKanbanStagesInput input)
     {
-        return await _stageRepository.GetListAsync(s => s.PipelineType == pipelineType);
+        var stages = await _stageRepository.GetListAsync(s => s.PipelineType == input.PipelineType);
+
+        return new ListResultDto<KanbanStageDto>(
+            ObjectMapper.Map<List<KanbanStage>, List<KanbanStageDto>>(stages.OrderBy(s => s.Sequence).ToList())
+        );
     }
 }

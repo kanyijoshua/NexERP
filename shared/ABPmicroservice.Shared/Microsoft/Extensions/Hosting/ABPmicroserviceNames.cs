@@ -17,6 +17,9 @@ public static class ABPmicroserviceNames
 
     public const string DbMigrator = "ABPmicroserviceDbMigrator";
 
+    public const string ErpApi = "ABPmicroserviceErp";
+    public const string ErpDb = "ABPmicroserviceErpDb";
+
     public const string Gateway = "ABPmicroserviceGateway";
 
     public const string IdentityServiceApi = "ABPmicroserviceIdentityService";

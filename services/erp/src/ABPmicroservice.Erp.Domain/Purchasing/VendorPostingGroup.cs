@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -8,7 +9,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Vendor Posting Group. Mirrors Business Central table 93 "Vendor Posting Group".
 /// Maps Vendor Posting Group Code -> Payables G/L Account.
 /// </summary>
-public class VendorPostingGroup : FullAuditedEntity<Guid>
+public class VendorPostingGroup : CompanyEntity
 {
     public string Code { get; private set; }
     public string Description { get; private set; }

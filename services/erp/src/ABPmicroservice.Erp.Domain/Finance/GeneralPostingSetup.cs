@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -8,7 +9,7 @@ namespace ABPmicroservice.Erp.Finance;
 /// General Posting Setup. Mirrors Business Central table 252 "General Posting Setup".
 /// Maps (Gen. Bus. Posting Group + Gen. Prod. Posting Group) -> G/L accounts.
 /// </summary>
-public class GeneralPostingSetup : FullAuditedEntity<Guid>
+public class GeneralPostingSetup : CompanyEntity
 {
     public string GenBusPostingGroup { get; private set; }
     public string GenProdPostingGroup { get; private set; }

@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +10,7 @@ namespace ABPmicroservice.Erp.Workflows;
 /// <summary>
 /// Workflow definition. Mirrors Business Central table 1501 "Workflow".
 /// </summary>
-public class Workflow : FullAuditedAggregateRoot<Guid>
+public class Workflow : CompanyAggregateRoot
 {
     public string Code { get; private set; }
     public string Description { get; private set; }
@@ -63,7 +64,7 @@ public class WorkflowStep : FullAuditedEntity<Guid>
 /// <summary>
 /// Approval Entry. Mirrors Business Central table 454 "Approval Entry".
 /// </summary>
-public class ApprovalEntry : FullAuditedEntity<Guid>
+public class ApprovalEntry : CompanyEntity
 {
     public string TableName { get; private set; }
     public Guid DocumentId { get; private set; }

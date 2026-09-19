@@ -1,0 +1,121 @@
+<div class="table-responsive erp-line-grid">
+  <table class="table table-sm table-hover align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="erp-line-grid__no">#</th>
+        <th
+          *ngFor="let column of columns; trackBy: trackByField"
+          scope="col"
+          [style.width]="column.width || null"
+          [class.text-end]="isNumeric(column)"
+        >
+          {{ column.labelKey | abpLocalization }}
+        </th>
+        <th *ngIf="!readonly" scope="col" class="erp-line-grid__actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let row of rows; let i = index"
+        #rowEl
+        [formGroup]="row"
+        (keydown)="onRowKeydown($event, i)"
+      >
+        <td class="text-muted small erp-line-grid__no">{{ i + 1 }}</td>
+
+        <td
+          *ngFor="let column of columns; trackBy: trackByField"
+          [class.text-end]="isNumeric(column)"
+        >
+          <ng-container *ngIf="row.get(column.field)">
+            <ng-container *ngIf="readonly || column.type === 'readonly'; else editor">
+              <span *ngIf="column.type === 'select'; else plainText">{{
+                displayText(row, column) | abpLocalization
+              }}</span>
+              <ng-template #plainText>{{ displayText(row, column) }}</ng-template>
+            </ng-container>
+
+            <ng-template #editor>
+              <ng-container [ngSwitch]="column.type">
+                <input
+                  *ngSwitchCase="'text'"
+                  type="text"
+                  class="form-control form-control-sm"
+                  [formControlName]="column.field"
+                  [attr.aria-label]="column.labelKey | abpLocalization"
+                  (change)="onCellChange(i, column.field)"
+                />
+                <input
+                  *ngSwitchCase="'number'"
+                  type="number"
+                  class="form-control form-control-sm text-end"
+                  [formControlName]="column.field"
+                  [attr.step]="column.step || 'any'"
+                  [attr.aria-label]="column.labelKey | abpLocalization"
+                  (change)="onCellChange(i, column.field)"
+                />
+                <input
+                  *ngSwitchCase="'currency'"
+                  type="number"
+                  class="form-control form-control-sm text-end"
+                  [formControlName]="column.field"
+                  [attr.step]="column.step || 0.01"
+                  [attr.aria-label]="column.labelKey | abpLocalization"
+                  (change)="onCellChange(i, column.field)"
+                />
+                <select
+                  *ngSwitchCase="'select'"
+                  class="form-select form-select-sm"
+                  [formControlName]="column.field"
+                  [attr.aria-label]="column.labelKey | abpLocalization"
+                  (change)="onCellChange(i, column.field)"
+                >
+                  <option *ngFor="let option of column.options || []" [ngValue]="option.value">
+                    {{ option.label | abpLocalization }}
+                  </option>
+                </select>
+                <erp-lookup
+                  *ngSwitchCase="'lookup'"
+                  inputClass="form-control-sm"
+                  [formControlName]="column.field"
+                  [source]="column.lookupSource"
+                  [valueField]="column.lookupValueField || 'code'"
+                  [allowFreeText]="!!column.lookupAllowFreeText"
+                  (selected)="onLookupSelected(i, column.field, $event)"
+                ></erp-lookup>
+              </ng-container>
+            </ng-template>
+          </ng-container>
+        </td>
+
+        <td *ngIf="!readonly" class="text-end erp-line-grid__actions">
+          <button
+            type="button"
+            class="btn btn-sm btn-link text-danger p-0"
+            tabindex="-1"
+            [attr.aria-label]="'Erp::RemoveLine' | abpLocalization"
+            [title]="'Erp::RemoveLine' | abpLocalization"
+            (click)="removeLine.emit(i)"
+          >
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="rows.length === 0">
+        <td [attr.colspan]="columns.length + (readonly ? 1 : 2)" class="text-center text-muted py-3">
+          {{ emptyKey | abpLocalization }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<button
+  *ngIf="!readonly"
+  type="button"
+  class="btn btn-sm btn-link text-decoration-none mt-1"
+  (click)="requestAddLine()"
+>
+  <i class="fas fa-plus me-1"></i>{{ 'Erp::AddLine' | abpLocalization }}
+</button>

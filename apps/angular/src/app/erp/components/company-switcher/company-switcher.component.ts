@@ -17,7 +17,7 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
         </button>
       </div>
 
-      <div *if="showModal" class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
+      <div *ngIf="showModal" class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -73,8 +73,8 @@ export class CompanySwitcherComponent implements OnInit {
   onCompanyChange(event: any): void {
     const selectedId = event.target.value;
     this.activeCompanyId = selectedId;
+    // No browser reload: pages react to CompanyService.companyChanged$ and re-query.
     this.companyService.setActiveCompany(selectedId);
-    window.location.reload();
   }
 
   openCopyModal(): void {

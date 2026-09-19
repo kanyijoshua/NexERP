@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -8,7 +9,7 @@ namespace ABPmicroservice.Erp.Reporting;
 /// Report Layout Selection. Mirrors Business Central Table 9651 "Report Layout Selection".
 /// Maps a Report Name to its active default layout.
 /// </summary>
-public class ReportLayoutSelection : FullAuditedEntity<Guid>
+public class ReportLayoutSelection : CompanyEntity
 {
     public string ReportName { get; private set; }
     public Guid SelectedLayoutId { get; private set; }
@@ -34,7 +35,7 @@ public class ReportLayoutSelection : FullAuditedEntity<Guid>
 /// <summary>
 /// Custom Report Layout. Mirrors Business Central Table 9650 "Custom Report Layouts".
 /// </summary>
-public class CustomReportLayout : FullAuditedEntity<Guid>
+public class CustomReportLayout : CompanyEntity
 {
     public string ReportName { get; private set; }
     public string LayoutName { get; private set; }

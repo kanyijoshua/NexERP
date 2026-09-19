@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-erp-dashboard',
@@ -72,6 +72,5 @@ import { Component, OnInit } from '@angular/core';
     </div>
   `,
 })
-export class DashboardComponent implements OnInit {
-  ngOnInit(): void {}
+export class DashboardComponent {
 }

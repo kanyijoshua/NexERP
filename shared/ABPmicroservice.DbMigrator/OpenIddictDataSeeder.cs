@@ -91,6 +91,37 @@ public class OpenIddictDataSeeder(
         }
     }
 
+    private async Task AddMissingScopesAsync(object client, List<string> scopes)
+    {
+        var descriptor = new OpenIddictApplicationDescriptor();
+        await _applicationManager.PopulateAsync(descriptor, client);
+
+        var changed = false;
+        foreach (var scope in scopes)
+        {
+            // Only API scopes are topped up; the built-in ones were settled at creation.
+            if (
+                scope == "offline_access"
+                || scope.StartsWith(
+                    OpenIddictConstants.Permissions.Prefixes.Scope,
+                    StringComparison.Ordinal
+                )
+            )
+            {
+                continue;
+            }
+
+            changed |= descriptor.Permissions.Add(
+                OpenIddictConstants.Permissions.Prefixes.Scope + scope
+            );
+        }
+
+        if (changed)
+        {
+            await _applicationManager.UpdateAsync(client, descriptor);
+        }
+    }
+
     private async Task CreateClientAsync(
         [NotNull] string name,
         string displayName,
@@ -131,15 +162,14 @@ public class OpenIddictDataSeeder(
             throw new BusinessException(L["TheClientSecretIsRequiredForConfidentialApplications"]);
         }
 
-        if (
-            !string.IsNullOrEmpty(name)
-            && await _applicationManager.FindByClientIdAsync(name) != null
-        )
+        var client = await _applicationManager.FindByClientIdAsync(name);
+        if (client != null)
         {
+            // Already seeded: only grant scopes added to the configuration since then.
+            await AddMissingScopesAsync(client, scopes);
             return;
         }
 
-        var client = await _applicationManager.FindByClientIdAsync(name);
         if (client == null)
         {
             var application = new OpenIddictApplicationDescriptor

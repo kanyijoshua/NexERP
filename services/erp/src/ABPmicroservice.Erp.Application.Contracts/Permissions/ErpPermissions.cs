@@ -88,6 +88,8 @@ public class ErpPermissions
     public static class Journals
     {
         public const string Default = GroupName + ".Journals";
+        public const string Create = Default + ".Create";
+        public const string Delete = Default + ".Delete";
         public const string Post = Default + ".Post";
     }
 
@@ -109,6 +111,33 @@ public class ErpPermissions
     {
         public const string Default = GroupName + ".Reports";
         public const string ExportExcel = Default + ".ExportExcel";
+    }
+
+    public static class Companies
+    {
+        public const string Default = GroupName + ".Companies";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Copy = Default + ".Copy";
+    }
+
+    public static class Kanban
+    {
+        public const string Default = GroupName + ".Kanban";
+        public const string Manage = Default + ".Manage";
+    }
+
+    public static class Chatter
+    {
+        public const string Default = GroupName + ".Chatter";
+        public const string Create = Default + ".Create";
+    }
+
+    public static class ReportLayouts
+    {
+        public const string Default = GroupName + ".ReportLayouts";
+        public const string Manage = Default + ".Manage";
     }
 
     public static string[] GetAll()

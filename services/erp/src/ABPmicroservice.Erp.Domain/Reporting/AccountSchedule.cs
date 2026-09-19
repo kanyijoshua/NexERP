@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +10,7 @@ namespace ABPmicroservice.Erp.Reporting;
 /// <summary>
 /// Account Schedule Header. Mirrors Business Central Table 84 "Acc. Schedule Name".
 /// </summary>
-public class AccountSchedule : FullAuditedAggregateRoot<Guid>
+public class AccountSchedule : CompanyAggregateRoot
 {
     public string Name { get; private set; }
     public string Description { get; private set; }

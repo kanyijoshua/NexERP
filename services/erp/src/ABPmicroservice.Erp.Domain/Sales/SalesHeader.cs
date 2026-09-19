@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +13,7 @@ namespace ABPmicroservice.Erp.Sales;
 /// Sales document header. Mirrors Business Central table 36 "Sales Header".
 /// Aggregate root that owns its <see cref="SalesLine"/> collection.
 /// </summary>
-public class SalesHeader : FullAuditedAggregateRoot<Guid>
+public class SalesHeader : CompanyAggregateRoot
 {
     public SalesDocumentType DocumentType { get; private set; }
 

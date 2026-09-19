@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ namespace ABPmicroservice.Erp.Sales;
 /// Posted Sales Invoice Header. Mirrors Business Central table 112 "Sales Invoice Header".
 /// Immutable historical posted document.
 /// </summary>
-public class PostedSalesHeader : Entity<Guid>
+public class PostedSalesHeader : CompanyBasicEntity
 {
     public string No { get; private set; }
     public string PreAssignedNo { get; private set; }

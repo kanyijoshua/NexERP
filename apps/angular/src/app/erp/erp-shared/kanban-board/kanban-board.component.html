@@ -1,0 +1,57 @@
+<div class="erp-kanban" cdkDropListGroup>
+  <section
+    *ngFor="let column of columns; trackBy: trackByColumn"
+    class="erp-kanban__column"
+    [class.erp-kanban__column--folded]="column.folded"
+    [class.erp-kanban__column--won]="column.isWon"
+    [class.erp-kanban__column--lost]="column.isLost"
+  >
+    <header class="erp-kanban__header">
+      <button
+        type="button"
+        class="btn btn-sm btn-link p-0 text-muted"
+        [attr.aria-expanded]="!column.folded"
+        [attr.aria-label]="(column.folded ? 'Erp::Unfold' : 'Erp::Fold') | abpLocalization"
+        [title]="(column.folded ? 'Erp::Unfold' : 'Erp::Fold') | abpLocalization"
+        (click)="toggleFold(column)"
+      >
+        <i class="fas" [ngClass]="column.folded ? 'fa-angle-double-right' : 'fa-angle-double-left'"></i>
+      </button>
+      <span class="erp-kanban__title fw-bold">{{ column.title }}</span>
+      <span class="badge bg-secondary rounded-pill">{{ column.cards.length }}</span>
+    </header>
+    <div *ngIf="!column.folded && column.aggregateLabel" class="erp-kanban__aggregate small text-muted">
+      {{ column.aggregateLabel }}
+    </div>
+
+    <div
+      class="erp-kanban__cards"
+      cdkDropList
+      [cdkDropListData]="column"
+      [cdkDropListDisabled]="!canMove"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      <ng-container *ngIf="!column.folded">
+        <div
+          *ngFor="let card of column.cards; trackBy: trackByCard"
+          class="erp-kanban__card card shadow-sm"
+          cdkDrag
+          [cdkDragData]="card"
+          [cdkDragDisabled]="!canMove"
+        >
+          <div class="card-body p-2">
+            <ng-container
+              *ngIf="cardTemplate; else defaultCard"
+              [ngTemplateOutlet]="cardTemplate"
+              [ngTemplateOutletContext]="{ $implicit: card, column: column }"
+            ></ng-container>
+            <ng-template #defaultCard>{{ cardId(card) }}</ng-template>
+          </div>
+        </div>
+        <div *ngIf="column.cards.length === 0" class="erp-kanban__empty small text-muted">
+          {{ emptyKey | abpLocalization }}
+        </div>
+      </ng-container>
+    </div>
+  </section>
+</div>

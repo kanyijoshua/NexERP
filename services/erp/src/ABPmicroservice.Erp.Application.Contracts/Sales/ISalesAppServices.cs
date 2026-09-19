@@ -37,6 +37,7 @@ public interface ISalesDocumentAppService
     /// <summary>
     /// Posts the document: creates G/L entries, item ledger entries and
     /// updates the customer balance. Mirrors BC "Post" codeunit behaviour.
+    /// Routed as POST /api/erp/sales-document/{id}/run-posting.
     /// </summary>
-    Task<SalesHeaderDto> PostAsync(Guid id);
+    Task<SalesHeaderDto> RunPostingAsync(Guid id);
 }

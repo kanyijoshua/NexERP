@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.MultiTenancy;
 
 namespace ABPmicroservice.Erp.RapidStart;
 
@@ -10,8 +11,9 @@ namespace ABPmicroservice.Erp.RapidStart;
 /// Configuration Package. Mirrors Business Central table 8623 "Config. Package".
 /// Seeding and data migration package entity.
 /// </summary>
-public class ConfigPackage : FullAuditedAggregateRoot<Guid>
+public class ConfigPackage : FullAuditedAggregateRoot<Guid>, IMultiTenant
 {
+    public Guid? TenantId { get; protected set; }
     public string Code { get; private set; }
     public string PackageName { get; private set; }
     public string ProductVersion { get; private set; }
@@ -35,8 +37,9 @@ public class ConfigPackage : FullAuditedAggregateRoot<Guid>
 /// <summary>
 /// Configuration Package Table. Mirrors Business Central table 8613 "Config. Package Table".
 /// </summary>
-public class ConfigPackageTable : FullAuditedEntity<Guid>
+public class ConfigPackageTable : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public Guid? TenantId { get; protected set; }
     public Guid ConfigPackageId { get; private set; }
     public int TableId { get; private set; }
     public string TableName { get; private set; }
@@ -62,8 +65,9 @@ public class ConfigPackageTable : FullAuditedEntity<Guid>
 /// <summary>
 /// Configuration Package Field. Mirrors Business Central table 8616 "Config. Package Field".
 /// </summary>
-public class ConfigPackageField : FullAuditedEntity<Guid>
+public class ConfigPackageField : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public Guid? TenantId { get; protected set; }
     public Guid ConfigPackageTableId { get; private set; }
     public int FieldId { get; private set; }
     public string FieldName { get; private set; }

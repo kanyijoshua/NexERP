@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Purchase document header. Mirrors Business Central table 38 "Purchase Header".
 /// Aggregate root that owns its <see cref="PurchaseLine"/> collection.
 /// </summary>
-public class PurchaseHeader : FullAuditedAggregateRoot<Guid>
+public class PurchaseHeader : CompanyAggregateRoot
 {
     public PurchaseDocumentType DocumentType { get; private set; }
 

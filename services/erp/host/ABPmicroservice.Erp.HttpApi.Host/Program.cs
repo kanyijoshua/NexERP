@@ -28,7 +28,7 @@ public class Program
                 configure => configure.DisableRetry = true
             );
             builder.AddNpgsqlDbContext<ErpDbContext>(
-                connectionName: "ErpDb",
+                connectionName: ABPmicroserviceNames.ErpDb,
                 configure => configure.DisableRetry = true
             );
 

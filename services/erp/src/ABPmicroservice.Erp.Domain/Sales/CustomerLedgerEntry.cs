@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,9 +9,8 @@ namespace ABPmicroservice.Erp.Sales;
 /// Customer Ledger Entry. Mirrors Business Central table 21 "Cust. Ledger Entry".
 /// Immutable subledger entry tracking accounts receivable balances per customer.
 /// </summary>
-public class CustomerLedgerEntry : Entity<Guid>
+public class CustomerLedgerEntry : LedgerEntryBase
 {
-    public long EntryNo { get; internal set; }
     public Guid CustomerId { get; private set; }
     public string CustomerNo { get; private set; }
     public DateTime PostingDate { get; private set; }

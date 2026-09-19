@@ -1,0 +1,14 @@
+.erp-line-grid {
+  &__no {
+    width: 2.5rem;
+  }
+
+  &__actions {
+    width: 2.25rem;
+  }
+
+  td {
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+  }
+}

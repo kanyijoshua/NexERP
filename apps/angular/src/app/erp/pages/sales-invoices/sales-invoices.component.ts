@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CompanyService } from '../../services/company.service';
 import { ErpApiService, SalesHeaderDto } from '../../services/erp-api.service';
 
 @Component({
@@ -38,7 +40,7 @@ import { ErpApiService, SalesHeaderDto } from '../../services/erp-api.service';
                       </span>
                     </td>
                     <td class="text-end">
-                      <button *if="!inv.posted" class="btn btn-sm btn-success me-1" (click)="postInvoice(inv.id)">
+                      <button *ngIf="!inv.posted" class="btn btn-sm btn-success me-1" (click)="postInvoice(inv.id)">
                         <i class="fas fa-check-circle me-1"></i> Post (CU 80)
                       </button>
                     </td>
@@ -51,12 +53,12 @@ import { ErpApiService, SalesHeaderDto } from '../../services/erp-api.service';
 
         <div class="col-md-4">
           <app-chatter-widget
-            *if="selectedInvoice"
+            *ngIf="selectedInvoice"
             entityType="SalesHeader"
             [entityId]="selectedInvoice.id"
             [entityNo]="selectedInvoice.no"
           ></app-chatter-widget>
-          <div *if="!selectedInvoice" class="card border-0 shadow-sm p-4 text-center text-muted">
+          <div *ngIf="!selectedInvoice" class="card border-0 shadow-sm p-4 text-center text-muted">
             <i class="fas fa-mouse-pointer fa-2x mb-2 text-secondary"></i>
             <p class="mb-0 small">Select a sales invoice to view Odoo Chatter activity feed & internal notes.</p>
           </div>
@@ -69,7 +71,10 @@ export class SalesInvoicesComponent implements OnInit {
   invoices: SalesHeaderDto[] = [];
   selectedInvoice: SalesHeaderDto | null = null;
 
-  constructor(private erpApi: ErpApiService) {}
+  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
+    // Re-query when the active company changes (replaces the old full page reload).
+    companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
+  }
 
   ngOnInit(): void {
     this.loadInvoices();

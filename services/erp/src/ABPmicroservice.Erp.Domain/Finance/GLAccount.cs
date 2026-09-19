@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Finance;
 /// <summary>
 /// G/L Account (Chart of Accounts). Mirrors Business Central table 15 "G/L Account".
 /// </summary>
-public class GLAccount : FullAuditedAggregateRoot<Guid>
+public class GLAccount : CompanyAggregateRoot
 {
     /// <summary>Business key. Mirrors BC field "No.".</summary>
     public string No { get; private set; }

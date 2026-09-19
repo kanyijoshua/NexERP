@@ -1,0 +1,39 @@
+<div *ngIf="buttons.length" class="erp-smart-buttons" role="group">
+  <ng-container *ngFor="let button of buttons">
+    <ng-container *abpPermission="button.permission">
+      <a
+        *ngIf="button.routerLink; else plainButton"
+        class="erp-smart-button btn btn-light border"
+        [routerLink]="button.routerLink"
+        [queryParams]="button.queryParams || null"
+      >
+        <ng-container
+          [ngTemplateOutlet]="content"
+          [ngTemplateOutletContext]="{ $implicit: button }"
+        ></ng-container>
+      </a>
+      <ng-template #plainButton>
+        <button
+          type="button"
+          class="erp-smart-button btn btn-light border"
+          (click)="buttonClick.emit(button)"
+        >
+          <ng-container
+            [ngTemplateOutlet]="content"
+            [ngTemplateOutletContext]="{ $implicit: button }"
+          ></ng-container>
+        </button>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+</div>
+
+<ng-template #content let-button>
+  <i [class]="button.icon + ' erp-smart-button__icon text-primary'"></i>
+  <span class="erp-smart-button__text">
+    <span *ngIf="hasCount(button)" class="erp-smart-button__count fw-bold">{{ button.count }}</span>
+    <span class="erp-smart-button__label small text-muted">{{
+      button.labelKey | abpLocalization
+    }}</span>
+  </span>
+</ng-template>

@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Dimensions;
 /// <summary>
 /// Financial Dimension. Mirrors Business Central table 348 "Dimension".
 /// </summary>
-public class Dimension : FullAuditedAggregateRoot<Guid>
+public class Dimension : CompanyAggregateRoot
 {
     public string Code { get; private set; }
     public string Name { get; private set; }

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CompanyService } from '../../services/company.service';
 import { ErpApiService, GLAccountDto } from '../../services/erp-api.service';
 
 @Component({
@@ -43,7 +45,10 @@ import { ErpApiService, GLAccountDto } from '../../services/erp-api.service';
 export class ChartOfAccountsComponent implements OnInit {
   accounts: GLAccountDto[] = [];
 
-  constructor(private erpApi: ErpApiService) {}
+  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
+    // Re-query when the active company changes (replaces the old full page reload).
+    companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
+  }
 
   ngOnInit(): void {
     this.erpApi.getGLAccounts().subscribe(data => {

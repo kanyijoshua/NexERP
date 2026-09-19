@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Finance;
 /// <summary>
 /// General Journal Batch. Mirrors Business Central table 232 "Gen. Journal Batch".
 /// </summary>
-public class GenJournalBatch : FullAuditedAggregateRoot<Guid>
+public class GenJournalBatch : CompanyAggregateRoot
 {
     public string JournalTemplateName { get; private set; }
     public string Name { get; private set; }
@@ -32,7 +33,7 @@ public class GenJournalBatch : FullAuditedAggregateRoot<Guid>
 /// <summary>
 /// General Journal Line. Mirrors Business Central table 81 "Gen. Journal Line".
 /// </summary>
-public class GenJournalLine : FullAuditedEntity<Guid>
+public class GenJournalLine : CompanyEntity
 {
     public Guid GenJournalBatchId { get; private set; }
     public int LineNo { get; private set; }

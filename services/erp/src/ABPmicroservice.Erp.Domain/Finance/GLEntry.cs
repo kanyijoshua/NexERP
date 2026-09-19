@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,10 +9,9 @@ namespace ABPmicroservice.Erp.Finance;
 /// Posted G/L Entry. Mirrors Business Central table 17 "G/L Entry".
 /// Entries are immutable once created (posted).
 /// </summary>
-public class GLEntry : Entity<Guid>
+public class GLEntry : LedgerEntryBase
 {
     /// <summary>Sequential entry number. Mirrors BC field "Entry No.".</summary>
-    public long EntryNo { get; internal set; }
 
     public Guid GLAccountId { get; private set; }
 

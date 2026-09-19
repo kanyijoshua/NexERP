@@ -101,6 +101,8 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
         );
 
         var journals = erpGroup.AddPermission(ErpPermissions.Journals.Default, L("Permission:Erp:Journals"));
+        journals.AddChild(ErpPermissions.Journals.Create, L("Permission:Erp:Journals:Create"));
+        journals.AddChild(ErpPermissions.Journals.Delete, L("Permission:Erp:Journals:Delete"));
         journals.AddChild(ErpPermissions.Journals.Post, L("Permission:Erp:Journals:Post"));
 
         var workflows = erpGroup.AddPermission(ErpPermissions.Workflows.Default, L("Permission:Erp:Workflows"));
@@ -113,6 +115,21 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
 
         var reports = erpGroup.AddPermission(ErpPermissions.Reports.Default, L("Permission:Erp:Reports"));
         reports.AddChild(ErpPermissions.Reports.ExportExcel, L("Permission:Erp:Reports:ExportExcel"));
+
+        var companies = erpGroup.AddPermission(ErpPermissions.Companies.Default, L("Permission:Erp:Companies"));
+        companies.AddChild(ErpPermissions.Companies.Create, L("Permission:Erp:Companies:Create"));
+        companies.AddChild(ErpPermissions.Companies.Update, L("Permission:Erp:Companies:Update"));
+        companies.AddChild(ErpPermissions.Companies.Delete, L("Permission:Erp:Companies:Delete"));
+        companies.AddChild(ErpPermissions.Companies.Copy, L("Permission:Erp:Companies:Copy"));
+
+        var kanban = erpGroup.AddPermission(ErpPermissions.Kanban.Default, L("Permission:Erp:Kanban"));
+        kanban.AddChild(ErpPermissions.Kanban.Manage, L("Permission:Erp:Kanban:Manage"));
+
+        var chatter = erpGroup.AddPermission(ErpPermissions.Chatter.Default, L("Permission:Erp:Chatter"));
+        chatter.AddChild(ErpPermissions.Chatter.Create, L("Permission:Erp:Chatter:Create"));
+
+        var reportLayouts = erpGroup.AddPermission(ErpPermissions.ReportLayouts.Default, L("Permission:Erp:ReportLayouts"));
+        reportLayouts.AddChild(ErpPermissions.ReportLayouts.Manage, L("Permission:Erp:ReportLayouts:Manage"));
     }
 
     private static void AddCrud(

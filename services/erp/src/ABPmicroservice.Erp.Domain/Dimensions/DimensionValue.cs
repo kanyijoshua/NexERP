@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Dimensions;
 /// <summary>
 /// Dimension Value. Mirrors Business Central table 349 "Dimension Value".
 /// </summary>
-public class DimensionValue : FullAuditedEntity<Guid>
+public class DimensionValue : CompanyEntity
 {
     public Guid DimensionId { get; private set; }
     public string DimensionCode { get; private set; }

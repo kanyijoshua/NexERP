@@ -19,7 +19,7 @@ internal class Program
         var identityDb = postgres.AddDatabase(ABPmicroserviceNames.IdentityServiceDb);
         var projectsDb = postgres.AddDatabase(ABPmicroserviceNames.ProjectsDb);
         var saasDb = postgres.AddDatabase(ABPmicroserviceNames.SaaSDb);
-        var erpDb = postgres.AddDatabase("ErpDb");
+        var erpDb = postgres.AddDatabase(ABPmicroserviceNames.ErpDb);
 
         var migrator = builder
             .AddProject<ABPmicroservice_DbMigrator>(
@@ -87,9 +87,9 @@ internal class Program
             .WithReference(seq)
             .WaitForCompletion(migrator);
 
-        builder
+        var erp = builder
             .AddProject<ABPmicroservice_Erp_HttpApi_Host>(
-                "erp-api",
+                ABPmicroserviceNames.ErpApi,
                 launchProfileName: LaunchProfileName
             )
             .WithExternalHttpEndpoints()
@@ -106,7 +106,8 @@ internal class Program
             .WithReference(seq)
             .WaitFor(admin)
             .WaitFor(identity)
-            .WaitFor(saas);
+            .WaitFor(saas)
+            .WaitFor(erp);
 
         var authserver = builder
             .AddProject<ABPmicroservice_AuthServer>(

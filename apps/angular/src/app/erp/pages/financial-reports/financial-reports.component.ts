@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CompanyService } from '../../services/company.service';
 import { ErpApiService, FinancialReportDto, ReportLayoutDto } from '../../services/erp-api.service';
 
 @Component({
@@ -33,7 +35,7 @@ import { ErpApiService, FinancialReportDto, ReportLayoutDto } from '../../servic
             </div>
           </div>
 
-          <div *if="report" class="table-responsive">
+          <div *ngIf="report" class="table-responsive">
             <h6 class="fw-bold text-uppercase border-bottom pb-2">{{ report.reportTitle }}</h6>
             <table class="table table-sm table-striped align-middle mb-0">
               <thead class="table-light">
@@ -58,7 +60,7 @@ import { ErpApiService, FinancialReportDto, ReportLayoutDto } from '../../servic
       </div>
 
       <!-- Report Layout Selection Modal (BC Table 9651) -->
-      <div *if="showLayoutModal" class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
+      <div *ngIf="showLayoutModal" class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
@@ -89,7 +91,7 @@ import { ErpApiService, FinancialReportDto, ReportLayoutDto } from '../../servic
                         </span>
                       </td>
                       <td class="text-end">
-                        <button *if="!l.isDefault" class="btn btn-xs btn-outline-primary" (click)="setDefaultLayout(l)">
+                        <button *ngIf="!l.isDefault" class="btn btn-xs btn-outline-primary" (click)="setDefaultLayout(l)">
                           Set Default
                         </button>
                       </td>
@@ -113,7 +115,10 @@ export class FinancialReportsComponent implements OnInit {
   activeLayout: ReportLayoutDto | null = null;
   showLayoutModal = false;
 
-  constructor(private erpApi: ErpApiService) {}
+  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
+    // Re-query when the active company changes (replaces the old full page reload).
+    companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
+  }
 
   ngOnInit(): void {
     const today = new Date().toISOString().split('T')[0];

@@ -28,7 +28,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "GLAccounts", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
-            b.HasIndex(x => x.No).IsUnique();
+            b.HasCompanyUniqueIndex("No");
         });
 
         builder.Entity<GLEntry>(b =>
@@ -59,7 +59,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "Customers", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
-            b.HasIndex(x => x.No).IsUnique();
+            b.HasCompanyUniqueIndex("No");
         });
 
         builder.Entity<CustomerPostingGroup>(b =>
@@ -104,7 +104,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "Vendors", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
-            b.HasIndex(x => x.No).IsUnique();
+            b.HasCompanyUniqueIndex("No");
         });
 
         builder.Entity<VendorPostingGroup>(b =>
@@ -149,7 +149,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "Items", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
-            b.HasIndex(x => x.No).IsUnique();
+            b.HasCompanyUniqueIndex("No");
         });
 
         builder.Entity<ItemCategory>(b =>

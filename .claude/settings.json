@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /r/ && dotnet test services/erp/test/ABPmicroservice.Erp.Application.Tests/ABPmicroservice.Erp.Application.Tests.csproj --no-build -nologo --filter \"FullyQualifiedName~Entity_To_Dto|FullyQualifiedName~An_Empty_Batch\" 2>&1 | grep -vE \"warning \" | grep -A12 \"Error Message\" | cut -c1-420 | head -44)",
+      "Read(//r//**)",
+      "Bash(grep -E \"^[A-Za-z]+ -> [A-Za-z]+ \\\\\\(|^Unmapped|^[A-Z][A-Za-z]+$\")",
+      "Bash(grep -vE \"^using |^\\\\s*$\" ABPmicroservice.Erp.Application/Inventory/ItemCategoryAppService.cs)",
+      "Bash(sed -n '/public ItemCategory\\(/,/^    }/p' ABPmicroservice.Erp.Domain/Inventory/ItemCategory.cs)",
+      "Bash(sed -n '/class UnitOfMeasureDto/,$p' ABPmicroservice.Erp.Application.Contracts/Inventory/ItemDtos.cs)",
+      "Bash(grep -vE \"^\\\\s*$\")",
+      "Bash(grep -vE \"^--$\")",
+      "Bash(sed -i 's|^\\\\\\(\\\\s*\\\\\\)public const string CannotDeleteItemWithLedgerEntries = Prefix + \":Items:00003\";|&\\\\n\\\\1public const string CodeAlreadyExists = Prefix + \":Items:00004\";|' ABPmicroservice.Erp.Domain.Shared/ErpErrorCodes.cs)",
+      "Bash(sed -i '/CreateMap<CreateUpdateGLAccountDto, GLAccount>\\(\\);/d; /CreateMap<CreateUpdateCustomerDto, Customer>\\(\\);/d; /CreateMap<CreateUpdateVendorDto, Vendor>\\(\\);/d' ABPmicroservice.Erp.Application/ErpApplicationAutoMapperProfile.cs)"
+    ]
+  }
+}

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ABPmicroservice.Erp.EntityFrameworkCore;
 using Volo.Abp;
+using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.Modularity;
@@ -28,7 +29,64 @@ public class ErpHttpApiHostModule : AbpModule
     {
         var hostingEnvironment = context.Services.GetHostingEnvironment();
 
-        context.ConfigureMicroservice("Erp");
+        context.ConfigureMicroservice(ABPmicroserviceNames.ErpApi);
+
+        // Expose every ERP application service under /api/erp/<kebab-name>.
+        Configure<AbpAspNetCoreMvcOptions>(options =>
+        {
+            options.ConventionalControllers.Create(
+                typeof(ErpApplicationModule).Assembly,
+                settings =>
+                {
+                    settings.RootPath = ErpRemoteServiceConsts.ModuleName;
+                    settings.RemoteServiceName = ErpRemoteServiceConsts.RemoteServiceName;
+                    settings.UrlControllerNameNormalizer = c => ErpUrlNames.Kebab(c.ControllerName);
+                }
+            );
+        });
+
+        if (hostingEnvironment.IsDevelopment())
+        {
+            Configure<AbpVirtualFileSystemOptions>(options =>
+            {
+                options.FileSets.ReplaceEmbeddedByPhysical<ErpDomainSharedModule>(
+                    Path.Combine(
+                        hostingEnvironment.ContentRootPath,
+                        string.Format(
+                            "..{0}..{0}src{0}ABPmicroservice.Erp.Domain.Shared",
+                            Path.DirectorySeparatorChar
+                        )
+                    )
+                );
+                options.FileSets.ReplaceEmbeddedByPhysical<ErpDomainModule>(
+                    Path.Combine(
+                        hostingEnvironment.ContentRootPath,
+                        string.Format(
+                            "..{0}..{0}src{0}ABPmicroservice.Erp.Domain",
+                            Path.DirectorySeparatorChar
+                        )
+                    )
+                );
+                options.FileSets.ReplaceEmbeddedByPhysical<ErpApplicationContractsModule>(
+                    Path.Combine(
+                        hostingEnvironment.ContentRootPath,
+                        string.Format(
+                            "..{0}..{0}src{0}ABPmicroservice.Erp.Application.Contracts",
+                            Path.DirectorySeparatorChar
+                        )
+                    )
+                );
+                options.FileSets.ReplaceEmbeddedByPhysical<ErpApplicationModule>(
+                    Path.Combine(
+                        hostingEnvironment.ContentRootPath,
+                        string.Format(
+                            "..{0}..{0}src{0}ABPmicroservice.Erp.Application",
+                            Path.DirectorySeparatorChar
+                        )
+                    )
+                );
+            });
+        }
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -50,10 +108,16 @@ public class ErpHttpApiHostModule : AbpModule
         app.UseMultiTenancy();
         app.UseAbpRequestLocalization();
         app.UseAuthorization();
+        app.UseMiddleware<CompanyResolutionMiddleware>();
         app.UseSwagger();
         app.UseAbpSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "ERP API");
+
+            var configuration = context.GetConfiguration();
+            options.OAuthClientId(configuration["AuthServer:SwaggerClientId"]);
+            options.OAuthClientSecret(configuration["AuthServer:SwaggerClientSecret"]);
+            options.OAuthScopes(ABPmicroserviceNames.ErpApi);
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();

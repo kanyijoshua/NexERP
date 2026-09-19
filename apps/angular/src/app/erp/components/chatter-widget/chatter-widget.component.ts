@@ -31,7 +31,7 @@ import { ChatterService, DocumentNoteDto } from '../../services/chatter.service'
             </div>
             <div class="mt-1 small">{{ note.noteText }}</div>
           </div>
-          <div *if="notes.length === 0" class="text-muted small text-center py-3">No activity logs or internal notes yet.</div>
+          <div *ngIf="notes.length === 0" class="text-muted small text-center py-3">No activity logs or internal notes yet.</div>
         </div>
       </div>
     </div>

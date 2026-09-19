@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Posted Purchase Invoice Header. Mirrors Business Central table 122 "Purch. Inv. Header".
 /// Immutable historical posted document.
 /// </summary>
-public class PostedPurchaseHeader : Entity<Guid>
+public class PostedPurchaseHeader : CompanyBasicEntity
 {
     public string No { get; private set; }
     public string PreAssignedNo { get; private set; }

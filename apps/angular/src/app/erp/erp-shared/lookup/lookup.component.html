@@ -1,0 +1,18 @@
+<input
+  #input
+  type="text"
+  autocomplete="off"
+  [class]="'form-control ' + inputClass"
+  [attr.id]="inputId || null"
+  [disabled]="isDisabled"
+  [placeholder]="placeholder ? (placeholder | abpLocalization) : ''"
+  [ngbTypeahead]="search"
+  [inputFormatter]="inputFormatter"
+  [resultFormatter]="resultFormatter"
+  [editable]="true"
+  [focusFirst]="!allowFreeText"
+  container="body"
+  (focus)="onFocus()"
+  (blur)="onBlur()"
+  (selectItem)="onSelect($event)"
+/>

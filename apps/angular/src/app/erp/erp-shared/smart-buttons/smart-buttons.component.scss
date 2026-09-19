@@ -1,0 +1,24 @@
+.erp-smart-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.erp-smart-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 8.5rem;
+  padding: 0.35rem 0.75rem;
+  text-align: start;
+
+  &__icon {
+    font-size: 1.25rem;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+}

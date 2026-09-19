@@ -16,15 +16,31 @@ public class Company : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public string DisplayName { get; private set; }
     public bool EvaluationCompany { get; private set; }
 
+    /// <summary>Company used when a request names none (one per tenant).</summary>
+    public bool IsDefault { get; private set; }
+
     protected Company() { }
 
-    public Company(Guid id, string name, string displayName, Guid? tenantId = null, bool evaluationCompany = false)
+    public Company(
+        Guid id,
+        string name,
+        string displayName,
+        Guid? tenantId = null,
+        bool evaluationCompany = false,
+        bool isDefault = false
+    )
         : base(id)
     {
         Name = Check.NotNullOrWhiteSpace(name, nameof(name), ErpDomainConsts.MaxNameLength);
         DisplayName = Check.NotNullOrWhiteSpace(displayName, nameof(displayName), ErpDomainConsts.MaxNameLength);
         TenantId = tenantId;
         EvaluationCompany = evaluationCompany;
+        IsDefault = isDefault;
+    }
+
+    public void SetDefault(bool isDefault)
+    {
+        IsDefault = isDefault;
     }
 }
 

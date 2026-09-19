@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Kanban;
 /// <summary>
 /// Odoo Kanban Pipeline Stage Definition.
 /// </summary>
-public class KanbanStage : FullAuditedEntity<Guid>
+public class KanbanStage : CompanyEntity
 {
     public string PipelineType { get; private set; } // "Sales", "Purchasing", "Lead"
     public int Sequence { get; private set; }

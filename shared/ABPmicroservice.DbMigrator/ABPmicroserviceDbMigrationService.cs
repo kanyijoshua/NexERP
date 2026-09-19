@@ -135,6 +135,7 @@ public class ABPmicroserviceDbMigrationService(
         await MigrateDatabaseAsync<AdministrationDbContext>(cancellationToken);
         await MigrateDatabaseAsync<IdentityServiceDbContext>(cancellationToken);
         await MigrateDatabaseAsync<ProjectsDbContext>(cancellationToken);
+        await MigrateDatabaseAsync<ErpDbContext>(cancellationToken);
         //await MigrateDatabaseAsync<WebAppDbContext>(cancellationToken);
 
         await uow.CompleteAsync(cancellationToken);

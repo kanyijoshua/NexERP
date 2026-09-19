@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Sales;
 /// <summary>
 /// Customer card. Mirrors Business Central table 18 "Customer".
 /// </summary>
-public class Customer : FullAuditedAggregateRoot<Guid>
+public class Customer : CompanyAggregateRoot
 {
     /// <summary>Business key. Mirrors BC field "No.".</summary>
     public string No { get; private set; }

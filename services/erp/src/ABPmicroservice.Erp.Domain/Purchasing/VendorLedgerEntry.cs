@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
@@ -8,9 +9,8 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Vendor Ledger Entry. Mirrors Business Central table 25 "Vendor Ledger Entry".
 /// Immutable subledger entry tracking accounts payable balances per vendor.
 /// </summary>
-public class VendorLedgerEntry : Entity<Guid>
+public class VendorLedgerEntry : LedgerEntryBase
 {
-    public long EntryNo { get; internal set; }
     public Guid VendorId { get; private set; }
     public string VendorNo { get; private set; }
     public DateTime PostingDate { get; private set; }

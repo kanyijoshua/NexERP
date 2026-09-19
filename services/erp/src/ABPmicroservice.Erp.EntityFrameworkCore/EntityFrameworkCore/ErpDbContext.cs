@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using ABPmicroservice.Erp.Automations;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
@@ -13,6 +19,9 @@ using ABPmicroservice.Erp.Sales;
 using ABPmicroservice.Erp.WebServices;
 using ABPmicroservice.Erp.Workflows;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -85,15 +94,145 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<ReportLayoutSelection> ReportLayoutSelections { get; set; }
     public DbSet<CustomReportLayout> CustomReportLayouts { get; set; }
 
+    /// <summary>
+    /// Ledger columns that may still change after posting (application and closing bookkeeping).
+    /// Everything else on an ILedgerEntry row is immutable.
+    /// </summary>
+    private static readonly HashSet<string> MutableLedgerProperties =
+    [
+        "Open",
+        "RemainingAmount",
+        "RemainingQuantity",
+        "InvoicedQuantity",
+        "ClosedByEntryId",
+        "ClosedByEntryNo",
+        "ClosedAtDate",
+        "CostPostedToGL",
+    ];
+
     public ErpDbContext(DbContextOptions<ErpDbContext> options)
         : base(options)
     {
     }
+
+    // Null at design time (migrations), where no filter values are needed.
+    protected ICurrentCompany CurrentCompany => LazyServiceProvider?.LazyGetService<ICurrentCompany>();
+
+    protected Guid? CurrentCompanyId => CurrentCompany?.Id;
+
+    protected bool IsCompanyFilterEnabled => DataFilter?.IsEnabled<ICompanyScoped>() ?? false;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         builder.ConfigureErp();
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        // Amounts, quantities and unit costs: numeric(18,5), as Business Central stores them.
+        var decimals = configurationBuilder.Properties<decimal>().HavePrecision(18, 5);
+
+        // SQLite (tests) has no decimal type and cannot SUM or ORDER BY it as text.
+        if (Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            decimals.HaveConversion<double>();
+        }
+    }
+
+    protected override bool ShouldFilterEntity<TEntity>(IMutableEntityType entityType)
+    {
+        return typeof(ICompanyScoped).IsAssignableFrom(typeof(TEntity))
+            || base.ShouldFilterEntity<TEntity>(entityType);
+    }
+
+    protected override Expression<Func<TEntity, bool>> CreateFilterExpression<TEntity>(
+        ModelBuilder modelBuilder
+    )
+    {
+        var expression = base.CreateFilterExpression<TEntity>(modelBuilder);
+
+        if (typeof(ICompanyScoped).IsAssignableFrom(typeof(TEntity)))
+        {
+            // No ambient company means no rows, never all rows.
+            Expression<Func<TEntity, bool>> companyFilter = e =>
+                !IsCompanyFilterEnabled
+                || EF.Property<Guid>(e, nameof(ICompanyScoped.CompanyId)) == CurrentCompanyId;
+
+            expression =
+                expression == null
+                    ? companyFilter
+                    : QueryFilterExpressionHelper.CombineExpressions(expression, companyFilter);
+        }
+
+        return expression;
+    }
+
+    protected override void ApplyAbpConceptsForAddedEntity(EntityEntry entry)
+    {
+        base.ApplyAbpConceptsForAddedEntity(entry);
+
+        if (entry.Entity is ICompanyScoped scoped && scoped.CompanyId == Guid.Empty)
+        {
+            var companyId =
+                CurrentCompanyId
+                ?? throw new BusinessException(ErpErrorCodes.Companies.CompanyRequired).WithData(
+                    "EntityType",
+                    entry.Metadata.ClrType.Name
+                );
+
+            entry.Property(nameof(ICompanyScoped.CompanyId)).CurrentValue = companyId;
+        }
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default
+    )
+    {
+        GuardLedgerEntries();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        GuardLedgerEntries();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <summary>Posted ledger rows are append-only: no deletes, and updates only to the bookkeeping columns.</summary>
+    private void GuardLedgerEntries()
+    {
+        foreach (var entry in ChangeTracker.Entries<ILedgerEntry>())
+        {
+            if (entry.State == EntityState.Deleted)
+            {
+                throw LedgerIsImmutable(entry, "Delete");
+            }
+
+            if (entry.State != EntityState.Modified)
+            {
+                continue;
+            }
+
+            var illegal = entry.Properties.FirstOrDefault(p =>
+                p.IsModified && !MutableLedgerProperties.Contains(p.Metadata.Name)
+            );
+            if (illegal != null)
+            {
+                throw LedgerIsImmutable(entry, illegal.Metadata.Name);
+            }
+        }
+    }
+
+    private static BusinessException LedgerIsImmutable(EntityEntry<ILedgerEntry> entry, string what)
+    {
+        return new BusinessException(ErpErrorCodes.Ledgers.LedgerEntryIsImmutable)
+            .WithData("EntityType", entry.Metadata.ClrType.Name)
+            .WithData("EntryNo", entry.Entity.EntryNo)
+            .WithData("Change", what);
     }
 }

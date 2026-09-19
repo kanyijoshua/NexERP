@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ namespace ABPmicroservice.Erp.Automations;
 /// <summary>
 /// Odoo Automated Trigger Action Rule Definition.
 /// </summary>
-public class AutomatedActionRule : FullAuditedAggregateRoot<Guid>
+public class AutomatedActionRule : CompanyAggregateRoot
 {
     public string RuleName { get; private set; }
     public string EntityType { get; private set; } // "SalesHeader", "PurchaseHeader"

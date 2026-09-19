@@ -1,93 +1,200 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Sales;
 
-public class CreateSalesHeaderDto
+[Authorize(ErpPermissions.SalesDocuments.Default)]
+public class SalesDocumentAppService
+    : CrudAppService<
+        SalesHeader,
+        SalesHeaderDto,
+        Guid,
+        GetSalesDocumentListInput,
+        CreateUpdateSalesHeaderDto,
+        CreateUpdateSalesHeaderDto
+    >,
+        ISalesDocumentAppService
 {
-    public SalesDocumentType DocumentType { get; set; }
-    public string No { get; set; }
-    public Guid CustomerId { get; set; }
-    public string SellToCustomerNo { get; set; }
-    public string SellToCustomerName { get; set; }
-    public DateTime PostingDate { get; set; }
-}
-
-public class CreateSalesLineDto
-{
-    public DocumentLineType Type { get; set; }
-    public string No { get; set; }
-    public string Description { get; set; }
-    public decimal Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-}
-
-public class SalesDocumentAppService : ApplicationService
-{
-    private readonly IRepository<SalesHeader, Guid> _salesHeaderRepository;
+    private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly SalesPostingEngine _salesPostingEngine;
 
     public SalesDocumentAppService(
-        IRepository<SalesHeader, Guid> salesHeaderRepository,
+        IRepository<SalesHeader, Guid> repository,
+        IRepository<Customer, Guid> customerRepository,
         SalesPostingEngine salesPostingEngine
     )
+        : base(repository)
     {
-        _salesHeaderRepository = salesHeaderRepository;
+        _customerRepository = customerRepository;
         _salesPostingEngine = salesPostingEngine;
+
+        GetPolicyName = ErpPermissions.SalesDocuments.Default;
+        GetListPolicyName = ErpPermissions.SalesDocuments.Default;
+        CreatePolicyName = ErpPermissions.SalesDocuments.Create;
+        UpdatePolicyName = ErpPermissions.SalesDocuments.Update;
+        DeletePolicyName = ErpPermissions.SalesDocuments.Delete;
     }
 
-    [Authorize(ErpPermissions.SalesDocuments.Default)]
-    public async Task<List<SalesHeader>> GetListAsync()
+    public override async Task<SalesHeaderDto> CreateAsync(CreateUpdateSalesHeaderDto input)
     {
-        return await _salesHeaderRepository.GetListAsync(includeDetails: true);
-    }
+        await CheckCreatePolicyAsync();
 
-    [Authorize(ErpPermissions.SalesDocuments.Default)]
-    public async Task<SalesHeader> GetAsync(Guid id)
-    {
-        return await _salesHeaderRepository.GetAsync(id, includeDetails: true);
-    }
+        var customer = await GetSellableCustomerAsync(input.CustomerId);
 
-    [Authorize(ErpPermissions.SalesDocuments.Create)]
-    public async Task<SalesHeader> CreateAsync(CreateSalesHeaderDto input)
-    {
+        if (await Repository.AnyAsync(x => x.DocumentType == input.DocumentType && x.No == input.No))
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.DocumentNoAlreadyExists).WithData("documentNo", input.No);
+        }
+
         var header = new SalesHeader(
             GuidGenerator.Create(),
             input.DocumentType,
             input.No,
-            input.CustomerId,
-            input.SellToCustomerNo,
-            input.SellToCustomerName,
+            customer.Id,
+            customer.No,
+            customer.Name,
             input.PostingDate
         );
-        return await _salesHeaderRepository.InsertAsync(header, autoSave: true);
+
+        ApplyHeader(header, input);
+        ReplaceLines(header, input);
+
+        await Repository.InsertAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
+    public override async Task<SalesHeaderDto> UpdateAsync(Guid id, CreateUpdateSalesHeaderDto input)
+    {
+        await CheckUpdatePolicyAsync();
+
+        var header = await GetEntityByIdAsync(id);
+
+        // A released document is frozen until it is reopened, as in Business Central.
+        if (header.Status != DocumentStatus.Open)
+        {
+            throw new DocumentNotOpenException(header.No);
+        }
+
+        ApplyHeader(header, input);
+        ReplaceLines(header, input);
+
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
+    public override async Task DeleteAsync(Guid id)
+    {
+        await CheckDeletePolicyAsync();
+
+        var header = await GetEntityByIdAsync(id);
+        if (header.Posted)
+        {
+            throw new DocumentAlreadyPostedException(header.No);
+        }
+
+        await Repository.DeleteAsync(header, autoSave: true);
     }
 
     [Authorize(ErpPermissions.SalesDocuments.Update)]
-    public async Task<SalesHeader> AddLineAsync(Guid headerId, CreateSalesLineDto input)
+    public async Task<SalesHeaderDto> ReleaseAsync(Guid id)
     {
-        var header = await _salesHeaderRepository.GetAsync(headerId, includeDetails: true);
-        header.AddLine(
-            GuidGenerator.Create(),
-            input.Type,
-            input.No,
-            input.Description,
-            input.Quantity,
-            input.UnitPrice
-        );
-        return await _salesHeaderRepository.UpdateAsync(header, autoSave: true);
+        var header = await GetEntityByIdAsync(id);
+        if (!header.Lines.Any())
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.DocumentHasNoLines).WithData("documentNo", header.No);
+        }
+
+        header.Release();
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
     }
 
-    [Authorize(ErpPermissions.SalesDocuments.Post)]
-    public async Task<PostedSalesHeader> PostAsync(Guid id)
+    [Authorize(ErpPermissions.SalesDocuments.Update)]
+    public async Task<SalesHeaderDto> ReopenAsync(Guid id)
     {
-        return await _salesPostingEngine.PostAsync(id);
+        var header = await GetEntityByIdAsync(id);
+        header.Reopen();
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
+    // Not named "PostAsync": ABP's conventional routing strips the HTTP-verb prefix,
+    // which would expose posting as a bare POST /{id}. This yields POST /{id}/run-posting.
+    [Authorize(ErpPermissions.SalesDocuments.Post)]
+    public async Task<SalesHeaderDto> RunPostingAsync(Guid id)
+    {
+        await _salesPostingEngine.PostAsync(id);
+        return await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id));
+    }
+
+    protected override async Task<SalesHeader> GetEntityByIdAsync(Guid id)
+    {
+        return await Repository.GetAsync(id, includeDetails: true);
+    }
+
+    protected override async Task<IQueryable<SalesHeader>> CreateFilteredQueryAsync(GetSalesDocumentListInput input)
+    {
+        // Lists show headers only; lines are loaded when a document is opened.
+        var query = await Repository.GetQueryableAsync();
+
+        return query
+            .WhereIf(
+                !input.Filter.IsNullOrWhiteSpace(),
+                x => x.No.Contains(input.Filter) || x.SellToCustomerNo.Contains(input.Filter) || x.SellToCustomerName.Contains(input.Filter)
+            )
+            .WhereIf(input.DocumentType.HasValue, x => x.DocumentType == input.DocumentType.Value)
+            .WhereIf(input.Status.HasValue, x => x.Status == input.Status.Value)
+            .WhereIf(input.CustomerId.HasValue, x => x.CustomerId == input.CustomerId.Value);
+    }
+
+    protected override IQueryable<SalesHeader> ApplyDefaultSorting(IQueryable<SalesHeader> query)
+    {
+        return query.OrderByDescending(x => x.PostingDate).ThenByDescending(x => x.No);
+    }
+
+    private async Task<Customer> GetSellableCustomerAsync(Guid customerId)
+    {
+        var customer = await _customerRepository.GetAsync(customerId);
+        if (customer.Blocked)
+        {
+            throw new BusinessException(ErpErrorCodes.Customers.CustomerBlocked).WithData("customerNo", customer.No);
+        }
+
+        return customer;
+    }
+
+    private static void ApplyHeader(SalesHeader header, CreateUpdateSalesHeaderDto input)
+    {
+        header.SetDates(input.PostingDate, input.DueDate);
+        header.SetCurrency(input.CurrencyCode);
+        header.SetPaymentTerms(input.PaymentTermsCode);
+        header.SetExternalDocumentNo(input.ExternalDocumentNo);
+    }
+
+    // The client always sends the whole document, so the line set is replaced wholesale.
+    private void ReplaceLines(SalesHeader header, CreateUpdateSalesHeaderDto input)
+    {
+        header.ClearLines();
+
+        foreach (var line in input.Lines)
+        {
+            header.AddLine(
+                GuidGenerator.Create(),
+                line.Type,
+                line.No,
+                line.Description,
+                line.Quantity,
+                line.UnitPrice,
+                line.LineDiscountPercent,
+                line.UnitOfMeasureCode
+            );
+        }
     }
 }

@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -7,7 +8,7 @@ namespace ABPmicroservice.Erp.Inventory;
 /// <summary>
 /// Item Journal Batch. Mirrors Business Central table 233 "Item Journal Batch".
 /// </summary>
-public class ItemJournalBatch : FullAuditedAggregateRoot<Guid>
+public class ItemJournalBatch : CompanyAggregateRoot
 {
     public string JournalTemplateName { get; private set; }
     public string Name { get; private set; }
@@ -32,7 +33,7 @@ public class ItemJournalBatch : FullAuditedAggregateRoot<Guid>
 /// <summary>
 /// Item Journal Line. Mirrors Business Central table 83 "Item Journal Line".
 /// </summary>
-public class ItemJournalLine : FullAuditedEntity<Guid>
+public class ItemJournalLine : CompanyEntity
 {
     public Guid ItemJournalBatchId { get; private set; }
     public int LineNo { get; private set; }

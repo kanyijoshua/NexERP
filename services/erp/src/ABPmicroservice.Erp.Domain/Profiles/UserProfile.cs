@@ -1,14 +1,16 @@
 using System;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
+using Volo.Abp.MultiTenancy;
 
 namespace ABPmicroservice.Erp.Profiles;
 
 /// <summary>
 /// User Personalization Profile. Mirrors Business Central Table 2000000073 "User Personalization".
 /// </summary>
-public class UserProfile : FullAuditedEntity<Guid>
+public class UserProfile : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public Guid? TenantId { get; protected set; }
     public Guid UserId { get; private set; }
     public string ProfileId { get; private set; } // e.g., "BUSINESS_MANAGER", "ACCOUNTANT", "SALES_ORDER_PROCESSOR"
     public string LanguageCode { get; private set; }
@@ -34,8 +36,9 @@ public class UserProfile : FullAuditedEntity<Guid>
 /// <summary>
 /// Role Center Dashboard Metadata.
 /// </summary>
-public class UserRoleCenter : FullAuditedEntity<Guid>
+public class UserRoleCenter : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public Guid? TenantId { get; protected set; }
     public string ProfileId { get; private set; }
     public string RoleCenterName { get; private set; }
     public string DefaultDashboardLayoutJson { get; private set; }
