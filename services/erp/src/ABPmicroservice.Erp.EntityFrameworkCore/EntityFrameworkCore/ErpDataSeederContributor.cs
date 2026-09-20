@@ -25,7 +25,6 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
     private readonly IRepository<Company, Guid> _companyRepository;
     private readonly IRepository<CompanyInformation, Guid> _companyInformationRepository;
     private readonly IRepository<KanbanStage, Guid> _kanbanStageRepository;
-    private readonly IRepository<CustomReportLayout, Guid> _customReportLayoutRepository;
 
     private readonly IRepository<GLAccount, Guid> _glAccountRepository;
     private readonly IRepository<CustomerPostingGroup, Guid> _custPostingGroupRepository;
@@ -58,7 +57,6 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         IRepository<Company, Guid> companyRepository,
         IRepository<CompanyInformation, Guid> companyInformationRepository,
         IRepository<KanbanStage, Guid> kanbanStageRepository,
-        IRepository<CustomReportLayout, Guid> customReportLayoutRepository,
         IRepository<GLAccount, Guid> glAccountRepository,
         IRepository<CustomerPostingGroup, Guid> custPostingGroupRepository,
         IRepository<VendorPostingGroup, Guid> vendorPostingGroupRepository,
@@ -87,7 +85,6 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         _companyRepository = companyRepository;
         _companyInformationRepository = companyInformationRepository;
         _kanbanStageRepository = kanbanStageRepository;
-        _customReportLayoutRepository = customReportLayoutRepository;
 
         _glAccountRepository = glAccountRepository;
         _custPostingGroupRepository = custPostingGroupRepository;
@@ -167,12 +164,8 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
 
     private async Task SeedCompanySetupAsync()
     {
-        if (await _customReportLayoutRepository.GetCountAsync() == 0)
-        {
-            await _customReportLayoutRepository.InsertAsync(new CustomReportLayout(NewId(), "Trial Balance", "Standard Grid (RDLC)", "RDLC", "Standard Business Central tabular grid layout", isDefault: true));
-            await _customReportLayoutRepository.InsertAsync(new CustomReportLayout(NewId(), "Trial Balance", "Executive Summary (Word/Print)", "Word", "Executive summary print layout with totals and charts"));
-            await _customReportLayoutRepository.InsertAsync(new CustomReportLayout(NewId(), "Trial Balance", "Data Analyst (Excel Worksheet)", "Excel", "Full raw data excel layout formatted for financial modeling"));
-        }
+        // No report layouts are seeded: with none, every report prints through the built-in
+        // layout, which is also what a user downloads to start a custom one from.
 
         if (await _kanbanStageRepository.GetCountAsync() == 0)
         {

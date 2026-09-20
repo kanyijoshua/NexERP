@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ErpSharedModule } from '../erp-shared/erp-shared.module';
 import { AccountSchedulesComponent } from './account-schedules/account-schedules.component';
 import { ColumnLayoutsComponent } from './column-layouts/column-layouts.component';
+import { ReportLayoutsComponent } from './report-layouts/report-layouts.component';
 import { ReportViewerComponent } from './report-viewer/report-viewer.component';
 
 const routes: Routes = [
@@ -26,10 +27,21 @@ const routes: Routes = [
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.AccountSchedules' },
   },
+  {
+    path: 'report-layouts',
+    component: ReportLayoutsComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.ReportLayouts' },
+  },
 ];
 
 @NgModule({
-  declarations: [ReportViewerComponent, AccountSchedulesComponent, ColumnLayoutsComponent],
+  declarations: [
+    ReportViewerComponent,
+    AccountSchedulesComponent,
+    ColumnLayoutsComponent,
+    ReportLayoutsComponent,
+  ],
   imports: [ErpSharedModule, RouterModule.forChild(routes)],
 })
 export class ReportsModule {}

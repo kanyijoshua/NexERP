@@ -81,6 +81,7 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ReportColumnDefinition, ReportColumnDto>();
         CreateMap<ReportRow, ReportRowDto>();
         CreateMap<CustomReportLayout, ReportLayoutDto>();
+        CreateMap<CustomReportLayout, ReportLayoutDetailDto>();
         CreateMap<AccountSchedule, AccountScheduleDto>().ForMember(d => d.LineCount, o => o.Ignore());
         CreateMap<AccountScheduleLine, AccountScheduleLineDto>();
         CreateMap<ColumnLayout, ColumnLayoutDto>().ForMember(d => d.LineCount, o => o.Ignore());

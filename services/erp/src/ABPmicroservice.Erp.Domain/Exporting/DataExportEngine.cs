@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using ABPmicroservice.Erp.Reporting;
 using Volo.Abp.DependencyInjection;
 
 namespace ABPmicroservice.Erp.Exporting;
@@ -62,6 +63,11 @@ public class DataExportEngine : ITransientDependency
 
         return format switch
         {
+            ExportFormat.Html => new ExportFile(
+                Encoding.UTF8.GetBytes(WriteHtml(name, columns, rows)),
+                $"{safeName}.html",
+                "text/html"
+            ),
             ExportFormat.Xlsx => new ExportFile(
                 SpreadsheetWriter.Write(safeName, headers, values),
                 $"{safeName}.xlsx",
@@ -78,6 +84,36 @@ public class DataExportEngine : ITransientDependency
                 "text/csv"
             ),
         };
+    }
+
+    /// <summary>
+    /// Renders a plain table through the built-in report layout, so a generic export and a
+    /// printed report look like the same system rather than two.
+    /// </summary>
+    private static string WriteHtml(
+        string name,
+        IReadOnlyList<ExportColumn> columns,
+        IReadOnlyList<IReadOnlyDictionary<string, object>> rows
+    )
+    {
+        var result = new ReportResult { Title = name };
+
+        // A generic table carries no column kinds, so every value is shown as it reads.
+        foreach (var column in columns)
+        {
+            result.Columns.Add(new ReportColumnDefinition(column.Key, column.Header, ReportColumnKind.Text));
+        }
+
+        foreach (var row in rows)
+        {
+            var reportRow = result.AddRow();
+            foreach (var column in columns)
+            {
+                reportRow.Values[column.Key] = row.GetValueOrDefault(column.Key);
+            }
+        }
+
+        return ReportTemplate.Parse(ReportLayoutTemplates.BuiltIn).Render(result, new ReportRenderContext());
     }
 
     /// <summary>

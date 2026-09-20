@@ -12,15 +12,31 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body p-0">
     <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::Code' | abpLocalization" prop="name" [width]="160"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Description' | abpLocalization" prop="description" [width]="280"></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::Code' | abpLocalization"
+        prop="name"
+        [width]="160"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::Description' | abpLocalization"
+        prop="description"
+        [width]="280"
+      ></ngx-datatable-column>
       <ngx-datatable-column
         [name]="'Erp::ColumnLayout' | abpLocalization"
         prop="defaultColumnLayoutName"
         [width]="180"
       ></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::LineCount' | abpLocalization" prop="lineCount" [width]="100"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="200">
+      <ngx-datatable-column
+        [name]="'Erp::LineCount' | abpLocalization"
+        prop="lineCount"
+        [width]="100"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::Actions' | abpLocalization"
+        [sortable]="false"
+        [width]="200"
+      >
         <ng-template let-row="row" ngx-datatable-cell-template>
           <button
             type="button"
@@ -67,11 +83,20 @@
           <input id="as-name" type="text" class="form-control" formControlName="name" autofocus />
         </div>
         <div class="col-md-7">
-          <label class="form-label" for="as-description">{{ 'Erp::Description' | abpLocalization }}</label>
-          <input id="as-description" type="text" class="form-control" formControlName="description" />
+          <label class="form-label" for="as-description">{{
+            'Erp::Description' | abpLocalization
+          }}</label>
+          <input
+            id="as-description"
+            type="text"
+            class="form-control"
+            formControlName="description"
+          />
         </div>
         <div class="col-md-6">
-          <label class="form-label" for="as-layout">{{ 'Erp::ColumnLayout' | abpLocalization }}</label>
+          <label class="form-label" for="as-layout">{{
+            'Erp::ColumnLayout' | abpLocalization
+          }}</label>
           <select id="as-layout" class="form-select" formControlName="defaultColumnLayoutName">
             <option value="">—</option>
             <option *ngFor="let layout of layouts" [value]="layout.name">

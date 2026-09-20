@@ -61,6 +61,21 @@ public enum AgedLedgerKind
 }
 
 /// <summary>
+/// Format of a custom report layout. Mirrors the "Type" of Business Central table 9650
+/// "Custom Report Layouts", minus RDLC, which needs the Windows-only report viewer.
+/// <para>
+/// Only <see cref="Html"/> can be rendered today. The other two are kept so a layout uploaded for
+/// them is refused as unsupported rather than silently ignored.
+/// </para>
+/// </summary>
+public enum ReportLayoutType
+{
+    Html = 0,
+    Word = 1,
+    Excel = 2,
+}
+
+/// <summary>
 /// The reports the viewer can run and export. Every one of them produces the same shape, so one
 /// screen and one exporter serve all of them.
 /// </summary>

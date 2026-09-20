@@ -21,18 +21,21 @@ public class FinancialReportAppService : ErpAppService, IFinancialReportAppServi
     private readonly AgedAccountsEngine _agedAccountsEngine;
     private readonly AccountScheduleEngine _scheduleEngine;
     private readonly DataExportEngine _exportEngine;
+    private readonly ReportLayoutRenderer _layoutRenderer;
 
     public FinancialReportAppService(
         FinancialReportEngine reportEngine,
         AgedAccountsEngine agedAccountsEngine,
         AccountScheduleEngine scheduleEngine,
-        DataExportEngine exportEngine
+        DataExportEngine exportEngine,
+        ReportLayoutRenderer layoutRenderer
     )
     {
         _reportEngine = reportEngine;
         _agedAccountsEngine = agedAccountsEngine;
         _scheduleEngine = scheduleEngine;
         _exportEngine = exportEngine;
+        _layoutRenderer = layoutRenderer;
     }
 
     public async Task<ReportResultDto> GetTrialBalanceAsync(FinancialReportPeriodInput input)
@@ -72,6 +75,22 @@ public class FinancialReportAppService : ErpAppService, IFinancialReportAppServi
     public async Task<IRemoteStreamContent> RunExportAsync(ReportExportInput input)
     {
         var result = await RunAsync(input);
+
+        // HTML is the one format that goes through a layout, because it is the one a user can
+        // restyle. The data formats stay a plain grid whatever layout is selected.
+        if (input.Format == ExportFormat.Html)
+        {
+            var html = await _layoutRenderer.RenderAsync(
+                ReportLayoutNames.For(input.Report, input.ScheduleName),
+                result
+            );
+
+            return new RemoteStreamContent(
+                new MemoryStream(ReportLayoutRenderer.ToBytes(html)),
+                $"{DataExportEngine.Sanitize(result.Title)}.html",
+                "text/html"
+            );
+        }
 
         var columns = result.Columns.Select(c => new ExportColumn(c.Key, c.Header)).ToList();
         var rows = result.Rows.Select(r => (IReadOnlyDictionary<string, object>)r.Values).ToList();

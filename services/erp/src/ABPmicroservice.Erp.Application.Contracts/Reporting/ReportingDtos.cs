@@ -258,40 +258,71 @@ public class ReportLayoutDto : EntityDto<Guid>
 
     public string LayoutName { get; set; }
 
-    public string LayoutType { get; set; }
+    public ReportLayoutType LayoutType { get; set; }
 
     public string Description { get; set; }
 
     public bool IsDefault { get; set; }
 }
 
+/// <summary>A layout with its body, for editing and downloading.</summary>
+public class ReportLayoutDetailDto : ReportLayoutDto
+{
+    public string TemplateContent { get; set; }
+}
+
+/// <summary>A report a layout can be attached to.</summary>
+public class ReportNameDto
+{
+    /// <summary>The value stored on a layout, e.g. "TrialBalance" or "AccountSchedule:BALANCE".</summary>
+    public string Name { get; set; }
+
+    public string DisplayName { get; set; }
+}
+
 public class GetReportLayoutsInput
 {
-    [Required]
+    /// <summary>Blank lists the layouts of every report.</summary>
+    [StringLength(ErpDomainConsts.MaxNameLength)]
     public string ReportName { get; set; }
 }
 
-public class CreateReportLayoutDto
+public class CreateUpdateReportLayoutDto
 {
     [Required]
+    [StringLength(ErpDomainConsts.MaxNameLength)]
     public string ReportName { get; set; }
 
     [Required]
+    [StringLength(ErpDomainConsts.MaxNameLength)]
     public string LayoutName { get; set; }
 
-    /// <summary>"RDLC", "Word", "Excel" or "Html".</summary>
-    [Required]
-    public string LayoutType { get; set; }
+    /// <summary>Only <see cref="ReportLayoutType.Html"/> can be rendered today.</summary>
+    public ReportLayoutType LayoutType { get; set; }
 
+    [StringLength(ErpDomainConsts.MaxDescriptionLength)]
     public string Description { get; set; }
+
+    [Required]
+    [StringLength(ErpDomainConsts.MaxLayoutTemplateLength)]
+    public string TemplateContent { get; set; }
 }
 
 public class SetDefaultReportLayoutInput
 {
     [Required]
+    [StringLength(ErpDomainConsts.MaxNameLength)]
     public string ReportName { get; set; }
 
     public Guid LayoutId { get; set; }
+}
+
+/// <summary>Renders a layout against sample figures, so it can be checked before it is saved.</summary>
+public class PreviewReportLayoutInput
+{
+    [Required]
+    [StringLength(ErpDomainConsts.MaxLayoutTemplateLength)]
+    public string TemplateContent { get; set; }
 }
 
 /// <summary>
@@ -362,13 +393,35 @@ public interface IColumnLayoutAppService : IApplicationService
     Task DeleteLineAsync(Guid id);
 }
 
+/// <summary>
+/// The layouts a report can be printed through. Mirrors Business Central's Report Layouts page
+/// and table 9651 "Report Layout Selection".
+/// </summary>
 public interface IReportLayoutAppService : IApplicationService
 {
     /// <summary>Routed as GET /api/erp/report-layout?reportName=..</summary>
     Task<ListResultDto<ReportLayoutDto>> GetListAsync(GetReportLayoutsInput input);
 
-    Task<ReportLayoutDto> CreateAsync(CreateReportLayoutDto input);
+    Task<ReportLayoutDetailDto> GetAsync(Guid id);
+
+    /// <summary>The reports a layout can be attached to. Routed as GET /api/erp/report-layout/report-names.</summary>
+    Task<ListResultDto<ReportNameDto>> GetReportNamesAsync();
+
+    /// <summary>
+    /// The built-in layout, which is the starting point for a custom one.
+    /// Routed as GET /api/erp/report-layout/built-in-template.
+    /// </summary>
+    Task<string> GetBuiltInTemplateAsync();
+
+    Task<ReportLayoutDto> CreateAsync(CreateUpdateReportLayoutDto input);
+
+    Task<ReportLayoutDto> UpdateAsync(Guid id, CreateUpdateReportLayoutDto input);
+
+    Task DeleteAsync(Guid id);
 
     /// <summary>Routed as POST /api/erp/report-layout/set-default.</summary>
     Task SetDefaultAsync(SetDefaultReportLayoutInput input);
+
+    /// <summary>Routed as POST /api/erp/report-layout/run-preview.</summary>
+    Task<string> RunPreviewAsync(PreviewReportLayoutInput input);
 }

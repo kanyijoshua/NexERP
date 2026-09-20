@@ -1,0 +1,219 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:ReportLayouts"
+  breadcrumb="Erp::Menu:Reports"
+  icon="fas fa-file-invoice"
+  [(filter)]="filter"
+  permission="Erp.ReportLayouts.Manage"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<p class="text-muted small">{{ 'Erp::ReportLayoutsDescription' | abpLocalization }}</p>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col-md-5">
+        <label class="form-label" for="rl-report">{{ 'Erp::ReportName' | abpLocalization }}</label>
+        <select
+          id="rl-report"
+          class="form-select"
+          [(ngModel)]="reportFilter"
+          (ngModelChange)="onReportFilterChange()"
+        >
+          <option value="">{{ 'Erp::All' | abpLocalization }}</option>
+          <option *ngFor="let report of reportNames" [value]="report.name">
+            {{ report.displayName }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'Erp::ReportName' | abpLocalization"
+        prop="reportName"
+        [width]="200"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ displayNameOf(row.reportName) }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::LayoutName' | abpLocalization"
+        prop="layoutName"
+        [width]="200"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::Description' | abpLocalization"
+        prop="description"
+        [width]="240"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::IsDefaultLayout' | abpLocalization"
+        [sortable]="false"
+        [width]="100"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.isDefault" class="badge bg-success">
+            {{ 'Erp::LayoutInUse' | abpLocalization }}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'Erp::Actions' | abpLocalization"
+        [sortable]="false"
+        [width]="240"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            *abpPermission="'Erp.ReportLayouts.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-success me-1"
+            [disabled]="row.isDefault"
+            (click)="useThisLayout(row)"
+          >
+            <i class="fas fa-check me-1"></i>{{ 'Erp::UseThisLayout' | abpLocalization }}
+          </button>
+          <button
+            *abpPermission="'Erp.ReportLayouts.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEdit(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.ReportLayouts.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [title]="'Erp::Delete' | abpLocalization"
+            (click)="remove(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (selected ? 'Erp::EditLayout' : 'Erp::NewLayout') | abpLocalization }}
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="rl-form-report">
+            {{ 'Erp::ReportName' | abpLocalization }} *
+          </label>
+          <select id="rl-form-report" class="form-select" formControlName="reportName">
+            <option value=""></option>
+            <option *ngFor="let report of reportNames" [value]="report.name">
+              {{ report.displayName }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="rl-name"
+            >{{ 'Erp::LayoutName' | abpLocalization }} *</label
+          >
+          <input id="rl-name" type="text" class="form-control" formControlName="layoutName" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="rl-type">{{ 'Erp::LayoutType' | abpLocalization }}</label>
+          <select id="rl-type" class="form-select" formControlName="layoutType">
+            <option [ngValue]="ReportLayoutType.Html">HTML</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="rl-description">
+            {{ 'Erp::Description' | abpLocalization }}
+          </label>
+          <input
+            id="rl-description"
+            type="text"
+            class="form-control"
+            formControlName="description"
+          />
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <label class="form-label mb-0 me-auto" for="rl-template">
+              {{ 'Erp::TemplateContent' | abpLocalization }} *
+            </label>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="resetToBuiltIn()"
+            >
+              <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::StartFromBuiltIn' | abpLocalization }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="download()">
+              <i class="fas fa-download me-1"></i>{{ 'Erp::DownloadLayout' | abpLocalization }}
+            </button>
+            <label class="btn btn-sm btn-outline-secondary mb-0">
+              <i class="fas fa-upload me-1"></i>{{ 'Erp::UploadLayout' | abpLocalization }}
+              <input type="file" accept=".html,.htm,text/html" hidden (change)="upload($event)" />
+            </label>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="preview()">
+              <i class="fas fa-eye me-1"></i>{{ 'Erp::PreviewLayout' | abpLocalization }}
+            </button>
+          </div>
+          <textarea
+            id="rl-template"
+            class="form-control font-monospace"
+            rows="16"
+            spellcheck="false"
+            formControlName="templateContent"
+          ></textarea>
+          <p class="form-text">
+            <strong>{{ 'Erp::LayoutPlaceholders' | abpLocalization }}:</strong>
+            {{ 'Erp::LayoutPlaceholdersHint' | abpLocalization }}
+          </p>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isPreviewOpen" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ 'Erp::PreviewLayout' | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <p class="form-text mt-0">{{ 'Erp::PreviewingWithSampleFigures' | abpLocalization }}</p>
+    <!-- Sandboxed: a layout is a whole document and must not reach into the app around it. -->
+    <iframe
+      class="w-100 border rounded"
+      style="height: 60vh"
+      sandbox
+      [srcdoc]="previewDoc"
+      [title]="'Erp::PreviewLayout' | abpLocalization"
+    ></iframe>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

@@ -129,32 +129,85 @@ export class ReportViewerComponent implements OnInit {
       });
   }
 
+  /** The parameters the running report was asked for, reused by every way of taking it away. */
+  private exportRequest() {
+    return {
+      report: this.report,
+      fromDate: this.fromDate,
+      toDate: this.toDate,
+      accountFilter: this.accountFilter || undefined,
+      excludeZeroBalances: this.excludeZeroBalances,
+      agingMethod: this.agingMethod,
+      periodLengthDays: this.periodLengthDays,
+      scheduleName: this.scheduleName || undefined,
+      columnLayoutName: this.columnLayoutName || undefined,
+    };
+  }
+
   exportReport(format: ExportFormat): void {
     this.busy = true;
     this.reports
-      .runExport({
-        report: this.report,
-        format,
-        fromDate: this.fromDate,
-        toDate: this.toDate,
-        accountFilter: this.accountFilter || undefined,
-        excludeZeroBalances: this.excludeZeroBalances,
-        agingMethod: this.agingMethod,
-        periodLengthDays: this.periodLengthDays,
-        scheduleName: this.scheduleName || undefined,
-        columnLayoutName: this.columnLayoutName || undefined,
-      })
+      .runExport({ ...this.exportRequest(), format })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: blob => {
           this.busy = false;
-          saveBlob(
-            blob,
-            `${this.title || 'report'}.${format === ExportFormat.Csv ? 'csv' : 'xlsx'}`,
-          );
+          saveBlob(blob, `${this.title || 'report'}.${ReportViewerComponent.extensionOf(format)}`);
         },
         error: () => (this.busy = false),
       });
+  }
+
+  /**
+   * Prints through the layout this company has chosen for the report, which is the one thing the
+   * on-screen grid cannot show.
+   */
+  print(): void {
+    this.busy = true;
+    this.reports
+      .runExport({ ...this.exportRequest(), format: ExportFormat.Html })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: blob => {
+          this.busy = false;
+          this.openForPrinting(blob);
+        },
+        error: () => (this.busy = false),
+      });
+  }
+
+  /**
+   * Opened in its own window rather than a frame: the layout is a whole document with its own
+   * styling, and the browser's print dialog belongs to it, not to the application.
+   */
+  private openForPrinting(blob: Blob): void {
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+
+    if (!printWindow) {
+      // Pop-ups blocked: fall back to saving the file, so the report is never simply lost.
+      saveBlob(blob, `${this.title || 'report'}.html`);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    printWindow.addEventListener('load', () => {
+      printWindow.print();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  private static extensionOf(format: ExportFormat): string {
+    switch (format) {
+      case ExportFormat.Csv:
+        return 'csv';
+      case ExportFormat.Json:
+        return 'json';
+      case ExportFormat.Html:
+        return 'html';
+      default:
+        return 'xlsx';
+    }
   }
 
   /** Bold totals and italic reversals, and indentation shown as padding on the first cell. */

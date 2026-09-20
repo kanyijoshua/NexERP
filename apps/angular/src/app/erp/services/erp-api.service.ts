@@ -42,15 +42,6 @@ export interface FinancialReportDto {
   rows: { rowNo: string; description: string; amount: number }[];
 }
 
-export interface ReportLayoutDto {
-  id: string;
-  reportName: string;
-  layoutName: string;
-  layoutType: string;
-  description: string;
-  isDefault: boolean;
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -92,18 +83,6 @@ export class ErpApiService {
     });
   }
 
-  getReportLayouts(reportName: string): Observable<ReportLayoutDto[]> {
-    return this.restService.request<void, ReportLayoutDto[]>({
-      method: 'GET',
-      url: `/api/erp/report-layout?reportName=${reportName}`,
-    });
-  }
-
-  setDefaultReportLayout(reportName: string, layoutId: string): Observable<void> {
-    return this.restService.request<any, void>({
-      method: 'POST',
-      url: `/api/erp/report-layout/set-default`,
-      body: { reportName, layoutId },
-    });
-  }
+  // Report layouts are served by the generated ReportLayoutService in @proxy/reporting; the
+  // hand-written calls that were here described a shape the API no longer has.
 }

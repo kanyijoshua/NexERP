@@ -88,6 +88,12 @@ public static class ErpErrorCodes
         public const string InvalidAccountRange = Prefix + ":Reports:00006";
         public const string ScheduleNotFound = Prefix + ":Reports:00007";
         public const string PeriodReversed = Prefix + ":Reports:00008";
+        public const string LayoutNameAlreadyExists = Prefix + ":Reports:00009";
+        public const string LayoutTypeNotRenderable = Prefix + ":Reports:00010";
+        public const string LayoutTemplateEmpty = Prefix + ":Reports:00011";
+        public const string LayoutTemplateNotValid = Prefix + ":Reports:00012";
+        public const string LayoutNotFound = Prefix + ":Reports:00013";
+        public const string LayoutBelongsToAnotherReport = Prefix + ":Reports:00014";
     }
 
     public static class Exporting

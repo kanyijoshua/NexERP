@@ -163,6 +163,17 @@ describe('ReportViewerComponent', () => {
     expect(input.accountFilter).toBe('1000..1999');
   });
 
+  /** Printing is the one output that goes through the company's chosen layout. */
+  it('prints through the layout by asking for HTML', () => {
+    component.report = ReportKind.TrialBalance;
+    spyOn(window, 'open').and.returnValue(null);
+
+    component.print();
+
+    const input = reports.runExport.calls.mostRecent().args[0] as { format: ExportFormat };
+    expect(input.format).toBe(ExportFormat.Html);
+  });
+
   it('only offers the account filter on the reports that read accounts', () => {
     component.report = ReportKind.TrialBalance;
     expect(component.usesAccountFilter).toBeTrue();

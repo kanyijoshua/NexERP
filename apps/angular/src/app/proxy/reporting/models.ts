@@ -5,6 +5,7 @@ import type { AgingMethod } from './aging-method.enum';
 import type { ColumnLayoutType } from './column-layout-type.enum';
 import type { ReportColumnKind } from './report-column-kind.enum';
 import type { ReportKind } from './report-kind.enum';
+import type { ReportLayoutType } from './report-layout-type.enum';
 import type { ExportFormat } from '../exporting/export-format.enum';
 
 export interface AccountScheduleDto extends EntityDto<string> {
@@ -52,11 +53,12 @@ export interface ColumnLayoutLineDto extends EntityDto<string> {
   showOppositeSign: boolean;
 }
 
-export interface CreateReportLayoutDto {
+export interface CreateUpdateReportLayoutDto {
   reportName: string;
   layoutName: string;
-  layoutType: string;
+  layoutType: ReportLayoutType;
   description?: string;
+  templateContent: string;
 }
 
 export interface CreateUpdateAccountScheduleDto {
@@ -100,7 +102,16 @@ export interface FinancialReportPeriodInput {
 }
 
 export interface GetReportLayoutsInput {
-  reportName: string;
+  reportName?: string;
+}
+
+export interface PreviewReportLayoutInput {
+  templateContent: string;
+}
+
+export interface ReportNameDto {
+  name?: string;
+  displayName?: string;
 }
 
 export interface ReportColumnDto {
@@ -125,9 +136,13 @@ export interface ReportExportInput {
 export interface ReportLayoutDto extends EntityDto<string> {
   reportName?: string;
   layoutName?: string;
-  layoutType?: string;
+  layoutType: ReportLayoutType;
   description?: string;
   isDefault: boolean;
+}
+
+export interface ReportLayoutDetailDto extends ReportLayoutDto {
+  templateContent?: string;
 }
 
 export interface ReportResultDto {

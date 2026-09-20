@@ -485,12 +485,21 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ReportLayoutSelections", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.ReportName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+
+            // One report prints through one layout in a company, which is what the lookup assumes.
+            b.HasCompanyUniqueIndex("ReportName");
         });
 
         builder.Entity<CustomReportLayout>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "CustomReportLayouts", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.ReportName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.LayoutName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.TemplateContent).HasMaxLength(ErpDomainConsts.MaxLayoutTemplateLength);
+            b.HasIndex(x => new { x.CompanyId, x.ReportName });
         });
     }
 }

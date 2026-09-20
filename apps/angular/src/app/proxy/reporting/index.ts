@@ -8,4 +8,5 @@ export * from './financial-report.service';
 export * from './models';
 export * from './report-column-kind.enum';
 export * from './report-kind.enum';
+export * from './report-layout-type.enum';
 export * from './report-layout.service';

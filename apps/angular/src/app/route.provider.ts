@@ -126,6 +126,15 @@ function configureRoutes(routesService: RoutesService) {
         requiredPolicy: 'Erp.AccountSchedules',
       },
       {
+        path: '/erp/reports/report-layouts',
+        name: 'Erp::Menu:ReportLayouts',
+        parentName: 'Erp::Menu:Reports',
+        iconClass: 'fas fa-file-invoice',
+        order: 4,
+        layout: eLayoutType.application,
+        requiredPolicy: 'Erp.ReportLayouts',
+      },
+      {
         path: '/erp/approvals',
         name: 'Erp::Menu:RequestsToApprove',
         parentName: 'Business Central ERP',

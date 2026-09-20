@@ -40,6 +40,12 @@ public static class ErpDomainConsts
     public const int MaxDateFormulaLength = 32;
     public const int MaxColumnHeaderLength = 50;
 
+    /// <summary>
+    /// Body of a report layout. Generous enough for a styled page with an inline logo, small
+    /// enough that one bad upload cannot fill the table.
+    /// </summary>
+    public const int MaxLayoutTemplateLength = 200_000;
+
     /// <summary>Name of a table as the export and integration APIs address it, e.g. "Customer".</summary>
     public const int MaxEntityNameLength = 100;
 
