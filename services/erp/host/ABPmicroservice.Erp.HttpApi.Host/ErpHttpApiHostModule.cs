@@ -31,6 +31,9 @@ public class ErpHttpApiHostModule : AbpModule
 
         context.ConfigureMicroservice(ABPmicroserviceNames.ErpApi);
 
+        // Queued webhook calls are sent from here, outside the request that queued them.
+        context.Services.AddErpWebhookDelivery();
+
         // Expose every ERP application service under /api/erp/<kebab-name>.
         Configure<AbpAspNetCoreMvcOptions>(options =>
         {

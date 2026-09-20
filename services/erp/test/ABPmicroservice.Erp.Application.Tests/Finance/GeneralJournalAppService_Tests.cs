@@ -32,6 +32,7 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
 
             result.PostedLineCount.ShouldBe(2);
             result.PostedDocumentCount.ShouldBe(1);
+            result.RegisterNo.ShouldBeGreaterThan(0);
             (await _journals.GetLinesAsync(batch.Id)).Items.ShouldBeEmpty();
         });
 
@@ -41,6 +42,10 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
         );
         entries.Count.ShouldBe(2);
         entries.Sum(e => e.Amount).ShouldBe(0m);
+
+        // Every posted entry is numbered and belongs to the register the run opened.
+        entries.ShouldAllBe(e => e.EntryNo > 0);
+        entries.Select(e => e.RegisterNo).Distinct().Count().ShouldBe(1);
     }
 
     [Fact]
@@ -68,19 +73,21 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
         await InCompanyAsync(DefaultCompanyName, async () =>
         {
             var batch = await NewBatchAsync("BALACC");
-            await _journals.CreateLineAsync(new CreateGenJournalLineDto
-            {
-                GenJournalBatchId = batch.Id,
-                PostingDate = new DateTime(2026, 2, 1),
-                DocumentType = GLEntryDocumentType.Payment,
-                DocumentNo = "JNL-003",
-                AccountType = "G/L Account",
-                AccountNo = "1020",
-                Description = "Transfer to bank",
-                Amount = 250m,
-                BalAccountType = "G/L Account",
-                BalAccountNo = "1010",
-            });
+            await _journals.CreateLineAsync(
+                new CreateUpdateGenJournalLineDto
+                {
+                    GenJournalBatchId = batch.Id,
+                    PostingDate = new DateTime(2026, 2, 1),
+                    DocumentType = GLEntryDocumentType.Payment,
+                    DocumentNo = "JNL-003",
+                    AccountType = GenJournalAccountType.GLAccount,
+                    AccountNo = "1020",
+                    Description = "Transfer to bank",
+                    Amount = 250m,
+                    BalAccountType = GenJournalAccountType.GLAccount,
+                    BalAccountNo = "1010",
+                }
+            );
 
             (await _journals.RunPostingAsync(batch.Id)).PostedLineCount.ShouldBe(1);
         });
@@ -91,6 +98,108 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
         );
         entries.Count.ShouldBe(2);
         entries.Sum(e => e.Amount).ShouldBe(0m);
+    }
+
+    /// <summary>
+    /// The case the old engine got wrong: a customer line wrote only a subledger entry, so the
+    /// books did not balance. It must also hit the receivables account of the posting group.
+    /// </summary>
+    [Fact]
+    public async Task A_Customer_Line_Also_Posts_To_The_Receivables_Control_Account()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await NewBatchAsync("CUSTCTL");
+            await _journals.CreateLineAsync(
+                new CreateUpdateGenJournalLineDto
+                {
+                    GenJournalBatchId = batch.Id,
+                    PostingDate = new DateTime(2026, 2, 1),
+                    DocumentType = GLEntryDocumentType.Invoice,
+                    DocumentNo = "JNL-005",
+                    AccountType = GenJournalAccountType.Customer,
+                    AccountNo = "C00010",
+                    Description = "Service invoice",
+                    Amount = 1000m,
+                    BalAccountType = GenJournalAccountType.GLAccount,
+                    BalAccountNo = "4000",
+                }
+            );
+
+            await _journals.RunPostingAsync(batch.Id);
+        });
+
+        var entries = await InCompanyAsync(
+            DefaultCompanyName,
+            () => _glEntryRepository.GetListAsync(e => e.DocumentNo == "JNL-005")
+        );
+
+        // Receivables debited, revenue credited: two entries that cancel out.
+        entries.Count.ShouldBe(2);
+        entries.Sum(e => e.Amount).ShouldBe(0m);
+        entries.Single(e => e.GLAccountNo == "1200").Amount.ShouldBe(1000m);
+        entries.Single(e => e.GLAccountNo == "4000").Amount.ShouldBe(-1000m);
+    }
+
+    [Fact]
+    public async Task Posting_To_An_Account_That_Forbids_Direct_Posting_Is_Refused()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await NewBatchAsync("NODIRECT");
+
+            // 1200 is the receivables control account: only the subledger may post to it.
+            await AddLineAsync(batch.Id, "JNL-006", "1200", 100m);
+            await AddLineAsync(batch.Id, "JNL-006", "4000", -100m);
+
+            var ex = await Should.ThrowAsync<BusinessException>(() => _journals.RunPostingAsync(batch.Id));
+            ex.Code.ShouldBe(ErpErrorCodes.GLAccounts.DirectPostingNotAllowed);
+        });
+    }
+
+    [Fact]
+    public async Task Check_Reports_What_Posting_Would_Refuse()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await NewBatchAsync("CHECK");
+            await AddLineAsync(batch.Id, "JNL-007", "1010", 100m);
+
+            var check = await _journals.CheckAsync(batch.Id);
+
+            check.IsValid.ShouldBeFalse();
+            check.Messages.ShouldContain(ErpErrorCodes.Journals.DocumentOutOfBalance);
+        });
+    }
+
+    /// <summary>
+    /// A preview is only a preview because it runs in a transaction that is thrown away. This
+    /// test suite runs on SQLite with unit-of-work transactions disabled, so the preview refuses
+    /// to run rather than posting for real — which is the behaviour that matters most here.
+    /// The rollback itself is exercised against PostgreSQL, where transactions are on.
+    /// </summary>
+    [Fact]
+    public async Task Preview_Refuses_To_Run_Without_A_Transaction_To_Roll_Back()
+    {
+        Guid batchId = default;
+
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await NewBatchAsync("PREVIEW");
+            batchId = batch.Id;
+            await AddLineAsync(batch.Id, "JNL-008", "1010", 300m);
+            await AddLineAsync(batch.Id, "JNL-008", "4000", -300m);
+
+            var exception = await Should.ThrowAsync<BusinessException>(() => _journals.PreviewAsync(batch.Id));
+            exception.Code.ShouldBe(ErpErrorCodes.Journals.PreviewNeedsATransaction);
+        });
+
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            // Nothing was posted, and the lines are still there to be posted for real.
+            (await _glEntryRepository.CountAsync(e => e.DocumentNo == "JNL-008")).ShouldBe(0);
+            (await _journals.GetLinesAsync(batchId)).Items.Count.ShouldBe(2);
+        });
     }
 
     [Fact]
@@ -121,6 +230,74 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
         });
     }
 
+    [Fact]
+    public async Task A_Recurring_Line_Is_Only_Allowed_Under_A_Recurring_Template()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await NewBatchAsync("NOTREC");
+
+            var ex = await Should.ThrowAsync<BusinessException>(
+                () =>
+                    _journals.CreateLineAsync(
+                        new CreateUpdateGenJournalLineDto
+                        {
+                            GenJournalBatchId = batch.Id,
+                            PostingDate = new DateTime(2026, 2, 1),
+                            DocumentNo = "JNL-009",
+                            AccountType = GenJournalAccountType.GLAccount,
+                            AccountNo = "1010",
+                            Amount = 10m,
+                            RecurringMethod = RecurringMethod.Fixed,
+                            RecurringFrequency = "1M",
+                        }
+                    )
+            );
+
+            ex.Code.ShouldBe(ErpErrorCodes.Journals.RecurringNotAllowedHere);
+        });
+    }
+
+    /// <summary>
+    /// A recurring line survives its own posting and moves on by its frequency, which is what
+    /// makes it recurring rather than a line that has to be typed every month.
+    /// </summary>
+    [Fact]
+    public async Task A_Recurring_Line_Survives_Posting_And_Moves_To_The_Next_Period()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var batch = await _journals.CreateBatchAsync(
+                new CreateGenJournalBatchDto { JournalTemplateName = "RECURRING", Name = "MONTHLY" }
+            );
+
+            await _journals.CreateLineAsync(
+                new CreateUpdateGenJournalLineDto
+                {
+                    GenJournalBatchId = batch.Id,
+                    PostingDate = new DateTime(2026, 1, 31),
+                    DocumentNo = "REC-001",
+                    AccountType = GenJournalAccountType.GLAccount,
+                    AccountNo = "1010",
+                    Description = "Monthly accrual",
+                    Amount = 120m,
+                    BalAccountType = GenJournalAccountType.GLAccount,
+                    BalAccountNo = "4000",
+                    RecurringMethod = RecurringMethod.Fixed,
+                    RecurringFrequency = "1M",
+                }
+            );
+
+            var result = await _journals.RunPostingAsync(batch.Id);
+            result.RecurringLineCount.ShouldBe(1);
+
+            var remaining = (await _journals.GetLinesAsync(batch.Id)).Items;
+            remaining.Count.ShouldBe(1);
+            remaining[0].PostingDate.ShouldBe(new DateTime(2026, 2, 28));
+            remaining[0].Amount.ShouldBe(120m);
+        });
+    }
+
     private Task<GenJournalBatchDto> NewBatchAsync(string name)
     {
         return _journals.CreateBatchAsync(
@@ -130,16 +307,18 @@ public class GeneralJournalAppService_Tests : ErpApplicationTestBase
 
     private Task<GenJournalLineDto> AddLineAsync(Guid batchId, string documentNo, string accountNo, decimal amount)
     {
-        return _journals.CreateLineAsync(new CreateGenJournalLineDto
-        {
-            GenJournalBatchId = batchId,
-            PostingDate = new DateTime(2026, 2, 1),
-            DocumentType = GLEntryDocumentType.Invoice,
-            DocumentNo = documentNo,
-            AccountType = "G/L Account",
-            AccountNo = accountNo,
-            Description = "Test line",
-            Amount = amount,
-        });
+        return _journals.CreateLineAsync(
+            new CreateUpdateGenJournalLineDto
+            {
+                GenJournalBatchId = batchId,
+                PostingDate = new DateTime(2026, 2, 1),
+                DocumentType = GLEntryDocumentType.Invoice,
+                DocumentNo = documentNo,
+                AccountType = GenJournalAccountType.GLAccount,
+                AccountNo = accountNo,
+                Description = "Test line",
+                Amount = amount,
+            }
+        );
     }
 }

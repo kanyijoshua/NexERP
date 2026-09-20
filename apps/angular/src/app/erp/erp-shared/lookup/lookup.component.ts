@@ -106,7 +106,7 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
     );
 
   inputFormatter = (item: LookupItem | string): string =>
-    typeof item === 'string' ? item : item?.code ?? '';
+    typeof item === 'string' ? item : (item?.code ?? '');
 
   resultFormatter = (item: LookupItem): string =>
     item.name ? `${item.code} — ${item.name}` : item.code;
@@ -241,7 +241,7 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
   private select(item: LookupItem): void {
     this.selectedItem = item;
     this.setInputText(item.code);
-    this.commit(this.valueField === 'id' ? item.id ?? null : item.code);
+    this.commit(this.valueField === 'id' ? (item.id ?? null) : item.code);
     this.selected.emit(item);
   }
 

@@ -32,4 +32,29 @@ public static class ErpDomainConsts
     public const int MaxCommentLength = 500;
     public const int MaxProfileIdLength = 30;
     public const int MaxPackageCodeLength = 20;
+    public const int MaxJournalTemplateNameLength = 10;
+    public const int MaxSourceCodeLength = 10;
+    public const int MaxReasonCodeLength = 10;
+    public const int MaxRowNoLength = 10;
+    public const int MaxTotalingLength = 250;
+    public const int MaxDateFormulaLength = 32;
+    public const int MaxColumnHeaderLength = 50;
+
+    /// <summary>Name of a table as the export and integration APIs address it, e.g. "Customer".</summary>
+    public const int MaxEntityNameLength = 100;
+
+    public const int MaxUrlLength = 500;
+    public const int MaxWebhookSecretLength = 128;
+
+    /// <summary>Number of delivery attempts before a webhook call is abandoned.</summary>
+    public const int MaxWebhookAttempts = 5;
+
+    /// <summary>Upper bound on the rows one export or integration query may return.</summary>
+    public const int MaxExportRowCount = 50_000;
+
+    /// <summary>
+    /// Days added to the posting date for the due date of a journal-posted receivable or payable.
+    /// A stand-in until payment terms (BC table 3) carry their own date formula.
+    /// </summary>
+    public const int DefaultPaymentDueDays = 30;
 }

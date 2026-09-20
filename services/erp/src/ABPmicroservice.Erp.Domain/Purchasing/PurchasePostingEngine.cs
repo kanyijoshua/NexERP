@@ -18,12 +18,16 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// </summary>
 public class PurchasePostingEngine : DomainService
 {
+    /// <summary>Stamped on every entry the engine posts. Mirrors BC's "PURCHASES" source code.</summary>
+    private const string SourceCode = "PURCHASES";
+
     private readonly IRepository<PurchaseHeader, Guid> _purchaseHeaderRepository;
     private readonly IRepository<PostedPurchaseHeader, Guid> _postedPurchaseHeaderRepository;
     private readonly GenJnlPostLine _genJnlPostLine;
     private readonly ItemJnlPostLine _itemJnlPostLine;
     private readonly PurchasesPayablesSetupManager _setupManager;
     private readonly NoSeriesManager _noSeriesManager;
+    private readonly GLRegisterManager _registerManager;
 
     public PurchasePostingEngine(
         IRepository<PurchaseHeader, Guid> purchaseHeaderRepository,
@@ -31,9 +35,11 @@ public class PurchasePostingEngine : DomainService
         GenJnlPostLine genJnlPostLine,
         ItemJnlPostLine itemJnlPostLine,
         PurchasesPayablesSetupManager setupManager,
-        NoSeriesManager noSeriesManager
+        NoSeriesManager noSeriesManager,
+        GLRegisterManager registerManager
     )
     {
+        _registerManager = registerManager;
         _purchaseHeaderRepository = purchaseHeaderRepository;
         _postedPurchaseHeaderRepository = postedPurchaseHeaderRepository;
         _genJnlPostLine = genJnlPostLine;
@@ -92,19 +98,27 @@ public class PurchasePostingEngine : DomainService
 
         await _postedPurchaseHeaderRepository.InsertAsync(postedHeader);
 
-        // 2. Post Vendor Ledger Entry (A/P Credit)
-        await _genJnlPostLine.PostLineAsync(new GenJournalLine(
-            GuidGenerator.Create(),
-            Guid.Empty,
-            1,
-            header.PostingDate,
-            GLEntryDocumentType.Invoice,
-            postedDocNo,
-            "Vendor",
-            header.BuyFromVendorNo,
-            $"Purchase Invoice {postedDocNo}",
-            -header.TotalAmountIncludingVat
-        ));
+        // Everything this document posts belongs to one register, so it can be navigated and
+        // reversed as a unit, exactly like a journal.
+        var register = await _registerManager.OpenAsync(header.PostingDate, SourceCode, postedDocNo);
+        var context = new GLPostingContext(register, SourceCode);
+
+        // 2. Post Vendor Ledger Entry (A/P Credit) and the payables control account with it
+        await _genJnlPostLine.PostLineAsync(
+            new GenJournalLine(
+                GuidGenerator.Create(),
+                Guid.Empty,
+                1,
+                header.PostingDate,
+                GLEntryDocumentType.Invoice,
+                postedDocNo,
+                GenJournalAccountType.Vendor,
+                header.BuyFromVendorNo,
+                $"Purchase Invoice {postedDocNo}",
+                -header.TotalAmountIncludingVat
+            ),
+            context
+        );
 
         // 3. Post Inventory / Cost & G/L entries per line
         foreach (var line in header.Lines)
@@ -131,10 +145,13 @@ public class PurchasePostingEngine : DomainService
                     postedDocNo,
                     line.Description,
                     line.LineAmount,
-                    header.BuyFromVendorNo
+                    header.BuyFromVendorNo,
+                    context: context
                 );
             }
         }
+
+        await _registerManager.CloseAsync(register);
 
         // 4. Mark header as posted
         header.MarkPosted(postedDocNo);

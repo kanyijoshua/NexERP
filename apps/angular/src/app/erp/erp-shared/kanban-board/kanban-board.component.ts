@@ -60,7 +60,10 @@ export class KanbanBoardComponent<T = unknown> {
     if (!from || !to || previousIndex < 0 || previousIndex >= from.cards.length) {
       return null;
     }
-    const targetIndex = Math.max(0, Math.min(index, from === to ? to.cards.length - 1 : to.cards.length));
+    const targetIndex = Math.max(
+      0,
+      Math.min(index, from === to ? to.cards.length - 1 : to.cards.length),
+    );
     if (from === to && targetIndex === previousIndex) {
       return null;
     }

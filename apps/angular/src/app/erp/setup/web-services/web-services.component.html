@@ -1,0 +1,112 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:WebServices"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-plug"
+  [(filter)]="filter"
+  permission="Erp.WebServices.Manage"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<div class="alert alert-info small">
+  <i class="fas fa-info-circle me-1"></i>{{ 'Erp::WebServicesHint' | abpLocalization }}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::ServiceName' | abpLocalization" prop="serviceName" [width]="180"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::EntityName' | abpLocalization" prop="entityName" [width]="180"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::ObjectType' | abpLocalization" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ objectTypeOptions[row.objectType]?.label | abpLocalization }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::ExcludedFields' | abpLocalization" prop="excludedFields" [width]="220"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Published' | abpLocalization" [width]="140" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div class="form-check form-switch mb-0">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.published"
+              [attr.aria-label]="'Erp::Published' | abpLocalization"
+              (change)="setPublished(row, !row.published)"
+            />
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            *abpPermission="'Erp.WebServices.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEdit(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.WebServices.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [title]="'Erp::Delete' | abpLocalization"
+            (click)="remove(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ (selected ? 'Erp::Edit' : 'Erp::New') | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="ws-name">{{ 'Erp::ServiceName' | abpLocalization }} *</label>
+          <input id="ws-name" type="text" class="form-control" formControlName="serviceName" autofocus />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="ws-entity">{{ 'Erp::EntityName' | abpLocalization }} *</label>
+          <select id="ws-entity" class="form-select" formControlName="entityName">
+            <option value="">—</option>
+            <option *ngFor="let entity of entities" [value]="entity.name">
+              {{ entity.displayName }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="ws-type">{{ 'Erp::ObjectType' | abpLocalization }}</label>
+          <select id="ws-type" class="form-select" formControlName="objectType">
+            <option *ngFor="let option of objectTypeOptions" [ngValue]="option.value">
+              {{ option.label | abpLocalization }}
+            </option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="ws-excluded">{{ 'Erp::ExcludedFields' | abpLocalization }}</label>
+          <input id="ws-excluded" type="text" class="form-control" formControlName="excludedFields" />
+          <div class="form-text">{{ 'Erp::ExcludedFieldsHint' | abpLocalization }}</div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

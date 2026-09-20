@@ -89,8 +89,49 @@ public class ErpPermissions
     {
         public const string Default = GroupName + ".Journals";
         public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
         public const string Delete = Default + ".Delete";
         public const string Post = Default + ".Post";
+
+        /// <summary>Creating templates, batches and standard journals, as opposed to filling them in.</summary>
+        public const string Manage = Default + ".Manage";
+    }
+
+    public static class GLRegisters
+    {
+        public const string Default = GroupName + ".GLRegisters";
+        public const string Reverse = Default + ".Reverse";
+    }
+
+    public static class AccountSchedules
+    {
+        public const string Default = GroupName + ".AccountSchedules";
+        public const string Manage = Default + ".Manage";
+    }
+
+    /// <summary>Exporting any table, and the saved column sets that go with it.</summary>
+    public static class DataExport
+    {
+        public const string Default = GroupName + ".DataExport";
+        public const string ManageTemplates = Default + ".ManageTemplates";
+    }
+
+    public static class WebServices
+    {
+        public const string Default = GroupName + ".WebServices";
+        public const string Manage = Default + ".Manage";
+    }
+
+    public static class Webhooks
+    {
+        public const string Default = GroupName + ".Webhooks";
+        public const string Manage = Default + ".Manage";
+    }
+
+    /// <summary>Reading published data through the integration API.</summary>
+    public static class Integration
+    {
+        public const string Default = GroupName + ".Integration";
     }
 
     public static class Workflows

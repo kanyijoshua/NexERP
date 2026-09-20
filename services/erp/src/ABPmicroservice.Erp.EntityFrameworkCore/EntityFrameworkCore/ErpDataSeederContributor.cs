@@ -42,6 +42,13 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
     private readonly IRepository<PurchasesPayablesSetup, Guid> _purchaseSetupRepository;
     private readonly IRepository<Workflow, Guid> _workflowRepository;
 
+    private readonly IRepository<GenJournalTemplate, Guid> _journalTemplateRepository;
+    private readonly IRepository<GenJournalBatch, Guid> _journalBatchRepository;
+    private readonly IRepository<AccountSchedule, Guid> _accountScheduleRepository;
+    private readonly IRepository<AccountScheduleLine, Guid> _accountScheduleLineRepository;
+    private readonly IRepository<ColumnLayout, Guid> _columnLayoutRepository;
+    private readonly IRepository<ColumnLayoutLine, Guid> _columnLayoutLineRepository;
+
     private readonly IGuidGenerator _guidGenerator;
     private readonly ICurrentTenant _currentTenant;
     private readonly ICurrentCompany _currentCompany;
@@ -65,6 +72,12 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         IRepository<SalesReceivablesSetup, Guid> salesSetupRepository,
         IRepository<PurchasesPayablesSetup, Guid> purchaseSetupRepository,
         IRepository<Workflow, Guid> workflowRepository,
+        IRepository<GenJournalTemplate, Guid> journalTemplateRepository,
+        IRepository<GenJournalBatch, Guid> journalBatchRepository,
+        IRepository<AccountSchedule, Guid> accountScheduleRepository,
+        IRepository<AccountScheduleLine, Guid> accountScheduleLineRepository,
+        IRepository<ColumnLayout, Guid> columnLayoutRepository,
+        IRepository<ColumnLayoutLine, Guid> columnLayoutLineRepository,
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
         ICurrentCompany currentCompany,
@@ -90,6 +103,13 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         _salesSetupRepository = salesSetupRepository;
         _purchaseSetupRepository = purchaseSetupRepository;
         _workflowRepository = workflowRepository;
+
+        _journalTemplateRepository = journalTemplateRepository;
+        _journalBatchRepository = journalBatchRepository;
+        _accountScheduleRepository = accountScheduleRepository;
+        _accountScheduleLineRepository = accountScheduleLineRepository;
+        _columnLayoutRepository = columnLayoutRepository;
+        _columnLayoutLineRepository = columnLayoutLineRepository;
 
         _guidGenerator = guidGenerator;
         _currentTenant = currentTenant;
@@ -127,6 +147,8 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
                     await SeedCompanySetupAsync();
                     await SeedNumberSeriesAsync();
                     await SeedApprovalWorkflowTemplatesAsync();
+                    await SeedJournalTemplatesAsync();
+                    await SeedFinancialReportsAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {
@@ -275,6 +297,153 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         var item = new Item(NewId(), "1000", "Bicycle Assembly", ItemType.Inventory, "PCS", unitPrice: 300m, unitCost: 150m);
         item.SetPostingGroups("RETAIL", "RETAIL");
         await _itemRepository.InsertAsync(item);
+    }
+
+    /// <summary>
+    /// The CRONUS journals: a general one, a recurring one for accruals, and the two payment
+    /// journals, each with the batch people actually type into.
+    /// </summary>
+    private async Task SeedJournalTemplatesAsync()
+    {
+        if (await _journalTemplateRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        await AddTemplateAsync("GENERAL", "General Journal", GenJournalTemplateType.General, "GENJNL", "DEFAULT");
+        await AddTemplateAsync(
+            "RECURRING",
+            "Recurring General Journal",
+            GenJournalTemplateType.General,
+            "GENJNL",
+            "DEFAULT",
+            recurring: true
+        );
+        await AddTemplateAsync(
+            "CASHRCPT",
+            "Cash Receipt Journal",
+            GenJournalTemplateType.CashReceipts,
+            "CASHRECJNL",
+            "CASH",
+            balAccountNo: "1020"
+        );
+        await AddTemplateAsync(
+            "PAYMENT",
+            "Payment Journal",
+            GenJournalTemplateType.Payments,
+            "PAYMENTJNL",
+            "BANK",
+            balAccountNo: "1020"
+        );
+    }
+
+    private async Task AddTemplateAsync(
+        string name,
+        string description,
+        GenJournalTemplateType type,
+        string sourceCode,
+        string batchName,
+        bool recurring = false,
+        string balAccountNo = null
+    )
+    {
+        await _journalTemplateRepository.InsertAsync(
+            new GenJournalTemplate(NewId(), name, description, type, recurring, sourceCode)
+        );
+
+        await _journalBatchRepository.InsertAsync(
+            new GenJournalBatch(
+                NewId(),
+                name,
+                batchName,
+                description,
+                balAccountType: balAccountNo == null ? null : GenJournalAccountType.GLAccount,
+                balAccountNo: balAccountNo
+            )
+        );
+    }
+
+    /// <summary>
+    /// A balance sheet and an income statement defined as account schedules, plus the column
+    /// layouts BC ships: this period, and this period against the same one last year.
+    /// </summary>
+    private async Task SeedFinancialReportsAsync()
+    {
+        if (await _accountScheduleRepository.GetCountAsync() > 0)
+        {
+            return;
+        }
+
+        var period = new ColumnLayout(NewId(), "PERIODS", "Net change and balance for the period");
+        await _columnLayoutRepository.InsertAsync(period, autoSave: true);
+        await AddColumnAsync(period.Id, 10, "C10", "Net Change", ColumnLayoutType.NetChange);
+        await AddColumnAsync(period.Id, 20, "C20", "Balance at Date", ColumnLayoutType.BalanceAtDate);
+
+        var comparison = new ColumnLayout(NewId(), "LASTYEAR", "This period against the same period last year");
+        await _columnLayoutRepository.InsertAsync(comparison, autoSave: true);
+        await AddColumnAsync(comparison.Id, 10, "C10", "This Year", ColumnLayoutType.NetChange);
+        await AddColumnAsync(comparison.Id, 20, "C20", "Last Year", ColumnLayoutType.NetChange, "-1Y");
+
+        var balanceSheet = new AccountSchedule(NewId(), "BALANCE", "Balance Sheet", "PERIODS");
+        await _accountScheduleRepository.InsertAsync(balanceSheet, autoSave: true);
+        await AddScheduleLineAsync(balanceSheet.Id, 10, "R10", "Assets", AccountScheduleTotalingType.Description, "-", bold: true);
+        await AddScheduleLineAsync(balanceSheet.Id, 20, "R20", "Cash and Bank", AccountScheduleTotalingType.PostingAccounts, "1010..1020", indentation: 1);
+        await AddScheduleLineAsync(balanceSheet.Id, 30, "R30", "Accounts Receivable", AccountScheduleTotalingType.PostingAccounts, "1200", indentation: 1);
+        await AddScheduleLineAsync(balanceSheet.Id, 40, "R40", "Inventory", AccountScheduleTotalingType.PostingAccounts, "1400", indentation: 1);
+        await AddScheduleLineAsync(balanceSheet.Id, 50, "R50", "Total Assets", AccountScheduleTotalingType.Formula, "R20+R30+R40", bold: true);
+        await AddScheduleLineAsync(balanceSheet.Id, 60, "R60", "Liabilities", AccountScheduleTotalingType.Description, "-", bold: true);
+        // Liabilities carry credit balances, so the sign is flipped to read as a positive figure.
+        await AddScheduleLineAsync(balanceSheet.Id, 70, "R70", "Accounts Payable", AccountScheduleTotalingType.PostingAccounts, "2100", showOppositeSign: true, indentation: 1);
+        await AddScheduleLineAsync(balanceSheet.Id, 80, "R80", "Total Liabilities", AccountScheduleTotalingType.Formula, "R70", bold: true);
+
+        var income = new AccountSchedule(NewId(), "INCOME", "Income Statement", "LASTYEAR");
+        await _accountScheduleRepository.InsertAsync(income, autoSave: true);
+        await AddScheduleLineAsync(income.Id, 10, "R10", "Revenue", AccountScheduleTotalingType.PostingAccounts, "4000..4999", showOppositeSign: true);
+        await AddScheduleLineAsync(income.Id, 20, "R20", "Cost of Goods Sold", AccountScheduleTotalingType.PostingAccounts, "5000..5999");
+        await AddScheduleLineAsync(income.Id, 30, "R30", "Gross Profit", AccountScheduleTotalingType.Formula, "R10-R20", bold: true);
+    }
+
+    private async Task AddColumnAsync(
+        Guid layoutId,
+        int lineNo,
+        string columnNo,
+        string header,
+        ColumnLayoutType type,
+        string comparisonFormula = null
+    )
+    {
+        await _columnLayoutLineRepository.InsertAsync(
+            new ColumnLayoutLine(NewId(), layoutId, lineNo, columnNo, header, type, comparisonFormula)
+        );
+    }
+
+    private async Task AddScheduleLineAsync(
+        Guid scheduleId,
+        int lineNo,
+        string rowNo,
+        string description,
+        AccountScheduleTotalingType totalingType,
+        string totaling,
+        bool showOppositeSign = false,
+        bool bold = false,
+        int indentation = 0
+    )
+    {
+        await _accountScheduleLineRepository.InsertAsync(
+            new AccountScheduleLine(
+                NewId(),
+                scheduleId,
+                lineNo,
+                rowNo,
+                description,
+                totalingType,
+                totaling,
+                showOppositeSign,
+                bold,
+                italic: false,
+                indentation: indentation
+            )
+        );
     }
 
     private Guid NewId() => _guidGenerator.Create();

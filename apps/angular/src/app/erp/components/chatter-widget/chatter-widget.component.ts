@@ -19,7 +19,10 @@ interface TimelineItem {
   template: `
     <div class="card shadow-sm border-0 chatter-card">
       <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <span class="fw-bold text-secondary"><i class="fas fa-comments text-primary me-2"></i>{{ 'Erp::ChatterTitle' | abpLocalization }}</span>
+        <span class="fw-bold text-secondary"
+          ><i class="fas fa-comments text-primary me-2"></i
+          >{{ 'Erp::ChatterTitle' | abpLocalization }}</span
+        >
         <span class="badge bg-secondary">{{ timeline.length }}</span>
       </div>
       <div class="card-body">
@@ -33,7 +36,12 @@ interface TimelineItem {
             [(ngModel)]="newNoteText"
             (keyup.enter)="postNote()"
           />
-          <button type="button" class="btn btn-sm btn-primary" [disabled]="!newNoteText.trim()" (click)="postNote()">
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            [disabled]="!newNoteText.trim()"
+            (click)="postNote()"
+          >
             <i class="fas fa-paper-plane me-1"></i>{{ 'Erp::PostNote' | abpLocalization }}
           </button>
         </div>
@@ -46,14 +54,23 @@ interface TimelineItem {
           >
             <div class="d-flex justify-content-between small text-muted">
               <span class="fw-bold text-dark">
-                <i class="fas me-1" [ngClass]="item.kind === 'note' ? 'fa-user-circle text-primary' : 'fa-history text-secondary'"></i>
+                <i
+                  class="fas me-1"
+                  [ngClass]="
+                    item.kind === 'note'
+                      ? 'fa-user-circle text-primary'
+                      : 'fa-history text-secondary'
+                  "
+                ></i>
                 {{ item.who || ('Erp::System' | abpLocalization) }}
               </span>
               <span>{{ item.time | date: 'short' }}</span>
             </div>
             <div class="mt-1 small">{{ item.text }}</div>
           </div>
-          <div *ngIf="timeline.length === 0" class="text-muted small text-center py-3">{{ 'Erp::NoActivityYet' | abpLocalization }}</div>
+          <div *ngIf="timeline.length === 0" class="text-muted small text-center py-3">
+            {{ 'Erp::NoActivityYet' | abpLocalization }}
+          </div>
         </div>
       </div>
     </div>
@@ -113,7 +130,12 @@ export class ChatterWidgetComponent implements OnChanges {
     }
 
     this.chatterService
-      .createNote({ entityType: this.entityType, entityId: this.entityId, entityNo: this.entityNo, noteText })
+      .createNote({
+        entityType: this.entityType,
+        entityId: this.entityId,
+        entityNo: this.entityNo,
+        noteText,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.newNoteText = '';

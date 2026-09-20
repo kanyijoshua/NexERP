@@ -8,7 +8,9 @@ using ABPmicroservice.Erp.Automations;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
+using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
@@ -17,8 +19,9 @@ using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
-using ABPmicroservice.Erp.WebServices;
+using ABPmicroservice.Erp.Sequences;
 using ABPmicroservice.Erp.Workflows;
+using Volo.Abp.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -37,8 +40,13 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<GLAccount> GLAccounts { get; set; }
     public DbSet<GLEntry> GLEntries { get; set; }
     public DbSet<GeneralPostingSetup> GeneralPostingSetups { get; set; }
+    public DbSet<GenJournalTemplate> GenJournalTemplates { get; set; }
     public DbSet<GenJournalBatch> GenJournalBatches { get; set; }
     public DbSet<GenJournalLine> GenJournalLines { get; set; }
+    public DbSet<GLRegister> GLRegisters { get; set; }
+    public DbSet<StandardGeneralJournal> StandardGeneralJournals { get; set; }
+    public DbSet<StandardGeneralJournalLine> StandardGeneralJournalLines { get; set; }
+    public DbSet<ErpNumberSequence> NumberSequences { get; set; }
 
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerPostingGroup> CustomerPostingGroups { get; set; }
@@ -88,8 +96,13 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
 
     public DbSet<AccountSchedule> AccountSchedules { get; set; }
     public DbSet<AccountScheduleLine> AccountScheduleLines { get; set; }
+    public DbSet<ColumnLayout> ColumnLayouts { get; set; }
+    public DbSet<ColumnLayoutLine> ColumnLayoutLines { get; set; }
 
     public DbSet<PublishedWebService> PublishedWebServices { get; set; }
+    public DbSet<WebhookSubscription> WebhookSubscriptions { get; set; }
+    public DbSet<WebhookDelivery> WebhookDeliveries { get; set; }
+    public DbSet<ExportTemplate> ExportTemplates { get; set; }
 
     public DbSet<DocumentNote> DocumentNotes { get; set; }
     public DbSet<ActivityStreamEntry> ActivityStreamEntries { get; set; }
@@ -115,6 +128,9 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
         "ClosedByEntryNo",
         "ClosedAtDate",
         "CostPostedToGL",
+        // A reversal never deletes the original; it stamps it as reversed and points at its mirror.
+        "Reversed",
+        "ReversedByEntryNo",
     ];
 
     public ErpDbContext(DbContextOptions<ErpDbContext> options)
@@ -195,19 +211,92 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
         }
     }
 
-    public override Task<int> SaveChangesAsync(
+    public override async Task<int> SaveChangesAsync(
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default
     )
     {
         GuardLedgerEntries();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        // Collected before saving, while the change tracker still says what each row is doing.
+        var changes = CollectEntityChanges();
+
+        var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        BufferEntityChanges(changes);
+        return result;
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         GuardLedgerEntries();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+
+        var changes = CollectEntityChanges();
+        var result = base.SaveChanges(acceptAllChangesOnSuccess);
+
+        BufferEntityChanges(changes);
+        return result;
+    }
+
+    /// <summary>
+    /// Notes which registered rows this save touches, so webhook subscribers can be told once the
+    /// transaction has committed. Tables nobody can subscribe to cost only a dictionary lookup.
+    /// </summary>
+    private List<EntityChangeNotification> CollectEntityChanges()
+    {
+        var registry = LazyServiceProvider?.LazyGetService<ErpEntityRegistry>();
+        if (registry == null)
+        {
+            return null;
+        }
+
+        List<EntityChangeNotification> changes = null;
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            var kind = entry.State switch
+            {
+                EntityState.Added => EntityChangeKind.Created,
+                EntityState.Modified => EntityChangeKind.Updated,
+                EntityState.Deleted => EntityChangeKind.Deleted,
+                _ => EntityChangeKind.None,
+            };
+
+            if (kind == EntityChangeKind.None || entry.Entity is not IEntity<Guid> entity)
+            {
+                continue;
+            }
+
+            var definition = registry.Find(entry.Metadata.ClrType.Name);
+            if (definition == null || definition.EntityType != entry.Metadata.ClrType)
+            {
+                continue;
+            }
+
+            changes ??= [];
+            changes.Add(new EntityChangeNotification(definition.Name, entity.Id, kind));
+        }
+
+        return changes;
+    }
+
+    private void BufferEntityChanges(List<EntityChangeNotification> changes)
+    {
+        if (changes == null || changes.Count == 0)
+        {
+            return;
+        }
+
+        var buffer = LazyServiceProvider?.LazyGetService<IEntityChangeBuffer>();
+        if (buffer == null)
+        {
+            return;
+        }
+
+        foreach (var change in changes)
+        {
+            buffer.Add(change);
+        }
     }
 
     /// <summary>Posted ledger rows are append-only: no deletes, and updates only to the bookkeeping columns.</summary>

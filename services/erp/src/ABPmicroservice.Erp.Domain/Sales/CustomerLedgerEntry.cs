@@ -23,6 +23,18 @@ public class CustomerLedgerEntry : LedgerEntryBase
     public bool Open { get; internal set; }
     public Guid DimensionSetId { get; private set; }
 
+    /// <summary>Groups the entries of one posting run. Mirrors BC "Transaction No.".</summary>
+    public long TransactionNo { get; internal set; }
+
+    public long RegisterNo { get; internal set; }
+
+    /// <summary>True once a reversal has cancelled this entry.</summary>
+    public bool Reversed { get; internal set; }
+
+    public long ReversedByEntryNo { get; internal set; }
+
+    public long ReversedEntryNo { get; internal set; }
+
     protected CustomerLedgerEntry() { }
 
     public CustomerLedgerEntry(

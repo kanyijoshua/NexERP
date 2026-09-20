@@ -11,8 +11,13 @@ import { ErpApiService, GLAccountDto } from '../../services/erp-api.service';
 
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-          <h5 class="mb-0 fw-bold"><i class="fas fa-list-ol text-primary me-2"></i>Chart of Accounts (Business Central Table 15)</h5>
-          <button class="btn btn-sm btn-outline-primary"><i class="fas fa-file-excel me-1"></i> Export to Excel</button>
+          <h5 class="mb-0 fw-bold">
+            <i class="fas fa-list-ol text-primary me-2"></i>Chart of Accounts (Business Central
+            Table 15)
+          </h5>
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-file-excel me-1"></i> Export to Excel
+          </button>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -32,8 +37,12 @@ import { ErpApiService, GLAccountDto } from '../../services/erp-api.service';
                 <td>{{ acc.name }}</td>
                 <td><span class="badge bg-secondary">Posting</span></td>
                 <td>Asset / Revenue</td>
-                <td class="text-end fw-bold" [class.text-success]="acc.netChange > 0">{{ acc.netChange | currency }}</td>
-                <td class="text-end fw-bold" [class.text-primary]="acc.balance > 0">{{ acc.balance | currency }}</td>
+                <td class="text-end fw-bold" [class.text-success]="acc.netChange > 0">
+                  {{ acc.netChange | currency }}
+                </td>
+                <td class="text-end fw-bold" [class.text-primary]="acc.balance > 0">
+                  {{ acc.balance | currency }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -45,7 +54,10 @@ import { ErpApiService, GLAccountDto } from '../../services/erp-api.service';
 export class ChartOfAccountsComponent implements OnInit {
   accounts: GLAccountDto[] = [];
 
-  constructor(private erpApi: ErpApiService, companyService: CompanyService) {
+  constructor(
+    private erpApi: ErpApiService,
+    companyService: CompanyService,
+  ) {
     // Re-query when the active company changes (replaces the old full page reload).
     companyService.companyChanged$.pipe(takeUntilDestroyed()).subscribe(() => this.ngOnInit());
   }

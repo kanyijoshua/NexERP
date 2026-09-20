@@ -10,7 +10,6 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ChartOfAccountsComponent } from './pages/chart-of-accounts/chart-of-accounts.component';
 import { SalesInvoicesComponent } from './pages/sales-invoices/sales-invoices.component';
 import { PurchaseInvoicesComponent } from './pages/purchase-invoices/purchase-invoices.component';
-import { FinancialReportsComponent } from './pages/financial-reports/financial-reports.component';
 
 @NgModule({
   declarations: [
@@ -18,14 +17,7 @@ import { FinancialReportsComponent } from './pages/financial-reports/financial-r
     ChartOfAccountsComponent,
     SalesInvoicesComponent,
     PurchaseInvoicesComponent,
-    FinancialReportsComponent,
   ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    SharedModule,
-    ErpSharedModule,
-    ErpRoutingModule,
-  ],
+  imports: [CommonModule, FormsModule, SharedModule, ErpSharedModule, ErpRoutingModule],
 })
 export class ErpModule {}

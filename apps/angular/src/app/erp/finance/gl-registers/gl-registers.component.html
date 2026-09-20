@@ -1,0 +1,107 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="fas fa-book text-primary me-2"></i>{{ 'Erp::Menu:GLRegisters' | abpLocalization }}
+  </h4>
+
+  <div class="form-check form-switch">
+    <input
+      id="only-reversible"
+      type="checkbox"
+      class="form-check-input"
+      [ngModel]="onlyReversible"
+      (ngModelChange)="toggleOnlyReversible($event)"
+    />
+    <label class="form-check-label" for="only-reversible">
+      {{ 'Erp::OnlyReversible' | abpLocalization }}
+    </label>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::RegisterNo' | abpLocalization" prop="no" [width]="110"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::PostingDate' | abpLocalization" prop="postingDate" [width]="140">
+        <ng-template let-value="value" ngx-datatable-cell-template>{{ value | date: 'mediumDate' }}</ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Batch' | abpLocalization" prop="journalBatchName" [width]="200"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::SourceCode' | abpLocalization" prop="sourceCode" [width]="120"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::PostedBy' | abpLocalization" prop="userName" [width]="150"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::TransactionNo' | abpLocalization" prop="transactionNo" [width]="130"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Reversed' | abpLocalization" [width]="160" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngIf="row.reversed" class="badge bg-secondary">
+            {{ 'Erp::Reversed' | abpLocalization }} · {{ row.reversedByRegisterNo }}
+          </span>
+          <span *ngIf="row.reversedRegisterNo" class="badge bg-info text-dark">
+            {{ 'Erp::Reverse' | abpLocalization }} · {{ row.reversedRegisterNo }}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="180">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            [title]="'Erp::ViewEntries' | abpLocalization"
+            (click)="showEntries(row)"
+          >
+            <i class="fas fa-list"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.GLRegisters.Reverse'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [disabled]="busy || !row.isReversible"
+            [title]="'Erp::Reverse' | abpLocalization"
+            (click)="reverse(row)"
+          >
+            <i class="fas fa-undo me-1"></i>{{ 'Erp::Reverse' | abpLocalization }}
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<div *ngIf="openRegisterNo !== null" class="card border-0 shadow-sm mt-3">
+  <div class="card-header bg-white d-flex align-items-center">
+    <span class="fw-bold">
+      {{ 'Erp::RegisterEntries' | abpLocalization: openRegisterNo }}
+    </span>
+    <button type="button" class="btn-close ms-auto" (click)="closeEntries()"></button>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">{{ 'Erp::Ledger' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::AccountNo' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::Debit' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::Credit' | abpLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of entries">
+          <td class="small text-muted">{{ entry.ledger }}</td>
+          <td>{{ entry.postingDate | date: 'mediumDate' }}</td>
+          <td>{{ entry.documentNo }}</td>
+          <td>{{ entry.accountNo }}</td>
+          <td>{{ entry.description }}</td>
+          <td class="text-end">{{ entry.debitAmount | erpAmount }}</td>
+          <td class="text-end">{{ entry.creditAmount | erpAmount }}</td>
+        </tr>
+        <tr *ngIf="entries.length === 0">
+          <td colspan="7" class="text-center text-muted py-3">
+            {{ 'Erp::NoDataAvailable' | abpLocalization }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,9 +1,18 @@
 import { ABP, ListService } from '@abp/ng.core';
 import { Component } from '@angular/core';
-import { PurchaseDocumentService, PurchaseDocumentType, PurchaseHeaderDto, VendorService } from '@proxy/purchasing';
+import {
+  PurchaseDocumentService,
+  PurchaseDocumentType,
+  PurchaseHeaderDto,
+  VendorService,
+} from '@proxy/purchasing';
 import { Observable, map } from 'rxjs';
 import { LookupItem } from '../../erp-shared';
-import { DocumentAction, DocumentListBase, NewDocumentInput } from '../documents/document-list.base';
+import {
+  DocumentAction,
+  DocumentListBase,
+  NewDocumentInput,
+} from '../documents/document-list.base';
 
 /** Purchase invoices (Business Central table 38, document type Invoice). */
 @Component({
@@ -29,12 +38,21 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
   protected getList = (query: ABP.PageQueryParams) =>
     this.documents.getList({ ...query, documentType: PurchaseDocumentType.Invoice } as never);
 
-  protected partyName = (row: PurchaseHeaderDto) => `${row.buyFromVendorNo ?? ''} ${row.buyFromVendorName ?? ''}`.trim();
+  protected partyName = (row: PurchaseHeaderDto) =>
+    `${row.buyFromVendorNo ?? ''} ${row.buyFromVendorName ?? ''}`.trim();
 
   protected searchParties(term: string): Observable<LookupItem[]> {
     return this.vendors
       .getList({ filter: term, blocked: false, maxResultCount: 20, skipCount: 0 } as never)
-      .pipe(map(result => (result.items ?? []).map(v => ({ id: v.id, code: v.no ?? '', name: v.name ?? undefined }))));
+      .pipe(
+        map(result =>
+          (result.items ?? []).map(v => ({
+            id: v.id,
+            code: v.no ?? '',
+            name: v.name ?? undefined,
+          })),
+        ),
+      );
   }
 
   protected createDocument(input: NewDocumentInput): Observable<PurchaseHeaderDto> {

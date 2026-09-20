@@ -16,13 +16,7 @@ export interface DocumentLineOption {
 }
 
 export type DocumentLineColumnType =
-  | 'text'
-  | 'number'
-  | 'date'
-  | 'select'
-  | 'lookup'
-  | 'readonly'
-  | 'currency';
+  'text' | 'number' | 'date' | 'select' | 'lookup' | 'readonly' | 'currency';
 
 /** Describes one editable cell of a document / journal line. */
 export interface DocumentLineColumn {

@@ -54,7 +54,9 @@ export class LineGridComponent implements AfterViewInit {
       }
       this.focusNewRow = false;
       const last = this.rowElements.last?.nativeElement;
-      const target = last?.querySelector<HTMLElement>('input:not([disabled]), select:not([disabled])');
+      const target = last?.querySelector<HTMLElement>(
+        'input:not([disabled]), select:not([disabled])',
+      );
       // After the view settled, otherwise the typeahead of a lookup cell opens mid change detection.
       setTimeout(() => target?.focus());
     });

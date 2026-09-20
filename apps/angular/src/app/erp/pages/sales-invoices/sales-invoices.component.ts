@@ -1,9 +1,18 @@
 import { ABP, ListService } from '@abp/ng.core';
 import { Component } from '@angular/core';
-import { CustomerService, SalesDocumentService, SalesDocumentType, SalesHeaderDto } from '@proxy/sales';
+import {
+  CustomerService,
+  SalesDocumentService,
+  SalesDocumentType,
+  SalesHeaderDto,
+} from '@proxy/sales';
 import { Observable, map } from 'rxjs';
 import { LookupItem } from '../../erp-shared';
-import { DocumentAction, DocumentListBase, NewDocumentInput } from '../documents/document-list.base';
+import {
+  DocumentAction,
+  DocumentListBase,
+  NewDocumentInput,
+} from '../documents/document-list.base';
 
 /** Sales invoices (Business Central table 36, document type Invoice). */
 @Component({
@@ -29,12 +38,21 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
   protected getList = (query: ABP.PageQueryParams) =>
     this.documents.getList({ ...query, documentType: SalesDocumentType.Invoice } as never);
 
-  protected partyName = (row: SalesHeaderDto) => `${row.sellToCustomerNo ?? ''} ${row.sellToCustomerName ?? ''}`.trim();
+  protected partyName = (row: SalesHeaderDto) =>
+    `${row.sellToCustomerNo ?? ''} ${row.sellToCustomerName ?? ''}`.trim();
 
   protected searchParties(term: string): Observable<LookupItem[]> {
     return this.customers
       .getList({ filter: term, blocked: false, maxResultCount: 20, skipCount: 0 } as never)
-      .pipe(map(result => (result.items ?? []).map(c => ({ id: c.id, code: c.no ?? '', name: c.name ?? undefined }))));
+      .pipe(
+        map(result =>
+          (result.items ?? []).map(c => ({
+            id: c.id,
+            code: c.no ?? '',
+            name: c.name ?? undefined,
+          })),
+        ),
+      );
   }
 
   protected createDocument(input: NewDocumentInput): Observable<SalesHeaderDto> {

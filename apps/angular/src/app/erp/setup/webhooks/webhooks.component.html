@@ -1,0 +1,225 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:Webhooks"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-satellite-dish"
+  [(filter)]="filter"
+  permission="Erp.Webhooks.Manage"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<div class="alert alert-info small">
+  <i class="fas fa-info-circle me-1"></i>{{ 'Erp::WebhooksHint' | abpLocalization }}
+</div>
+
+<!-- The one moment the secret can be copied. -->
+<div *ngIf="newSecret" class="alert alert-warning d-flex align-items-center">
+  <div class="me-auto">
+    <div class="fw-bold">{{ 'Erp::Secret' | abpLocalization }}</div>
+    <code class="user-select-all">{{ newSecret }}</code>
+    <div class="small">{{ 'Erp::SecretShownOnce' | abpLocalization }}</div>
+  </div>
+  <button type="button" class="btn-close" (click)="newSecret = null"></button>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::Name' | abpLocalization" prop="name" [width]="170"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::EntityName' | abpLocalization" prop="entityName" [width]="150"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::EndpointUrl' | abpLocalization" prop="endpointUrl" [width]="260"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::ChangeKinds' | abpLocalization" [width]="180" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span *ngFor="let kind of changeKindText(row.changeKinds).split(',')" class="badge bg-light text-dark me-1">
+            {{ kind | abpLocalization }}
+          </span>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Active' | abpLocalization" prop="active" [width]="90">
+        <ng-template let-value="value" ngx-datatable-cell-template>
+          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::FailureCount' | abpLocalization" [width]="120" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <span
+            *ngIf="row.failureCount > 0"
+            class="badge bg-danger"
+            [title]="row.lastError"
+            >{{ row.failureCount }}</span
+          >
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="250">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            [title]="'Erp::Deliveries' | abpLocalization"
+            (click)="openDeliveries(row)"
+          >
+            <i class="fas fa-list"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.Webhooks.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            [title]="'Erp::SendTest' | abpLocalization"
+            (click)="sendTest(row)"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.Webhooks.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            [title]="'Erp::RegenerateSecret' | abpLocalization"
+            (click)="regenerateSecret(row)"
+          >
+            <i class="fas fa-key"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.Webhooks.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEdit(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.Webhooks.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [title]="'Erp::Delete' | abpLocalization"
+            (click)="remove(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ (selected ? 'Erp::Edit' : 'Erp::New') | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="wh-name">{{ 'Erp::Name' | abpLocalization }} *</label>
+          <input id="wh-name" type="text" class="form-control" formControlName="name" autofocus />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="wh-entity">{{ 'Erp::EntityName' | abpLocalization }} *</label>
+          <select id="wh-entity" class="form-select" formControlName="entityName">
+            <option value="">—</option>
+            <option *ngFor="let entity of entities" [value]="entity.name">{{ entity.displayName }}</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="wh-url">{{ 'Erp::EndpointUrl' | abpLocalization }} *</label>
+          <input id="wh-url" type="url" class="form-control" formControlName="endpointUrl" />
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">{{ 'Erp::ChangeKinds' | abpLocalization }}</label>
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input id="wh-created" type="checkbox" class="form-check-input" formControlName="notifyCreated" />
+              <label class="form-check-label" for="wh-created">{{ 'Erp::Created' | abpLocalization }}</label>
+            </div>
+            <div class="form-check">
+              <input id="wh-updated" type="checkbox" class="form-check-input" formControlName="notifyUpdated" />
+              <label class="form-check-label" for="wh-updated">{{ 'Erp::Updated' | abpLocalization }}</label>
+            </div>
+            <div class="form-check">
+              <input id="wh-deleted" type="checkbox" class="form-check-input" formControlName="notifyDeleted" />
+              <label class="form-check-label" for="wh-deleted">{{ 'Erp::Deleted' | abpLocalization }}</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input id="wh-active" type="checkbox" class="form-check-input" formControlName="active" />
+            <label class="form-check-label" for="wh-active">{{ 'Erp::Active' | abpLocalization }}</label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isDeliveriesModalOpen" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ 'Erp::Deliveries' | abpLocalization }}
+      <span class="text-muted">· {{ deliveriesOwner?.name }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::DeliveryStatus' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::ChangeKinds' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::CreationTime' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::AttemptCount' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::ResponseStatusCode' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::LastError' | abpLocalization }}</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let delivery of deliveries">
+            <td><span class="badge" [ngClass]="statusClass(delivery.status)">{{ delivery.status }}</span></td>
+            <td>{{ delivery.changeKind }}</td>
+            <td>{{ delivery.creationTime | date: 'short' }}</td>
+            <td>{{ delivery.attemptCount }}</td>
+            <td>{{ delivery.responseStatusCode }}</td>
+            <td class="small text-danger">{{ delivery.error }}</td>
+            <td class="text-end">
+              <button
+                *ngIf="delivery.status !== DeliveryStatus.Delivered"
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                [title]="'Erp::RetryDelivery' | abpLocalization"
+                (click)="retry(delivery)"
+              >
+                <i class="fas fa-redo"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="deliveries.length === 0">
+            <td colspan="7" class="text-center text-muted py-3">
+              {{ 'Erp::NoDataAvailable' | abpLocalization }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

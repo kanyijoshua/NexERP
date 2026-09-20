@@ -59,18 +59,24 @@ import { Component } from '@angular/core';
       <div class="row g-3">
         <div class="col-md-8">
           <div class="card border-0 shadow-sm p-3">
-            <h5 class="fw-bold mb-3"><i class="fas fa-chart-area text-primary me-2"></i>Financial Overview & Cash Flow</h5>
+            <h5 class="fw-bold mb-3">
+              <i class="fas fa-chart-area text-primary me-2"></i>Financial Overview & Cash Flow
+            </h5>
             <div class="alert alert-info small mb-0">
-              <i class="fas fa-info-circle me-1"></i> Running standard Business Central Chart of Accounts posting engine with double-entry balance verification.
+              <i class="fas fa-info-circle me-1"></i> Running standard Business Central Chart of
+              Accounts posting engine with double-entry balance verification.
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <app-chatter-widget entityType="System" entityId="00000000-0000-0000-0000-000000000000" entityNo="SYS-001"></app-chatter-widget>
+          <app-chatter-widget
+            entityType="System"
+            entityId="00000000-0000-0000-0000-000000000000"
+            entityNo="SYS-001"
+          ></app-chatter-widget>
         </div>
       </div>
     </div>
   `,
 })
-export class DashboardComponent {
-}
+export class DashboardComponent {}

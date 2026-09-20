@@ -1,13 +1,16 @@
 import { Confirmation, ConfirmationService } from '@abp/ng.theme.shared';
-import { Component, DestroyRef, EventEmitter, HostBinding, Input, Output, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  HostBinding,
+  Input,
+  Output,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormGroup } from '@angular/forms';
-import {
-  DocumentAction,
-  DocumentLineChange,
-  DocumentLineColumn,
-  DocumentTotal,
-} from '../models';
+import { DocumentAction, DocumentLineChange, DocumentLineColumn, DocumentTotal } from '../models';
 
 export const DEFAULT_STATUS_COLORS: Record<string, string> = {
   Draft: 'secondary',

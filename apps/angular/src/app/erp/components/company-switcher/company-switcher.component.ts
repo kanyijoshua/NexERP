@@ -6,7 +6,9 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
   template: `
     <div class="company-switcher-container">
       <div class="input-group input-group-sm">
-        <span class="input-group-text bg-primary text-white"><i class="fas fa-building me-1"></i> Legal Company</span>
+        <span class="input-group-text bg-primary text-white"
+          ><i class="fas fa-building me-1"></i> Legal Company</span
+        >
         <select class="form-select" [value]="activeCompanyId" (change)="onCompanyChange($event)">
           <option *ngFor="let company of companies" [value]="company.id">
             {{ company.displayName }} {{ company.evaluationCompany ? '(Evaluation)' : '' }}
@@ -21,18 +23,26 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title"><i class="fas fa-copy text-primary me-2"></i>Copy Company (Business Central CU 357)</h5>
+              <h5 class="modal-title">
+                <i class="fas fa-copy text-primary me-2"></i>Copy Company (Business Central CU 357)
+              </h5>
               <button type="button" class="btn-close" (click)="showModal = false"></button>
             </div>
             <div class="modal-body">
-              <p class="text-muted small">Clones standard Chart of Accounts, Dimensions, and Posting Setup into a new company.</p>
+              <p class="text-muted small">
+                Clones standard Chart of Accounts, Dimensions, and Posting Setup into a new company.
+              </p>
               <div class="mb-3">
                 <label class="form-label">New Company Code</label>
                 <input class="form-control" [(ngModel)]="newCompanyCode" placeholder="CRONUS_DE" />
               </div>
               <div class="mb-3">
                 <label class="form-label">Display Name</label>
-                <input class="form-control" [(ngModel)]="newDisplayName" placeholder="CRONUS Germany GmbH" />
+                <input
+                  class="form-control"
+                  [(ngModel)]="newDisplayName"
+                  placeholder="CRONUS Germany GmbH"
+                />
               </div>
             </div>
             <div class="modal-footer">
@@ -46,7 +56,9 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
   `,
   styles: [
     `
-      .company-switcher-container { margin-bottom: 1rem; }
+      .company-switcher-container {
+        margin-bottom: 1rem;
+      }
     `,
   ],
 })
@@ -80,9 +92,11 @@ export class CompanySwitcherComponent implements OnInit {
 
   executeCopyCompany(): void {
     if (!this.activeCompanyId || !this.newCompanyCode) return;
-    this.companyService.copyCompany(this.activeCompanyId, this.newCompanyCode, this.newDisplayName).subscribe(() => {
-      this.showModal = false;
-      this.ngOnInit();
-    });
+    this.companyService
+      .copyCompany(this.activeCompanyId, this.newCompanyCode, this.newDisplayName)
+      .subscribe(() => {
+        this.showModal = false;
+        this.ngOnInit();
+      });
   }
 }

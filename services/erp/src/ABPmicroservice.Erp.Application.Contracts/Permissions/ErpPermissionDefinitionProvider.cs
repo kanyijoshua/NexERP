@@ -102,8 +102,33 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
 
         var journals = erpGroup.AddPermission(ErpPermissions.Journals.Default, L("Permission:Erp:Journals"));
         journals.AddChild(ErpPermissions.Journals.Create, L("Permission:Erp:Journals:Create"));
+        journals.AddChild(ErpPermissions.Journals.Update, L("Permission:Erp:Journals:Update"));
         journals.AddChild(ErpPermissions.Journals.Delete, L("Permission:Erp:Journals:Delete"));
         journals.AddChild(ErpPermissions.Journals.Post, L("Permission:Erp:Journals:Post"));
+        journals.AddChild(ErpPermissions.Journals.Manage, L("Permission:Erp:Journals:Manage"));
+
+        var registers = erpGroup.AddPermission(ErpPermissions.GLRegisters.Default, L("Permission:Erp:GLRegisters"));
+        registers.AddChild(ErpPermissions.GLRegisters.Reverse, L("Permission:Erp:GLRegisters:Reverse"));
+
+        var schedules = erpGroup.AddPermission(
+            ErpPermissions.AccountSchedules.Default,
+            L("Permission:Erp:AccountSchedules")
+        );
+        schedules.AddChild(ErpPermissions.AccountSchedules.Manage, L("Permission:Erp:AccountSchedules:Manage"));
+
+        var dataExport = erpGroup.AddPermission(ErpPermissions.DataExport.Default, L("Permission:Erp:DataExport"));
+        dataExport.AddChild(
+            ErpPermissions.DataExport.ManageTemplates,
+            L("Permission:Erp:DataExport:ManageTemplates")
+        );
+
+        var webServices = erpGroup.AddPermission(ErpPermissions.WebServices.Default, L("Permission:Erp:WebServices"));
+        webServices.AddChild(ErpPermissions.WebServices.Manage, L("Permission:Erp:WebServices:Manage"));
+
+        var webhooks = erpGroup.AddPermission(ErpPermissions.Webhooks.Default, L("Permission:Erp:Webhooks"));
+        webhooks.AddChild(ErpPermissions.Webhooks.Manage, L("Permission:Erp:Webhooks:Manage"));
+
+        erpGroup.AddPermission(ErpPermissions.Integration.Default, L("Permission:Erp:Integration"));
 
         var workflows = erpGroup.AddPermission(ErpPermissions.Workflows.Default, L("Permission:Erp:Workflows"));
         workflows.AddChild(ErpPermissions.Workflows.Manage, L("Permission:Erp:Workflows:Manage"));

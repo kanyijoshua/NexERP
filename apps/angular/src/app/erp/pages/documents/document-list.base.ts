@@ -4,7 +4,12 @@ import { DestroyRef, Directive, OnInit, ViewChild, inject } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DocumentLineType, DocumentStatus, documentLineTypeOptions } from '@proxy/documents';
-import { ApprovalEntryDto, ApprovalEntryService, ApprovalRequestResultDto, ApprovalStatus } from '@proxy/workflows';
+import {
+  ApprovalEntryDto,
+  ApprovalEntryService,
+  ApprovalRequestResultDto,
+  ApprovalStatus,
+} from '@proxy/workflows';
 import { Observable, finalize } from 'rxjs';
 import { ChatterWidgetComponent } from '../../components/chatter-widget/chatter-widget.component';
 import { DocumentLineColumn, LookupItem, calculateDocumentTotals } from '../../erp-shared';
@@ -26,10 +31,17 @@ export interface NewDocumentInput {
   no: string | null;
   partyId: string;
   postingDate: string;
-  lines: { type: DocumentLineType; no: string; description: string; quantity: number; unitAmount: number }[];
+  lines: {
+    type: DocumentLineType;
+    no: string;
+    description: string;
+    quantity: number;
+    unitAmount: number;
+  }[];
 }
 
-export type DocumentAction = 'release' | 'reopen' | 'sendApprovalRequest' | 'cancelApprovalRequest' | 'runPosting' | 'delete';
+export type DocumentAction =
+  'release' | 'reopen' | 'sendApprovalRequest' | 'cancelApprovalRequest' | 'runPosting' | 'delete';
 
 /**
  * Sales and purchase invoice lists behave identically: list, create, release, reopen,
@@ -112,12 +124,21 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         labelKey: 'Erp::Type',
         type: 'select',
         width: '140px',
-        options: documentLineTypeOptions.map(o => ({ value: o.value, label: 'Erp::Enum:DocumentLineType.' + o.key })),
+        options: documentLineTypeOptions.map(o => ({
+          value: o.value,
+          label: 'Erp::Enum:DocumentLineType.' + o.key,
+        })),
       },
       { field: 'no', labelKey: 'Erp::No', type: 'text', width: '130px' },
       { field: 'description', labelKey: 'Erp::Description', type: 'text' },
       { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: '110px', step: 1 },
-      { field: 'unitAmount', labelKey: this.unitAmountLabelKey, type: 'currency', width: '140px', step: 0.01 },
+      {
+        field: 'unitAmount',
+        labelKey: this.unitAmountLabelKey,
+        type: 'currency',
+        width: '140px',
+        step: 0.01,
+      },
     ];
 
     this.list
@@ -179,7 +200,10 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
 
     if (action === 'runPosting' || action === 'delete') {
       this.confirmation
-        .warn(action === 'delete' ? 'Erp::ItemWillBeDeletedMessage' : 'Erp::PostDocumentConfirmation', 'Erp::AreYouSure')
+        .warn(
+          action === 'delete' ? 'Erp::ItemWillBeDeletedMessage' : 'Erp::PostDocumentConfirmation',
+          'Erp::AreYouSure',
+        )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(status => {
           if (status === Confirmation.Status.confirm) {
@@ -227,10 +251,15 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
 
     this.isBusy = true;
     this.createDocument(input)
-      .pipe(finalize(() => (this.isBusy = false)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(created => {
         this.isModalOpen = false;
-        this.toaster.success('Erp::DocumentCreated', undefined, { messageLocalizationParams: [created.no ?? ''] });
+        this.toaster.success('Erp::DocumentCreated', undefined, {
+          messageLocalizationParams: [created.no ?? ''],
+        });
         this.selected = created;
         this.list.get();
       });
@@ -241,10 +270,15 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     this.busyId = id;
 
     this.run(action, id)
-      .pipe(finalize(() => (this.busyId = null)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.busyId = null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(result => {
         this.toaster.success(this.successKey(action, result), undefined, {
-          messageLocalizationParams: [(result as ApprovalRequestResultDto)?.firstApproverUserName ?? ''],
+          messageLocalizationParams: [
+            (result as ApprovalRequestResultDto)?.firstApproverUserName ?? '',
+          ],
         });
         if (action === 'delete' && this.selected?.id === id) {
           this.selected = null;
@@ -257,7 +291,9 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   private successKey(action: DocumentAction, result: unknown): string {
     switch (action) {
       case 'sendApprovalRequest':
-        return (result as ApprovalRequestResultDto)?.autoApproved ? 'Erp::ApprovalAutoApproved' : 'Erp::ApprovalRequestSent';
+        return (result as ApprovalRequestResultDto)?.autoApproved
+          ? 'Erp::ApprovalAutoApproved'
+          : 'Erp::ApprovalRequestSent';
       case 'cancelApprovalRequest':
         return 'Erp::ApprovalRequestCanceled';
       case 'release':

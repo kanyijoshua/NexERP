@@ -3,7 +3,11 @@ import { IdentityUserService } from '@abp/ng.identity/proxy';
 import { Component, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApprovalUserSetupDto, ApprovalUserSetupService, CreateUpdateApprovalUserSetupDto } from '@proxy/workflows';
+import {
+  ApprovalUserSetupDto,
+  ApprovalUserSetupService,
+  CreateUpdateApprovalUserSetupDto,
+} from '@proxy/workflows';
 import { Observable, map } from 'rxjs';
 import { CrudListBase, LookupItem } from '../../erp-shared';
 
@@ -33,19 +37,30 @@ export class ApprovalUserSetupComponent
 
   protected getList = (query: ABP.PageQueryParams) => this.service.getList(query as never);
   protected create = (input: CreateUpdateApprovalUserSetupDto) => this.service.create(input);
-  protected update = (id: string, input: CreateUpdateApprovalUserSetupDto) => this.service.update(id, input);
+  protected update = (id: string, input: CreateUpdateApprovalUserSetupDto) =>
+    this.service.update(id, input);
   protected delete = (id: string) => this.service.delete(id);
 
   /** Users of the identity service, for the "User" field of a new row. */
   readonly searchUsers = (term: string): Observable<LookupItem[]> =>
     this.identityUsers
       .getList({ filter: term, maxResultCount: 20, skipCount: 0 } as never)
-      .pipe(map(result => (result.items ?? []).map(u => ({ id: u.id, code: u.userName ?? '', name: u.email ?? undefined }))));
+      .pipe(
+        map(result =>
+          (result.items ?? []).map(u => ({
+            id: u.id,
+            code: u.userName ?? '',
+            name: u.email ?? undefined,
+          })),
+        ),
+      );
 
   override ngOnInit(): void {
     super.ngOnInit();
     // Refresh the approver choices whenever the list itself reloads.
-    this.list.query$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadAllSetups());
+    this.list.query$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadAllSetups());
     this.loadAllSetups();
   }
 
@@ -64,9 +79,15 @@ export class ApprovalUserSetupComponent
       userName: [item?.userName ?? '', [Validators.required, Validators.maxLength(256)]],
       approverUserId: [item?.approverUserId ?? null],
       substituteUserId: [item?.substituteUserId ?? null],
-      salesAmountApprovalLimit: [item?.salesAmountApprovalLimit ?? 0, [Validators.required, Validators.min(0)]],
+      salesAmountApprovalLimit: [
+        item?.salesAmountApprovalLimit ?? 0,
+        [Validators.required, Validators.min(0)],
+      ],
       unlimitedSalesApproval: [item?.unlimitedSalesApproval ?? false],
-      purchaseAmountApprovalLimit: [item?.purchaseAmountApprovalLimit ?? 0, [Validators.required, Validators.min(0)]],
+      purchaseAmountApprovalLimit: [
+        item?.purchaseAmountApprovalLimit ?? 0,
+        [Validators.required, Validators.min(0)],
+      ],
       unlimitedPurchaseApproval: [item?.unlimitedPurchaseApproval ?? false],
       isApprovalAdministrator: [item?.isApprovalAdministrator ?? false],
     });
@@ -78,7 +99,8 @@ export class ApprovalUserSetupComponent
   }
 
   private linkUnlimited(form: FormGroup, flag: string, amount: string): void {
-    const apply = (unlimited: boolean) => (unlimited ? form.get(amount)?.disable() : form.get(amount)?.enable());
+    const apply = (unlimited: boolean) =>
+      unlimited ? form.get(amount)?.disable() : form.get(amount)?.enable();
     apply(!!form.get(flag)?.value);
     form.get(flag)?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(apply);
   }

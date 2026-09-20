@@ -2,7 +2,9 @@ using ABPmicroservice.Erp.Automations;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
+using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
@@ -11,7 +13,7 @@ using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
-using ABPmicroservice.Erp.WebServices;
+using ABPmicroservice.Erp.Sequences;
 using ABPmicroservice.Erp.Workflows;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
@@ -329,10 +331,112 @@ public static class ErpDbContextModelCreatingExtensions
             b.ConfigureByConvention();
         });
 
+        builder.Entity<ColumnLayout>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ColumnLayouts", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.ColumnLayoutId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+            b.HasCompanyUniqueIndex("Name");
+        });
+
+        builder.Entity<ColumnLayoutLine>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ColumnLayoutLines", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.ColumnNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxRowNoLength);
+            b.Property(x => x.ColumnHeader).HasMaxLength(ErpDomainConsts.MaxColumnHeaderLength);
+            b.Property(x => x.ComparisonDateFormula).HasMaxLength(ErpDomainConsts.MaxDateFormulaLength);
+        });
+
+        builder.Entity<GenJournalTemplate>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GenJournalTemplates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxJournalTemplateNameLength);
+            b.Property(x => x.SourceCode).HasMaxLength(ErpDomainConsts.MaxSourceCodeLength);
+            b.Property(x => x.NoSeriesCode).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.HasCompanyUniqueIndex("Name");
+        });
+
+        builder.Entity<GLRegister>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GLRegisters", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.SourceCode).HasMaxLength(ErpDomainConsts.MaxSourceCodeLength);
+            b.Property(x => x.JournalBatchName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.UserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Ignore(x => x.IsEmpty);
+            b.Ignore(x => x.IsReversible);
+            b.HasCompanyUniqueIndex("No");
+        });
+
+        builder.Entity<StandardGeneralJournal>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "StandardGeneralJournals", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.JournalTemplateName).IsRequired().HasMaxLength(ErpDomainConsts.MaxJournalTemplateNameLength);
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ErpDomainConsts.MaxJournalTemplateNameLength);
+            b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.StandardGeneralJournalId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+            b.HasCompanyUniqueIndex("JournalTemplateName", "Code");
+        });
+
+        builder.Entity<StandardGeneralJournalLine>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "StandardGeneralJournalLines", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.AccountNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+        });
+
+        builder.Entity<ErpNumberSequence>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "NumberSequences", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.HasCompanyUniqueIndex("Name");
+        });
+
         builder.Entity<PublishedWebService>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "PublishedWebServices", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.ServiceName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.ExcludedFields).HasMaxLength(ErpDomainConsts.MaxTotalingLength);
+            b.HasCompanyUniqueIndex("ServiceName");
+        });
+
+        builder.Entity<WebhookSubscription>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "WebhookSubscriptions", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.EndpointUrl).IsRequired().HasMaxLength(ErpDomainConsts.MaxUrlLength);
+            b.Property(x => x.Secret).HasMaxLength(ErpDomainConsts.MaxWebhookSecretLength);
+            b.Property(x => x.LastError).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.HasIndex(x => new { x.EntityName, x.Active });
+        });
+
+        builder.Entity<WebhookDelivery>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "WebhookDeliveries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.Error).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            // The worker asks for exactly this: what is due, oldest first.
+            b.HasIndex(x => new { x.Status, x.NextAttemptTime });
+            b.HasIndex(x => x.SubscriptionId);
+        });
+
+        builder.Entity<ExportTemplate>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ExportTemplates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.Fields).IsRequired().HasMaxLength(ErpDomainConsts.MaxTotalingLength);
+            b.HasCompanyUniqueIndex("EntityName", "Name");
         });
 
         builder.Entity<Company>(b =>

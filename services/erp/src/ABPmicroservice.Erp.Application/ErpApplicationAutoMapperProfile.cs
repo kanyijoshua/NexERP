@@ -1,7 +1,9 @@
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
+using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
@@ -23,8 +25,17 @@ public class ErpApplicationAutoMapperProfile : Profile
         // Finance
         CreateMap<GLAccount, GLAccountDto>();
         CreateMap<GLEntry, GLEntryDto>();
-        CreateMap<GenJournalBatch, GenJournalBatchDto>();
+        CreateMap<GenJournalTemplate, GenJournalTemplateDto>().ForMember(d => d.BatchCount, o => o.Ignore());
+        // The line count, balance and recurring flag are filled from the batch's lines and template.
+        CreateMap<GenJournalBatch, GenJournalBatchDto>()
+            .ForMember(d => d.LineCount, o => o.Ignore())
+            .ForMember(d => d.Balance, o => o.Ignore())
+            .ForMember(d => d.Recurring, o => o.Ignore());
         CreateMap<GenJournalLine, GenJournalLineDto>();
+        CreateMap<GLRegister, GLRegisterDto>();
+        CreateMap<StandardGeneralJournal, StandardJournalDto>().ForMember(d => d.LineCount, o => o.Ignore());
+        CreateMap<ReversalResult, ReversalResultDto>();
+        CreateMap<GenJnlPostBatchResult, GenJournalPostingResultDto>();
 
         // Inventory
         CreateMap<Item, ItemDto>();
@@ -66,9 +77,21 @@ public class ErpApplicationAutoMapperProfile : Profile
             .ForMember(d => d.SubstituteUserName, o => o.Ignore());
 
         // Reporting
-        CreateMap<FinancialReportResultDto, FinancialReportDto>();
-        CreateMap<FinancialReportRowDto, FinancialReportLineDto>();
+        CreateMap<ReportResult, ReportResultDto>();
+        CreateMap<ReportColumnDefinition, ReportColumnDto>();
+        CreateMap<ReportRow, ReportRowDto>();
         CreateMap<CustomReportLayout, ReportLayoutDto>();
+        CreateMap<AccountSchedule, AccountScheduleDto>().ForMember(d => d.LineCount, o => o.Ignore());
+        CreateMap<AccountScheduleLine, AccountScheduleLineDto>();
+        CreateMap<ColumnLayout, ColumnLayoutDto>().ForMember(d => d.LineCount, o => o.Ignore());
+        CreateMap<ColumnLayoutLine, ColumnLayoutLineDto>();
+
+        // Exporting and integration
+        CreateMap<ExportTemplate, ExportTemplateDto>().ForMember(d => d.Fields, o => o.MapFrom(s => s.GetFields()));
+        // The URL is built by the service, which knows the route; the secret is shown only once.
+        CreateMap<PublishedWebService, PublishedWebServiceDto>().ForMember(d => d.Url, o => o.Ignore());
+        CreateMap<WebhookSubscription, WebhookSubscriptionDto>().ForMember(d => d.Secret, o => o.Ignore());
+        CreateMap<WebhookDelivery, WebhookDeliveryDto>();
 
         // Chatter and Kanban
         CreateMap<DocumentNote, DocumentNoteDto>();

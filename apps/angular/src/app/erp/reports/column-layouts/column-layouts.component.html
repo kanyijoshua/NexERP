@@ -1,0 +1,107 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:ColumnLayouts"
+  breadcrumb="Erp::Menu:Reports"
+  icon="fas fa-columns"
+  [(filter)]="filter"
+  permission="Erp.AccountSchedules.Manage"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
+      <ngx-datatable-column [name]="'Erp::Code' | abpLocalization" prop="name" [width]="180"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Description' | abpLocalization" prop="description" [width]="340"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::LineCount' | abpLocalization" prop="lineCount" [width]="100"></ngx-datatable-column>
+      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="200">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary me-1"
+            (click)="openLines(row)"
+          >
+            <i class="fas fa-list-ol me-1"></i>{{ 'Erp::Lines' | abpLocalization }}
+          </button>
+          <button
+            *abpPermission="'Erp.AccountSchedules.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-primary me-1"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEdit(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+          <button
+            *abpPermission="'Erp.AccountSchedules.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            [title]="'Erp::Delete' | abpLocalization"
+            (click)="remove(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ (selected ? 'Erp::Edit' : 'Erp::New') | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label" for="cl-name">{{ 'Erp::Code' | abpLocalization }} *</label>
+          <input id="cl-name" type="text" class="form-control" formControlName="name" autofocus />
+        </div>
+        <div class="col-md-7">
+          <label class="form-label" for="cl-description">{{ 'Erp::Description' | abpLocalization }}</label>
+          <input id="cl-description" type="text" class="form-control" formControlName="description" />
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isLinesModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ 'Erp::ColumnLayout' | abpLocalization }}
+      <span class="text-muted">· {{ layoutOwner?.name }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <p class="form-text mt-0">{{ 'Erp::ComparisonDateFormulaHint' | abpLocalization }}</p>
+    <erp-line-grid
+      [lines]="layoutLines"
+      [columns]="lineColumns"
+      (addLine)="addLine()"
+      (removeLine)="removeLine($event)"
+    ></erp-line-grid>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Cancel' | abpLocalization }}
+    </button>
+    <abp-button iconClass="fa fa-check" [disabled]="layoutLines.invalid" (click)="saveLines()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

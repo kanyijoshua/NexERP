@@ -14,7 +14,9 @@ export interface CompanyDto {
   providedIn: 'root',
 })
 export class CompanyService {
-  private activeCompanyId$ = new BehaviorSubject<string | null>(localStorage.getItem('active_company_id'));
+  private activeCompanyId$ = new BehaviorSubject<string | null>(
+    localStorage.getItem('active_company_id'),
+  );
 
   private companyChangedSubject = new Subject<string>();
 
@@ -45,7 +47,10 @@ export class CompanyService {
   /** The tenant's companies, default first (the API returns an ABP list result). */
   getCompanies(): Observable<CompanyDto[]> {
     return this.restService
-      .request<void, { items: CompanyDto[] }>({ method: 'GET', url: '/api/erp/company' }, { apiName: 'Erp' })
+      .request<void, { items: CompanyDto[] }>(
+        { method: 'GET', url: '/api/erp/company' },
+        { apiName: 'Erp' },
+      )
       .pipe(map(result => result.items ?? []));
   }
 
@@ -68,9 +73,17 @@ export class CompanyService {
     return fallback.id;
   }
 
-  copyCompany(sourceCompanyId: string, newCompanyName: string, newDisplayName: string): Observable<CompanyDto> {
+  copyCompany(
+    sourceCompanyId: string,
+    newCompanyName: string,
+    newDisplayName: string,
+  ): Observable<CompanyDto> {
     return this.restService.request<unknown, CompanyDto>(
-      { method: 'POST', url: '/api/erp/company/copy', body: { sourceCompanyId, newCompanyName, newDisplayName } },
+      {
+        method: 'POST',
+        url: '/api/erp/company/copy',
+        body: { sourceCompanyId, newCompanyName, newDisplayName },
+      },
       { apiName: 'Erp' },
     );
   }

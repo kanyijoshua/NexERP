@@ -3,15 +3,30 @@ import { RestService } from '@abp/ng.core';
 import { CompanyDto, CompanyService } from './company.service';
 
 describe('CompanyService', () => {
-  const cronus: CompanyDto = { id: 'a', name: 'CRONUS', displayName: 'CRONUS', evaluationCompany: false, isDefault: true };
-  const us: CompanyDto = { id: 'b', name: 'CRONUS US', displayName: 'CRONUS US', evaluationCompany: true, isDefault: false };
+  const cronus: CompanyDto = {
+    id: 'a',
+    name: 'CRONUS',
+    displayName: 'CRONUS',
+    evaluationCompany: false,
+    isDefault: true,
+  };
+  const us: CompanyDto = {
+    id: 'b',
+    name: 'CRONUS US',
+    displayName: 'CRONUS US',
+    evaluationCompany: true,
+    isDefault: false,
+  };
 
   let service: CompanyService;
 
   beforeEach(() => {
     localStorage.removeItem('active_company_id');
     TestBed.configureTestingModule({
-      providers: [CompanyService, { provide: RestService, useValue: jasmine.createSpyObj('RestService', ['request']) }],
+      providers: [
+        CompanyService,
+        { provide: RestService, useValue: jasmine.createSpyObj('RestService', ['request']) },
+      ],
     });
     service = TestBed.inject(CompanyService);
   });

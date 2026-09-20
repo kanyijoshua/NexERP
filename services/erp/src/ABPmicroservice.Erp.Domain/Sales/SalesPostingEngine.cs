@@ -18,6 +18,9 @@ namespace ABPmicroservice.Erp.Sales;
 /// </summary>
 public class SalesPostingEngine : DomainService
 {
+    /// <summary>Stamped on every entry the engine posts. Mirrors BC's "SALES" source code.</summary>
+    private const string SourceCode = "SALES";
+
     private readonly IRepository<SalesHeader, Guid> _salesHeaderRepository;
     private readonly IRepository<PostedSalesHeader, Guid> _postedSalesHeaderRepository;
     private readonly IRepository<CustomerPostingGroup, Guid> _customerPostingGroupRepository;
@@ -26,6 +29,7 @@ public class SalesPostingEngine : DomainService
     private readonly ItemJnlPostLine _itemJnlPostLine;
     private readonly SalesReceivablesSetupManager _setupManager;
     private readonly NoSeriesManager _noSeriesManager;
+    private readonly GLRegisterManager _registerManager;
 
     public SalesPostingEngine(
         IRepository<SalesHeader, Guid> salesHeaderRepository,
@@ -35,9 +39,11 @@ public class SalesPostingEngine : DomainService
         GenJnlPostLine genJnlPostLine,
         ItemJnlPostLine itemJnlPostLine,
         SalesReceivablesSetupManager setupManager,
-        NoSeriesManager noSeriesManager
+        NoSeriesManager noSeriesManager,
+        GLRegisterManager registerManager
     )
     {
+        _registerManager = registerManager;
         _salesHeaderRepository = salesHeaderRepository;
         _postedSalesHeaderRepository = postedSalesHeaderRepository;
         _customerPostingGroupRepository = customerPostingGroupRepository;
@@ -98,19 +104,27 @@ public class SalesPostingEngine : DomainService
 
         await _postedSalesHeaderRepository.InsertAsync(postedHeader);
 
-        // 2. Post Customer Ledger Entry (A/R Debit)
-        await _genJnlPostLine.PostLineAsync(new GenJournalLine(
-            GuidGenerator.Create(),
-            Guid.Empty,
-            1,
-            header.PostingDate,
-            GLEntryDocumentType.Invoice,
-            postedDocNo,
-            "Customer",
-            header.SellToCustomerNo,
-            $"Sales Invoice {postedDocNo}",
-            header.TotalAmountIncludingVat
-        ));
+        // Everything this document posts belongs to one register, so it can be navigated and
+        // reversed as a unit, exactly like a journal.
+        var register = await _registerManager.OpenAsync(header.PostingDate, SourceCode, postedDocNo);
+        var context = new GLPostingContext(register, SourceCode);
+
+        // 2. Post Customer Ledger Entry (A/R Debit) and the receivables control account with it
+        await _genJnlPostLine.PostLineAsync(
+            new GenJournalLine(
+                GuidGenerator.Create(),
+                Guid.Empty,
+                1,
+                header.PostingDate,
+                GLEntryDocumentType.Invoice,
+                postedDocNo,
+                GenJournalAccountType.Customer,
+                header.SellToCustomerNo,
+                $"Sales Invoice {postedDocNo}",
+                header.TotalAmountIncludingVat
+            ),
+            context
+        );
 
         // 3. Post Revenue & Item Ledger entries per line
         foreach (var line in header.Lines)
@@ -137,10 +151,13 @@ public class SalesPostingEngine : DomainService
                     postedDocNo,
                     line.Description,
                     -line.LineAmount,
-                    header.SellToCustomerNo
+                    header.SellToCustomerNo,
+                    context: context
                 );
             }
         }
+
+        await _registerManager.CloseAsync(register);
 
         // 4. Mark header as posted
         header.MarkPosted(postedDocNo);

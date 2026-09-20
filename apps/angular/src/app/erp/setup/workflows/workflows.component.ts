@@ -47,14 +47,19 @@ export class WorkflowsComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+    this.companyService.companyChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.load());
   }
 
   load(): void {
     this.loading = true;
     this.service
       .getList()
-      .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.loading = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(result => (this.workflows = result.items ?? []));
   }
 
@@ -67,7 +72,7 @@ export class WorkflowsComponent implements OnInit {
   }
 
   toggleSteps(workflow: WorkflowDto): void {
-    this.expandedId = this.expandedId === workflow.id ? null : workflow.id ?? null;
+    this.expandedId = this.expandedId === workflow.id ? null : (workflow.id ?? null);
   }
 
   /** Enabling is what makes documents need approval, so it is confirmed; disabling is not. */
@@ -78,7 +83,10 @@ export class WorkflowsComponent implements OnInit {
     const id = workflow.id;
 
     if (!enabled) {
-      this.service.disable(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+      this.service
+        .disable(id)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.load());
       return;
     }
 
@@ -87,7 +95,10 @@ export class WorkflowsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(status => {
         if (status === Confirmation.Status.confirm) {
-          this.service.enable(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+          this.service
+            .enable(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.load());
         } else {
           this.load(); // put the switch back
         }
@@ -113,14 +124,21 @@ export class WorkflowsComponent implements OnInit {
     }
 
     const input = this.form.getRawValue() as CreateUpdateWorkflowDto;
-    const request$ = this.selected?.id ? this.service.update(this.selected.id, input) : this.service.create(input);
+    const request$ = this.selected?.id
+      ? this.service.update(this.selected.id, input)
+      : this.service.create(input);
 
     this.isBusy = true;
-    request$.pipe(finalize(() => (this.isBusy = false)), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.isModalOpen = false;
-      this.toaster.success('Erp::SavedSuccessfully');
-      this.load();
-    });
+    request$
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.isModalOpen = false;
+        this.toaster.success('Erp::SavedSuccessfully');
+        this.load();
+      });
   }
 
   remove(workflow: WorkflowDto): void {
@@ -134,22 +152,37 @@ export class WorkflowsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(status => {
         if (status === Confirmation.Status.confirm) {
-          this.service.delete(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            this.toaster.success('Erp::DeletedSuccessfully');
-            this.load();
-          });
+          this.service
+            .delete(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+              this.toaster.success('Erp::DeletedSuccessfully');
+              this.load();
+            });
         }
       });
   }
 
   private buildForm(workflow?: WorkflowDto): FormGroup {
     return this.fb.group({
-      code: [{ value: workflow?.code ?? '', disabled: !!workflow }, [Validators.required, Validators.maxLength(30)]],
+      code: [
+        { value: workflow?.code ?? '', disabled: !!workflow },
+        [Validators.required, Validators.maxLength(30)],
+      ],
       description: [workflow?.description ?? '', Validators.maxLength(250)],
-      documentKind: [workflow?.documentKind ?? ApprovalDocumentKind.SalesDocument, Validators.required],
+      documentKind: [
+        workflow?.documentKind ?? ApprovalDocumentKind.SalesDocument,
+        Validators.required,
+      ],
       minimumAmount: [workflow?.minimumAmount ?? 0, [Validators.required, Validators.min(0)]],
-      approverLimitType: [workflow?.approverLimitType ?? ApproverLimitType.ApproverChain, Validators.required],
-      dueDays: [workflow?.dueDays ?? 0, [Validators.required, Validators.min(0), Validators.max(3650)]],
+      approverLimitType: [
+        workflow?.approverLimitType ?? ApproverLimitType.ApproverChain,
+        Validators.required,
+      ],
+      dueDays: [
+        workflow?.dueDays ?? 0,
+        [Validators.required, Validators.min(0), Validators.max(3650)],
+      ],
     });
   }
 }

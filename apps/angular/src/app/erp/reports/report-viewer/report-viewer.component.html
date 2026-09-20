@@ -1,0 +1,186 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <h4 class="mb-0 fw-bold">
+      <i class="fas fa-chart-line text-primary me-2"></i>{{ 'Erp::Menu:FinancialReports' | abpLocalization }}
+    </h4>
+    <div *ngIf="title" class="small text-muted">{{ title }}</div>
+  </div>
+
+  <ng-container *abpPermission="'Erp.Reports.ExportExcel'">
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-success"
+      [disabled]="busy || rows.length === 0"
+      (click)="exportReport(ExportFormat.Csv)"
+    >
+      <i class="fas fa-file-csv me-1"></i>CSV
+    </button>
+    <button
+      type="button"
+      class="btn btn-sm btn-success"
+      [disabled]="busy || rows.length === 0"
+      (click)="exportReport(ExportFormat.Xlsx)"
+    >
+      <i class="fas fa-file-excel me-1"></i>{{ 'Erp::ExportToExcel' | abpLocalization }}
+    </button>
+  </ng-container>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label" for="rv-report">{{ 'Erp::Report' | abpLocalization }}</label>
+        <select
+          id="rv-report"
+          class="form-select"
+          [(ngModel)]="report"
+          (ngModelChange)="onReportChange()"
+        >
+          <option *ngFor="let option of reportOptions" [ngValue]="option.value">
+            {{ option.label | abpLocalization }}
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="!isAged" class="col-md-2">
+        <label class="form-label" for="rv-from">{{ 'Erp::FromDate' | abpLocalization }}</label>
+        <input id="rv-from" type="date" class="form-control" [(ngModel)]="fromDate" />
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label" for="rv-to">
+          {{ (isAged ? 'Erp::AsOfDate' : 'Erp::ToDate') | abpLocalization }}
+        </label>
+        <input id="rv-to" type="date" class="form-control" [(ngModel)]="toDate" />
+      </div>
+
+      <div *ngIf="usesAccountFilter" class="col-md-3">
+        <label class="form-label" for="rv-accounts">{{ 'Erp::AccountFilter' | abpLocalization }}</label>
+        <input
+          id="rv-accounts"
+          type="text"
+          class="form-control"
+          [placeholder]="'Erp::AccountFilterHint' | abpLocalization"
+          [(ngModel)]="accountFilter"
+        />
+      </div>
+
+      <ng-container *ngIf="isAged">
+        <div class="col-md-2">
+          <label class="form-label" for="rv-aging">{{ 'Erp::AgingMethod' | abpLocalization }}</label>
+          <select id="rv-aging" class="form-select" [(ngModel)]="agingMethod">
+            <option *ngFor="let option of agingOptions" [ngValue]="option.value">
+              {{ option.label | abpLocalization }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="rv-period">{{ 'Erp::PeriodLengthDays' | abpLocalization }}</label>
+          <input id="rv-period" type="number" min="1" max="365" class="form-control" [(ngModel)]="periodLengthDays" />
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="isSchedule">
+        <div class="col-md-3">
+          <label class="form-label" for="rv-schedule">{{ 'Erp::AccountSchedule' | abpLocalization }}</label>
+          <select id="rv-schedule" class="form-select" [(ngModel)]="scheduleName">
+            <option *ngFor="let schedule of scheduleList" [value]="schedule.name">
+              {{ schedule.description || schedule.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="rv-layout">{{ 'Erp::ColumnLayout' | abpLocalization }}</label>
+          <select id="rv-layout" class="form-select" [(ngModel)]="columnLayoutName">
+            <option value="">—</option>
+            <option *ngFor="let layout of layoutList" [value]="layout.name">
+              {{ layout.description || layout.name }}
+            </option>
+          </select>
+        </div>
+      </ng-container>
+
+      <div class="col-md-3">
+        <div class="form-check form-switch">
+          <input
+            id="rv-zero"
+            type="checkbox"
+            class="form-check-input"
+            [(ngModel)]="excludeZeroBalances"
+          />
+          <label class="form-check-label" for="rv-zero">
+            {{ 'Erp::ExcludeZeroBalances' | abpLocalization }}
+          </label>
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <button type="button" class="btn btn-primary w-100" [disabled]="busy || runDisabled" (click)="run()">
+          <span *ngIf="busy" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          <i *ngIf="!busy" class="fas fa-play me-1"></i>{{ 'Erp::Run' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <div *ngIf="rows.length; else empty" class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th
+              *ngFor="let column of columns; let first = first"
+              scope="col"
+              [class.text-end]="column.type !== 'text' && column.type !== 'date'"
+            >
+              {{ column.labelKey }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows" [ngClass]="rowClass(row)">
+            <td
+              *ngFor="let column of columns; let first = first"
+              [class.text-end]="column.type !== 'text' && column.type !== 'date'"
+              [style.padding-left.rem]="first ? row['__indent'] * 1.25 + 0.5 : null"
+            >
+              <ng-container [ngSwitch]="column.type">
+                <ng-container *ngSwitchCase="'currency'">{{ row[column.field] | erpAmount }}</ng-container>
+                <ng-container *ngSwitchCase="'date'">{{ row[column.field] | date: 'mediumDate' }}</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <button
+                    *ngIf="first && row['__drill']; else plain"
+                    type="button"
+                    class="btn btn-link btn-sm p-0 text-decoration-none"
+                    [title]="'Erp::DrillDown' | abpLocalization"
+                    (click)="drillDown(row)"
+                  >
+                    {{ row[column.field] }}
+                  </button>
+                  <ng-template #plain>{{ row[column.field] }}</ng-template>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #empty>
+      <div class="text-center text-muted py-5">
+        <ng-container *ngIf="busy; else noData">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          {{ 'Erp::Loading' | abpLocalization }}
+        </ng-container>
+        <ng-template #noData>
+          <i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ 'Erp::NoDataAvailable' | abpLocalization }}
+        </ng-template>
+      </div>
+    </ng-template>
+  </div>
+</div>

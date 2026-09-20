@@ -84,14 +84,12 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
         this.list.filter = value;
       });
 
-    this.companyService.companyChanged$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        if (this.list.page !== 0) {
-          this.list.page = 0;
-        }
-        this.list.get();
-      });
+    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (this.list.page !== 0) {
+        this.list.page = 0;
+      }
+      this.list.get();
+    });
   }
 
   /** Loads the full record before editing. Defaults to the row itself. */

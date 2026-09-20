@@ -1,0 +1,210 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="fas fa-file-export text-primary me-2"></i>{{ 'Erp::Menu:DataExport' | abpLocalization }}
+  </h4>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <label class="form-label" for="de-entity">{{ 'Erp::Table' | abpLocalization }}</label>
+        <select
+          id="de-entity"
+          class="form-select mb-3"
+          [ngModel]="entityName"
+          (ngModelChange)="onEntityChange($event)"
+        >
+          <option value="">—</option>
+          <option *ngFor="let entity of entities" [value]="entity.name">{{ entity.displayName }}</option>
+        </select>
+
+        <ng-container *ngIf="fields.length">
+          <div class="d-flex align-items-center mb-2">
+            <span class="fw-bold me-auto">{{ 'Erp::Fields' | abpLocalization }}</span>
+            <button type="button" class="btn btn-sm btn-link p-0 me-2" (click)="selectDefaults()">
+              {{ 'Erp::SelectDefaults' | abpLocalization }}
+            </button>
+            <button type="button" class="btn btn-sm btn-link p-0 me-2" (click)="selectAll()">
+              {{ 'Erp::SelectAll' | abpLocalization }}
+            </button>
+            <button type="button" class="btn btn-sm btn-link p-0" (click)="selectNone()">
+              {{ 'Erp::SelectNone' | abpLocalization }}
+            </button>
+          </div>
+
+          <div class="border rounded p-2" style="max-height: 320px; overflow-y: auto">
+            <div *ngFor="let field of fields" class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                [id]="'field-' + field.name"
+                [checked]="selectedFields.has(field.name!)"
+                (change)="toggleField(field.name!)"
+              />
+              <label class="form-check-label" [for]="'field-' + field.name">
+                {{ field.displayName }}
+                <span class="badge bg-light text-muted ms-1">{{ field.dataType }}</span>
+              </label>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-8">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <span class="fw-bold me-auto">{{ 'Erp::Filters' | abpLocalization }}</span>
+          <button
+            type="button"
+            class="btn btn-sm btn-link p-0"
+            [disabled]="!fields.length"
+            (click)="addFilter()"
+          >
+            <i class="fas fa-plus me-1"></i>{{ 'Erp::AddFilter' | abpLocalization }}
+          </button>
+        </div>
+
+        <div *ngFor="let filter of filters; let i = index" class="row g-2 align-items-end mb-2">
+          <div class="col-md-4">
+            <select class="form-select form-select-sm" [(ngModel)]="filter.field">
+              <option *ngFor="let field of fields" [value]="field.name">{{ field.displayName }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select form-select-sm" [(ngModel)]="filter.operator">
+              <option *ngFor="let option of operatorOptions" [ngValue]="option.value">
+                {{ option.label | abpLocalization }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select
+              *ngIf="enumValuesOf(filter.field).length; else freeText"
+              class="form-select form-select-sm"
+              [(ngModel)]="filter.value"
+            >
+              <option *ngFor="let value of enumValuesOf(filter.field)" [value]="value">{{ value }}</option>
+            </select>
+            <ng-template #freeText>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [attr.aria-label]="'Erp::Value' | abpLocalization"
+                [(ngModel)]="filter.value"
+              />
+            </ng-template>
+          </div>
+          <div class="col-md-1 text-end">
+            <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="removeFilter(i)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="row g-2 align-items-end mt-2">
+          <div class="col-md-4">
+            <label class="form-label small mb-1" for="de-order">{{ 'Erp::SortBy' | abpLocalization }}</label>
+            <select id="de-order" class="form-select form-select-sm" [(ngModel)]="orderBy">
+              <option value="">—</option>
+              <option *ngFor="let field of fields" [value]="field.name">{{ field.displayName }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1" for="de-format">{{ 'Erp::Format' | abpLocalization }}</label>
+            <select id="de-format" class="form-select form-select-sm" [(ngModel)]="format">
+              <option [ngValue]="ExportFormat.Xlsx">Excel (.xlsx)</option>
+              <option [ngValue]="ExportFormat.Csv">CSV</option>
+              <option [ngValue]="ExportFormat.Json">JSON</option>
+            </select>
+          </div>
+          <div class="col-md-5 text-end">
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" [disabled]="!canRun" (click)="preview()">
+              <i class="fas fa-eye me-1"></i>{{ 'Erp::Preview' | abpLocalization }}
+            </button>
+            <button type="button" class="btn btn-sm btn-success" [disabled]="!canRun" (click)="run()">
+              <i class="fas fa-download me-1"></i>{{ 'Erp::Export' | abpLocalization }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *abpPermission="'Erp.DataExport.ManageTemplates'" class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="fw-bold mb-2">{{ 'Erp::ExportTemplates' | abpLocalization }}</div>
+
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span *ngFor="let template of templates" class="badge bg-light text-dark border">
+            <button type="button" class="btn btn-sm btn-link p-0 me-1" (click)="applyTemplate(template)">
+              {{ template.name }}
+            </button>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0" (click)="deleteTemplate(template)">
+              <i class="fas fa-times"></i>
+            </button>
+          </span>
+        </div>
+
+        <div class="row g-2 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label small mb-1" for="de-template">{{ 'Erp::TemplateName' | abpLocalization }}</label>
+            <input id="de-template" type="text" class="form-control form-control-sm" [(ngModel)]="templateName" />
+          </div>
+          <div class="col-md-4">
+            <div class="form-check">
+              <input id="de-share" type="checkbox" class="form-check-input" [(ngModel)]="shareTemplate" />
+              <label class="form-check-label small" for="de-share">
+                {{ 'Erp::ShareTemplate' | abpLocalization }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-3 text-end">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              [disabled]="!templateName.trim() || !entityName"
+              (click)="saveTemplate()"
+            >
+              <i class="fas fa-bookmark me-1"></i>{{ 'Erp::SaveAsTemplate' | abpLocalization }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold">
+        {{ 'Erp::Preview' | abpLocalization }}
+        <span *ngIf="totalCount" class="badge bg-primary ms-2">
+          {{ 'Erp::RowsFound' | abpLocalization: totalCount }}
+        </span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th *ngFor="let column of previewColumns" scope="col">{{ column }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of previewRows">
+                <td *ngFor="let column of previewColumns">{{ row[column] }}</td>
+              </tr>
+              <tr *ngIf="previewRows.length === 0">
+                <td [attr.colspan]="previewColumns.length || 1" class="text-center text-muted py-3">
+                  {{ 'Erp::NoDataAvailable' | abpLocalization }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

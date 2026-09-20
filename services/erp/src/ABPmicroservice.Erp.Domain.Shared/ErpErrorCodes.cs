@@ -54,6 +54,61 @@ public static class ErpErrorCodes
     {
         public const string NothingToPost = Prefix + ":Journals:00001";
         public const string DocumentOutOfBalance = Prefix + ":Journals:00002";
+        public const string TemplateNameAlreadyExists = Prefix + ":Journals:00003";
+        public const string BatchNameAlreadyExists = Prefix + ":Journals:00004";
+        public const string TemplateNotFound = Prefix + ":Journals:00005";
+        public const string AccountNoRequired = Prefix + ":Journals:00006";
+        public const string SameAccountAndBalAccount = Prefix + ":Journals:00007";
+        public const string PostingDateRequired = Prefix + ":Journals:00008";
+        public const string RecurringFrequencyRequired = Prefix + ":Journals:00009";
+        public const string RecurringNotAllowedHere = Prefix + ":Journals:00010";
+        public const string InvalidDateFormula = Prefix + ":Journals:00011";
+        public const string BalancingMethodNeedsAllocation = Prefix + ":Journals:00012";
+        public const string StandardJournalCodeAlreadyExists = Prefix + ":Journals:00013";
+        public const string BatchNotEmpty = Prefix + ":Journals:00014";
+        public const string PreviewNeedsATransaction = Prefix + ":Journals:00015";
+    }
+
+    public static class Registers
+    {
+        public const string RegisterNotFound = Prefix + ":Registers:00001";
+        public const string AlreadyReversed = Prefix + ":Registers:00002";
+        public const string NotReversible = Prefix + ":Registers:00003";
+        public const string EntryAlreadyReversed = Prefix + ":Registers:00004";
+        public const string AppliedEntryCannotBeReversed = Prefix + ":Registers:00005";
+    }
+
+    public static class Reports
+    {
+        public const string ScheduleNameAlreadyExists = Prefix + ":Reports:00001";
+        public const string ColumnLayoutNameAlreadyExists = Prefix + ":Reports:00002";
+        public const string UnknownRowReference = Prefix + ":Reports:00003";
+        public const string CircularRowFormula = Prefix + ":Reports:00004";
+        public const string InvalidRowFormula = Prefix + ":Reports:00005";
+        public const string InvalidAccountRange = Prefix + ":Reports:00006";
+        public const string ScheduleNotFound = Prefix + ":Reports:00007";
+        public const string PeriodReversed = Prefix + ":Reports:00008";
+    }
+
+    public static class Exporting
+    {
+        public const string UnknownEntity = Prefix + ":Exporting:00001";
+        public const string UnknownField = Prefix + ":Exporting:00002";
+        public const string NoFieldsSelected = Prefix + ":Exporting:00003";
+        public const string FilterValueNotValid = Prefix + ":Exporting:00004";
+        public const string OperatorNotSupportedForField = Prefix + ":Exporting:00005";
+        public const string TooManyRows = Prefix + ":Exporting:00006";
+        public const string TemplateNameAlreadyExists = Prefix + ":Exporting:00007";
+    }
+
+    public static class Integration
+    {
+        public const string ServiceNameAlreadyExists = Prefix + ":Integration:00001";
+        public const string EntityNotPublished = Prefix + ":Integration:00002";
+        public const string EndpointNotHttps = Prefix + ":Integration:00003";
+        public const string SubscriptionNotFound = Prefix + ":Integration:00004";
+        public const string DeliveryNotRetryable = Prefix + ":Integration:00005";
+        public const string EndpointNotValid = Prefix + ":Integration:00006";
     }
 
     public static class Ledgers
@@ -75,6 +130,7 @@ public static class ErpErrorCodes
         public const string CustomerNotFound = Prefix + ":Customers:00002";
         public const string CreditLimitExceeded = Prefix + ":Customers:00003";
         public const string CustomerBlocked = Prefix + ":Customers:00004";
+        public const string PostingGroupNotFound = Prefix + ":Customers:00005";
     }
 
     public static class Vendors
@@ -82,6 +138,7 @@ public static class ErpErrorCodes
         public const string VendorAlreadyExists = Prefix + ":Vendors:00001";
         public const string VendorNotFound = Prefix + ":Vendors:00002";
         public const string VendorBlocked = Prefix + ":Vendors:00003";
+        public const string PostingGroupNotFound = Prefix + ":Vendors:00004";
     }
 
     public static class GLAccounts

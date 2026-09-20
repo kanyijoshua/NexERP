@@ -1,7 +1,12 @@
 import { ABP, ListService } from '@abp/ng.core';
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CreateUpdateNoSeriesDto, NoSeriesDto, NoSeriesLineDto, NoSeriesService } from '@proxy/numbering';
+import {
+  CreateUpdateNoSeriesDto,
+  NoSeriesDto,
+  NoSeriesLineDto,
+  NoSeriesService,
+} from '@proxy/numbering';
 import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
 
 /** No. Series list and card. Mirrors Business Central pages 456 "No. Series" and 457 "No. Series Lines". */
@@ -16,7 +21,13 @@ export class NoSeriesComponent extends CrudListBase<NoSeriesDto, CreateUpdateNoS
     { field: 'startingNo', labelKey: 'Erp::StartingNo', type: 'text' },
     { field: 'endingNo', labelKey: 'Erp::EndingNo', type: 'text' },
     { field: 'warningNo', labelKey: 'Erp::WarningNo', type: 'text' },
-    { field: 'incrementByNo', labelKey: 'Erp::IncrementByNo', type: 'number', width: '110px', step: 1 },
+    {
+      field: 'incrementByNo',
+      labelKey: 'Erp::IncrementByNo',
+      type: 'number',
+      width: '110px',
+      step: 1,
+    },
     { field: 'lastNoUsed', labelKey: 'Erp::LastNoUsed', type: 'readonly' },
   ];
 
@@ -43,7 +54,10 @@ export class NoSeriesComponent extends CrudListBase<NoSeriesDto, CreateUpdateNoS
 
     return this.fb.group({
       // The code is the key other tables refer to, so it is fixed once created.
-      code: [{ value: item?.code ?? '', disabled: !!item }, [Validators.required, Validators.maxLength(20)]],
+      code: [
+        { value: item?.code ?? '', disabled: !!item },
+        [Validators.required, Validators.maxLength(20)],
+      ],
       description: [item?.description ?? '', Validators.maxLength(250)],
       defaultNos: [item?.defaultNos ?? true],
       manualNos: [item?.manualNos ?? false],
@@ -65,7 +79,10 @@ export class NoSeriesComponent extends CrudListBase<NoSeriesDto, CreateUpdateNoS
       id: [line?.id ?? null],
       startingDate: [line?.startingDate ? line.startingDate.substring(0, 10) : null],
       // Needs at least one digit, otherwise there is nothing to increment.
-      startingNo: [line?.startingNo ?? '', [Validators.required, Validators.maxLength(20), Validators.pattern(/.*\d.*/)]],
+      startingNo: [
+        line?.startingNo ?? '',
+        [Validators.required, Validators.maxLength(20), Validators.pattern(/.*\d.*/)],
+      ],
       endingNo: [line?.endingNo ?? '', Validators.maxLength(20)],
       warningNo: [line?.warningNo ?? '', Validators.maxLength(20)],
       incrementByNo: [line?.incrementByNo ?? 1, [Validators.required, Validators.min(1)]],

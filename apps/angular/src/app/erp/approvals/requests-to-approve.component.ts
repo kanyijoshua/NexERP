@@ -53,7 +53,9 @@ export class RequestsToApproveComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(result => (this.data = result));
 
-    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.list.get());
+    this.companyService.companyChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.list.get());
   }
 
   setView(view: ApprovalView): void {
@@ -90,7 +92,11 @@ export class RequestsToApproveComponent implements OnInit {
   }
 
   isOverdue(entry: ApprovalEntryDto): boolean {
-    return entry.status === ApprovalStatus.Open && !!entry.dueDate && new Date(entry.dueDate) < new Date();
+    return (
+      entry.status === ApprovalStatus.Open &&
+      !!entry.dueDate &&
+      new Date(entry.dueDate) < new Date()
+    );
   }
 
   open(action: PendingAction, entry: ApprovalEntryDto): void {
@@ -107,14 +113,23 @@ export class RequestsToApproveComponent implements OnInit {
 
     const input = { comment: this.comment.trim() || undefined };
     const request$ =
-      this.action === 'approve' ? this.service.approve(this.entry.id, input) : this.service.reject(this.entry.id, input);
+      this.action === 'approve'
+        ? this.service.approve(this.entry.id, input)
+        : this.service.reject(this.entry.id, input);
 
     this.isBusy = true;
-    request$.pipe(finalize(() => (this.isBusy = false)), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.isModalOpen = false;
-      this.toaster.success(this.action === 'approve' ? 'Erp::RequestApproved' : 'Erp::RequestRejected');
-      this.list.get();
-    });
+    request$
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.isModalOpen = false;
+        this.toaster.success(
+          this.action === 'approve' ? 'Erp::RequestApproved' : 'Erp::RequestRejected',
+        );
+        this.list.get();
+      });
   }
 
   delegate(entry: ApprovalEntryDto): void {
@@ -128,10 +143,13 @@ export class RequestsToApproveComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(status => {
         if (status === Confirmation.Status.confirm) {
-          this.service.delegate(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            this.toaster.success('Erp::RequestDelegated');
-            this.list.get();
-          });
+          this.service
+            .delegate(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+              this.toaster.success('Erp::RequestDelegated');
+              this.list.get();
+            });
         }
       });
   }

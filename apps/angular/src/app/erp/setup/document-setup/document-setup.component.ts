@@ -57,7 +57,9 @@ export class DocumentSetupComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+    this.companyService.companyChanged$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.load());
   }
 
   /** "SI-00012" next to the chosen series, so the effect of a choice is visible at once. */
@@ -69,7 +71,10 @@ export class DocumentSetupComponent implements OnInit {
     this.savingSales = true;
     this.salesSetupService
       .update(this.blankToNull(this.salesForm))
-      .pipe(finalize(() => (this.savingSales = false)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.savingSales = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(setup => {
         this.salesForm.reset(setup);
         this.toaster.success('Erp::SavedSuccessfully');
@@ -80,7 +85,10 @@ export class DocumentSetupComponent implements OnInit {
     this.savingPurchase = true;
     this.purchaseSetupService
       .update(this.blankToNull(this.purchaseForm))
-      .pipe(finalize(() => (this.savingPurchase = false)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.savingPurchase = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(setup => {
         this.purchaseForm.reset(setup);
         this.toaster.success('Erp::SavedSuccessfully');
@@ -94,7 +102,10 @@ export class DocumentSetupComponent implements OnInit {
       sales: this.salesSetupService.get(),
       purchase: this.purchaseSetupService.get(),
     })
-      .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => (this.loading = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(({ series, sales, purchase }) => {
         this.series = series.items ?? [];
         this.salesForm.reset(sales);
