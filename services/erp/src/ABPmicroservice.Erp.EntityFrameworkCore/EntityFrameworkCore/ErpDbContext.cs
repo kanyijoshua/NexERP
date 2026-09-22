@@ -13,6 +13,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Modules;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Profiles;
 using ABPmicroservice.Erp.Purchasing;
@@ -107,6 +108,8 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<DocumentNote> DocumentNotes { get; set; }
     public DbSet<ActivityStreamEntry> ActivityStreamEntries { get; set; }
     public DbSet<DocumentActivityTask> DocumentActivityTasks { get; set; }
+
+    public DbSet<ErpModuleState> ErpModuleStates { get; set; }
 
     public DbSet<KanbanStage> KanbanStages { get; set; }
     public DbSet<AutomatedActionRule> AutomatedActionRules { get; set; }

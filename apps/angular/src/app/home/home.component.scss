@@ -1,1 +1,12 @@
-/* Styles for the home component */
+/* An app tile lifts on hover, so the grid reads as something you click rather than a list. */
+.app-tile {
+  transition:
+    transform 0.12s ease-in-out,
+    box-shadow 0.12s ease-in-out;
+}
+
+.app-tile:hover,
+.app-tile:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 12%) !important;
+}

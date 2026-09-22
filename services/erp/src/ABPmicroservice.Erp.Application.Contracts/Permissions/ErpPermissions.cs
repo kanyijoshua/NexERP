@@ -154,6 +154,13 @@ public class ErpPermissions
         public const string ExportExcel = Default + ".ExportExcel";
     }
 
+    /// <summary>Which of the system's own apps this company runs.</summary>
+    public static class Modules
+    {
+        public const string Default = GroupName + ".Modules";
+        public const string Manage = Default + ".Manage";
+    }
+
     public static class Companies
     {
         public const string Default = GroupName + ".Companies";

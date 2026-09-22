@@ -6,14 +6,12 @@ import { SharedModule } from '../shared/shared.module';
 import { ErpRoutingModule } from './erp-routing.module';
 import { ErpSharedModule } from './erp-shared/erp-shared.module';
 
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ChartOfAccountsComponent } from './pages/chart-of-accounts/chart-of-accounts.component';
 import { SalesInvoicesComponent } from './pages/sales-invoices/sales-invoices.component';
 import { PurchaseInvoicesComponent } from './pages/purchase-invoices/purchase-invoices.component';
 
 @NgModule({
   declarations: [
-    DashboardComponent,
     ChartOfAccountsComponent,
     SalesInvoicesComponent,
     PurchaseInvoicesComponent,

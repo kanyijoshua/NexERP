@@ -7,6 +7,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
+using ABPmicroservice.Erp.Modules;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Profiles;
 using ABPmicroservice.Erp.Purchasing;
@@ -427,6 +428,16 @@ public static class ErpDbContextModelCreatingExtensions
             // The worker asks for exactly this: what is due, oldest first.
             b.HasIndex(x => new { x.Status, x.NextAttemptTime });
             b.HasIndex(x => x.SubscriptionId);
+        });
+
+        builder.Entity<ErpModuleState>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ModuleStates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.ModuleCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxCodeLength);
+
+            // A module stands at one state in a company, which is what the lookup assumes.
+            b.HasCompanyUniqueIndex("ModuleCode");
         });
 
         builder.Entity<ExportTemplate>(b =>

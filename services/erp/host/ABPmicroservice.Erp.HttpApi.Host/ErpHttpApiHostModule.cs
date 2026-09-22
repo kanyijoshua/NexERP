@@ -1,5 +1,6 @@
 using System.IO;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ABPmicroservice.Erp.EntityFrameworkCore;
@@ -33,6 +34,12 @@ public class ErpHttpApiHostModule : AbpModule
 
         // Queued webhook calls are sent from here, outside the request that queued them.
         context.Services.AddErpWebhookDelivery();
+
+        // A module switched off in a company has to be off to the API too, not just hidden on screen.
+        Configure<MvcOptions>(options =>
+        {
+            options.Filters.AddService<ErpModuleActionFilter>();
+        });
 
         // Expose every ERP application service under /api/erp/<kebab-name>.
         Configure<AbpAspNetCoreMvcOptions>(options =>

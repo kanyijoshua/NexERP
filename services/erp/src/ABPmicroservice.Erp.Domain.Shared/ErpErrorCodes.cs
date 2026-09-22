@@ -117,6 +117,15 @@ public static class ErpErrorCodes
         public const string EndpointNotValid = Prefix + ":Integration:00006";
     }
 
+    public static class Modules
+    {
+        public const string UnknownModule = Prefix + ":Modules:00001";
+        public const string ModuleIsDisabled = Prefix + ":Modules:00002";
+        public const string CoreModuleCannotBeDisabled = Prefix + ":Modules:00003";
+        public const string DependencyIsDisabled = Prefix + ":Modules:00004";
+        public const string RequiredByAnotherModule = Prefix + ":Modules:00005";
+    }
+
     public static class Ledgers
     {
         public const string LedgerEntryIsImmutable = Prefix + ":Ledgers:00001";

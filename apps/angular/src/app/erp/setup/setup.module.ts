@@ -5,13 +5,20 @@ import { ErpSharedModule } from '../erp-shared/erp-shared.module';
 import { ApprovalUserSetupComponent } from './approval-user-setup/approval-user-setup.component';
 import { DataExportComponent } from './data-export/data-export.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
+import { ModulesComponent } from './modules/modules.component';
 import { NoSeriesComponent } from './no-series/no-series.component';
 import { WebServicesComponent } from './web-services/web-services.component';
 import { WebhooksComponent } from './webhooks/webhooks.component';
 import { WorkflowsComponent } from './workflows/workflows.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'no-series', pathMatch: 'full' },
+  { path: '', redirectTo: 'modules', pathMatch: 'full' },
+  {
+    path: 'modules',
+    component: ModulesComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Modules' },
+  },
   {
     path: 'no-series',
     component: NoSeriesComponent,
@@ -60,6 +67,7 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
+    ModulesComponent,
     NoSeriesComponent,
     DocumentSetupComponent,
     WorkflowsComponent,
