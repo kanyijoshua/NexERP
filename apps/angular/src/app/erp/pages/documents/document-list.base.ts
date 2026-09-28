@@ -1,6 +1,7 @@
 import { ABP, ListService, PagedResultDto, PermissionService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
 import { DestroyRef, Directive, OnInit, ViewChild, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DocumentLineType, DocumentStatus, documentLineTypeOptions } from '@proxy/documents';
@@ -12,7 +13,12 @@ import {
 } from '@proxy/workflows';
 import { Observable, finalize } from 'rxjs';
 import { ChatterWidgetComponent } from '../../components/chatter-widget/chatter-widget.component';
-import { DocumentLineColumn, LookupItem, calculateDocumentTotals } from '../../erp-shared';
+import {
+  DocumentLineChange,
+  DocumentLineColumn,
+  LookupItem,
+  calculateDocumentTotals,
+} from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
 /** The fields the list page needs from a sales or purchase header. */
@@ -56,6 +62,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected readonly companyService = inject(CompanyService);
   protected readonly approvalEntries = inject(ApprovalEntryService);
   private readonly permissions = inject(PermissionService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);
   readonly DocumentStatus = DocumentStatus;
@@ -69,6 +77,16 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   abstract readonly permissionPrefix: string;
   /** "SalesHeader" / "PurchaseHeader": the key of the record's chatter thread. */
   abstract readonly chatterEntityType: string;
+  /** Record entity of the party lookup: `customer` / `vendor`. */
+  abstract readonly partyEntity: string;
+  /** What an item line takes as its unit amount: the item's price on sales, its cost on purchases. */
+  abstract readonly itemAmountField: 'unitPrice' | 'unitCost';
+
+  /**
+   * Only the documents of this customer / vendor (`?partyId=` from the smart button on its card).
+   * Subclasses pass it to their list query.
+   */
+  partyFilter: string | null = null;
 
   @ViewChild(ChatterWidgetComponent) private chatter?: ChatterWidgetComponent;
 
@@ -118,6 +136,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   readonly nameOf = (row: TRow) => this.partyName(row);
 
   ngOnInit(): void {
+    this.partyFilter = this.route.snapshot.queryParamMap.get('partyId');
     this.lineColumns = [
       {
         field: 'type',
@@ -129,7 +148,15 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
           label: 'Erp::Enum:DocumentLineType.' + o.key,
         })),
       },
-      { field: 'no', labelKey: 'Erp::No', type: 'text', width: '130px' },
+      {
+        field: 'no',
+        labelKey: 'Erp::No',
+        type: 'lookup',
+        width: '170px',
+        // Lines of other types (resource, charge...) have no table here yet: plain text.
+        lookupEntity: row => lineEntityOf(row.get('type')?.value),
+        lookupAllowFreeText: true,
+      },
       { field: 'description', labelKey: 'Erp::Description', type: 'text' },
       { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: '110px', step: 1 },
       {
@@ -156,6 +183,37 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       this.list.page = 0;
       this.list.get();
     });
+  }
+
+  clearPartyFilter(): void {
+    this.partyFilter = null;
+    this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+    this.list.page = 0;
+    this.list.get();
+  }
+
+  /**
+   * Picking an item or G/L account fills the line the way BC's validation of "No." does:
+   * description, and for an item its price (sales) or cost (purchases). A new line type clears
+   * the number, which pointed into the other table.
+   */
+  onLineChange(change: DocumentLineChange): void {
+    const line = this.lines.at(change.index) as FormGroup | undefined;
+    if (!line) {
+      return;
+    }
+    if (change.field === 'type') {
+      line.patchValue({ no: '', description: '' });
+      return;
+    }
+    const record = change.item?.data;
+    if (change.field !== 'no' || !record) {
+      return;
+    }
+    line.patchValue({ description: change.item?.name ?? '' });
+    if (line.get('type')?.value === DocumentLineType.Item) {
+      line.patchValue({ unitAmount: Number(record[this.itemAmountField]) || 0 });
+    }
   }
 
   select(row: TRow | null): void {
@@ -315,5 +373,17 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       quantity: [1, [Validators.required, Validators.min(0.00001)]],
       unitAmount: [0, [Validators.required, Validators.min(0)]],
     });
+  }
+}
+
+/** The record table the "No." of a document line points into, by line type. */
+export function lineEntityOf(type: DocumentLineType | null | undefined): string | null {
+  switch (type) {
+    case DocumentLineType.Item:
+      return 'item';
+    case DocumentLineType.GLAccount:
+      return 'glAccount';
+    default:
+      return null;
   }
 }

@@ -15,6 +15,9 @@ import { KanbanBoardComponent } from './kanban-board/kanban-board.component';
 import { LineGridComponent } from './line-grid/line-grid.component';
 import { LookupComponent } from './lookup/lookup.component';
 import { PageToolbarComponent } from './page-toolbar/page-toolbar.component';
+import { RecordCardDialogComponent } from './record/record-card-dialog.component';
+import { RecordFormComponent } from './record/record-form.component';
+import { RecordListDialogComponent } from './record/record-list-dialog.component';
 import { ErpAmountPipe } from './pipes/erp-amount.pipe';
 import { ReportPageComponent } from './report-page/report-page.component';
 import { SmartButtonsComponent } from './smart-buttons/smart-buttons.component';
@@ -31,6 +34,9 @@ const DECLARATIONS = [
   KanbanBoardComponent,
   ReportPageComponent,
   SmartButtonsComponent,
+  RecordFormComponent,
+  RecordCardDialogComponent,
+  RecordListDialogComponent,
   ErpAmountPipe,
 ];
 

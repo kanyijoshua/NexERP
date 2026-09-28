@@ -87,6 +87,7 @@
                   inputClass="form-control-sm"
                   [formControlName]="column.field"
                   [source]="column.lookupSource"
+                  [entity]="entityOf(row, column)"
                   [valueField]="column.lookupValueField || 'code'"
                   [allowFreeText]="!!column.lookupAllowFreeText"
                   (selected)="onLookupSelected(i, column.field, $event)"

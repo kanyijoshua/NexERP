@@ -8,6 +8,14 @@
   (create)="openCreate()"
 ></erp-page-toolbar>
 
+<div *ngIf="partyFilter" class="mb-2">
+  <span class="badge rounded-pill text-bg-light border fw-normal py-2 px-3">
+    <i class="fas fa-filter me-1 text-primary"></i>{{ partyLabelKey | abpLocalization }}:
+    <strong>{{ data.items?.length ? nameOf(data.items![0]) : '…' }}</strong>
+    <button type="button" class="btn-close btn-close-sm ms-2 align-middle" style="font-size: 0.6rem" [attr.aria-label]="'Erp::Clear' | abpLocalization" (click)="clearPartyFilter()"></button>
+  </span>
+</div>
+
 <div class="row g-3">
   <div class="col-xl-8">
     <div class="card border-0 shadow-sm">
@@ -153,7 +161,7 @@
         </div>
         <div class="col-md-6">
           <label class="form-label" for="doc-party">{{ partyLabelKey | abpLocalization }} *</label>
-          <erp-lookup inputId="doc-party" formControlName="partyId" valueField="id" [source]="partySource"></erp-lookup>
+          <erp-lookup inputId="doc-party" formControlName="partyId" valueField="id" [source]="partySource" [entity]="partyEntity"></erp-lookup>
         </div>
         <div class="col-md-3">
           <label class="form-label" for="doc-date">{{ 'Erp::PostingDate' | abpLocalization }} *</label>
@@ -161,7 +169,7 @@
         </div>
       </div>
 
-      <erp-line-grid [lines]="lines" [columns]="lineColumns" (addLine)="addLine()" (removeLine)="removeLine($event)"></erp-line-grid>
+      <erp-line-grid [lines]="lines" [columns]="lineColumns" (addLine)="addLine()" (removeLine)="removeLine($event)" (lineChange)="onLineChange($event)"></erp-line-grid>
 
       <div class="text-end fw-bold mt-2">
         {{ 'Erp::Amount' | abpLocalization }}: {{ totals.amountExclVat | erpAmount }}

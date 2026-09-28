@@ -100,10 +100,13 @@ public class ItemAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
+        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        var filter = input.Filter?.Trim().ToLower();
+
         return query
             .WhereIf(
-                !input.Filter.IsNullOrWhiteSpace(),
-                x => x.No.Contains(input.Filter) || x.Description.Contains(input.Filter)
+                !filter.IsNullOrEmpty(),
+                x => x.No.ToLower().Contains(filter) || (x.Description != null && x.Description.ToLower().Contains(filter))
             )
             .WhereIf(input.Type.HasValue, x => x.Type == input.Type.Value)
             .WhereIf(input.ItemCategoryId.HasValue, x => x.ItemCategoryId == input.ItemCategoryId.Value);

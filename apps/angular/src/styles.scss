@@ -29,3 +29,18 @@
   }
 
 }
+
+/* erp-lookup: the typeahead popup is attached to <body>, so its styles are global. */
+.erp-lookup__popup {
+  min-width: 18rem;
+  max-height: 24rem;
+  overflow-y: auto;
+
+  // "Search More..." is always the first action: a rule above it separates the records from the actions.
+  .erp-lookup__action--first {
+    display: block;
+    margin: -0.25rem -1rem 0;
+    padding: 0.25rem 1rem 0;
+    border-top: 1px solid var(--bs-border-color);
+  }
+}

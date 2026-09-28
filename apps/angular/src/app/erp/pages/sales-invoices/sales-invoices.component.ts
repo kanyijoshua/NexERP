@@ -27,6 +27,8 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
   readonly unitAmountLabelKey = 'Erp::UnitPrice';
   readonly permissionPrefix = 'Erp.SalesDocuments';
   readonly chatterEntityType = 'SalesHeader';
+  readonly partyEntity = 'customer';
+  readonly itemAmountField = 'unitPrice' as const;
 
   constructor(
     private readonly documents: SalesDocumentService,
@@ -36,7 +38,11 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
   }
 
   protected getList = (query: ABP.PageQueryParams) =>
-    this.documents.getList({ ...query, documentType: SalesDocumentType.Invoice } as never);
+    this.documents.getList({
+      ...query,
+      documentType: SalesDocumentType.Invoice,
+      customerId: this.partyFilter ?? undefined,
+    } as never);
 
   protected partyName = (row: SalesHeaderDto) =>
     `${row.sellToCustomerNo ?? ''} ${row.sellToCustomerName ?? ''}`.trim();

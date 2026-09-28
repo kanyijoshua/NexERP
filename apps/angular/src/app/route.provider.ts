@@ -18,6 +18,11 @@ export const ERP_ROUTE_MODULE: Record<string, string> = {
   'Erp::Menu:WebServices': 'Integration',
   'Erp::Menu:Webhooks': 'Integration',
   'Erp::Menu:DataExport': 'DataExport',
+  'Erp::Menu:Customers': 'Sales',
+  'Erp::Menu:Vendors': 'Purchasing',
+  'Erp::Menu:Items': 'Inventory',
+  'Erp::Menu:UnitsOfMeasure': 'Inventory',
+  'Erp::Menu:ItemCategories': 'Inventory',
 };
 
 /** The ERP menu, defined once so it can be rebuilt when a module is switched on or off. */
@@ -62,6 +67,61 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 4,
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.PurchaseDocuments',
+  },
+  {
+    // A group only: the tables every document and journal line looks records up in.
+    name: 'Erp::Menu:MasterData',
+    parentName: 'Erp::Menu:Erp',
+    iconClass: 'fas fa-database',
+    order: 8,
+    layout: eLayoutType.application,
+    requiredPolicy:
+      'Erp.Customers || Erp.Vendors || Erp.Items || Erp.UnitsOfMeasure || Erp.ItemCategories',
+  },
+  {
+    path: '/erp/customers',
+    name: 'Erp::Menu:Customers',
+    parentName: 'Erp::Menu:MasterData',
+    iconClass: 'fas fa-user-tie',
+    order: 1,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Customers',
+  },
+  {
+    path: '/erp/vendors',
+    name: 'Erp::Menu:Vendors',
+    parentName: 'Erp::Menu:MasterData',
+    iconClass: 'fas fa-truck-field',
+    order: 2,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Vendors',
+  },
+  {
+    path: '/erp/items',
+    name: 'Erp::Menu:Items',
+    parentName: 'Erp::Menu:MasterData',
+    iconClass: 'fas fa-box',
+    order: 3,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Items',
+  },
+  {
+    path: '/erp/units-of-measure',
+    name: 'Erp::Menu:UnitsOfMeasure',
+    parentName: 'Erp::Menu:MasterData',
+    iconClass: 'fas fa-ruler-combined',
+    order: 4,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.UnitsOfMeasure',
+  },
+  {
+    path: '/erp/item-categories',
+    name: 'Erp::Menu:ItemCategories',
+    parentName: 'Erp::Menu:MasterData',
+    iconClass: 'fas fa-sitemap',
+    order: 5,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.ItemCategories',
   },
   {
     // A group only: it has no page of its own.

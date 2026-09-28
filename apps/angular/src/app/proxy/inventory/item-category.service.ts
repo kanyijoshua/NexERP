@@ -1,6 +1,6 @@
-import type { CreateUpdateItemCategoryDto, ItemCategoryDto } from './models';
+import type { GetItemCategoryListInput, CreateUpdateItemCategoryDto, ItemCategoryDto } from './models';
 import { RestService, Rest } from '@abp/ng.core';
-import type { PagedAndSortedResultRequestDto, PagedResultDto } from '@abp/ng.core';
+import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 
 @Injectable({
@@ -35,11 +35,11 @@ export class ItemCategoryService {
     { apiName: this.apiName,...config });
   
 
-  getList = (input: PagedAndSortedResultRequestDto, config?: Partial<Rest.Config>) =>
+  getList = (input: GetItemCategoryListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<ItemCategoryDto>>({
       method: 'GET',
       url: '/api/erp/item-category',
-      params: { sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

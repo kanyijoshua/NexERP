@@ -112,10 +112,13 @@ public class CustomerAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
+        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        var filter = input.Filter?.Trim().ToLower();
+
         return query
             .WhereIf(
-                !input.Filter.IsNullOrWhiteSpace(),
-                x => x.No.Contains(input.Filter) || x.Name.Contains(input.Filter)
+                !filter.IsNullOrEmpty(),
+                x => x.No.ToLower().Contains(filter) || (x.Name != null && x.Name.ToLower().Contains(filter))
             )
             .WhereIf(input.Blocked.HasValue, x => x.Blocked == input.Blocked.Value);
     }

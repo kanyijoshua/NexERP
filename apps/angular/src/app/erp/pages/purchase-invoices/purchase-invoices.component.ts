@@ -27,6 +27,8 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
   readonly unitAmountLabelKey = 'Erp::DirectUnitCost';
   readonly permissionPrefix = 'Erp.PurchaseDocuments';
   readonly chatterEntityType = 'PurchaseHeader';
+  readonly partyEntity = 'vendor';
+  readonly itemAmountField = 'unitCost' as const;
 
   constructor(
     private readonly documents: PurchaseDocumentService,
@@ -36,7 +38,11 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
   }
 
   protected getList = (query: ABP.PageQueryParams) =>
-    this.documents.getList({ ...query, documentType: PurchaseDocumentType.Invoice } as never);
+    this.documents.getList({
+      ...query,
+      documentType: PurchaseDocumentType.Invoice,
+      vendorId: this.partyFilter ?? undefined,
+    } as never);
 
   protected partyName = (row: PurchaseHeaderDto) =>
     `${row.buyFromVendorNo ?? ''} ${row.buyFromVendorName ?? ''}`.trim();

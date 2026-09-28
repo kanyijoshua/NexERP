@@ -1,0 +1,94 @@
+<div class="modal-header flex-wrap gap-2">
+  <h5 class="modal-title me-auto">
+    <i [class]="entity.icon + ' text-primary me-2'"></i>{{ (selectable ? 'Erp::SelectFrom' : 'Erp::AllRecordsOf') | abpLocalization: (entity.pluralKey | abpLocalization) }}
+  </h5>
+  <div class="input-group input-group-sm w-auto">
+    <span class="input-group-text"><i class="fas fa-search"></i></span>
+    <input
+      type="search"
+      class="form-control"
+      ngbAutofocus
+      [attr.aria-label]="'Erp::Search' | abpLocalization"
+      [placeholder]="'Erp::Search' | abpLocalization"
+      [ngModel]="filter"
+      (ngModelChange)="onFilterChange($event)"
+      (keydown.enter)="selectable && data.items?.length === 1 && pick(data.items![0])"
+    />
+  </div>
+  <button *ngIf="canCreate" type="button" class="btn btn-sm btn-primary" (click)="createNew()">
+    <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
+  </button>
+  <button type="button" class="btn-close" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body p-0">
+  <ngx-datatable
+    class="erp-record-list"
+    [rows]="data.items"
+    [count]="data.totalCount"
+    [list]="list"
+    [selected]="selected ? [selected] : []"
+    selectionType="single"
+    default
+    (activate)="onActivate($event)"
+  >
+    <ngx-datatable-column
+      *ngFor="let column of entity.columns"
+      [name]="column.labelKey | abpLocalization"
+      [prop]="column.field"
+      [sortable]="column.sortable !== false"
+      [width]="column.width || 150"
+      [headerClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
+      [cellClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
+    >
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <ng-container [ngSwitch]="column.type">
+          <span *ngSwitchCase="'currency'">{{ $any(row[column.field]) ?? 0 | erpAmount }}</span>
+          <i *ngSwitchCase="'boolean'" class="fas" [ngClass]="row[column.field] ? 'fa-check' : 'fa-minus text-muted opacity-25'"></i>
+          <span *ngSwitchCase="'select'">{{ $any(cellText(row, column)) | abpLocalization }}</span>
+          <span *ngSwitchDefault [class.fw-bold]="column === entity.columns[0]">{{ row[column.field] }}</span>
+        </ng-container>
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column [name]="''" [sortable]="false" [width]="selectable ? 170 : 110" cellClass="text-end">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <button
+          *ngIf="selectable"
+          type="button"
+          class="btn btn-sm btn-outline-primary me-1"
+          (click)="pick(row); $event.stopPropagation()"
+        >
+          {{ 'Erp::Select' | abpLocalization }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-link px-1"
+          [title]="'Erp::OpenCard' | abpLocalization"
+          [attr.aria-label]="'Erp::OpenCard' | abpLocalization"
+          (click)="openCard(row, $event)"
+        >
+          <i class="fas fa-pen-to-square"></i>
+        </button>
+        <button
+          *ngIf="canDelete"
+          type="button"
+          class="btn btn-sm btn-link text-danger px-1"
+          [title]="'Erp::Delete' | abpLocalization"
+          [attr.aria-label]="'Erp::Delete' | abpLocalization"
+          (click)="remove(row, $event)"
+        >
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+</div>
+
+<div class="modal-footer">
+  <span class="me-auto small text-muted">{{ selectable ? ('Erp::ListDialogHint' | abpLocalization) : '' }}</span>
+  <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+  <button *ngIf="selectable" type="button" class="btn btn-primary" [disabled]="!selected" (click)="pick()">
+    <i class="fas fa-check me-1"></i>{{ 'Erp::Select' | abpLocalization }}
+  </button>
+</div>

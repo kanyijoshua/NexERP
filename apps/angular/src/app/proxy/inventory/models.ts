@@ -27,6 +27,10 @@ export interface CreateUpdateUnitOfMeasureDto {
   description?: string;
 }
 
+export interface GetItemCategoryListInput extends PagedAndSortedResultRequestDto {
+  filter?: string;
+}
+
 export interface GetItemLedgerEntryListInput extends PagedAndSortedResultRequestDto {
   itemId?: string;
   documentNo?: string;
@@ -37,6 +41,10 @@ export interface GetItemListInput extends PagedAndSortedResultRequestDto {
   filter?: string;
   type?: ItemType;
   itemCategoryId?: string;
+}
+
+export interface GetUnitOfMeasureListInput extends PagedAndSortedResultRequestDto {
+  filter?: string;
 }
 
 export interface ItemCategoryDto extends FullAuditedEntityDto<string> {

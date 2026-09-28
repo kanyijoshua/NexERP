@@ -40,6 +40,18 @@ public class GetItemListInput : PagedAndSortedResultRequestDto
     public Guid? ItemCategoryId { get; set; }
 }
 
+public class GetItemCategoryListInput : PagedAndSortedResultRequestDto
+{
+    /// <summary>Matches code or description, ignoring case.</summary>
+    public string Filter { get; set; }
+}
+
+public class GetUnitOfMeasureListInput : PagedAndSortedResultRequestDto
+{
+    /// <summary>Matches code or description, ignoring case.</summary>
+    public string Filter { get; set; }
+}
+
 public class ItemCategoryDto : FullAuditedEntityDto<Guid>
 {
     public string Code { get; set; }

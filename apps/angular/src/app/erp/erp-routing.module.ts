@@ -1,21 +1,31 @@
 import { permissionGuard } from '@abp/ng.core';
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { ChartOfAccountsComponent } from './pages/chart-of-accounts/chart-of-accounts.component';
+import { Route, RouterModule, Routes } from '@angular/router';
 import { SalesInvoicesComponent } from './pages/sales-invoices/sales-invoices.component';
 import { PurchaseInvoicesComponent } from './pages/purchase-invoices/purchase-invoices.component';
 import { moduleGuard } from './services/module.guard';
+
+function masterData(path: string, entity: string, requiredPolicy: string, module: string): Route {
+  return {
+    path,
+    loadChildren: () => import('./master-data/master-data.module').then(m => m.MasterDataModule),
+    canActivate: [permissionGuard, moduleGuard],
+    // Component-less, so the list and card pages below inherit `entity`.
+    data: { entity, requiredPolicy, module },
+  };
+}
 
 const routes: Routes = [
   // The role centre is the application's landing page now, so /erp has nothing of its own.
   { path: '', redirectTo: '/', pathMatch: 'full' },
   { path: 'dashboard', redirectTo: '/', pathMatch: 'full' },
-  {
-    path: 'chart-of-accounts',
-    component: ChartOfAccountsComponent,
-    canActivate: [permissionGuard, moduleGuard],
-    data: { requiredPolicy: 'Erp.GLAccounts', module: 'Finance' },
-  },
+  // Master data: one lazy module serves the list and card pages of every table, see `MasterDataEntities`.
+  masterData('chart-of-accounts', 'glAccount', 'Erp.GLAccounts', 'Finance'),
+  masterData('customers', 'customer', 'Erp.Customers', 'Sales'),
+  masterData('vendors', 'vendor', 'Erp.Vendors', 'Purchasing'),
+  masterData('items', 'item', 'Erp.Items', 'Inventory'),
+  masterData('units-of-measure', 'unitOfMeasure', 'Erp.UnitsOfMeasure', 'Inventory'),
+  masterData('item-categories', 'itemCategory', 'Erp.ItemCategories', 'Inventory'),
   {
     path: 'sales-invoices',
     component: SalesInvoicesComponent,

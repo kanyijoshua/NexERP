@@ -92,6 +92,12 @@ export class LineGridComponent implements AfterViewInit {
     this.lineChange.emit({ index, field, item });
   }
 
+  /** The record entity a lookup cell works on; it may depend on the row (e.g. its line type). */
+  entityOf(row: FormGroup, column: DocumentLineColumn): string | null {
+    const entity = column.lookupEntity;
+    return typeof entity === 'function' ? entity(row) : (entity ?? null);
+  }
+
   isNumeric(column: DocumentLineColumn): boolean {
     return column.type === 'number' || column.type === 'currency';
   }

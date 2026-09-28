@@ -16,7 +16,7 @@ public class UnitOfMeasureAppService
         UnitOfMeasure,
         UnitOfMeasureDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetUnitOfMeasureListInput,
         CreateUpdateUnitOfMeasureDto,
         CreateUpdateUnitOfMeasureDto
     >,
@@ -56,6 +56,17 @@ public class UnitOfMeasureAppService
 
         await Repository.UpdateAsync(unit, autoSave: true);
         return await MapToGetOutputDtoAsync(unit);
+    }
+
+    protected override async Task<IQueryable<UnitOfMeasure>> CreateFilteredQueryAsync(GetUnitOfMeasureListInput input)
+    {
+        var query = await base.CreateFilteredQueryAsync(input);
+        var filter = input.Filter?.Trim().ToLower();
+
+        return query.WhereIf(
+            !filter.IsNullOrEmpty(),
+            x => x.Code.ToLower().Contains(filter) || (x.Description != null && x.Description.ToLower().Contains(filter))
+        );
     }
 
     protected override IQueryable<UnitOfMeasure> ApplyDefaultSorting(IQueryable<UnitOfMeasure> query)

@@ -1,18 +1,64 @@
-<input
-  #input
-  type="text"
-  autocomplete="off"
-  [class]="'form-control ' + inputClass"
-  [attr.id]="inputId || null"
-  [disabled]="isDisabled"
-  [placeholder]="placeholder ? (placeholder | abpLocalization) : ''"
-  [ngbTypeahead]="search"
-  [inputFormatter]="inputFormatter"
-  [resultFormatter]="resultFormatter"
-  [editable]="true"
-  [focusFirst]="!allowFreeText"
-  container="body"
-  (focus)="onFocus()"
-  (blur)="onBlur()"
-  (selectItem)="onSelect($event)"
-/>
+<div class="erp-lookup" [ngClass]="{ 'input-group flex-nowrap': recordEntity, 'input-group-sm': recordEntity && inputClass.includes('-sm') }">
+  <input
+    #input
+    type="text"
+    autocomplete="off"
+    [class]="'form-control ' + inputClass"
+    [attr.id]="inputId || null"
+    [disabled]="isDisabled"
+    [placeholder]="placeholder ? (placeholder | abpLocalization) : ''"
+    [ngbTypeahead]="search"
+    [inputFormatter]="inputFormatter"
+    [resultFormatter]="resultFormatter"
+    [resultTemplate]="recordEntity ? optionTemplate : null!"
+    [editable]="true"
+    [focusFirst]="!allowFreeText"
+    popupClass="erp-lookup__popup"
+    container="body"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (selectItem)="onSelect($event)"
+  />
+  <ng-container *ngIf="recordEntity">
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      tabindex="-1"
+      [disabled]="isDisabled"
+      [title]="'Erp::SelectFromFullList' | abpLocalization"
+      [attr.aria-label]="'Erp::SelectFromFullList' | abpLocalization"
+      (click)="openList()"
+    >
+      <i class="fas fa-ellipsis"></i>
+    </button>
+    <button
+      *ngIf="value !== null"
+      type="button"
+      class="btn btn-outline-secondary"
+      tabindex="-1"
+      [title]="'Erp::OpenCard' | abpLocalization"
+      [attr.aria-label]="'Erp::OpenCard' | abpLocalization"
+      (click)="openCard()"
+    >
+      <i class="fas fa-arrow-right"></i>
+    </button>
+  </ng-container>
+</div>
+
+<ng-template #optionTemplate let-option="result" let-term="term">
+  <ng-container [ngSwitch]="option.action">
+    <span *ngSwitchCase="'searchMore'" class="erp-lookup__action text-primary" [class.erp-lookup__action--first]="!!option.first">
+      <i class="fas fa-list fa-fw me-1"></i>{{ 'Erp::SearchMore' | abpLocalization }}
+    </span>
+    <span *ngSwitchCase="'create'" class="erp-lookup__action text-primary">
+      <i class="fas fa-plus fa-fw me-1"></i>{{ 'Erp::CreateNamed' | abpLocalization: option.term }}
+    </span>
+    <span *ngSwitchCase="'createEdit'" class="erp-lookup__action text-primary">
+      <i class="fas fa-pen-to-square fa-fw me-1"></i>{{ 'Erp::CreateAndEdit' | abpLocalization }}
+    </span>
+    <span *ngSwitchDefault>
+      <ngb-highlight class="fw-semibold" [result]="option.code" [term]="term"></ngb-highlight>
+      <ngb-highlight *ngIf="option.name" class="text-muted ms-2" [result]="option.name" [term]="term"></ngb-highlight>
+    </span>
+  </ng-container>
+</ng-template>

@@ -16,7 +16,7 @@ public class ItemCategoryAppService
         ItemCategory,
         ItemCategoryDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetItemCategoryListInput,
         CreateUpdateItemCategoryDto,
         CreateUpdateItemCategoryDto
     >,
@@ -59,6 +59,17 @@ public class ItemCategoryAppService
 
         await Repository.UpdateAsync(category, autoSave: true);
         return await MapToGetOutputDtoAsync(category);
+    }
+
+    protected override async Task<IQueryable<ItemCategory>> CreateFilteredQueryAsync(GetItemCategoryListInput input)
+    {
+        var query = await base.CreateFilteredQueryAsync(input);
+        var filter = input.Filter?.Trim().ToLower();
+
+        return query.WhereIf(
+            !filter.IsNullOrEmpty(),
+            x => x.Code.ToLower().Contains(filter) || (x.Description != null && x.Description.ToLower().Contains(filter))
+        );
     }
 
     protected override IQueryable<ItemCategory> ApplyDefaultSorting(IQueryable<ItemCategory> query)

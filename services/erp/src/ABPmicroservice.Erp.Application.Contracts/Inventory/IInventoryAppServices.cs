@@ -19,7 +19,7 @@ public interface IItemCategoryAppService
     : ICrudAppService<
         ItemCategoryDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetItemCategoryListInput,
         CreateUpdateItemCategoryDto,
         CreateUpdateItemCategoryDto
     > { }
@@ -28,7 +28,7 @@ public interface IUnitOfMeasureAppService
     : ICrudAppService<
         UnitOfMeasureDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetUnitOfMeasureListInput,
         CreateUpdateUnitOfMeasureDto,
         CreateUpdateUnitOfMeasureDto
     > { }

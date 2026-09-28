@@ -1,0 +1,105 @@
+<div [formGroup]="form" class="erp-record-form">
+  <section
+    *ngFor="let section of sections; trackBy: trackSection"
+    class="erp-record-form__section mb-3"
+    [ngClass]="{ 'card border-0 shadow-sm': collapsible }"
+  >
+    <button
+      *ngIf="collapsible; else plainHeading"
+      type="button"
+      class="btn card-header bg-white border-0 d-flex align-items-center w-100 text-start py-2"
+      [attr.aria-expanded]="!isCollapsed(section)"
+      (click)="toggle(section)"
+    >
+      <i class="fas fa-fw me-2 text-muted" [ngClass]="isCollapsed(section) ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
+      <span class="fw-bold">{{ section.labelKey | abpLocalization }}</span>
+      <span *ngIf="isCollapsed(section)" class="ms-auto ps-3 small text-muted text-truncate">{{ summary(section) }}</span>
+    </button>
+    <ng-template #plainHeading>
+      <h6 *ngIf="sections.length > 1" class="text-uppercase small fw-bold text-muted border-bottom pb-1 mb-2">
+        {{ section.labelKey | abpLocalization }}
+      </h6>
+    </ng-template>
+
+    <div *ngIf="!isCollapsed(section)" class="row g-3" [ngClass]="{ 'card-body pt-0': collapsible }">
+      <div
+        *ngFor="let field of fields(section); trackBy: trackField"
+        [ngClass]="field.wide || field.type === 'textarea' ? 'col-12' : 'col-md-6'"
+      >
+        <div *ngIf="field.type === 'checkbox'; else labelled" class="form-check form-switch mt-md-4">
+          <input class="form-check-input" type="checkbox" role="switch" [id]="controlId(field)" [formControlName]="field.field" />
+          <label class="form-check-label" [for]="controlId(field)">{{ field.labelKey | abpLocalization }}</label>
+        </div>
+
+        <ng-template #labelled>
+          <label class="form-label small mb-1" [for]="controlId(field)">
+            {{ field.labelKey | abpLocalization }}<span *ngIf="field.required" class="text-danger"> *</span>
+          </label>
+
+          <ng-container [ngSwitch]="field.type">
+            <input
+              *ngSwitchCase="'number'"
+              type="number"
+              class="form-control form-control-sm"
+              [id]="controlId(field)"
+              [formControlName]="field.field"
+              [class.is-invalid]="isInvalid(field)"
+            />
+            <input
+              *ngSwitchCase="'currency'"
+              type="number"
+              step="0.01"
+              class="form-control form-control-sm text-end"
+              [id]="controlId(field)"
+              [formControlName]="field.field"
+              [class.is-invalid]="isInvalid(field)"
+            />
+            <textarea
+              *ngSwitchCase="'textarea'"
+              rows="3"
+              class="form-control form-control-sm"
+              [id]="controlId(field)"
+              [formControlName]="field.field"
+              [class.is-invalid]="isInvalid(field)"
+            ></textarea>
+            <select
+              *ngSwitchCase="'select'"
+              class="form-select form-select-sm"
+              [id]="controlId(field)"
+              [formControlName]="field.field"
+              [class.is-invalid]="isInvalid(field)"
+            >
+              <option *ngIf="!field.required" [ngValue]="null"></option>
+              <option *ngFor="let option of field.options || []" [ngValue]="option.value">
+                {{ option.label | abpLocalization }}
+              </option>
+            </select>
+            <erp-lookup
+              *ngSwitchCase="'lookup'"
+              inputClass="form-control-sm"
+              [inputId]="controlId(field)"
+              [formControlName]="field.field"
+              [entity]="field.lookupEntity"
+              [valueField]="field.lookupValueField || 'code'"
+              [displayText]="displayTextOf(field)"
+              (selected)="onLookupSelected(field, $event)"
+            ></erp-lookup>
+            <div *ngSwitchCase="'readonly'" class="form-control form-control-sm bg-light text-end" [id]="controlId(field)">
+              {{ record?.[field.field] ?? 0 | erpAmount }}
+            </div>
+            <input
+              *ngSwitchDefault
+              [type]="field.type === 'email' ? 'email' : 'text'"
+              class="form-control form-control-sm"
+              [id]="controlId(field)"
+              [formControlName]="field.field"
+              [placeholder]="field.placeholderKey ? (field.placeholderKey | abpLocalization) : ''"
+              [class.is-invalid]="isInvalid(field)"
+            />
+          </ng-container>
+        </ng-template>
+        <div *ngIf="field.helpKey" class="form-text small">{{ field.helpKey | abpLocalization }}</div>
+      </div>
+    </div>
+  </section>
+</div>
