@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { RestService } from '@abp/ng.core';
-import { BehaviorSubject, Observable, Subject, map } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, combineLatest, map, tap } from 'rxjs';
 
 export interface CompanyDto {
   id: string;
@@ -29,6 +29,17 @@ export class CompanyService {
   /** The active company id as a stream (replays the current value). */
   readonly activeCompany$: Observable<string | null> = this.activeCompanyId$.asObservable();
 
+  private companiesSubject = new BehaviorSubject<CompanyDto[]>([]);
+
+  /** The companies as last read by {@link loadCompanies}. */
+  readonly companies$: Observable<CompanyDto[]> = this.companiesSubject.asObservable();
+
+  /** The active company itself, once the list has been read; null before that. */
+  readonly currentCompany$: Observable<CompanyDto | null> = combineLatest([
+    this.companiesSubject,
+    this.activeCompanyId$,
+  ]).pipe(map(([companies, id]) => companies.find(c => c.id === id) ?? null));
+
   constructor(private restService: RestService) {}
 
   getActiveCompanyId(): string | null {
@@ -52,6 +63,19 @@ export class CompanyService {
         { apiName: 'Erp' },
       )
       .pipe(map(result => result.items ?? []));
+  }
+
+  /**
+   * Reads the companies once for everything that shows them (the company menu, the home page),
+   * and makes sure the active one still exists.
+   */
+  loadCompanies(): Observable<CompanyDto[]> {
+    return this.getCompanies().pipe(
+      tap(list => {
+        this.companiesSubject.next(list);
+        this.ensureValidActiveCompany(list);
+      }),
+    );
   }
 
   /**

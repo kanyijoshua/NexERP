@@ -22,6 +22,7 @@ import { KanbanColumn, KanbanMoveEvent } from '../models';
   styleUrls: ['./kanban-board.component.scss'],
   // The CDK drag preview lives in <body>; all styles are scoped by the erp-kanban BEM block.
   encapsulation: ViewEncapsulation.None,
+  standalone: false,
 })
 export class KanbanBoardComponent<T = unknown> {
   @Input() columns: KanbanColumn<T>[] = [];

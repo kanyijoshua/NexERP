@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace ABPmicroservice.Gateway;
 
@@ -14,17 +14,13 @@ public static class OpenApiOptionsExtensions
             Type = SecuritySchemeType.Http,
             Name = JwtBearerDefaults.AuthenticationScheme,
             Scheme = JwtBearerDefaults.AuthenticationScheme,
-            Reference = new OpenApiReference
-            {
-                Type = ReferenceType.SecurityScheme,
-                Id = JwtBearerDefaults.AuthenticationScheme,
-            },
         };
 
         options.AddDocumentTransformer(
             (document, context, cancellationToken) =>
             {
                 document.Components ??= new();
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
                 document.Components.SecuritySchemes.Add(
                     JwtBearerDefaults.AuthenticationScheme,
                     scheme
@@ -43,7 +39,11 @@ public static class OpenApiOptionsExtensions
                         .Any()
                 )
                 {
-                    operation.Security = [new() { [scheme] = [] }];
+                    var reference = new OpenApiSecuritySchemeReference(
+                        JwtBearerDefaults.AuthenticationScheme,
+                        context.Document
+                    );
+                    operation.Security = [new() { [reference] = [] }];
                 }
 
                 return Task.CompletedTask;

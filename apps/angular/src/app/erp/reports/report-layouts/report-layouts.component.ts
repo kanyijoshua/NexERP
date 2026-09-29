@@ -25,6 +25,7 @@ import { CrudListBase, saveBlob } from '../../erp-shared';
   selector: 'app-report-layouts',
   templateUrl: './report-layouts.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class ReportLayoutsComponent
   extends CrudListBase<ReportLayoutDto, CreateUpdateReportLayoutDto>

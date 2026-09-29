@@ -4,7 +4,9 @@ import { ComponentFixture, TestBed, waitForAsync } from "@angular/core/testing";
 import { NgxValidateCoreModule } from "@ngx-validate/core";
 import { HomeComponent } from "./home.component";
 import { OAuthService } from 'angular-oauth2-oidc';
-import { AuthService } from '@abp/ng.core';
+import { AuthService, DefaultQueueManager, QUEUE_MANAGER } from '@abp/ng.core';
+import { HomeService } from '@proxy/home';
+import { EMPTY } from 'rxjs';
 
 
 
@@ -33,7 +35,14 @@ describe("HomeComponent", () => {
           {
             provide: AuthService,
             useValue: mockAuthService
-          }
+          },
+          // The summary endpoint is not under test here.
+          {
+            provide: HomeService,
+            useValue: jasmine.createSpyObj('HomeService', { getSummary: EMPTY })
+          },
+          // Needed by *abpPermission; provideAbpCore() registers it, CoreTestingModule does not.
+          { provide: QUEUE_MANAGER, useClass: DefaultQueueManager }
         ],
       }).compileComponents();
     })

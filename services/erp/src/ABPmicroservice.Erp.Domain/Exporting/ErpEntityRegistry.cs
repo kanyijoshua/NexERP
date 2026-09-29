@@ -203,6 +203,7 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<SalesLine>(),
             Define<PostedSalesHeader>(),
             Define<PostedSalesLine>(),
+            Define<SalesReceivablesSetup>(),
 
             // Purchasing
             Define<Vendor>(),
@@ -212,6 +213,7 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<PurchaseLine>(),
             Define<PostedPurchaseHeader>(),
             Define<PostedPurchaseLine>(),
+            Define<PurchasesPayablesSetup>(),
 
             // Inventory
             Define<Item>(),

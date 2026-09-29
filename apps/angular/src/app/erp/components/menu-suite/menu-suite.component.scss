@@ -1,0 +1,123 @@
+// Business Central's menu suite: columns of "- Page" links under bold headings with a count.
+
+.suite__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.suite__title {
+  margin-right: auto;
+}
+
+.suite__company {
+  font-size: 0.95rem;
+  color: var(--erp-ink-muted);
+}
+
+// mat-dialog-title adds its own padding and margin; this header lays itself out.
+.suite__heading.suite__heading {
+  margin: 0;
+  padding: 0;
+  font-size: 1.9rem;
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--erp-ink);
+
+  &::before {
+    display: none;
+  }
+}
+
+.suite__find {
+  width: min(22rem, 100%);
+}
+
+.suite__find-icon {
+  padding: 0 0.5rem 0 0.75rem;
+  color: var(--erp-ink-muted);
+}
+
+.suite__close i {
+  font-size: 1.1rem;
+}
+
+.suite__body.suite__body {
+  max-height: min(70vh, 48rem);
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+
+.suite__columns {
+  columns: 15rem auto;
+  column-gap: 2.5rem;
+}
+
+.suite__section {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+}
+
+.suite__section-name {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--erp-ink);
+}
+
+.suite__count {
+  font-weight: 400;
+  color: var(--erp-ink-muted);
+}
+
+.suite__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suite__list--nested {
+  padding-left: 0.9rem;
+}
+
+.suite__link,
+.suite__group {
+  display: inline-block;
+  padding: 0.1rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.suite__link {
+  color: var(--erp-link);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.suite__group {
+  border: 0;
+  background: none;
+  color: var(--erp-ink);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--erp-link);
+  }
+}
+
+.suite__chevron {
+  margin-left: 0.3rem;
+  font-size: 0.65rem;
+  color: var(--erp-ink-muted);
+}
+
+.suite__empty {
+  color: var(--erp-ink-muted);
+}

@@ -55,8 +55,9 @@ export function openRecordCardDialog<TDto = any>(
  * `{ record, deleted: true }` after a delete.
  */
 @Component({
-  selector: 'erp-record-card-dialog',
-  templateUrl: './record-card-dialog.component.html',
+    selector: 'erp-record-card-dialog',
+    templateUrl: './record-card-dialog.component.html',
+    standalone: false
 })
 export class RecordCardDialogComponent implements OnInit {
   readonly modal = inject(NgbActiveModal);

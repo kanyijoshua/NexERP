@@ -1,4 +1,197 @@
 /* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+/*
+ * Angular Material 3 theme. mat.theme() only emits --mat-sys-* custom properties, so it sits
+ * alongside Bootstrap without restyling anything Bootstrap draws.
+ */
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$cyan-palette,
+        theme-type: light,
+      ),
+      typography: (
+        plain-family: (system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif),
+        brand-family: (system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif),
+      ),
+      density: 0,
+    )
+  );
+}
+
+/*
+ * ERP theme tokens. AppThemeService overwrites --erp-primary / --erp-accent (and their -rgb and
+ * on- colours) with the tenant's theme; the values here are the Odoo-inspired defaults, so the
+ * page is right before the theme has loaded. Everything else is derived from those two.
+ */
+:root {
+  --erp-primary: #714b67;
+  --erp-primary-rgb: 113, 75, 103;
+  --erp-on-primary: #ffffff;
+  --erp-accent: #017e84;
+  --erp-accent-rgb: 1, 126, 132;
+  --erp-on-accent: #ffffff;
+
+  // Action colour: buttons, links, activity tiles, focus.
+  --erp-brand: var(--erp-accent);
+  --erp-link: color-mix(in srgb, var(--erp-accent) 88%, black);
+  --erp-hover: rgb(var(--erp-accent-rgb) / 8%);
+
+  --erp-attention: #9a5b00;
+  --erp-overdue: #c62828;
+  --erp-quiet: #e9ecef;
+  --erp-ink: #1f2328;
+  --erp-ink-muted: #5b6168;
+  --erp-rule: #dee2e6;
+  --erp-page: #f5f6f8;
+  --erp-surface: #ffffff;
+  --erp-shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
+  --erp-shadow-raised: 0 8px 20px rgb(16 24 40 / 12%);
+
+  // Odoo rounds everything softly; Business Central keeps it square.
+  --erp-radius: 0.75rem;
+  --erp-radius-sm: 0.5rem;
+
+  --bs-primary: var(--erp-accent);
+  --bs-primary-rgb: var(--erp-accent-rgb);
+  --bs-link-color: var(--erp-link);
+  --bs-link-color-rgb: var(--erp-accent-rgb);
+  --bs-link-hover-color: color-mix(in srgb, var(--erp-accent) 70%, black);
+  --bs-border-radius: var(--erp-radius-sm);
+  --bs-border-radius-lg: var(--erp-radius);
+  --bs-focus-ring-color: rgb(var(--erp-accent-rgb) / 25%);
+
+  // Material follows the accent too.
+  --mat-sys-primary: var(--erp-accent);
+  --mat-sys-on-primary: var(--erp-on-accent);
+}
+
+:root[data-erp-corners='square'] {
+  --erp-radius: 2px;
+  --erp-radius-sm: 2px;
+  --mat-button-filled-container-shape: 2px;
+  --mat-button-outlined-container-shape: 2px;
+  --mat-button-protected-container-shape: 2px;
+  --mat-button-text-container-shape: 2px;
+  --mat-dialog-container-shape: 2px;
+}
+
+body {
+  background: var(--erp-page);
+  color: var(--erp-ink);
+}
+
+/* Bootstrap's primary button is drawn in the accent, so older pages match the Material ones. */
+.btn-primary {
+  --bs-btn-bg: var(--erp-accent);
+  --bs-btn-border-color: var(--erp-accent);
+  --bs-btn-color: var(--erp-on-accent);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--erp-accent) 85%, black);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--erp-accent) 85%, black);
+  --bs-btn-hover-color: var(--erp-on-accent);
+  --bs-btn-active-bg: color-mix(in srgb, var(--erp-accent) 75%, black);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--erp-accent) 75%, black);
+  --bs-btn-disabled-bg: var(--erp-accent);
+  --bs-btn-disabled-border-color: var(--erp-accent);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--erp-accent);
+  --bs-btn-border-color: var(--erp-accent);
+  --bs-btn-hover-bg: var(--erp-accent);
+  --bs-btn-hover-border-color: var(--erp-accent);
+  --bs-btn-hover-color: var(--erp-on-accent);
+  --bs-btn-active-bg: var(--erp-accent);
+  --bs-btn-active-border-color: var(--erp-accent);
+}
+
+/* Cards as Odoo draws them: white, a hairline border, a soft shadow and the theme's corners. */
+.card {
+  --bs-card-border-color: var(--erp-rule);
+  --bs-card-border-radius: var(--erp-radius);
+  --bs-card-inner-border-radius: calc(var(--erp-radius) - 1px);
+  box-shadow: var(--erp-shadow);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: rgb(var(--erp-accent-rgb) / 60%);
+  box-shadow: 0 0 0 0.2rem rgb(var(--erp-accent-rgb) / 18%);
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: var(--erp-radius) !important;
+}
+
+/*
+ * The top bar (ABP Basic theme, #main-navbar). "Brand" paints it in the primary colour, as
+ * Odoo does; "Light" keeps it white with the accent for the current page, as Business Central
+ * does. Bootstrap's own dark navbar colours are replaced either way.
+ */
+#main-navbar {
+  min-height: 3.5rem !important;
+  box-shadow: none !important;
+
+  .navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-link {
+    border-bottom: 2px solid transparent;
+    font-size: 0.95rem;
+
+    &:hover,
+    &.active {
+      border-bottom-color: currentColor;
+    }
+  }
+
+  .dropdown-menu {
+    border-color: var(--erp-rule);
+    border-radius: var(--erp-radius-sm);
+    box-shadow: var(--erp-shadow-raised);
+  }
+
+  .dropdown-item:active,
+  .dropdown-item.active {
+    background: var(--erp-accent);
+    color: var(--erp-on-accent);
+  }
+}
+
+:root[data-erp-navbar='light'] #main-navbar {
+  --bs-navbar-color: #3b4148;
+  --bs-navbar-hover-color: var(--erp-accent);
+  --bs-navbar-active-color: var(--erp-accent);
+  --bs-navbar-brand-color: var(--erp-primary);
+  --bs-navbar-brand-hover-color: var(--erp-primary);
+  --bs-navbar-toggler-border-color: var(--erp-rule);
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2833, 37, 41, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  --erp-nav-field: var(--erp-page);
+  --erp-nav-field-border: var(--erp-rule);
+  --erp-nav-divider: var(--erp-rule);
+
+  background: #fff !important;
+  border-bottom: 1px solid var(--erp-rule);
+}
+
+:root:not([data-erp-navbar='light']) #main-navbar {
+  --bs-navbar-color: color-mix(in srgb, var(--erp-on-primary) 82%, transparent);
+  --bs-navbar-hover-color: var(--erp-on-primary);
+  --bs-navbar-active-color: var(--erp-on-primary);
+  --bs-navbar-brand-color: var(--erp-on-primary);
+  --bs-navbar-brand-hover-color: var(--erp-on-primary);
+  --bs-navbar-toggler-border-color: color-mix(in srgb, var(--erp-on-primary) 35%, transparent);
+  --erp-nav-field: color-mix(in srgb, var(--erp-on-primary) 14%, transparent);
+  --erp-nav-field-border: color-mix(in srgb, var(--erp-on-primary) 22%, transparent);
+  --erp-nav-divider: color-mix(in srgb, var(--erp-on-primary) 25%, transparent);
+
+  background: var(--erp-primary) !important;
+  border-bottom: 0;
+}
 
 @keyframes donut-spin {
   0% {

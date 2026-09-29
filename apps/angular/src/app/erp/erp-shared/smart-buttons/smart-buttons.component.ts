@@ -6,6 +6,7 @@ import { SmartButton } from '../models';
   selector: 'erp-smart-buttons',
   templateUrl: './smart-buttons.component.html',
   styleUrls: ['./smart-buttons.component.scss'],
+  standalone: false,
 })
 export class SmartButtonsComponent {
   @Input() buttons: SmartButton[] = [];

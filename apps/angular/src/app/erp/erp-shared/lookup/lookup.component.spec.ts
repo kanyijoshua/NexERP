@@ -3,6 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgbTypeaheadModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxValidateCoreModule } from '@ngx-validate/core';
 import { Observable, of } from 'rxjs';
 import { LookupItem } from '../models';
 import { LOOKUP_DEBOUNCE_MS, LookupComponent } from './lookup.component';
@@ -17,20 +18,23 @@ const ITEMS: LookupItem[] = [
   template: `
     <table [formGroup]="form">
       <tbody formArrayName="lines">
-        <tr *ngFor="let row of lines.controls; let i = index" [formGroupName]="i">
-          <td>
-            <erp-lookup
-              formControlName="customerNo"
-              [source]="source"
-              [valueField]="valueField"
-              [allowFreeText]="allowFreeText"
-              (selected)="selected = $event"
-            ></erp-lookup>
-          </td>
-        </tr>
+        @for (row of lines.controls; track row; let i = $index) {
+          <tr [formGroupName]="i">
+            <td>
+              <erp-lookup
+                formControlName="customerNo"
+                [source]="source"
+                [valueField]="valueField"
+                [allowFreeText]="allowFreeText"
+                (selected)="selected = $event"
+              ></erp-lookup>
+            </td>
+          </tr>
+        }
       </tbody>
     </table>
   `,
+  standalone: false,
 })
 class TestLookupHostComponent {
   @ViewChild(LookupComponent, { static: false }) lookup!: LookupComponent;
@@ -66,7 +70,12 @@ describe('LookupComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [LookupComponent, TestLookupHostComponent],
-      imports: [CoreTestingModule.withConfig(), ReactiveFormsModule, NgbTypeaheadModule],
+      imports: [
+        CoreTestingModule.withConfig(),
+        ReactiveFormsModule,
+        NgbTypeaheadModule,
+        NgxValidateCoreModule.forRoot(),
+      ],
     }).compileComponents();
   }));
 

@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>ABPmicroservice.Erp</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.AspNetCore.Mvc" Version="10.6.1" />
         <ProjectReference Include="..\ABPmicroservice.Erp.Application.Contracts\ABPmicroservice.Erp.Application.Contracts.csproj" />
     </ItemGroup>
 

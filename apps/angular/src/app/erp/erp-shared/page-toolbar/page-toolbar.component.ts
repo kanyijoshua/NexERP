@@ -13,6 +13,7 @@ import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/co
 @Component({
   selector: 'erp-page-toolbar',
   templateUrl: './page-toolbar.component.html',
+  standalone: false,
 })
 export class PageToolbarComponent {
   /** Removes the native tooltip that a static `title="..."` attribute would put on the host. */

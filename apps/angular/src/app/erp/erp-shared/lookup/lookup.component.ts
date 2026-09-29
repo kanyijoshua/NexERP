@@ -56,15 +56,16 @@ export interface LookupOption extends LookupItem {
  * `source`, when also given, still decides what the dropdown offers (e.g. only unblocked customers).
  */
 @Component({
-  selector: 'erp-lookup',
-  templateUrl: './lookup.component.html',
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => LookupComponent),
-      multi: true,
-    },
-  ],
+    selector: 'erp-lookup',
+    templateUrl: './lookup.component.html',
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => LookupComponent),
+            multi: true,
+        },
+    ],
+    standalone: false
 })
 export class LookupComponent implements ControlValueAccessor, OnDestroy {
   /** Returns the items matching the typed term (an empty term means "first page"). */

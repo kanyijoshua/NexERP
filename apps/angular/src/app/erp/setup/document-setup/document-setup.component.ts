@@ -20,6 +20,7 @@ interface SeriesField {
 @Component({
   selector: 'app-document-setup',
   templateUrl: './document-setup.component.html',
+  standalone: false,
 })
 export class DocumentSetupComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

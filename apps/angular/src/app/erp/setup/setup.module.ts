@@ -1,5 +1,7 @@
 import { permissionGuard } from '@abp/ng.core';
 import { NgModule } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RouterModule, Routes } from '@angular/router';
 import { ErpSharedModule } from '../erp-shared/erp-shared.module';
 import { ApprovalUserSetupComponent } from './approval-user-setup/approval-user-setup.component';
@@ -7,6 +9,7 @@ import { DataExportComponent } from './data-export/data-export.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
 import { ModulesComponent } from './modules/modules.component';
 import { NoSeriesComponent } from './no-series/no-series.component';
+import { ThemeSettingsComponent } from './theme/theme-settings.component';
 import { WebServicesComponent } from './web-services/web-services.component';
 import { WebhooksComponent } from './webhooks/webhooks.component';
 import { WorkflowsComponent } from './workflows/workflows.component';
@@ -58,6 +61,12 @@ const routes: Routes = [
     data: { requiredPolicy: 'Erp.Webhooks && Erp.DataExport' },
   },
   {
+    path: 'theme',
+    component: ThemeSettingsComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Theme' },
+  },
+  {
     path: 'data-export',
     component: DataExportComponent,
     canActivate: [permissionGuard],
@@ -75,7 +84,8 @@ const routes: Routes = [
     WebServicesComponent,
     WebhooksComponent,
     DataExportComponent,
+    ThemeSettingsComponent,
   ],
-  imports: [ErpSharedModule, RouterModule.forChild(routes)],
+  imports: [ErpSharedModule, MatButtonModule, MatButtonToggleModule, RouterModule.forChild(routes)],
 })
 export class SetupModule {}

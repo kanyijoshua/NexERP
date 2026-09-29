@@ -24,6 +24,12 @@ public class ActivityCueDto
     /// <summary>Already localized.</summary>
     public string DisplayName { get; set; }
 
+    /// <summary>
+    /// The heading the cue sits under, already localized. A Role Center shows its cues in groups
+    /// (Approvals, Finance, Sales…), not as one row.
+    /// </summary>
+    public string Group { get; set; }
+
     public decimal Value { get; set; }
 
     /// <summary>True when the value is money rather than a count, so it reads as an amount.</summary>

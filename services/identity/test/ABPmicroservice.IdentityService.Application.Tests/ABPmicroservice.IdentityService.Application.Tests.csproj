@@ -3,14 +3,14 @@
 
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>ABPmicroservice.IdentityService</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ABPmicroservice.IdentityService.Application\ABPmicroservice.IdentityService.Application.csproj" />
     <ProjectReference Include="..\ABPmicroservice.IdentityService.Domain.Tests\ABPmicroservice.IdentityService.Domain.Tests.csproj" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
   </ItemGroup>
 
 </Project>

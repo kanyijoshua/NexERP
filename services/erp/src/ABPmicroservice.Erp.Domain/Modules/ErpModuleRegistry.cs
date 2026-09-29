@@ -76,6 +76,7 @@ public static class ErpModuleRegistry
     public const string Approvals = "Approvals";
     public const string Integration = "Integration";
     public const string DataExport = "DataExport";
+    public const string RapidStart = "RapidStart";
     public const string Chatter = "Chatter";
     public const string Kanban = "Kanban";
 
@@ -92,7 +93,7 @@ public static class ErpModuleRegistry
             "/erp/setup",
             true,
             [],
-            ["Companies", "Dimensions", "Numbering", "Home", "Modules"]
+            ["Companies", "Dimensions", "Numbering", "Home", "Modules", "Theming"]
         ),
 
         // The general ledger is the backbone every posting module writes to.
@@ -107,6 +108,7 @@ public static class ErpModuleRegistry
         new(Kanban, GroupCollaboration, "fas fa-table-columns", null, false, [], ["Kanban"]),
         new(Integration, GroupSystem, "fas fa-plug", "/erp/setup/web-services", false, [], ["Integration"]),
         new(DataExport, GroupSystem, "fas fa-file-export", "/erp/setup/data-export", false, [], ["Exporting"]),
+        new(RapidStart, GroupSystem, "fas fa-rocket", "/erp/rapid-start/worksheet", false, [], ["RapidStart"]),
     ];
 
     public static IReadOnlyList<ErpModuleDefinition> All => Definitions;

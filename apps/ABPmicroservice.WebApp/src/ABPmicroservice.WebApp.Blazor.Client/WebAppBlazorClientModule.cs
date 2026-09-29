@@ -7,7 +7,6 @@ using ABPmicroservice.WebApp.Blazor.Client.Menus;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.AspNetCore.Components.WebAssembly.LeptonXLiteTheme;
 using Volo.Abp.Autofac.WebAssembly;
-using Volo.Abp.AutoMapper;
 using Volo.Abp.Identity.Blazor.WebAssembly;
 using Volo.Abp.Modularity;
 using Volo.Abp.SettingManagement.Blazor.WebAssembly;
@@ -31,7 +30,6 @@ public class WebAppBlazorClientModule : AbpModule
         var builder = context.Services.GetSingletonInstance<WebAssemblyHostBuilder>();
 
         ConfigureAuthentication(builder);
-        ConfigureAutoMapper();
         ConfigureBlazorise(context);
         ConfigureHttpClient(context, environment);
         ConfigureMenu();
@@ -54,14 +52,6 @@ public class WebAppBlazorClientModule : AbpModule
             options.ProviderOptions.DefaultScopes.Add(ABPmicroserviceNames.IdentityServiceApi);
             options.ProviderOptions.DefaultScopes.Add(ABPmicroserviceNames.SaaSApi);
             options.ProviderOptions.DefaultScopes.Add(ABPmicroserviceNames.WebAppApi);
-        });
-    }
-
-    private void ConfigureAutoMapper()
-    {
-        Configure<AbpAutoMapperOptions>(options =>
-        {
-            options.AddMaps<WebAppBlazorClientModule>();
         });
     }
 

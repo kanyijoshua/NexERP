@@ -19,6 +19,7 @@ import {
   selector: 'app-sales-invoices',
   templateUrl: '../documents/document-list.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
   readonly titleKey = 'Erp::SalesInvoices';

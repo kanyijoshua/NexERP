@@ -19,6 +19,7 @@ import {
   selector: 'app-purchase-invoices',
   templateUrl: '../documents/document-list.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDto> {
   readonly titleKey = 'Erp::PurchaseInvoices';

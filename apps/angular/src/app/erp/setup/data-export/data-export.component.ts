@@ -23,6 +23,7 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'app-data-export',
   templateUrl: './data-export.component.html',
+  standalone: false,
 })
 export class DataExportComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

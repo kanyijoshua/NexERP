@@ -14,6 +14,7 @@ import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
   selector: 'app-no-series',
   templateUrl: './no-series.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class NoSeriesComponent extends CrudListBase<NoSeriesDto, CreateUpdateNoSeriesDto> {
   readonly lineColumns: DocumentLineColumn[] = [

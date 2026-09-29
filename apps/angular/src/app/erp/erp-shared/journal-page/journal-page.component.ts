@@ -24,6 +24,7 @@ import { JournalBalance, computeJournalBalance } from './journal-balance';
 @Component({
   selector: 'erp-journal-page',
   templateUrl: './journal-page.component.html',
+  standalone: false,
 })
 export class JournalPageComponent implements OnChanges, OnDestroy {
   @HostBinding('attr.title') readonly hostTitle = null;

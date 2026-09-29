@@ -1,0 +1,54 @@
+@if (user()?.isAuthenticated) {
+  <div class="page-search" role="search">
+    <i class="fas fa-magnifying-glass page-search__icon" aria-hidden="true"></i>
+    <input
+      #input
+      type="search"
+      class="page-search__input"
+      [placeholder]="'Erp::SearchPages' | abpLocalization"
+      [attr.aria-label]="'Erp::SearchPages' | abpLocalization"
+      aria-keyshortcuts="Alt+Q"
+      [value]="text()"
+      (input)="text.set(input.value)"
+      (keydown.escape)="clear()"
+      [matAutocomplete]="auto"
+    />
+    <kbd class="page-search__hint" aria-hidden="true">Alt+Q</kbd>
+  </div>
+
+  <mat-autocomplete
+    #auto="matAutocomplete"
+    class="page-search__panel"
+    [autoActiveFirstOption]="true"
+    [displayWith]="display"
+    [hideSingleSelectionIndicator]="true"
+    (optionSelected)="select($event)"
+  >
+    @for (page of results(); track page.path) {
+      <mat-option [value]="page">
+        <div class="page-search__option">
+          <i class="page-search__option-icon" [class]="page.icon || 'fas fa-file'" aria-hidden="true"></i>
+          <div class="page-search__option-text">
+            <div class="page-search__option-name">{{ page.name }}</div>
+            <div class="page-search__option-trail">{{ page.trail }}</div>
+          </div>
+        </div>
+      </mat-option>
+    }
+    @if (text().trim()) {
+      @if (results().length === 0) {
+        <mat-option disabled class="page-search__none">
+          {{ 'Erp::NoPageFound' | abpLocalization: text() }}
+        </mat-option>
+      }
+      <mat-option [value]="openMenu">
+        <div class="page-search__option">
+          <i class="fas fa-bars page-search__option-icon" aria-hidden="true"></i>
+          <div class="page-search__option-text">
+            <div class="page-search__option-name">{{ 'Erp::ExploreMenu' | abpLocalization }}</div>
+          </div>
+        </div>
+      </mat-option>
+    }
+  </mat-autocomplete>
+}

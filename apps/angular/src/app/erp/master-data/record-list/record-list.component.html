@@ -12,24 +12,33 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body p-0">
     <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default (activate)="onActivate($event)" class="erp-clickable-rows">
-      <ngx-datatable-column
-        *ngFor="let column of entity.columns"
-        [name]="column.labelKey | abpLocalization"
-        [prop]="column.field"
-        [sortable]="column.sortable !== false"
-        [width]="column.width || 150"
-        [headerClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-        [cellClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-      >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <ng-container [ngSwitch]="column.type">
-            <span *ngSwitchCase="'currency'">{{ $any(row[column.field]) ?? 0 | erpAmount }}</span>
-            <i *ngSwitchCase="'boolean'" class="fas" [ngClass]="row[column.field] ? 'fa-check' : 'fa-minus text-muted opacity-25'"></i>
-            <span *ngSwitchCase="'select'">{{ optionLabel(row, column) | abpLocalization }}</span>
-            <a *ngSwitchDefault [class.fw-bold]="column === entity.columns[0]" [routerLink]="cardLink(row)" (click)="$event.stopPropagation()">{{ row[column.field] }}</a>
-          </ng-container>
-        </ng-template>
-      </ngx-datatable-column>
+      @for (column of entity.columns; track column) {
+        <ngx-datatable-column
+          [name]="column.labelKey | abpLocalization"
+          [prop]="column.field"
+          [sortable]="column.sortable !== false"
+          [width]="column.width || 150"
+          [headerClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
+          [cellClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
+          >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            @switch (column.type) {
+              @case ('currency') {
+                <span>{{ $any(row[column.field]) ?? 0 | erpAmount }}</span>
+              }
+              @case ('boolean') {
+                <i class="fas" [ngClass]="row[column.field] ? 'fa-check' : 'fa-minus text-muted opacity-25'"></i>
+              }
+              @case ('select') {
+                <span>{{ optionLabel(row, column) | abpLocalization }}</span>
+              }
+              @default {
+                <a [class.fw-bold]="column === entity.columns[0]" [routerLink]="cardLink(row)" (click)="$event.stopPropagation()">{{ row[column.field] }}</a>
+              }
+            }
+          </ng-template>
+        </ngx-datatable-column>
+      }
 
       <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="100" cellClass="text-end" headerClass="text-end">
         <ng-template let-row="row" ngx-datatable-cell-template>
@@ -39,7 +48,7 @@
             [title]="'Erp::Edit' | abpLocalization"
             [attr.aria-label]="'Erp::Edit' | abpLocalization"
             (click)="quickEdit(row, $event)"
-          >
+            >
             <i class="fas fa-pen-to-square"></i>
           </button>
           <button
@@ -49,7 +58,7 @@
             [title]="'Erp::Delete' | abpLocalization"
             [attr.aria-label]="'Erp::Delete' | abpLocalization"
             (click)="remove(row, $event)"
-          >
+            >
             <i class="fas fa-trash-alt"></i>
           </button>
         </ng-template>

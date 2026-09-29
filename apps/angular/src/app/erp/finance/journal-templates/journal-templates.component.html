@@ -46,7 +46,7 @@
             class="btn btn-sm btn-outline-primary me-1"
             [title]="'Erp::Edit' | abpLocalization"
             (click)="openEdit(row)"
-          >
+            >
             <i class="fas fa-pen"></i>
           </button>
           <button
@@ -55,7 +55,7 @@
             class="btn btn-sm btn-outline-danger"
             [title]="'Erp::Delete' | abpLocalization"
             (click)="remove(row)"
-          >
+            >
             <i class="fas fa-trash"></i>
           </button>
         </ng-template>
@@ -68,51 +68,57 @@
   <ng-template #abpHeader>
     <h5 class="modal-title">
       {{ (selected ? 'Erp::Edit' : 'Erp::NewTemplate') | abpLocalization }}
-      <span *ngIf="selected" class="text-muted">· {{ selected.name }}</span>
+      @if (selected) {
+        <span class="text-muted">· {{ selected.name }}</span>
+      }
     </h5>
   </ng-template>
 
   <ng-template #abpBody>
-    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label" for="jt-name">{{ 'Erp::Code' | abpLocalization }} *</label>
-          <input id="jt-name" type="text" class="form-control text-uppercase" formControlName="name" autofocus />
-        </div>
-        <div class="col-md-8">
-          <label class="form-label" for="jt-description">{{ 'Erp::Description' | abpLocalization }}</label>
-          <input id="jt-description" type="text" class="form-control" formControlName="description" />
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label" for="jt-type">{{ 'Erp::TemplateType' | abpLocalization }}</label>
-          <select id="jt-type" class="form-select" formControlName="type">
-            <option *ngFor="let option of typeOptions" [ngValue]="option.value">
-              {{ option.label | abpLocalization }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" for="jt-source">{{ 'Erp::SourceCode' | abpLocalization }}</label>
-          <input id="jt-source" type="text" class="form-control text-uppercase" formControlName="sourceCode" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" for="jt-series">{{ 'Erp::NoSeriesCode' | abpLocalization }}</label>
-          <select id="jt-series" class="form-select" formControlName="noSeriesCode">
-            <option value="">—</option>
-            <option *ngFor="let code of seriesCodes" [value]="code">{{ code }}</option>
-          </select>
-        </div>
-
-        <div class="col-12">
-          <div class="form-check form-switch">
-            <input id="jt-recurring" type="checkbox" class="form-check-input" formControlName="recurring" />
-            <label class="form-check-label" for="jt-recurring">{{ 'Erp::Recurring' | abpLocalization }}</label>
+    @if (form) {
+      <form [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="jt-name">{{ 'Erp::Code' | abpLocalization }} *</label>
+            <input id="jt-name" type="text" class="form-control text-uppercase" formControlName="name" autofocus />
           </div>
-          <div class="form-text">{{ 'Erp::RecurringTemplateHelp' | abpLocalization }}</div>
+          <div class="col-md-8">
+            <label class="form-label" for="jt-description">{{ 'Erp::Description' | abpLocalization }}</label>
+            <input id="jt-description" type="text" class="form-control" formControlName="description" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="jt-type">{{ 'Erp::TemplateType' | abpLocalization }}</label>
+            <select id="jt-type" class="form-select" formControlName="type">
+              @for (option of typeOptions; track option) {
+                <option [ngValue]="option.value">
+                  {{ option.label | abpLocalization }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="jt-source">{{ 'Erp::SourceCode' | abpLocalization }}</label>
+            <input id="jt-source" type="text" class="form-control text-uppercase" formControlName="sourceCode" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="jt-series">{{ 'Erp::NoSeriesCode' | abpLocalization }}</label>
+            <select id="jt-series" class="form-select" formControlName="noSeriesCode">
+              <option value="">—</option>
+              @for (code of seriesCodes; track code) {
+                <option [value]="code">{{ code }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input id="jt-recurring" type="checkbox" class="form-check-input" formControlName="recurring" />
+              <label class="form-check-label" for="jt-recurring">{{ 'Erp::Recurring' | abpLocalization }}</label>
+            </div>
+            <div class="form-text">{{ 'Erp::RecurringTemplateHelp' | abpLocalization }}</div>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    }
   </ng-template>
 
   <ng-template #abpFooter>

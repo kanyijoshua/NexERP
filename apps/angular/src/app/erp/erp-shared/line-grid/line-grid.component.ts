@@ -26,6 +26,7 @@ import { ErpAmountPipe } from '../pipes/erp-amount.pipe';
   selector: 'erp-line-grid',
   templateUrl: './line-grid.component.html',
   styleUrls: ['./line-grid.component.scss'],
+  standalone: false,
 })
 export class LineGridComponent implements AfterViewInit {
   @Input() lines: FormArray = new FormArray<FormGroup>([]);

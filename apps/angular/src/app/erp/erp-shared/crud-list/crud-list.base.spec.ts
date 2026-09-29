@@ -25,7 +25,11 @@ interface TestInput {
   name: string;
 }
 
-@Component({ selector: 'erp-test-crud-list', template: '' })
+@Component({
+  selector: 'erp-test-crud-list',
+  template: '',
+  standalone: false,
+})
 class TestCrudListComponent extends CrudListBase<TestDto, TestInput> {
   getListSpy = jasmine.createSpy('getList').and.returnValue(of({ items: [], totalCount: 0 }));
   createSpy = jasmine.createSpy('create').and.returnValue(of({ id: '1', name: 'A' }));

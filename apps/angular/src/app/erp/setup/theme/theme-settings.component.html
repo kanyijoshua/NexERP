@@ -1,0 +1,131 @@
+<div class="theme-page">
+  <header class="theme-page__header">
+    <div>
+      <h1 class="theme-page__title">{{ 'Erp::Menu:Theme' | abpLocalization }}</h1>
+      <p class="theme-page__intro">{{ 'Erp::ThemeDescription' | abpLocalization }}</p>
+    </div>
+    <div class="theme-page__actions">
+      <button mat-button type="button" [disabled]="busy()" (click)="reset()">
+        {{ 'Erp::ResetToDefault' | abpLocalization }}
+      </button>
+      @if (dirty()) {
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="discard()">
+          {{ 'Erp::DiscardChanges' | abpLocalization }}
+        </button>
+      }
+      <button mat-flat-button type="button" [disabled]="!dirty() || !valid() || busy()" (click)="save()">
+        <i class="fas fa-check me-2" aria-hidden="true"></i>{{ 'AbpUi::Save' | abpLocalization }}
+      </button>
+    </div>
+  </header>
+
+  @if (dirty()) {
+    <div class="theme-page__notice" role="status">
+      <i class="fas fa-eye me-2" aria-hidden="true"></i>{{ 'Erp::ThemePreviewing' | abpLocalization }}
+    </div>
+  }
+
+  <section class="theme-card">
+    <h2 class="theme-card__title">{{ 'Erp::ThemePresets' | abpLocalization }}</h2>
+    <div class="presets">
+      @for (preset of presets; track preset.key) {
+        <button
+          type="button"
+          class="preset"
+          [class.preset--active]="isPreset(preset)"
+          [attr.aria-pressed]="isPreset(preset)"
+          (click)="usePreset(preset)"
+        >
+          <span class="preset__swatch">
+            <span [style.background]="preset.theme.primaryColor"></span>
+            <span [style.background]="preset.theme.accentColor"></span>
+          </span>
+          <span class="preset__name">{{ 'Erp::ThemePreset:' + preset.key | abpLocalization }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="theme-card">
+    <h2 class="theme-card__title">{{ 'Erp::ThemeColors' | abpLocalization }}</h2>
+    <div class="colors">
+      @for (field of ['primaryColor', 'accentColor']; track field) {
+        <label class="color-field">
+          <span class="color-field__label">{{ 'Erp::Theme:' + field | abpLocalization }}</span>
+          <span class="color-field__hint">{{ 'Erp::Theme:' + field + 'Hint' | abpLocalization }}</span>
+          <span class="color-field__inputs">
+            <input
+              type="color"
+              class="color-field__picker"
+              [value]="$any(draft())[field]"
+              (input)="setColor($any(field), $any($event.target).value)"
+              [attr.aria-label]="'Erp::Theme:' + field | abpLocalization"
+            />
+            <input
+              type="text"
+              class="form-control color-field__hex"
+              maxlength="7"
+              spellcheck="false"
+              [class.is-invalid]="!$any(draft())[field]?.match('^#[0-9A-Fa-f]{6}$')"
+              [value]="$any(draft())[field]"
+              (change)="setColor($any(field), $any($event.target).value)"
+            />
+          </span>
+        </label>
+      }
+    </div>
+  </section>
+
+  <section class="theme-card theme-card--split">
+    <div>
+      <h2 class="theme-card__title">{{ 'Erp::ThemeNavbar' | abpLocalization }}</h2>
+      <mat-button-toggle-group
+        [value]="draft().navbarStyle"
+        (change)="setNavbar($event.value)"
+        [attr.aria-label]="'Erp::ThemeNavbar' | abpLocalization"
+      >
+        <mat-button-toggle [value]="ErpNavbarStyle.Brand">
+          {{ 'Erp::ThemeNavbar:Brand' | abpLocalization }}
+        </mat-button-toggle>
+        <mat-button-toggle [value]="ErpNavbarStyle.Light">
+          {{ 'Erp::ThemeNavbar:Light' | abpLocalization }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+    <div>
+      <h2 class="theme-card__title">{{ 'Erp::ThemeCorners' | abpLocalization }}</h2>
+      <mat-button-toggle-group
+        [value]="draft().cornerStyle"
+        (change)="setCorners($event.value)"
+        [attr.aria-label]="'Erp::ThemeCorners' | abpLocalization"
+      >
+        <mat-button-toggle [value]="ErpCornerStyle.Rounded">
+          {{ 'Erp::ThemeCorners:Rounded' | abpLocalization }}
+        </mat-button-toggle>
+        <mat-button-toggle [value]="ErpCornerStyle.Square">
+          {{ 'Erp::ThemeCorners:Square' | abpLocalization }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </section>
+
+  <!-- A few real pieces of the UI, so the choice can be judged without leaving the page. -->
+  <section class="theme-card">
+    <h2 class="theme-card__title">{{ 'Erp::ThemeSample' | abpLocalization }}</h2>
+    <div class="sample">
+      <div class="sample__tile">
+        <span>{{ 'Erp::Cue:OpenSalesInvoices' | abpLocalization }}</span>
+        <strong>12</strong>
+      </div>
+      <div class="sample__app">
+        <span class="sample__app-icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
+        <span>{{ 'Erp::Menu:Finance' | abpLocalization }}</span>
+      </div>
+      <div class="sample__controls">
+        <button mat-flat-button type="button" tabindex="-1">{{ 'AbpUi::Save' | abpLocalization }}</button>
+        <button mat-stroked-button type="button" tabindex="-1">{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+        <a href="javascript:void(0)" tabindex="-1">{{ 'Erp::ViewAll' | abpLocalization }}</a>
+      </div>
+    </div>
+  </section>
+</div>

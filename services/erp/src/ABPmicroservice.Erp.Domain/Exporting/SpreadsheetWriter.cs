@@ -9,11 +9,28 @@ using System.Text;
 
 namespace ABPmicroservice.Erp.Exporting;
 
+/// <summary>One worksheet to write: its tab name, a header row and the rows beneath it.</summary>
+public sealed class SpreadsheetSheet
+{
+    public SpreadsheetSheet(string name, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<object>> rows)
+    {
+        Name = name;
+        Headers = headers;
+        Rows = rows;
+    }
+
+    public string Name { get; }
+
+    public IReadOnlyList<string> Headers { get; }
+
+    public IEnumerable<IReadOnlyList<object>> Rows { get; }
+}
+
 /// <summary>
-/// Writes a single-sheet .xlsx file.
+/// Writes an .xlsx file.
 /// <para>
 /// An xlsx is a zip of XML parts, so the format is written directly rather than pulling in a
-/// spreadsheet library for one sheet of plain cells. Numbers and dates are written as numbers and
+/// spreadsheet library for sheets of plain cells. Numbers and dates are written as numbers and
 /// dates, not as text, so the file can be sorted and totalled the moment it opens — which is the
 /// whole point of offering Excel next to CSV.
 /// </para>
@@ -21,20 +38,40 @@ namespace ABPmicroservice.Erp.Exporting;
 public static class SpreadsheetWriter
 {
     /// <summary>Excel counts days from 1899-12-30 because of a deliberate leap-year bug in 1900.</summary>
-    private static readonly DateTime ExcelEpoch = new(1899, 12, 30);
+    public static readonly DateTime ExcelEpoch = new(1899, 12, 30);
 
     public static byte[] Write(string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<object>> rows)
     {
+        return Write([new SpreadsheetSheet(sheetName, headers, rows)]);
+    }
+
+    /// <summary>
+    /// Writes one tab per sheet, in order. A configuration package uses this to put each of its
+    /// tables on a tab of its own, as Business Central's "Export to Excel" does.
+    /// </summary>
+    public static byte[] Write(IReadOnlyList<SpreadsheetSheet> sheets)
+    {
+        if (sheets == null || sheets.Count == 0)
+        {
+            sheets = [new SpreadsheetSheet("Sheet1", Array.Empty<string>(), Array.Empty<IReadOnlyList<object>>())];
+        }
+
+        var names = UniqueSheetNames(sheets);
+
         using var buffer = new MemoryStream();
 
         using (var archive = new ZipArchive(buffer, ZipArchiveMode.Create, leaveOpen: true))
         {
-            AddEntry(archive, "[Content_Types].xml", ContentTypes);
+            AddEntry(archive, "[Content_Types].xml", ContentTypes(sheets.Count));
             AddEntry(archive, "_rels/.rels", RootRelationships);
-            AddEntry(archive, "xl/workbook.xml", Workbook(sheetName));
-            AddEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships);
+            AddEntry(archive, "xl/workbook.xml", Workbook(names));
+            AddEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships(sheets.Count));
             AddEntry(archive, "xl/styles.xml", Styles);
-            AddEntry(archive, "xl/worksheets/sheet1.xml", Sheet(headers, rows));
+
+            for (var i = 0; i < sheets.Count; i++)
+            {
+                AddEntry(archive, $"xl/worksheets/sheet{i + 1}.xml", Sheet(sheets[i].Headers, sheets[i].Rows));
+            }
         }
 
         return buffer.ToArray();
@@ -147,16 +184,27 @@ public static class SpreadsheetWriter
         return name + rowNumber.ToString(CultureInfo.InvariantCulture);
     }
 
-    private const string ContentTypes = """
-        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-        <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-          <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-          <Default Extension="xml" ContentType="application/xml"/>
-          <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-          <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-          <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-        </Types>
-        """;
+    private static string ContentTypes(int sheetCount)
+    {
+        var overrides = new StringBuilder();
+        for (var i = 1; i <= sheetCount; i++)
+        {
+            overrides.Append(
+                $"<Override PartName=\"/xl/worksheets/sheet{i}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
+            );
+        }
+
+        return $"""
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+              <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+              <Default Extension="xml" ContentType="application/xml"/>
+              <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+              {overrides}
+              <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+            </Types>
+            """;
+    }
 
     private const string RootRelationships = """
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -165,13 +213,25 @@ public static class SpreadsheetWriter
         </Relationships>
         """;
 
-    private const string WorkbookRelationships = """
-        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-          <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-          <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-        </Relationships>
-        """;
+    /// <summary>Sheets take relationship ids rId1…rIdN; the styles part comes after them.</summary>
+    private static string WorkbookRelationships(int sheetCount)
+    {
+        var relationships = new StringBuilder();
+        for (var i = 1; i <= sheetCount; i++)
+        {
+            relationships.Append(
+                $"<Relationship Id=\"rId{i}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet{i}.xml\"/>"
+            );
+        }
+
+        return $"""
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+              {relationships}
+              <Relationship Id="rId{sheetCount + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+            </Relationships>
+            """;
+    }
 
     /// <summary>Three formats are enough: plain, a date and a bold header.</summary>
     private const string Styles = """
@@ -189,22 +249,57 @@ public static class SpreadsheetWriter
         </styleSheet>
         """;
 
-    private static string Workbook(string sheetName)
+    private static string Workbook(IReadOnlyList<string> sheetNames)
     {
-        var safeName = Escape(sheetName.IsNullOrWhiteSpace() ? "Sheet1" : sheetName);
-
-        // Excel refuses a sheet name over 31 characters or containing : \ / ? * [ ]
-        safeName = new string(safeName.Where(c => !":\\/?*[]".Contains(c)).ToArray());
-        if (safeName.Length > 31)
+        var sheets = new StringBuilder();
+        for (var i = 0; i < sheetNames.Count; i++)
         {
-            safeName = safeName[..31];
+            sheets.Append($"<sheet name=\"{Escape(sheetNames[i])}\" sheetId=\"{i + 1}\" r:id=\"rId{i + 1}\"/>");
         }
 
         return $"""
             <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
             <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-              <sheets><sheet name="{safeName}" sheetId="1" r:id="rId1"/></sheets>
+              <sheets>{sheets}</sheets>
             </workbook>
             """;
+    }
+
+    /// <summary>
+    /// Excel refuses a sheet name over 31 characters, one containing : \ / ? * [ ], and two
+    /// sheets whose names differ only in case.
+    /// </summary>
+    private static List<string> UniqueSheetNames(IReadOnlyList<SpreadsheetSheet> sheets)
+    {
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var names = new List<string>(sheets.Count);
+
+        foreach (var sheet in sheets)
+        {
+            var name = SheetName(sheet.Name);
+            var candidate = name;
+
+            for (var suffix = 2; !used.Add(candidate); suffix++)
+            {
+                var tail = $" ({suffix})";
+                candidate = name[..Math.Min(name.Length, 31 - tail.Length)] + tail;
+            }
+
+            names.Add(candidate);
+        }
+
+        return names;
+    }
+
+    public static string SheetName(string name)
+    {
+        var cleaned = new string((name ?? string.Empty).Where(c => c >= 0x20 && !":\\/?*[]".Contains(c)).ToArray()).Trim();
+
+        if (cleaned.Length == 0)
+        {
+            cleaned = "Sheet1";
+        }
+
+        return cleaned.Length > 31 ? cleaned[..31] : cleaned;
     }
 }

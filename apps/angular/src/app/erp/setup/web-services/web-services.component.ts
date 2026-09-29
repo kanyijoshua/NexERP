@@ -20,6 +20,7 @@ import { CrudListBase } from '../../erp-shared';
   selector: 'app-web-services',
   templateUrl: './web-services.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class WebServicesComponent
   extends CrudListBase<PublishedWebServiceDto, CreateUpdateWebServiceDto>

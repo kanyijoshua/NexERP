@@ -16,9 +16,10 @@ import { CrudListBase, LookupItem } from '../../erp-shared';
  * Mirrors Business Central page 663 "Approval User Setup".
  */
 @Component({
-  selector: 'app-approval-user-setup',
-  templateUrl: './approval-user-setup.component.html',
-  providers: [ListService],
+    selector: 'app-approval-user-setup',
+    templateUrl: './approval-user-setup.component.html',
+    providers: [ListService],
+    standalone: false
 })
 export class ApprovalUserSetupComponent
   extends CrudListBase<ApprovalUserSetupDto, CreateUpdateApprovalUserSetupDto>

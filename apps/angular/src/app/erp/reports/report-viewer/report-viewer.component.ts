@@ -35,6 +35,7 @@ interface ViewerRow {
 @Component({
   selector: 'app-report-viewer',
   templateUrl: './report-viewer.component.html',
+  standalone: false,
 })
 export class ReportViewerComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

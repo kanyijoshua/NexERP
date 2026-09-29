@@ -47,34 +47,38 @@ interface TimelineItem {
         </div>
 
         <div class="timeline mt-3">
-          <div
-            *ngFor="let item of timeline"
-            class="timeline-item mb-2 p-2 rounded border-start border-3"
-            [ngClass]="item.kind === 'note' ? 'bg-light border-primary' : 'border-secondary'"
-          >
-            <div class="d-flex justify-content-between small text-muted">
-              <span class="fw-bold text-dark">
-                <i
-                  class="fas me-1"
-                  [ngClass]="
-                    item.kind === 'note'
-                      ? 'fa-user-circle text-primary'
-                      : 'fa-history text-secondary'
-                  "
-                ></i>
-                {{ item.who || ('Erp::System' | abpLocalization) }}
-              </span>
-              <span>{{ item.time | date: 'short' }}</span>
+          @for (item of timeline; track item) {
+            <div
+              class="timeline-item mb-2 p-2 rounded border-start border-3"
+              [ngClass]="item.kind === 'note' ? 'bg-light border-primary' : 'border-secondary'"
+            >
+              <div class="d-flex justify-content-between small text-muted">
+                <span class="fw-bold text-dark">
+                  <i
+                    class="fas me-1"
+                    [ngClass]="
+                      item.kind === 'note'
+                        ? 'fa-user-circle text-primary'
+                        : 'fa-history text-secondary'
+                    "
+                  ></i>
+                  {{ item.who || ('Erp::System' | abpLocalization) }}
+                </span>
+                <span>{{ item.time | date: 'short' }}</span>
+              </div>
+              <div class="mt-1 small">{{ item.text }}</div>
             </div>
-            <div class="mt-1 small">{{ item.text }}</div>
-          </div>
-          <div *ngIf="timeline.length === 0" class="text-muted small text-center py-3">
-            {{ 'Erp::NoActivityYet' | abpLocalization }}
-          </div>
+          }
+          @if (timeline.length === 0) {
+            <div class="text-muted small text-center py-3">
+              {{ 'Erp::NoActivityYet' | abpLocalization }}
+            </div>
+          }
         </div>
       </div>
     </div>
   `,
+  standalone: false,
 })
 export class ChatterWidgetComponent implements OnChanges {
   private readonly destroyRef = inject(DestroyRef);

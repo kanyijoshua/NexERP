@@ -58,7 +58,7 @@
       </ngx-datatable-column>
       <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="250">
         <ng-template let-row="row" ngx-datatable-cell-template>
-          <ng-container *ngIf="row.canAct">
+          @if (row.canAct) {
             <ng-container *abpPermission="'Erp.Workflows.Approve'">
               <button type="button" class="btn btn-sm btn-success me-1" (click)="open('approve', row)">
                 <i class="fas fa-check me-1"></i>{{ 'Erp::Approve' | abpLocalization }}
@@ -70,7 +70,7 @@
                 <i class="fas fa-share me-1"></i>{{ 'Erp::Delegate' | abpLocalization }}
               </button>
             </ng-container>
-          </ng-container>
+          }
         </ng-template>
       </ngx-datatable-column>
     </ngx-datatable>
@@ -96,7 +96,9 @@
       {{ (action === 'approve' ? 'Erp::CommentOptional' : 'Erp::ReasonForRejection') | abpLocalization }}
     </label>
     <textarea id="approval-comment" class="form-control" rows="3" maxlength="500" [(ngModel)]="comment" autofocus></textarea>
-    <div *ngIf="action === 'reject'" class="form-text">{{ 'Erp::RejectHelp' | abpLocalization }}</div>
+    @if (action === 'reject') {
+      <div class="form-text">{{ 'Erp::RejectHelp' | abpLocalization }}</div>
+    }
   </ng-template>
 
   <ng-template #abpFooter>
@@ -105,7 +107,7 @@
       [iconClass]="action === 'approve' ? 'fa fa-check' : 'fa fa-times'"
       [buttonClass]="action === 'approve' ? 'btn btn-success' : 'btn btn-danger'"
       (click)="confirmAction()"
-    >
+      >
       {{ (action === 'approve' ? 'Erp::Approve' : 'Erp::Reject') | abpLocalization }}
     </abp-button>
   </ng-template>

@@ -1,94 +1,100 @@
-<div class="container py-4">
-  <ng-container *ngIf="hasLoggedIn; else signedOut">
-    <header class="d-flex flex-wrap align-items-end gap-2 mb-4">
-      <div class="me-auto">
-        <h3 class="fw-bold mb-1">
-          {{ greetingKey | abpLocalization }}<span *ngIf="summary?.userName">, {{ summary?.userName }}</span>
-        </h3>
-        <div class="text-muted">
-          <i class="fas fa-building me-1"></i>{{ summary?.companyName }}
+@if (hasLoggedIn) {
+  <div class="role-center">
+    @if (busy()) {
+      <mat-progress-bar class="role-center__progress" mode="indeterminate" />
+    }
+
+    <header class="role-center__header">
+      <div class="role-center__title">
+        <h1 class="role-center__company">
+          <app-company-menu variant="title" />
+        </h1>
+        <div class="role-center__greeting">
+          {{ greetingKey | abpLocalization }}@if (summary()?.userName) {
+            <span>, {{ summary()?.userName }}</span>
+          }
         </div>
       </div>
-
-      <a
-        *abpPermission="'Erp.Modules'"
-        class="btn btn-sm btn-outline-secondary"
-        routerLink="/erp/setup/modules"
-      >
-        <i class="fas fa-sliders me-1"></i>{{ 'Erp::OpenModules' | abpLocalization }}
-      </a>
+      <div class="role-center__tools">
+        <button mat-flat-button type="button" (click)="openMenuSuite()">
+          <i class="fas fa-bars me-2" aria-hidden="true"></i>{{ 'Erp::ExploreMenu' | abpLocalization }}
+        </button>
+        <a *abpPermission="'Erp.Modules'" mat-stroked-button routerLink="/erp/setup/modules">
+          <i class="fas fa-sliders me-2" aria-hidden="true"></i>{{ 'Erp::OpenModules' | abpLocalization }}
+        </a>
+      </div>
     </header>
 
-    <section class="mb-4">
-      <h6 class="text-uppercase text-muted fw-bold small mb-2">
-        {{ 'Erp::Activities' | abpLocalization }}
-      </h6>
-
-      <div *ngIf="summary && summary.cues.length === 0" class="text-muted small">
-        {{ 'Erp::NothingNeedsAttention' | abpLocalization }}
-      </div>
-
-      <div class="row g-3">
-        <div *ngFor="let cue of summary?.cues" class="col-6 col-lg-3">
-          <a
-            class="card border-0 shadow-sm h-100 text-decoration-none border-start border-4"
-            [ngClass]="toneClass(cue)"
-            [routerLink]="cue.route"
-          >
-            <div class="card-body d-flex align-items-center gap-3">
-              <i class="fa-2x opacity-75" [ngClass]="[cue.icon || '', toneTextClass(cue)]"></i>
-              <div>
-                <div class="h4 fw-bold mb-0" [ngClass]="toneTextClass(cue)">
-                  <ng-container *ngIf="cue.isAmount; else plainCount">
-                    {{ cue.value | number: '1.2-2' }}
-                  </ng-container>
-                  <ng-template #plainCount>{{ cue.value }}</ng-template>
-                </div>
-                <div class="small text-muted">{{ cue.displayName }}</div>
-              </div>
+    <section class="role-center__section">
+      <h2 class="role-center__heading">{{ 'Erp::Activities' | abpLocalization }}</h2>
+      @if (summary()?.cues?.length === 0) {
+        <div class="role-center__empty">{{ 'Erp::NothingNeedsAttention' | abpLocalization }}</div>
+      }
+      <div class="cue-groups">
+        @for (group of cueGroups(); track group.name) {
+          <div class="cue-group">
+            @if (group.name) {
+              <h3 class="role-center__label">{{ group.name }}</h3>
+            }
+            <div class="cue-group__tiles">
+              @for (cue of group.cues; track cue.key) {
+                <a
+                  class="cue"
+                  matRipple
+                  [ngClass]="toneClass(cue)"
+                  [routerLink]="cue.route"
+                  [attr.aria-label]="cue.displayName + ': ' + cue.value"
+                >
+                  <span class="cue__title" [matTooltip]="cue.displayName ?? ''" matTooltipShowDelay="600">
+                    {{ cue.displayName }}
+                  </span>
+                  <span class="cue__value" [class.cue__value--long]="isLongValue(cue)">
+                    @if (cue.isAmount) {
+                      {{ cue.value | number: '1.2-2' }}
+                    } @else {
+                      {{ cue.value | number: '1.0-0' }}
+                    }
+                  </span>
+                  <span class="cue__footer" [attr.title]="'Erp::ViewAll' | abpLocalization">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                  </span>
+                </a>
+              }
             </div>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h6 class="text-uppercase text-muted fw-bold small mb-2">
-        {{ 'Erp::Apps' | abpLocalization }}
-      </h6>
-
-      <div *ngIf="summary && groups.length === 0" class="alert alert-warning py-2 small">
-        {{ 'Erp::NoAppsEnabled' | abpLocalization }}
-      </div>
-
-      <div *ngFor="let group of groups" class="mb-4">
-        <div class="text-muted small fw-semibold mb-2">{{ group.name }}</div>
-
-        <div class="row g-3">
-          <div *ngFor="let app of group.apps" class="col-6 col-md-4 col-lg-3">
-            <a
-              class="card border-0 shadow-sm h-100 text-decoration-none app-tile"
-              [routerLink]="app.route"
-            >
-              <div class="card-body text-center py-4">
-                <i class="fa-2x text-primary mb-3 d-block" [ngClass]="app.icon"></i>
-                <div class="fw-semibold text-body">{{ app.displayName }}</div>
-                <div class="small text-muted mt-1">{{ app.description }}</div>
-              </div>
-            </a>
           </div>
-        </div>
+        }
       </div>
     </section>
-  </ng-container>
 
-  <ng-template #signedOut>
-    <div class="p-5 text-center">
-      <h1 class="fw-bold">{{ '::Welcome' | abpLocalization }}</h1>
-      <p class="lead text-muted">{{ '::LongWelcomeMessage' | abpLocalization }}</p>
-      <a (click)="login()" class="px-4 btn btn-primary mt-3" role="button">
-        <i class="fa fa-sign-in me-1" aria-hidden="true"></i>{{ 'AbpAccount::Login' | abpLocalization }}
-      </a>
-    </div>
-  </ng-template>
-</div>
+    <!-- Apps: every module that is on, as Odoo lays out its home screen. -->
+    <section class="role-center__section">
+      <h2 class="role-center__heading">{{ 'Erp::Apps' | abpLocalization }}</h2>
+      @if (summary()?.apps?.length === 0) {
+        <div class="role-center__empty">{{ 'Erp::NoAppsEnabled' | abpLocalization }}</div>
+      }
+      <nav class="apps">
+        @for (app of summary()?.apps; track app.code) {
+          <a
+            class="app"
+            [routerLink]="app.route"
+            [matTooltip]="app.description ?? ''"
+            matTooltipShowDelay="500"
+          >
+            <span class="app__icon" [style.--app-color]="appColor(app.code)">
+              <i [ngClass]="app.icon || 'fas fa-cube'" aria-hidden="true"></i>
+            </span>
+            <span class="app__name">{{ app.displayName }}</span>
+          </a>
+        }
+      </nav>
+    </section>
+  </div>
+} @else {
+  <div class="welcome">
+    <h1 class="welcome__title">{{ 'Erp::Welcome' | abpLocalization }}</h1>
+    <p class="welcome__text">{{ 'Erp::LongWelcomeMessage' | abpLocalization }}</p>
+    <a mat-flat-button (click)="login()" role="button">
+      <i class="fas fa-right-to-bracket me-2" aria-hidden="true"></i>{{ 'Erp::Login' | abpLocalization }}
+    </a>
+  </div>
+}

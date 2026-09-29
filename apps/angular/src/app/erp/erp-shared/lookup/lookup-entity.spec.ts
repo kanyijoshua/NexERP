@@ -2,8 +2,9 @@ import { PermissionService } from '@abp/ng.core';
 import { CoreTestingModule } from '@abp/ng.core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick, waitForAsync } from '@angular/core/testing';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgbTypeaheadModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxValidateCoreModule } from '@ngx-validate/core';
 import { Observable, of } from 'rxjs';
 import { LookupItem } from '../models';
 import { RecordDialogService } from '../record/record-dialog.service';
@@ -50,17 +51,22 @@ function unitEntity(overrides: Partial<RecordEntity<Uom>> = {}): RecordEntity<Uo
 }
 
 @Component({
-  selector: 'erp-test-entity-lookup-host',
-  template: `<erp-lookup
-    [formControl]="control"
-    [entity]="entityKey"
-    [valueField]="valueField"
-    (selected)="selected = $event"
-  ></erp-lookup>`,
+    selector: 'erp-test-entity-lookup-host',
+    template: `<div [formGroup]="form">
+    <erp-lookup
+      [formControl]="control"
+      [entity]="entityKey"
+      [valueField]="valueField"
+      (selected)="selected = $event"
+    ></erp-lookup>
+  </div>`,
+    standalone: false
 })
 class HostComponent {
   @ViewChild(LookupComponent, { static: true }) lookup!: LookupComponent;
   control = new FormControl<string | null>(null);
+  // ngx-validate (exported by the ABP core module) needs a parent form group.
+  form = new FormGroup({ control: this.control });
   entityKey: string | null = 'uom';
   valueField: 'code' | 'id' = 'code';
   selected: LookupItem | null | undefined;
@@ -92,7 +98,12 @@ describe('LookupComponent with a record entity', () => {
 
     TestBed.configureTestingModule({
       declarations: [LookupComponent, HostComponent],
-      imports: [CoreTestingModule.withConfig(), ReactiveFormsModule, NgbTypeaheadModule],
+      imports: [
+        CoreTestingModule.withConfig(),
+        ReactiveFormsModule,
+        NgbTypeaheadModule,
+        NgxValidateCoreModule.forRoot(),
+      ],
       providers: [{ provide: RecordDialogService, useValue: dialogs }],
     }).compileComponents();
   }));

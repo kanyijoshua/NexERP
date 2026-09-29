@@ -220,6 +220,10 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigPackages", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ErpDomainConsts.MaxPackageCodeLength);
+            b.Property(x => x.PackageName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.ProductVersion).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.HasCompanyUniqueIndex("Code");
             b.HasMany(x => x.Tables).WithOne().HasForeignKey(x => x.ConfigPackageId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -227,6 +231,9 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigPackageTables", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.DataTemplateCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.Filters).HasMaxLength(ErpDomainConsts.MaxConfigSettingsLength);
             b.HasMany(x => x.Fields).WithOne().HasForeignKey(x => x.ConfigPackageTableId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -234,6 +241,57 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigPackageFields", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.FieldName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.Mappings).HasMaxLength(ErpDomainConsts.MaxConfigSettingsLength);
+        });
+
+        builder.Entity<ConfigPackageRecord>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigPackageRecords", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Values).IsRequired();
+            // Staged records are always read one package table at a time, in row order.
+            b.HasIndex(x => new { x.ConfigPackageId, x.ConfigPackageTableId, x.RecordNo });
+        });
+
+        builder.Entity<ConfigPackageError>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigPackageErrors", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.FieldName).HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.ErrorText).IsRequired().HasMaxLength(ErpDomainConsts.MaxConfigErrorLength);
+            b.HasIndex(x => new { x.ConfigPackageId, x.ConfigPackageTableId });
+            b.HasIndex(x => x.ConfigPackageRecordId);
+        });
+
+        builder.Entity<ConfigTemplate>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigTemplates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.HasCompanyUniqueIndex("Code");
+            b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.ConfigTemplateId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ConfigTemplateLine>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigTemplateLines", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.FieldName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.DefaultValue).HasMaxLength(ErpDomainConsts.MaxConfigValueLength);
+        });
+
+        builder.Entity<ConfigLine>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ConfigLines", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.EntityName).HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.PackageCode).HasMaxLength(ErpDomainConsts.MaxPackageCodeLength);
+            b.Property(x => x.ResponsibleUserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.Comments).HasMaxLength(ErpDomainConsts.MaxCommentLength);
         });
 
         builder.Entity<Workflow>(b =>

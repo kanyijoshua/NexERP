@@ -17,7 +17,9 @@
       <ngx-datatable-column [name]="'Erp::User' | abpLocalization" prop="userName" [width]="160">
         <ng-template let-row="row" ngx-datatable-cell-template>
           <span class="fw-bold">{{ row.userName }}</span>
-          <span *ngIf="row.isApprovalAdministrator" class="badge bg-info ms-1">{{ 'Erp::Administrator' | abpLocalization }}</span>
+          @if (row.isApprovalAdministrator) {
+            <span class="badge bg-info ms-1">{{ 'Erp::Administrator' | abpLocalization }}</span>
+          }
         </ng-template>
       </ngx-datatable-column>
       <ngx-datatable-column [name]="'Erp::Approver' | abpLocalization" prop="approverUserName" [sortable]="false" [width]="140">
@@ -54,68 +56,75 @@
   <ng-template #abpHeader>
     <h5 class="modal-title">
       {{ (selected ? 'Erp::EditApprovalUser' : 'Erp::NewApprovalUser') | abpLocalization }}
-      <span *ngIf="selected" class="text-muted">· {{ selected.userName }}</span>
+      @if (selected) {
+        <span class="text-muted">· {{ selected.userName }}</span>
+      }
     </h5>
   </ng-template>
 
   <ng-template #abpBody>
-    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
-      <div *ngIf="!selected" class="mb-3">
-        <label class="form-label" for="aus-user">{{ 'Erp::User' | abpLocalization }} *</label>
-        <erp-lookup
-          inputId="aus-user"
-          formControlName="userId"
-          valueField="id"
-          [source]="searchUsers"
-          [placeholder]="'Erp::SearchUsers' | abpLocalization"
-          (selected)="onUserSelected($event)"
-        ></erp-lookup>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label" for="aus-approver">{{ 'Erp::Approver' | abpLocalization }}</label>
-          <select id="aus-approver" class="form-select" formControlName="approverUserId">
-            <option [ngValue]="null">{{ 'Erp::NoApprover' | abpLocalization }}</option>
-            <option *ngFor="let s of othersThan(form.getRawValue().userId)" [ngValue]="s.userId">{{ s.userName }}</option>
-          </select>
-          <div class="form-text">{{ 'Erp::ApproverHelp' | abpLocalization }}</div>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label" for="aus-substitute">{{ 'Erp::Substitute' | abpLocalization }}</label>
-          <select id="aus-substitute" class="form-select" formControlName="substituteUserId">
-            <option [ngValue]="null">{{ 'Erp::NoSubstitute' | abpLocalization }}</option>
-            <option *ngFor="let s of othersThan(form.getRawValue().userId)" [ngValue]="s.userId">{{ s.userName }}</option>
-          </select>
-          <div class="form-text">{{ 'Erp::SubstituteHelp' | abpLocalization }}</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label" for="aus-sales">{{ 'Erp::SalesAmountApprovalLimit' | abpLocalization }}</label>
-          <input id="aus-sales" type="number" min="0" step="0.01" class="form-control" formControlName="salesAmountApprovalLimit" />
-          <div class="form-check mt-1">
-            <input id="aus-sales-unl" type="checkbox" class="form-check-input" formControlName="unlimitedSalesApproval" />
-            <label class="form-check-label" for="aus-sales-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+    @if (form) {
+      <form [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+        @if (!selected) {
+          <div class="mb-3">
+            <label class="form-label" for="aus-user">{{ 'Erp::User' | abpLocalization }} *</label>
+            <erp-lookup
+              inputId="aus-user"
+              formControlName="userId"
+              valueField="id"
+              [source]="searchUsers"
+              [placeholder]="'Erp::SearchUsers' | abpLocalization"
+              (selected)="onUserSelected($event)"
+            ></erp-lookup>
+          </div>
+        }
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="aus-approver">{{ 'Erp::Approver' | abpLocalization }}</label>
+            <select id="aus-approver" class="form-select" formControlName="approverUserId">
+              <option [ngValue]="null">{{ 'Erp::NoApprover' | abpLocalization }}</option>
+              @for (s of othersThan(form.getRawValue().userId); track s) {
+                <option [ngValue]="s.userId">{{ s.userName }}</option>
+              }
+            </select>
+            <div class="form-text">{{ 'Erp::ApproverHelp' | abpLocalization }}</div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="aus-substitute">{{ 'Erp::Substitute' | abpLocalization }}</label>
+            <select id="aus-substitute" class="form-select" formControlName="substituteUserId">
+              <option [ngValue]="null">{{ 'Erp::NoSubstitute' | abpLocalization }}</option>
+              @for (s of othersThan(form.getRawValue().userId); track s) {
+                <option [ngValue]="s.userId">{{ s.userName }}</option>
+              }
+            </select>
+            <div class="form-text">{{ 'Erp::SubstituteHelp' | abpLocalization }}</div>
           </div>
         </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label" for="aus-purch">{{ 'Erp::PurchaseAmountApprovalLimit' | abpLocalization }}</label>
-          <input id="aus-purch" type="number" min="0" step="0.01" class="form-control" formControlName="purchaseAmountApprovalLimit" />
-          <div class="form-check mt-1">
-            <input id="aus-purch-unl" type="checkbox" class="form-check-input" formControlName="unlimitedPurchaseApproval" />
-            <label class="form-check-label" for="aus-purch-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="aus-sales">{{ 'Erp::SalesAmountApprovalLimit' | abpLocalization }}</label>
+            <input id="aus-sales" type="number" min="0" step="0.01" class="form-control" formControlName="salesAmountApprovalLimit" />
+            <div class="form-check mt-1">
+              <input id="aus-sales-unl" type="checkbox" class="form-check-input" formControlName="unlimitedSalesApproval" />
+              <label class="form-check-label" for="aus-sales-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="aus-purch">{{ 'Erp::PurchaseAmountApprovalLimit' | abpLocalization }}</label>
+            <input id="aus-purch" type="number" min="0" step="0.01" class="form-control" formControlName="purchaseAmountApprovalLimit" />
+            <div class="form-check mt-1">
+              <input id="aus-purch-unl" type="checkbox" class="form-check-input" formControlName="unlimitedPurchaseApproval" />
+              <label class="form-check-label" for="aus-purch-unl">{{ 'Erp::Unlimited' | abpLocalization }}</label>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="form-check form-switch">
-        <input id="aus-admin" type="checkbox" class="form-check-input" formControlName="isApprovalAdministrator" />
-        <label class="form-check-label" for="aus-admin">{{ 'Erp::ApprovalAdministrator' | abpLocalization }}</label>
-      </div>
-      <div class="form-text">{{ 'Erp::ApprovalAdministratorHelp' | abpLocalization }}</div>
-    </form>
+        <div class="form-check form-switch">
+          <input id="aus-admin" type="checkbox" class="form-check-input" formControlName="isApprovalAdministrator" />
+          <label class="form-check-label" for="aus-admin">{{ 'Erp::ApprovalAdministrator' | abpLocalization }}</label>
+        </div>
+        <div class="form-text">{{ 'Erp::ApprovalAdministratorHelp' | abpLocalization }}</div>
+      </form>
+    }
   </ng-template>
 
   <ng-template #abpFooter>

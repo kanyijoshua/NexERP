@@ -1,38 +1,57 @@
 import { AuthService } from '@abp/ng.core';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivityCueDto, ActivityCueTone, HomeService, HomeSummaryDto } from '@proxy/home';
-import { ErpModuleDto } from '@proxy/modules';
+import { MenuSuiteService } from '../erp/components/menu-suite/menu-suite.service';
+import { CompanyService } from '../erp/services/company.service';
 
-/** One heading of the app grid, with the modules that sit under it. */
-interface AppGroup {
+/** Icon colours for the app grid, all dark enough for a white glyph. */
+const APP_COLORS = [
+  '#C2185B',
+  '#E65100',
+  '#2E7D32',
+  '#1565C0',
+  '#6A1B9A',
+  '#00838F',
+  '#AD1457',
+  '#4E342E',
+  '#283593',
+  '#00695C',
+  '#BF360C',
+  '#5D4037',
+];
+
+/** One heading of the Activities area, with the cues that sit under it. */
+interface CueGroup {
   name: string;
-  apps: ErpModuleDto[];
+  cues: ActivityCueDto[];
 }
 
 /**
- * The landing page.
+ * The landing page, laid out as a Business Central Role Center.
  * <p>
- * A Business Central Role Center opens on what needs doing rather than on a menu, and Odoo opens
- * on the apps you have installed. This is both: the activity cues first, then the modules this
- * company has switched on, as tiles.
+ * The company and the actions you can take sit at the top; under them, the activity cues as
+ * coloured tiles, grouped by the area they count (Approvals, Finance, Sales…). A tile says how
+ * many things are waiting and opens the list they were counted from.
  * </p>
  */
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
+  standalone: false,
 })
 export class HomeComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
   private readonly home = inject(HomeService);
+  private readonly companies = inject(CompanyService);
+  private readonly menuSuite = inject(MenuSuiteService);
 
-  readonly ActivityCueTone = ActivityCueTone;
-
-  summary: HomeSummaryDto | null = null;
-  groups: AppGroup[] = [];
-  busy = false;
+  // Signals, so the page redraws when the data arrives whatever change detection its layout uses.
+  readonly summary = signal<HomeSummaryDto | null>(null);
+  readonly cueGroups = signal<CueGroup[]>([]);
+  readonly busy = signal(false);
 
   get hasLoggedIn(): boolean {
     return this.authService.isAuthenticated;
@@ -49,78 +68,90 @@ export class HomeComponent implements OnInit {
     return hour < 18 ? 'Erp::GoodAfternoon' : 'Erp::GoodEvening';
   }
 
-  get hasAttention(): boolean {
-    return (this.summary?.cues ?? []).some(cue => cue.value > 0);
-  }
-
   ngOnInit(): void {
     if (this.hasLoggedIn) {
       this.load();
+
+      // Every figure belongs to one company: switching company redraws the page.
+      this.companies.companyChanged$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.load());
     }
+  }
+
+  openMenuSuite(): void {
+    this.menuSuite.open();
   }
 
   login(): void {
     this.authService.navigateToLogin();
   }
 
-  /** Overdue reads red, work waiting reads amber, and a zero always reads quiet. */
+  /**
+   * A zero reads quiet (grey); otherwise the tone picks the colour: overdue red, waiting amber,
+   * anything else the brand colour.
+   */
   toneClass(cue: ActivityCueDto): string {
     if (cue.value <= 0) {
-      return 'border-secondary-subtle';
+      return 'cue--quiet';
     }
 
     switch (cue.tone) {
       case ActivityCueTone.Overdue:
-        return 'border-danger';
+        return 'cue--overdue';
       case ActivityCueTone.Attention:
-        return 'border-warning';
+        return 'cue--attention';
       default:
-        return 'border-primary';
+        return 'cue--neutral';
     }
   }
 
-  toneTextClass(cue: ActivityCueDto): string {
-    if (cue.value <= 0) {
-      return 'text-secondary';
+  /**
+   * Each app keeps its own colour, the way Odoo's home screen tells apps apart at a glance. The
+   * colour comes from the app's code, so it never moves when apps are switched on or off.
+   */
+  appColor(code: string | undefined): string {
+    let hash = 0;
+
+    for (const ch of code ?? '') {
+      hash = (hash * 31 + ch.charCodeAt(0)) | 0;
     }
 
-    switch (cue.tone) {
-      case ActivityCueTone.Overdue:
-        return 'text-danger';
-      case ActivityCueTone.Attention:
-        return 'text-warning';
-      default:
-        return 'text-primary';
-    }
+    return APP_COLORS[Math.abs(hash) % APP_COLORS.length];
+  }
+
+  /** Large amounts get a smaller figure so they still fit on one line of the tile. */
+  isLongValue(cue: ActivityCueDto): boolean {
+    return Math.abs(cue.value) >= 1_000_000 || (cue.isAmount && Math.abs(cue.value) >= 100_000);
   }
 
   private load(): void {
-    this.busy = true;
+    this.busy.set(true);
     this.home
       .getSummary()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: summary => {
-          this.busy = false;
-          this.summary = summary;
-          this.groups = HomeComponent.group(summary.apps ?? []);
+          this.busy.set(false);
+          this.summary.set(summary);
+          this.cueGroups.set(HomeComponent.group(summary.cues ?? []));
         },
-        error: () => (this.busy = false),
+        error: () => this.busy.set(false),
       });
   }
 
-  /** Apps are laid out under their group heading, in the order the server sent them. */
-  private static group(apps: ErpModuleDto[]): AppGroup[] {
-    const groups: AppGroup[] = [];
+  /** Cues are laid out under their group heading, in the order the server sent them. */
+  private static group(cues: ActivityCueDto[]): CueGroup[] {
+    const groups: CueGroup[] = [];
 
-    for (const app of apps) {
-      const name = app.group ?? '';
+    for (const cue of cues) {
+      const name = cue.group ?? '';
       const existing = groups.find(g => g.name === name);
 
       if (existing) {
-        existing.apps.push(app);
+        existing.cues.push(cue);
       } else {
-        groups.push({ name, apps: [app] });
+        groups.push({ name, cues: [cue] });
       }
     }
 

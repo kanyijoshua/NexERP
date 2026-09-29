@@ -50,19 +50,23 @@
 
 <ng-template #seriesFields let-form="form" let-fields="fields" let-prefix="prefix">
   <div [formGroup]="form">
-    <div *ngFor="let field of fields" class="row align-items-center mb-2">
-      <label class="col-sm-5 col-form-label" [for]="prefix + '-' + field.control">{{ field.labelKey | abpLocalization }}</label>
-      <div class="col-sm-4">
-        <select class="form-select form-select-sm" [id]="prefix + '-' + field.control" [formControlName]="field.control">
-          <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
-          <option *ngFor="let s of series" [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
-        </select>
+    @for (field of fields; track field) {
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" [for]="prefix + '-' + field.control">{{ field.labelKey | abpLocalization }}</label>
+        <div class="col-sm-4">
+          <select class="form-select form-select-sm" [id]="prefix + '-' + field.control" [formControlName]="field.control">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series; track s) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-sm-3 small text-muted font-monospace">
+          @if (nextNo(form.get(field.control)?.value); as next) {
+            <i class="fas fa-arrow-right me-1"></i>{{ next }}
+          }
+        </div>
       </div>
-      <div class="col-sm-3 small text-muted font-monospace">
-        <ng-container *ngIf="nextNo(form.get(field.control)?.value) as next">
-          <i class="fas fa-arrow-right me-1"></i>{{ next }}
-        </ng-container>
-      </div>
-    </div>
+    }
   </div>
 </ng-template>

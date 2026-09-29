@@ -1,0 +1,73 @@
+<div class="suite">
+  <header class="suite__header">
+    <div class="suite__title">
+      <div class="suite__company">{{ (company$ | async)?.displayName }}</div>
+      <h2 class="suite__heading" mat-dialog-title>{{ 'Erp::MenuSuite' | abpLocalization }}</h2>
+    </div>
+    <mat-form-field class="suite__find" appearance="outline" subscriptSizing="dynamic">
+      <i matPrefix class="fas fa-magnifying-glass suite__find-icon" aria-hidden="true"></i>
+      <input
+        matInput
+        [placeholder]="'Erp::FindPage' | abpLocalization"
+        [ngModel]="find()"
+        (ngModelChange)="find.set($event)"
+        (keydown.enter)="openFirstMatch()"
+        [attr.aria-label]="'Erp::FindPage' | abpLocalization"
+      />
+    </mat-form-field>
+    <button mat-icon-button mat-dialog-close class="suite__close" [attr.aria-label]="'AbpUi::Close' | abpLocalization">
+      <i class="fas fa-xmark" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <mat-dialog-content class="suite__body">
+    @if (shown().length === 0) {
+      <p class="suite__empty">{{ 'Erp::NoPageFound' | abpLocalization: find() }}</p>
+    }
+    <div class="suite__columns">
+      @for (section of shown(); track section.name) {
+        <section class="suite__section">
+          <h3 class="suite__section-name">
+            {{ section.name }} <span class="suite__count">({{ section.count }})</span>
+          </h3>
+          <ul class="suite__list">
+            @for (entry of section.entries; track entry.name) {
+              <li>
+                @if (entry.children.length) {
+                  <button
+                    type="button"
+                    class="suite__group"
+                    [attr.aria-expanded]="isOpen(section.name, entry)"
+                    (click)="toggle(section.name, entry)"
+                  >
+                    - {{ entry.name }} <span class="suite__count">({{ entry.count }})</span>
+                    <i
+                      class="fas suite__chevron"
+                      [ngClass]="isOpen(section.name, entry) ? 'fa-chevron-up' : 'fa-chevron-down'"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                  @if (isOpen(section.name, entry)) {
+                    <ul class="suite__list suite__list--nested">
+                      @for (child of entry.children; track child.name) {
+                        <li>
+                          <a class="suite__link" [routerLink]="child.path" (click)="$event.preventDefault(); go(child.path!)">
+                            - {{ child.name }}
+                          </a>
+                        </li>
+                      }
+                    </ul>
+                  }
+                } @else {
+                  <a class="suite__link" [routerLink]="entry.path" (click)="$event.preventDefault(); go(entry.path!)">
+                    - {{ entry.name }}
+                  </a>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  </mat-dialog-content>
+</div>

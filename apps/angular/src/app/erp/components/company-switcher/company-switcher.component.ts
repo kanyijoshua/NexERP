@@ -10,48 +10,58 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
           ><i class="fas fa-building me-1"></i> Legal Company</span
         >
         <select class="form-select" [value]="activeCompanyId" (change)="onCompanyChange($event)">
-          <option *ngFor="let company of companies" [value]="company.id">
-            {{ company.displayName }} {{ company.evaluationCompany ? '(Evaluation)' : '' }}
-          </option>
+          @for (company of companies; track company) {
+            <option [value]="company.id">
+              {{ company.displayName }} {{ company.evaluationCompany ? '(Evaluation)' : '' }}
+            </option>
+          }
         </select>
         <button class="btn btn-outline-secondary" (click)="openCopyModal()" title="Copy Company">
           <i class="fas fa-copy"></i> Copy Company
         </button>
       </div>
 
-      <div *ngIf="showModal" class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
-                <i class="fas fa-copy text-primary me-2"></i>Copy Company (Business Central CU 357)
-              </h5>
-              <button type="button" class="btn-close" (click)="showModal = false"></button>
-            </div>
-            <div class="modal-body">
-              <p class="text-muted small">
-                Clones standard Chart of Accounts, Dimensions, and Posting Setup into a new company.
-              </p>
-              <div class="mb-3">
-                <label class="form-label">New Company Code</label>
-                <input class="form-control" [(ngModel)]="newCompanyCode" placeholder="CRONUS_DE" />
+      @if (showModal) {
+        <div class="modal d-block bg-dark bg-opacity-50" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i class="fas fa-copy text-primary me-2"></i>Copy Company (Business Central CU
+                  357)
+                </h5>
+                <button type="button" class="btn-close" (click)="showModal = false"></button>
               </div>
-              <div class="mb-3">
-                <label class="form-label">Display Name</label>
-                <input
-                  class="form-control"
-                  [(ngModel)]="newDisplayName"
-                  placeholder="CRONUS Germany GmbH"
-                />
+              <div class="modal-body">
+                <p class="text-muted small">
+                  Clones standard Chart of Accounts, Dimensions, and Posting Setup into a new
+                  company.
+                </p>
+                <div class="mb-3">
+                  <label class="form-label">New Company Code</label>
+                  <input
+                    class="form-control"
+                    [(ngModel)]="newCompanyCode"
+                    placeholder="CRONUS_DE"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Display Name</label>
+                  <input
+                    class="form-control"
+                    [(ngModel)]="newDisplayName"
+                    placeholder="CRONUS Germany GmbH"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showModal = false">Cancel</button>
-              <button class="btn btn-primary" (click)="executeCopyCompany()">Copy Company</button>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="showModal = false">Cancel</button>
+                <button class="btn btn-primary" (click)="executeCopyCompany()">Copy Company</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [
@@ -61,6 +71,7 @@ import { CompanyDto, CompanyService } from '../../services/company.service';
       }
     `,
   ],
+  standalone: false,
 })
 export class CompanySwitcherComponent implements OnInit {
   companies: CompanyDto[] = [];

@@ -43,6 +43,7 @@ export const DEFAULT_STATUS_COLORS: Record<string, string> = {
 @Component({
   selector: 'erp-document-page',
   templateUrl: './document-page.component.html',
+  standalone: false,
 })
 export class DocumentPageComponent {
   @HostBinding('attr.title') readonly hostTitle = null;

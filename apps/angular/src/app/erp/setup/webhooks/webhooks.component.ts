@@ -22,6 +22,7 @@ import { CrudListBase } from '../../erp-shared';
   selector: 'app-webhooks',
   templateUrl: './webhooks.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class WebhooksComponent
   extends CrudListBase<WebhookSubscriptionDto, CreateUpdateWebhookSubscriptionDto>

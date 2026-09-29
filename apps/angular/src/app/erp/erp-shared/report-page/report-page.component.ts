@@ -8,6 +8,7 @@ import { ReportColumn } from '../models';
 @Component({
   selector: 'erp-report-page',
   templateUrl: './report-page.component.html',
+  standalone: false,
 })
 export class ReportPageComponent {
   @HostBinding('attr.title') readonly hostTitle = null;

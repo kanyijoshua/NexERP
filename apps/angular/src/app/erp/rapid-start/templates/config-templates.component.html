@@ -1,0 +1,213 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::Menu:ConfigTemplates"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-clone"
+  [showSearch]="false"
+  permission="Erp.RapidStart.Manage"
+  (create)="openCreate()"
+  >
+  <select
+    class="form-select form-select-sm w-auto"
+    [attr.aria-label]="'Erp::Table' | abpLocalization"
+    [(ngModel)]="entityFilter"
+    (ngModelChange)="load()"
+    >
+    <option value="">{{ 'Erp::AllTables' | abpLocalization }}</option>
+    @for (area of catalogAreas; track area) {
+      <optgroup [label]="area.area">
+        @for (table of area.tables; track table) {
+          <option [value]="table.entityName">{{ table.displayName }}</option>
+        }
+      </optgroup>
+    }
+  </select>
+</erp-page-toolbar>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::Code' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Table' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Lines' | abpLocalization }}</th>
+            <th scope="col" class="text-center">{{ 'Erp::Enabled' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (template of templates; track template) {
+            <tr>
+              <td class="fw-semibold">{{ template.code }}</td>
+              <td>{{ template.description }}</td>
+              <td>{{ tableName(template.entityName) }}</td>
+              <td class="text-end">{{ template.lines?.length ?? 0 }}</td>
+              <td class="text-center">
+                <i class="fas" [ngClass]="template.enabled ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+              </td>
+              <td class="text-end text-nowrap">
+                <ng-container *abpPermission="'Erp.RapidStart.Manage'">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    [title]="'Erp::Edit' | abpLocalization"
+                    [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                    (click)="openEdit(template)"
+                    >
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    [title]="'Erp::Delete' | abpLocalization"
+                    [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                    (click)="remove(template)"
+                    >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </ng-container>
+              </td>
+            </tr>
+          }
+          @if (!templates.length) {
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                {{ (loading ? 'Erp::Loading' : 'Erp::NoDataAvailable') | abpLocalization }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'lg', scrollable: true }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (selected ? 'Erp::EditConfigTemplate' : 'Erp::NewConfigTemplate') | abpLocalization }}
+      @if (selected) {
+        <span class="text-muted">· {{ selected.code }}</span>
+      }
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label" for="ct-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+        <input id="ct-code" type="text" class="form-control text-uppercase" maxlength="20" [(ngModel)]="draft.code" />
+      </div>
+      <div class="col-md-9">
+        <label class="form-label" for="ct-description">{{ 'Erp::Description' | abpLocalization }}</label>
+        <input id="ct-description" type="text" class="form-control" maxlength="250" [(ngModel)]="draft.description" />
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="ct-table">{{ 'Erp::Table' | abpLocalization }} *</label>
+        <select id="ct-table" class="form-select" [ngModel]="draft.entityName" (ngModelChange)="onEntityChange($event)">
+          <option value="">—</option>
+          @for (area of catalogAreas; track area) {
+            <optgroup [label]="area.area">
+              @for (table of area.tables; track table) {
+                <option [value]="table.entityName">{{ table.displayName }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </div>
+      <div class="col-md-4 pt-md-4">
+        <div class="form-check form-switch mt-md-2">
+          <input id="ct-enabled" type="checkbox" class="form-check-input" [(ngModel)]="draft.enabled" />
+          <label class="form-check-label" for="ct-enabled">{{ 'Erp::Enabled' | abpLocalization }}</label>
+        </div>
+      </div>
+    </div>
+
+    <h6 class="mt-4 mb-2">{{ 'Erp::Lines' | abpLocalization }}</h6>
+    <p class="form-text mt-0">{{ 'Erp::ConfigTemplateLinesHelp' | abpLocalization }}</p>
+    <table class="table table-sm align-middle mb-2">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">{{ 'Erp::Field' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::DefaultValue' | abpLocalization }}</th>
+          <th scope="col" class="text-center">{{ 'Erp::Mandatory' | abpLocalization }}</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of draft.lines; track line; let i = $index) {
+          <tr>
+            <td>
+              <select class="form-select form-select-sm" [attr.aria-label]="'Erp::Field' | abpLocalization" [(ngModel)]="line.fieldName">
+                <option value="">—</option>
+                @for (field of fields; track field) {
+                  <option [value]="field.name" [disabled]="isUsed(field.name, i)">
+                    {{ field.displayName || field.name }}{{ field.isRequired ? ' *' : '' }}
+                  </option>
+                }
+              </select>
+            </td>
+            <td>
+              @if (valueOptions(line.fieldName).length) {
+                <select
+                  class="form-select form-select-sm"
+                  [attr.aria-label]="'Erp::DefaultValue' | abpLocalization"
+                  [(ngModel)]="line.defaultValue"
+                  >
+                  <option value="">—</option>
+                  @for (value of valueOptions(line.fieldName); track value) {
+                    <option [value]="value">{{ value }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  maxlength="2000"
+                  [attr.aria-label]="'Erp::DefaultValue' | abpLocalization"
+                  [placeholder]="fieldOf(line.fieldName)?.dataType ?? ''"
+                  [(ngModel)]="line.defaultValue"
+                  />
+              }
+            </td>
+            <td class="text-center">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                [attr.aria-label]="'Erp::Mandatory' | abpLocalization"
+                [(ngModel)]="line.mandatory"
+                />
+            </td>
+            <td class="text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-link text-danger p-0"
+                [attr.aria-label]="'Erp::RemoveLine' | abpLocalization"
+                (click)="removeLine(i)"
+                >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
+          </tr>
+        }
+        @if (!draft.lines.length) {
+          <tr>
+            <td colspan="4" class="text-center text-muted py-2">{{ 'Erp::NoLines' | abpLocalization }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-sm btn-link p-0" [disabled]="!draft.entityName" (click)="addLine()">
+      <i class="fas fa-plus me-1"></i>{{ 'Erp::AddLine' | abpLocalization }}
+    </button>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="!canSave" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

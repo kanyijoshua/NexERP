@@ -23,6 +23,7 @@ import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
   selector: 'app-account-schedules',
   templateUrl: './account-schedules.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class AccountSchedulesComponent
   extends CrudListBase<AccountScheduleDto, CreateUpdateAccountScheduleDto>

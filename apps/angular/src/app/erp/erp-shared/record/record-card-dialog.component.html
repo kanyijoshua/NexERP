@@ -7,61 +7,83 @@
       {{ isNew ? ('Erp::New' | abpLocalization) + ' – ' + (entity.titleKey | abpLocalization) : heading }}
     </h5>
   </div>
-  <a
-    *ngIf="cardLink"
-    class="btn btn-sm btn-link ms-auto text-nowrap"
-    target="_blank"
-    rel="noopener"
-    [routerLink]="cardLink"
-    [title]="'Erp::OpenFullCardHint' | abpLocalization"
-  >
-    <i class="fas fa-up-right-from-square me-1"></i>{{ 'Erp::OpenFullCard' | abpLocalization }}
-  </a>
+  @if (cardLink) {
+    <a
+      class="btn btn-sm btn-link ms-auto text-nowrap"
+      target="_blank"
+      rel="noopener"
+      [routerLink]="cardLink"
+      [title]="'Erp::OpenFullCardHint' | abpLocalization"
+      >
+      <i class="fas fa-up-right-from-square me-1"></i>{{ 'Erp::OpenFullCard' | abpLocalization }}
+    </a>
+  }
   <button type="button" class="btn-close ms-2" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="modal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
-  <div *ngIf="facts.length" class="d-flex flex-wrap gap-2 mb-3">
-    <span
-      *ngFor="let fact of facts"
-      class="badge rounded-pill border fw-normal"
-      [ngClass]="fact.warnWhenTrue && fact.value === true ? 'bg-danger-subtle text-danger border-danger' : 'bg-light text-dark'"
-    >
-      {{ fact.labelKey | abpLocalization }}:
-      <ng-container [ngSwitch]="fact.type">
-        <strong *ngSwitchCase="'currency'">{{ $any(fact.value) ?? 0 | erpAmount }}</strong>
-        <strong *ngSwitchCase="'boolean'">{{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}</strong>
-        <strong *ngSwitchDefault>{{ fact.value }}</strong>
-      </ng-container>
-    </span>
-  </div>
+  @if (facts.length) {
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      @for (fact of facts; track fact) {
+        <span
+          class="badge rounded-pill border fw-normal"
+          [ngClass]="fact.warnWhenTrue && fact.value === true ? 'bg-danger-subtle text-danger border-danger' : 'bg-light text-dark'"
+          >
+          {{ fact.labelKey | abpLocalization }}:
+          @switch (fact.type) {
+            @case ('currency') {
+              <strong>{{ $any(fact.value) ?? 0 | erpAmount }}</strong>
+            }
+            @case ('boolean') {
+              <strong>{{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}</strong>
+            }
+            @default {
+              <strong>{{ fact.value }}</strong>
+            }
+          }
+        </span>
+      }
+    </div>
+  }
 
-  <div *ngIf="!form" class="text-center text-muted py-4">
-    <i class="fas fa-spinner fa-spin me-1"></i>{{ 'Erp::Loading' | abpLocalization }}
-  </div>
+  @if (!form) {
+    <div class="text-center text-muted py-4">
+      <i class="fas fa-spinner fa-spin me-1"></i>{{ 'Erp::Loading' | abpLocalization }}
+    </div>
+  }
 
-  <form *ngIf="form" (ngSubmit)="save()">
-    <erp-record-form idPrefix="dlg" [entity]="entity" [form]="form" [record]="record" [quick]="quick"></erp-record-form>
-    <!-- Enter in a text field saves, as it does in Odoo's quick create. -->
-    <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
-  </form>
+  @if (form) {
+    <form (ngSubmit)="save()">
+      <erp-record-form idPrefix="dlg" [entity]="entity" [form]="form" [record]="record" [quick]="quick"></erp-record-form>
+      <!-- Enter in a text field saves, as it does in Odoo's quick create. -->
+      <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
+    </form>
+  }
 
-  <button *ngIf="hasMoreFields" type="button" class="btn btn-sm btn-link px-0" (click)="showAllFields()">
-    <i class="fas fa-plus-circle me-1"></i>{{ 'Erp::ShowAllFields' | abpLocalization }}
-  </button>
-  <div *ngIf="!canEdit && form" class="alert alert-light border small mb-0 mt-2">
-    <i class="fas fa-lock me-1"></i>{{ 'Erp::ReadOnlyNoPermission' | abpLocalization }}
-  </div>
+  @if (hasMoreFields) {
+    <button type="button" class="btn btn-sm btn-link px-0" (click)="showAllFields()">
+      <i class="fas fa-plus-circle me-1"></i>{{ 'Erp::ShowAllFields' | abpLocalization }}
+    </button>
+  }
+  @if (!canEdit && form) {
+    <div class="alert alert-light border small mb-0 mt-2">
+      <i class="fas fa-lock me-1"></i>{{ 'Erp::ReadOnlyNoPermission' | abpLocalization }}
+    </div>
+  }
 </div>
 
 <div class="modal-footer">
-  <button *ngIf="canDelete" type="button" class="btn btn-outline-danger me-auto" [disabled]="isBusy" (click)="remove()">
-    <i class="fas fa-trash me-1"></i>{{ 'Erp::Delete' | abpLocalization }}
-  </button>
+  @if (canDelete) {
+    <button type="button" class="btn btn-outline-danger me-auto" [disabled]="isBusy" (click)="remove()">
+      <i class="fas fa-trash me-1"></i>{{ 'Erp::Delete' | abpLocalization }}
+    </button>
+  }
   <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
     {{ (canEdit ? 'Erp::Discard' : 'AbpUi::Close') | abpLocalization }}
   </button>
-  <button *ngIf="canEdit" type="button" class="btn btn-primary" [disabled]="isBusy || !form" (click)="save()">
-    <i class="fas me-1" [ngClass]="isBusy ? 'fa-spinner fa-spin' : 'fa-check'"></i>{{ 'Erp::Save' | abpLocalization }}
-  </button>
+  @if (canEdit) {
+    <button type="button" class="btn btn-primary" [disabled]="isBusy || !form" (click)="save()">
+      <i class="fas me-1" [ngClass]="isBusy ? 'fa-spinner fa-spin' : 'fa-check'"></i>{{ 'Erp::Save' | abpLocalization }}
+    </button>
+  }
 </div>

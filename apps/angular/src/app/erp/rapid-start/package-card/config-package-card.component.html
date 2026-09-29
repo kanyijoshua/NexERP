@@ -1,0 +1,639 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <div class="small text-muted">
+      <a routerLink="/erp/rapid-start/packages">{{ 'Erp::Menu:ConfigPackages' | abpLocalization }}</a>
+    </div>
+    <h4 class="mb-0 fw-bold">
+      <i class="fas fa-box-open text-primary me-2"></i>{{ pkg?.code }}
+      <span class="text-muted fw-normal" *ngIf="pkg?.packageName">· {{ pkg?.packageName }}</span>
+    </h4>
+  </div>
+  <i *ngIf="busy || loading" class="fas fa-spinner fa-spin text-muted"></i>
+</div>
+
+<ng-container *ngIf="pkg">
+  <!-- General -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label small mb-1" for="pc-code">{{ 'Erp::Code' | abpLocalization }}</label>
+          <input id="pc-code" type="text" class="form-control form-control-sm" [value]="pkg.code" disabled />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small mb-1" for="pc-name">{{ 'Erp::PackageName' | abpLocalization }} *</label>
+          <input
+            id="pc-name"
+            type="text"
+            class="form-control form-control-sm"
+            maxlength="100"
+            [(ngModel)]="packageName"
+            [disabled]="!canManage"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small mb-1" for="pc-version">{{ 'Erp::ProductVersion' | abpLocalization }}</label>
+          <input
+            id="pc-version"
+            type="text"
+            class="form-control form-control-sm"
+            maxlength="20"
+            [(ngModel)]="productVersion"
+            [disabled]="!canManage"
+          />
+        </div>
+        <div class="col-md-2 small text-muted">
+          <div>{{ 'Erp::LastImported' | abpLocalization }}: {{ (pkg.lastImportedTime | date: 'short') || '—' }}</div>
+          <div>{{ 'Erp::LastApplied' | abpLocalization }}: {{ (pkg.lastAppliedTime | date: 'short') || '—' }}</div>
+        </div>
+        <div class="col-md-2 text-end">
+          <button
+            *abpPermission="'Erp.RapidStart.Manage'"
+            type="button"
+            class="btn btn-sm btn-primary"
+            [disabled]="!headerChanged || !packageName.trim() || busy"
+            (click)="saveHeader()"
+          >
+            <i class="fas fa-check me-1"></i>{{ 'Erp::Save' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <button
+      *abpPermission="'Erp.RapidStart.Manage'"
+      type="button"
+      class="btn btn-sm btn-primary"
+      [disabled]="busy"
+      (click)="openAddTables()"
+    >
+      <i class="fas fa-plus me-1"></i>{{ 'Erp::AddTables' | abpLocalization }}
+    </button>
+
+    <ng-container *abpPermission="'Erp.RapidStart.Import'">
+      <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy || !tables.length" (click)="fillFromDatabase()">
+        <i class="fas fa-database me-1"></i>{{ 'Erp::GetDataFromDatabase' | abpLocalization }}
+      </button>
+      <input #excelFile type="file" class="d-none" accept=".xlsx" (change)="importFromExcel($event)" />
+      <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy || !tables.length" (click)="excelFile.click()">
+        <i class="fas fa-file-excel me-1"></i>{{ 'Erp::ImportFromExcel' | abpLocalization }}
+      </button>
+    </ng-container>
+
+    <div *abpPermission="'Erp.RapidStart.Export'" ngbDropdown class="d-inline-block">
+      <button type="button" class="btn btn-sm btn-outline-primary" ngbDropdownToggle [disabled]="busy">
+        <i class="fas fa-download me-1"></i>{{ 'Erp::Export' | abpLocalization }}
+      </button>
+      <div ngbDropdownMenu>
+        <button type="button" ngbDropdownItem (click)="exportPackage(ConfigPackageFileFormat.Json)">
+          <i class="fas fa-file-code me-2"></i>{{ 'Erp::ExportPackageFile' | abpLocalization }}
+        </button>
+        <button type="button" ngbDropdownItem (click)="exportPackage(ConfigPackageFileFormat.Xlsx)">
+          <i class="fas fa-file-excel me-2"></i>{{ 'Erp::ExportToExcel' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+
+    <ng-container *abpPermission="'Erp.RapidStart.Apply'">
+      <button type="button" class="btn btn-sm btn-outline-success" [disabled]="busy || !tables.length" (click)="validatePackage()">
+        <i class="fas fa-clipboard-check me-1"></i>{{ 'Erp::ValidatePackage' | abpLocalization }}
+      </button>
+      <button type="button" class="btn btn-sm btn-success" [disabled]="busy || !tables.length" (click)="applyPackage()">
+        <i class="fas fa-play me-1"></i>{{ 'Erp::ApplyPackage' | abpLocalization }}
+      </button>
+    </ng-container>
+
+    <button
+      *abpPermission="'Erp.RapidStart.Import'"
+      type="button"
+      class="btn btn-sm btn-outline-danger"
+      [disabled]="busy || !pkg.noOfRecords"
+      (click)="clearPackageData()"
+    >
+      <i class="fas fa-eraser me-1"></i>{{ 'Erp::ClearPackageData' | abpLocalization }}
+    </button>
+
+    <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="showErrors()">
+      <i class="fas fa-triangle-exclamation me-1"></i>{{ 'Erp::ShowErrors' | abpLocalization }}
+      <span *ngIf="pkg.noOfErrors" class="badge bg-danger ms-1">{{ pkg.noOfErrors }}</span>
+    </button>
+
+    <span class="small text-muted ms-auto">
+      {{
+        (selected.size ? 'Erp::ActionsApplyToSelected' : 'Erp::ActionsApplyToAll')
+          | abpLocalization: (selected.size ? selected.size : tables.length) + ''
+      }}
+    </span>
+  </div>
+
+  <!-- Tables -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 36px">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [attr.aria-label]="'Erp::SelectAll' | abpLocalization"
+                  [checked]="allSelected"
+                  [disabled]="!tables.length"
+                  (change)="toggleAll()"
+                />
+              </th>
+              <th scope="col">{{ 'Erp::Table' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::ProcessingOrder' | abpLocalization }}</th>
+              <th scope="col" class="text-center">{{ 'Erp::DeleteRecordsBeforeProcessing' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::DataTemplate' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::NoOfRecords' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::NoOfErrors' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let table of tables" [class.table-active]="selected.has(table.id!)">
+              <td>
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [attr.aria-label]="table.displayName"
+                  [checked]="selected.has(table.id!)"
+                  (change)="toggle(table)"
+                />
+              </td>
+              <td>
+                <div class="fw-semibold">{{ table.displayName || table.entityName }}</div>
+                <div class="small text-muted">
+                  {{ table.entityName }}
+                  <span *ngIf="table.filters?.length" class="badge bg-light text-dark border ms-1">
+                    <i class="fas fa-filter me-1"></i>{{ table.filters.length }}
+                  </span>
+                </div>
+              </td>
+              <td class="text-end">{{ table.processingOrder }}</td>
+              <td class="text-center">
+                <i class="fas" [ngClass]="table.deleteRecordsBeforeProcessing ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+              </td>
+              <td>{{ table.dataTemplateCode }}</td>
+              <td class="text-end">
+                <a [routerLink]="['tables', table.id]">{{ table.noOfRecords }}</a>
+              </td>
+              <td class="text-end">
+                <a
+                  *ngIf="table.noOfErrors > 0; else noErrors"
+                  class="text-danger fw-bold"
+                  [routerLink]="['tables', table.id]"
+                  [queryParams]="{ errorsOnly: true }"
+                >
+                  {{ table.noOfErrors }}
+                </a>
+                <ng-template #noErrors>0</ng-template>
+              </td>
+              <td class="text-end text-nowrap">
+                <a
+                  class="btn btn-sm btn-outline-secondary me-1"
+                  [routerLink]="['tables', table.id]"
+                  [title]="'Erp::PackageRecords' | abpLocalization"
+                  [attr.aria-label]="'Erp::PackageRecords' | abpLocalization"
+                >
+                  <i class="fas fa-table-list"></i>
+                </a>
+                <ng-container *abpPermission="'Erp.RapidStart.Manage'">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    [title]="'Erp::TableSettings' | abpLocalization"
+                    [attr.aria-label]="'Erp::TableSettings' | abpLocalization"
+                    (click)="openTable(table)"
+                  >
+                    <i class="fas fa-sliders"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    [title]="'Erp::Fields' | abpLocalization"
+                    [attr.aria-label]="'Erp::Fields' | abpLocalization"
+                    (click)="openTable(table, 3)"
+                  >
+                    <i class="fas fa-list-check"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    [title]="'Erp::ExcludeTable' | abpLocalization"
+                    [attr.aria-label]="'Erp::ExcludeTable' | abpLocalization"
+                    (click)="excludeTable(table)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </ng-container>
+              </td>
+            </tr>
+            <tr *ngIf="!tables.length">
+              <td colspan="8" class="text-center text-muted py-4">{{ 'Erp::NoTablesInPackage' | abpLocalization }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result of the last validate / apply -->
+  <div *ngIf="runSummary" class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex align-items-center">
+      <span class="fw-bold me-auto">
+        <i
+          class="fas me-2"
+          [ngClass]="runSummary.result.errors ? 'fa-triangle-exclamation text-danger' : 'fa-circle-check text-success'"
+        ></i>
+        {{ (runSummary.kind === 'validate' ? 'Erp::ValidationResult' : 'Erp::ApplyResult') | abpLocalization }}
+      </span>
+      <button
+        type="button"
+        class="btn-close"
+        [attr.aria-label]="'Erp::Clear' | abpLocalization"
+        (click)="runSummary = null"
+      ></button>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::Table' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Inserted' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Modified' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Deleted' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::NoOfErrors' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of runSummary.result.tables">
+            <td>{{ tableName(row) }}</td>
+            <td class="text-end">{{ row.inserted }}</td>
+            <td class="text-end">{{ row.modified }}</td>
+            <td class="text-end">{{ row.deleted }}</td>
+            <td class="text-end" [class.text-danger]="row.errors > 0" [class.fw-bold]="row.errors > 0">{{ row.errors }}</td>
+          </tr>
+        </tbody>
+        <tfoot class="table-light fw-bold">
+          <tr>
+            <td>{{ 'Erp::Total' | abpLocalization }}</td>
+            <td class="text-end">{{ runSummary.result.inserted }}</td>
+            <td class="text-end">{{ runSummary.result.modified }}</td>
+            <td></td>
+            <td class="text-end" [class.text-danger]="runSummary.result.errors > 0">{{ runSummary.result.errors }}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div *ngIf="runSummary.kind === 'validate'" class="small text-muted px-3 py-2">
+        {{ 'Erp::ValidationWritesNothing' | abpLocalization }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Errors -->
+  <div *ngIf="errors" class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex align-items-center">
+      <span class="fw-bold me-auto">
+        {{ 'Erp::PackageErrors' | abpLocalization }}
+        <span class="badge ms-1" [ngClass]="errors.length ? 'bg-danger' : 'bg-success'">{{ errors.length }}</span>
+      </span>
+      <button type="button" class="btn-close" [attr.aria-label]="'Erp::Clear' | abpLocalization" (click)="errors = null"></button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive" style="max-height: 360px">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">{{ 'Erp::Table' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::RecordNo' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::Field' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::ErrorText' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let error of errors">
+              <td>
+                <a [routerLink]="['tables', error.tableId]" [queryParams]="{ errorsOnly: true }">{{ tableName(error) }}</a>
+              </td>
+              <td class="text-end">{{ error.recordNo }}</td>
+              <td>{{ error.fieldName }}</td>
+              <td class="text-danger">{{ error.errorText }}</td>
+            </tr>
+            <tr *ngIf="!errors.length">
+              <td colspan="4" class="text-center text-muted py-3">{{ 'Erp::NoErrors' | abpLocalization }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Add tables -->
+<abp-modal [(visible)]="isAddOpen" [busy]="busy" [options]="{ size: 'lg', scrollable: true }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ 'Erp::AddTables' | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div class="input-group input-group-sm mb-3">
+      <span class="input-group-text"><i class="fas fa-search"></i></span>
+      <input
+        type="search"
+        class="form-control"
+        [attr.aria-label]="'Erp::Search' | abpLocalization"
+        [placeholder]="'Erp::Search' | abpLocalization"
+        [(ngModel)]="catalogFilter"
+      />
+    </div>
+
+    <ng-container *ngFor="let area of catalogAreas">
+      <div *ngIf="areaHasMatches(area)" class="mb-3">
+        <div class="fw-bold small text-uppercase text-muted border-bottom mb-1">{{ area.area || '—' }}</div>
+        <div class="row">
+          <ng-container *ngFor="let table of area.tables">
+            <div *ngIf="matchesCatalogFilter(table)" class="col-md-6">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [id]="'add-' + table.entityName"
+                  [disabled]="isInPackage(table)"
+                  [checked]="isInPackage(table) || toInclude.has(table.entityName!)"
+                  (change)="toggleInclude(table.entityName!)"
+                />
+                <label class="form-check-label" [for]="'add-' + table.entityName">
+                  {{ table.displayName || table.entityName }}
+                  <span *ngIf="isInPackage(table)" class="badge bg-light text-muted border ms-1">
+                    {{ 'Erp::InPackage' | abpLocalization }}
+                  </span>
+                </label>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </ng-container>
+    <div *ngIf="!catalogAreas.length" class="text-muted text-center py-3">{{ 'Erp::Loading' | abpLocalization }}</div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <div class="form-check me-auto">
+      <input id="add-related" type="checkbox" class="form-check-input" [(ngModel)]="includeRelated" />
+      <label class="form-check-label" for="add-related">{{ 'Erp::IncludeRelatedTables' | abpLocalization }}</label>
+    </div>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-plus" [disabled]="!toInclude.size" (click)="includeTables()">
+      {{ 'Erp::AddTablesCount' | abpLocalization: toInclude.size + '' }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<!-- Table settings: options, filters, fields -->
+<abp-modal [(visible)]="isTableOpen" [busy]="busy" [options]="{ size: 'xl', scrollable: true }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ 'Erp::TableSettings' | abpLocalization }}
+      <span class="text-muted">· {{ editTable?.displayName || editTable?.entityName }}</span>
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ul ngbNav #nav="ngbNav" [(activeId)]="tableTab" class="nav-tabs mb-3">
+      <li [ngbNavItem]="1">
+        <button type="button" ngbNavLink>{{ 'Erp::Options' | abpLocalization }}</button>
+        <ng-template ngbNavContent>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label" for="ts-order">{{ 'Erp::ProcessingOrder' | abpLocalization }}</label>
+              <input id="ts-order" type="number" step="1" class="form-control" [(ngModel)]="editProcessingOrder" />
+            </div>
+            <div class="col-md-5">
+              <label class="form-label" for="ts-template">{{ 'Erp::DataTemplate' | abpLocalization }}</label>
+              <select id="ts-template" class="form-select" [(ngModel)]="editTemplateCode">
+                <option value="">—</option>
+                <option *ngFor="let t of tableTemplates" [value]="t.code">{{ t.code }} · {{ t.description }}</option>
+                <option
+                  *ngIf="editTemplateCode && !tableTemplates.length"
+                  [value]="editTemplateCode"
+                >
+                  {{ editTemplateCode }}
+                </option>
+              </select>
+              <div class="form-text">{{ 'Erp::DataTemplateHelp' | abpLocalization }}</div>
+            </div>
+            <div class="col-md-4 pt-md-4">
+              <div class="form-check form-switch mt-md-2">
+                <input id="ts-delete" type="checkbox" class="form-check-input" [(ngModel)]="editDeleteBefore" />
+                <label class="form-check-label" for="ts-delete">
+                  {{ 'Erp::DeleteRecordsBeforeProcessing' | abpLocalization }}
+                </label>
+              </div>
+              <div class="form-text">{{ 'Erp::DeleteRecordsBeforeProcessingHelp' | abpLocalization }}</div>
+            </div>
+          </div>
+        </ng-template>
+      </li>
+
+      <li [ngbNavItem]="2">
+        <button type="button" ngbNavLink>
+          {{ 'Erp::Filters' | abpLocalization }}
+          <span *ngIf="editFilters.length" class="badge bg-primary ms-1">{{ editFilters.length }}</span>
+        </button>
+        <ng-template ngbNavContent>
+          <p class="form-text mt-0">{{ 'Erp::PackageFiltersHelp' | abpLocalization }}</p>
+          <div *ngFor="let filter of editFilters; let i = index" class="row g-2 align-items-end mb-2">
+            <div class="col-md-4">
+              <select class="form-select form-select-sm" [attr.aria-label]="'Erp::Field' | abpLocalization" [(ngModel)]="filter.field">
+                <option *ngFor="let field of editFields" [value]="field.fieldName">{{ field.displayName }}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select form-select-sm" [attr.aria-label]="'Erp::Operator' | abpLocalization" [(ngModel)]="filter.operator">
+                <option *ngFor="let option of operatorOptions" [ngValue]="option.value">
+                  {{ option.label | abpLocalization }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select
+                *ngIf="enumValuesOf(filter.field).length; else freeText"
+                class="form-select form-select-sm"
+                [attr.aria-label]="'Erp::Value' | abpLocalization"
+                [(ngModel)]="filter.value"
+              >
+                <option *ngFor="let value of enumValuesOf(filter.field)" [value]="value">{{ value }}</option>
+              </select>
+              <ng-template #freeText>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  [attr.aria-label]="'Erp::Value' | abpLocalization"
+                  [(ngModel)]="filter.value"
+                />
+              </ng-template>
+            </div>
+            <div class="col-md-1 text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-link text-danger p-0"
+                [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                (click)="removeFilter(i)"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-link p-0" [disabled]="!editFields.length" (click)="addFilter()">
+            <i class="fas fa-plus me-1"></i>{{ 'Erp::AddFilter' | abpLocalization }}
+          </button>
+        </ng-template>
+      </li>
+
+      <li [ngbNavItem]="3">
+        <button type="button" ngbNavLink>{{ 'Erp::Fields' | abpLocalization }}</button>
+        <ng-template ngbNavContent>
+          <div class="d-flex align-items-center mb-2">
+            <span class="form-text me-auto mt-0">{{ 'Erp::PackageFieldsHelp' | abpLocalization }}</span>
+            <button type="button" class="btn btn-sm btn-link p-0 me-2" (click)="setAllIncluded(true)">
+              {{ 'Erp::SelectAll' | abpLocalization }}
+            </button>
+            <button type="button" class="btn btn-sm btn-link p-0" (click)="setAllIncluded(false)">
+              {{ 'Erp::SelectNone' | abpLocalization }}
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">{{ 'Erp::Field' | abpLocalization }}</th>
+                  <th scope="col" class="text-center">{{ 'Erp::IncludeField' | abpLocalization }}</th>
+                  <th scope="col" class="text-center">{{ 'Erp::ValidateField' | abpLocalization }}</th>
+                  <th scope="col" style="width: 110px">{{ 'Erp::ProcessingOrder' | abpLocalization }}</th>
+                  <th scope="col" class="text-center">{{ 'Erp::PrimaryKey' | abpLocalization }}</th>
+                  <th scope="col">{{ 'Erp::FieldMappings' | abpLocalization }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let field of editFields">
+                  <tr>
+                    <td>
+                      <div class="fw-semibold">{{ field.displayName }}</div>
+                      <div class="small text-muted">
+                        {{ field.fieldName }}
+                        <span class="badge bg-light text-muted ms-1">{{ field.dataType }}</span>
+                        <span *ngIf="field.relatedTable" class="badge bg-light text-dark border ms-1">
+                          <i class="fas fa-link me-1"></i>{{ field.relatedTable }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [attr.aria-label]="'Erp::IncludeField' | abpLocalization"
+                        [(ngModel)]="field.includeField"
+                        [disabled]="field.primaryKey"
+                      />
+                    </td>
+                    <td class="text-center">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [attr.aria-label]="'Erp::ValidateField' | abpLocalization"
+                        [(ngModel)]="field.validateField"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="1"
+                        class="form-control form-control-sm"
+                        [attr.aria-label]="'Erp::ProcessingOrder' | abpLocalization"
+                        [(ngModel)]="field.processingOrder"
+                      />
+                    </td>
+                    <td class="text-center">
+                      <i class="fas" [ngClass]="field.primaryKey ? 'fa-key text-warning' : 'fa-minus text-muted'"></i>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-link p-0" (click)="field.showMappings = !field.showMappings">
+                        <i class="fas me-1" [ngClass]="field.showMappings ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                        {{ 'Erp::MappingsCount' | abpLocalization: field.mappings.length + '' }}
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="field.showMappings" class="table-light">
+                    <td colspan="6">
+                      <div class="small text-muted mb-2">{{ 'Erp::FieldMappingsHelp' | abpLocalization }}</div>
+                      <div *ngFor="let mapping of field.mappings; let i = index" class="row g-2 align-items-center mb-1">
+                        <div class="col-md-5">
+                          <input
+                            type="text"
+                            class="form-control form-control-sm"
+                            maxlength="2000"
+                            [placeholder]="'Erp::OldValue' | abpLocalization"
+                            [attr.aria-label]="'Erp::OldValue' | abpLocalization"
+                            [(ngModel)]="mapping.oldValue"
+                          />
+                        </div>
+                        <div class="col-auto text-muted"><i class="fas fa-arrow-right"></i></div>
+                        <div class="col-md-5">
+                          <select
+                            *ngIf="enumValuesOf(field.fieldName).length; else newFreeText"
+                            class="form-select form-select-sm"
+                            [attr.aria-label]="'Erp::NewValue' | abpLocalization"
+                            [(ngModel)]="mapping.newValue"
+                          >
+                            <option *ngFor="let value of enumValuesOf(field.fieldName)" [value]="value">{{ value }}</option>
+                          </select>
+                          <ng-template #newFreeText>
+                            <input
+                              type="text"
+                              class="form-control form-control-sm"
+                              maxlength="2000"
+                              [placeholder]="'Erp::NewValue' | abpLocalization"
+                              [attr.aria-label]="'Erp::NewValue' | abpLocalization"
+                              [(ngModel)]="mapping.newValue"
+                            />
+                          </ng-template>
+                        </div>
+                        <div class="col-auto">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-link text-danger p-0"
+                            [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                            (click)="removeMapping(field, i)"
+                          >
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-sm btn-link p-0" (click)="addMapping(field)">
+                        <i class="fas fa-plus me-1"></i>{{ 'Erp::AddMapping' | abpLocalization }}
+                      </button>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav"></div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" (click)="saveTable()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

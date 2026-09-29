@@ -33,7 +33,7 @@
               [checked]="row.published"
               [attr.aria-label]="'Erp::Published' | abpLocalization"
               (change)="setPublished(row, !row.published)"
-            />
+              />
           </div>
         </ng-template>
       </ngx-datatable-column>
@@ -45,7 +45,7 @@
             class="btn btn-sm btn-outline-primary me-1"
             [title]="'Erp::Edit' | abpLocalization"
             (click)="openEdit(row)"
-          >
+            >
             <i class="fas fa-pen"></i>
           </button>
           <button
@@ -54,7 +54,7 @@
             class="btn btn-sm btn-outline-danger"
             [title]="'Erp::Delete' | abpLocalization"
             (click)="remove(row)"
-          >
+            >
             <i class="fas fa-trash"></i>
           </button>
         </ng-template>
@@ -69,36 +69,42 @@
   </ng-template>
 
   <ng-template #abpBody>
-    <form *ngIf="form" [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label" for="ws-name">{{ 'Erp::ServiceName' | abpLocalization }} *</label>
-          <input id="ws-name" type="text" class="form-control" formControlName="serviceName" autofocus />
+    @if (form) {
+      <form [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="ws-name">{{ 'Erp::ServiceName' | abpLocalization }} *</label>
+            <input id="ws-name" type="text" class="form-control" formControlName="serviceName" autofocus />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="ws-entity">{{ 'Erp::EntityName' | abpLocalization }} *</label>
+            <select id="ws-entity" class="form-select" formControlName="entityName">
+              <option value="">—</option>
+              @for (entity of entities; track entity) {
+                <option [value]="entity.name">
+                  {{ entity.displayName }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="ws-type">{{ 'Erp::ObjectType' | abpLocalization }}</label>
+            <select id="ws-type" class="form-select" formControlName="objectType">
+              @for (option of objectTypeOptions; track option) {
+                <option [ngValue]="option.value">
+                  {{ option.label | abpLocalization }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="ws-excluded">{{ 'Erp::ExcludedFields' | abpLocalization }}</label>
+            <input id="ws-excluded" type="text" class="form-control" formControlName="excludedFields" />
+            <div class="form-text">{{ 'Erp::ExcludedFieldsHint' | abpLocalization }}</div>
+          </div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label" for="ws-entity">{{ 'Erp::EntityName' | abpLocalization }} *</label>
-          <select id="ws-entity" class="form-select" formControlName="entityName">
-            <option value="">—</option>
-            <option *ngFor="let entity of entities" [value]="entity.name">
-              {{ entity.displayName }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="ws-type">{{ 'Erp::ObjectType' | abpLocalization }}</label>
-          <select id="ws-type" class="form-select" formControlName="objectType">
-            <option *ngFor="let option of objectTypeOptions" [ngValue]="option.value">
-              {{ option.label | abpLocalization }}
-            </option>
-          </select>
-        </div>
-        <div class="col-12">
-          <label class="form-label" for="ws-excluded">{{ 'Erp::ExcludedFields' | abpLocalization }}</label>
-          <input id="ws-excluded" type="text" class="form-control" formControlName="excludedFields" />
-          <div class="form-text">{{ 'Erp::ExcludedFieldsHint' | abpLocalization }}</div>
-        </div>
-      </div>
-    </form>
+      </form>
+    }
   </ng-template>
 
   <ng-template #abpFooter>

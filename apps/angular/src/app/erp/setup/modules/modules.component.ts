@@ -21,6 +21,7 @@ interface ModuleGroup {
 @Component({
   selector: 'app-modules',
   templateUrl: './modules.component.html',
+  standalone: false,
 })
 export class ModulesComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

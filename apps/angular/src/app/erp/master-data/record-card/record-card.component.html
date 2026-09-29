@@ -7,78 +7,105 @@
     </a>
     <h4 class="mb-0 fw-bold">
       <i [class]="entity.icon + ' text-primary me-2'"></i>
-      <ng-container *ngIf="isNew; else existing">{{ 'Erp::New' | abpLocalization }} – {{ entity.titleKey | abpLocalization }}</ng-container>
-      <ng-template #existing>{{ title }}</ng-template>
-      <span *ngIf="record?.['blocked']" class="badge bg-danger ms-2 align-middle fs-6">{{ 'Erp::Blocked' | abpLocalization }}</span>
+      @if (isNew) {
+        {{ 'Erp::New' | abpLocalization }} – {{ entity.titleKey | abpLocalization }}
+      } @else {
+        {{ title }}
+      }
+      @if (record?.['blocked']) {
+        <span class="badge bg-danger ms-2 align-middle fs-6">{{ 'Erp::Blocked' | abpLocalization }}</span>
+      }
     </h4>
   </div>
 
   <div class="d-flex flex-wrap gap-2" role="toolbar">
-    <ng-container *ngIf="canEdit">
+    @if (canEdit) {
       <button type="button" class="btn btn-sm btn-primary" [disabled]="isBusy || !form || (!isNew && !form.dirty)" (click)="save()" [title]="'Erp::SaveShortcut' | abpLocalization">
         <i class="fas me-1" [ngClass]="isBusy ? 'fa-spinner fa-spin' : 'fa-check'"></i>{{ 'Erp::Save' | abpLocalization }}
       </button>
-      <button *ngIf="form?.dirty" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="discard()">
-        <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::Discard' | abpLocalization }}
-      </button>
-    </ng-container>
-    <ng-container *ngFor="let action of actions">
+      @if (form?.dirty) {
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="discard()">
+          <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::Discard' | abpLocalization }}
+        </button>
+      }
+    }
+    @for (action of actions; track action) {
       <button *abpPermission="action.permission" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="run(action)">
         <i [class]="action.icon + ' me-1'"></i>{{ action.labelKey | abpLocalization }}
       </button>
-    </ng-container>
-    <ng-container *ngIf="!isNew">
+    }
+    @if (!isNew) {
       <button *abpPermission="entity.permission + '.Create'" type="button" class="btn btn-sm btn-outline-primary" (click)="newRecord()">
         <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
       </button>
-    </ng-container>
-    <button *ngIf="canDelete" type="button" class="btn btn-sm btn-outline-danger" [disabled]="isBusy" (click)="remove()" [title]="'Erp::Delete' | abpLocalization">
-      <i class="fas fa-trash"></i>
-    </button>
+    }
+    @if (canDelete) {
+      <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="isBusy" (click)="remove()" [title]="'Erp::Delete' | abpLocalization">
+        <i class="fas fa-trash"></i>
+      </button>
+    }
   </div>
 </div>
 
-<erp-smart-buttons *ngIf="related.length" class="d-block mb-3" [buttons]="related"></erp-smart-buttons>
+@if (related.length) {
+  <erp-smart-buttons class="d-block mb-3" [buttons]="related"></erp-smart-buttons>
+}
 
-<div *ngIf="!form" class="text-center text-muted py-5">
-  <i class="fas fa-spinner fa-spin me-1"></i>{{ 'Erp::Loading' | abpLocalization }}
-</div>
-
-<div *ngIf="form" class="row g-3">
-  <div class="col-xl-9">
-    <form (ngSubmit)="save()">
-      <erp-record-form idPrefix="card" [entity]="entity" [form]="form" [record]="record" [collapsible]="true"></erp-record-form>
-      <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
-    </form>
-    <div *ngIf="!canEdit" class="alert alert-light border small">
-      <i class="fas fa-lock me-1"></i>{{ 'Erp::ReadOnlyNoPermission' | abpLocalization }}
-    </div>
+@if (!form) {
+  <div class="text-center text-muted py-5">
+    <i class="fas fa-spinner fa-spin me-1"></i>{{ 'Erp::Loading' | abpLocalization }}
   </div>
+}
 
-  <aside class="col-xl-3">
-    <div *ngIf="facts.length" class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-light fw-bold text-secondary small text-uppercase">
-        {{ 'Erp::Statistics' | abpLocalization }}
-      </div>
-      <dl class="list-group list-group-flush mb-0 small">
-        <div *ngFor="let fact of facts" class="list-group-item d-flex justify-content-between">
-          <dt class="fw-normal text-muted">{{ fact.labelKey | abpLocalization }}</dt>
-          <dd class="mb-0 fw-bold" [class.text-danger]="fact.warnWhenTrue && fact.value === true" [ngSwitch]="fact.type">
-            <ng-container *ngSwitchCase="'currency'">{{ $any(fact.value) ?? 0 | erpAmount }}</ng-container>
-            <ng-container *ngSwitchCase="'boolean'">{{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}</ng-container>
-            <ng-container *ngSwitchDefault>{{ fact.value }}</ng-container>
-          </dd>
+@if (form) {
+  <div class="row g-3">
+    <div class="col-xl-9">
+      <form (ngSubmit)="save()">
+        <erp-record-form idPrefix="card" [entity]="entity" [form]="form" [record]="record" [collapsible]="true"></erp-record-form>
+        <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
+      </form>
+      @if (!canEdit) {
+        <div class="alert alert-light border small">
+          <i class="fas fa-lock me-1"></i>{{ 'Erp::ReadOnlyNoPermission' | abpLocalization }}
         </div>
-      </dl>
+      }
     </div>
-
-    <ng-container *ngIf="!isNew && entity.chatterEntityType && record">
-      <app-chatter-widget
-        *abpPermission="'Erp.Chatter'"
-        [entityType]="entity.chatterEntityType"
-        [entityId]="record['id']"
-        [entityNo]="title"
-      ></app-chatter-widget>
-    </ng-container>
-  </aside>
-</div>
+    <aside class="col-xl-3">
+      @if (facts.length) {
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-light fw-bold text-secondary small text-uppercase">
+            {{ 'Erp::Statistics' | abpLocalization }}
+          </div>
+          <dl class="list-group list-group-flush mb-0 small">
+            @for (fact of facts; track fact) {
+              <div class="list-group-item d-flex justify-content-between">
+                <dt class="fw-normal text-muted">{{ fact.labelKey | abpLocalization }}</dt>
+                <dd class="mb-0 fw-bold" [class.text-danger]="fact.warnWhenTrue && fact.value === true">
+                  @switch (fact.type) {
+                    @case ('currency') {
+                      {{ $any(fact.value) ?? 0 | erpAmount }}
+                    }
+                    @case ('boolean') {
+                      {{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}
+                    }
+                    @default {
+                      {{ fact.value }}
+                    }
+                  }
+                </dd>
+              </div>
+            }
+          </dl>
+        </div>
+      }
+      @if (!isNew && entity.chatterEntityType && record) {
+        <app-chatter-widget
+          *abpPermission="'Erp.Chatter'"
+          [entityType]="entity.chatterEntityType"
+          [entityId]="record['id']"
+          [entityNo]="title"
+        ></app-chatter-widget>
+      }
+    </aside>
+  </div>
+}

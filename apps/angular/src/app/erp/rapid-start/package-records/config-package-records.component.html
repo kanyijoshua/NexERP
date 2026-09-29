@@ -1,0 +1,182 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <div class="small text-muted">
+      <a routerLink="/erp/rapid-start/packages">{{ 'Erp::Menu:ConfigPackages' | abpLocalization }}</a>
+      <span class="mx-1">/</span>
+      <a [routerLink]="['/erp/rapid-start/packages', packageId]">{{ pkg?.code }}</a>
+    </div>
+    <h4 class="mb-0 fw-bold">
+      <i class="fas fa-table-list text-primary me-2"></i>{{ 'Erp::PackageRecords' | abpLocalization }}
+      @if (table) {
+        <span class="text-muted fw-normal">· {{ table.displayName || table.entityName }}</span>
+      }
+    </h4>
+  </div>
+
+  <div class="form-check form-switch mb-0">
+    <input
+      id="pr-errors-only"
+      type="checkbox"
+      class="form-check-input"
+      [ngModel]="errorsOnly"
+      (ngModelChange)="setErrorsOnly($event)"
+      />
+    <label class="form-check-label" for="pr-errors-only">{{ 'Erp::ErrorsOnly' | abpLocalization }}</label>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" class="text-end">{{ 'Erp::RecordNo' | abpLocalization }}</th>
+            @for (column of columns; track column) {
+              <th scope="col" class="text-nowrap">
+                @if (column.primaryKey) {
+                  <i class="fas fa-key text-warning me-1"></i>
+                  }{{ column.displayName || column.fieldName }}
+                </th>
+              }
+              <th scope="col">{{ 'Erp::Errors' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of records; track record) {
+              <tr [class.table-danger]="record.invalid">
+                <td class="text-end text-muted">{{ record.recordNo }}</td>
+                @for (column of columns; track column) {
+                  <td [title]="fieldErrors(record, column.fieldName).join('; ')">
+                    <span [class.text-danger]="fieldErrors(record, column.fieldName).length">
+                      {{ record.values?.[column.fieldName ?? ''] }}
+                    </span>
+                    @for (text of fieldErrors(record, column.fieldName); track text) {
+                      <div class="small text-danger">
+                        <i class="fas fa-circle-exclamation me-1"></i>{{ text }}
+                      </div>
+                    }
+                  </td>
+                }
+                <td class="small text-danger">
+                  @for (text of otherErrors(record); track text) {
+                    <div>{{ text }}</div>
+                  }
+                </td>
+                <td class="text-end text-nowrap">
+                  <ng-container *abpPermission="'Erp.RapidStart.Import'">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary me-1"
+                      [title]="'Erp::Edit' | abpLocalization"
+                      [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                      (click)="openEdit(record)"
+                      >
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      [title]="'Erp::Delete' | abpLocalization"
+                      [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                      (click)="remove(record)"
+                      >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </ng-container>
+                </td>
+              </tr>
+            }
+            @if (!records.length) {
+              <tr>
+                <td [attr.colspan]="columns.length + 3" class="text-center text-muted py-4">
+                  {{ (loading ? 'Erp::Loading' : 'Erp::NoDataAvailable') | abpLocalization }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer bg-white d-flex align-items-center gap-2">
+      <span class="small text-muted me-auto">
+        {{ 'Erp::RowsOf' | abpLocalization: firstRow + '' : lastRow + '' : totalCount + '' }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="page === 0 || loading"
+        [attr.aria-label]="'Erp::PreviousPage' | abpLocalization"
+        (click)="previous()"
+        >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="!hasNext || loading"
+        [attr.aria-label]="'Erp::NextPage' | abpLocalization"
+        (click)="next()"
+        >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <abp-modal [(visible)]="isEditOpen" [busy]="isBusy" [options]="{ size: 'lg', scrollable: true }">
+    <ng-template #abpHeader>
+      <h5 class="modal-title">
+        {{ 'Erp::EditRecord' | abpLocalization }}
+        <span class="text-muted">· {{ 'Erp::RecordNo' | abpLocalization }} {{ editing?.recordNo }}</span>
+      </h5>
+    </ng-template>
+
+    <ng-template #abpBody>
+      <div class="row g-3">
+        @for (column of columns; track column) {
+          <div class="col-md-6">
+            <label class="form-label" [for]="'rec-' + column.fieldName">
+              @if (column.primaryKey) {
+                <i class="fas fa-key text-warning me-1"></i>
+                }{{ column.displayName || column.fieldName }}
+              </label>
+              @if (enumValuesOf(column.fieldName).length) {
+                <select
+                  class="form-select"
+                  [id]="'rec-' + column.fieldName"
+                  [(ngModel)]="editValues[column.fieldName ?? '']"
+                  >
+                  <option value="">—</option>
+                  @for (value of enumValuesOf(column.fieldName); track value) {
+                    <option [value]="value">{{ value }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  type="text"
+                  class="form-control"
+                  maxlength="2000"
+                  [id]="'rec-' + column.fieldName"
+                  [class.is-invalid]="editing && fieldErrors(editing, column.fieldName).length"
+                  [(ngModel)]="editValues[column.fieldName ?? '']"
+                  />
+              }
+              @for (text of editing ? fieldErrors(editing, column.fieldName) : []; track text) {
+                <div class="small text-danger">
+                  {{ text }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <p class="form-text mt-3 mb-0">{{ 'Erp::EditRecordHelp' | abpLocalization }}</p>
+      </ng-template>
+
+      <ng-template #abpFooter>
+        <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+        <abp-button iconClass="fa fa-check" (click)="saveRecord()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+      </ng-template>
+    </abp-modal>

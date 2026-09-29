@@ -4,7 +4,10 @@ import { Pipe, PipeTransform } from '@angular/core';
  * Formats an amount with thousands separators and two decimals, WITHOUT a currency symbol.
  * `{{ 1234.5 | erpAmount }}` -> `1,234.50`, `{{ 1234.5 | erpAmount: 'KES' }}` -> `1,234.50 KES`.
  */
-@Pipe({ name: 'erpAmount' })
+@Pipe({
+  name: 'erpAmount',
+  standalone: false,
+})
 export class ErpAmountPipe implements PipeTransform {
   private static readonly formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,

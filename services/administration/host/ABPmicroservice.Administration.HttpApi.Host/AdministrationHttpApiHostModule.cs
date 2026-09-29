@@ -4,14 +4,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Logging;
 using ABPmicroservice.Administration.EntityFrameworkCore;
+using ABPmicroservice.Erp;
 using ABPmicroservice.IdentityService;
 using ABPmicroservice.IdentityService.EntityFrameworkCore;
 using ABPmicroservice.MultiTenancy;
+using ABPmicroservice.Projects;
 using ABPmicroservice.SaaS;
 using Volo.Abp;
 using Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy;
 using Volo.Abp.Identity;
 using Volo.Abp.Modularity;
+using Volo.Abp.PermissionManagement;
 using Volo.Abp.VirtualFileSystem;
 
 namespace ABPmicroservice.Administration;
@@ -21,7 +24,11 @@ namespace ABPmicroservice.Administration;
 [DependsOn(typeof(AdministrationApplicationModule))]
 [DependsOn(typeof(AdministrationEntityFrameworkCoreModule))]
 [DependsOn(typeof(AdministrationHttpApiModule))]
+// Localization only: the gateway sends the UI's application-configuration call here, so every
+// service's texts (menus, permission names) have to be known to this host.
+[DependsOn(typeof(ErpDomainSharedModule))]
 [DependsOn(typeof(IdentityServiceApplicationContractsModule))]
+[DependsOn(typeof(ProjectsDomainSharedModule))]
 [DependsOn(typeof(IdentityServiceEntityFrameworkCoreModule))]
 [DependsOn(typeof(SaaSApplicationContractsModule))]
 [DependsOn(typeof(ABPmicroserviceMicroserviceModule))]
@@ -34,6 +41,13 @@ public class AdministrationHttpApiHostModule : AbpModule
         var configuration = context.Services.GetConfiguration();
 
         context.ConfigureMicroservice(ABPmicroserviceNames.AdministrationApi);
+
+        // Every service saves its permission definitions to the shared store at startup; read them
+        // back so the permission dialog also lists services this host does not reference (ERP, Projects).
+        Configure<PermissionManagementOptions>(options =>
+        {
+            options.IsDynamicPermissionStoreEnabled = true;
+        });
 
         if (hostingEnvironment.IsDevelopment())
         {

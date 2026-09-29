@@ -3,12 +3,12 @@
   
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>ABPmicroservice.Projects</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Volo.Abp.Http.Client" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.Http.Client" Version="10.6.1" />
         <ProjectReference Include="..\ABPmicroservice.Projects.Application.Contracts\ABPmicroservice.Projects.Application.Contracts.csproj" />
     </ItemGroup>
 

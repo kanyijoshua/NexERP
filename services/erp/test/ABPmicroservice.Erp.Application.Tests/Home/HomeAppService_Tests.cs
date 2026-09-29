@@ -58,6 +58,17 @@ public class HomeAppService_Tests : ErpApplicationTestBase
         summary.Cues.ShouldAllBe(c => !c.DisplayName.StartsWith("Cue:"));
     }
 
+    /// <summary>The page lays cues out under headings, so each needs a readable one.</summary>
+    [Fact]
+    public async Task Every_Cue_Sits_Under_A_Localized_Group()
+    {
+        var summary = await SummaryAsync();
+
+        summary.Cues.ShouldAllBe(c => !string.IsNullOrWhiteSpace(c.Group));
+        summary.Cues.ShouldAllBe(c => !c.Group.StartsWith("Menu:") && !c.Group.StartsWith("Module:"));
+        summary.Cues.Single(c => c.Key == "OpenSalesInvoices").Group.ShouldBe("Sales");
+    }
+
     /// <summary>The figures are counted from the books, not decoration on the page.</summary>
     [Fact]
     public async Task A_Cue_Counts_What_Is_Actually_There()

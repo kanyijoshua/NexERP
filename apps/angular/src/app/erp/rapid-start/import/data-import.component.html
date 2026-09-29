@@ -1,0 +1,250 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <div class="small text-muted">{{ 'Erp::Menu:Setup' | abpLocalization }}</div>
+    <h4 class="mb-0 fw-bold">
+      <i class="fas fa-file-import text-primary me-2"></i>{{ 'Erp::Menu:ImportData' | abpLocalization }}
+    </h4>
+  </div>
+  <span class="badge rounded-pill" [ngClass]="step === 1 ? 'bg-primary' : 'bg-light text-muted border'">
+    1 · {{ 'Erp::ImportStepFile' | abpLocalization }}
+  </span>
+  <span class="badge rounded-pill" [ngClass]="step === 2 ? 'bg-primary' : 'bg-light text-muted border'">
+    2 · {{ 'Erp::ImportStepMapping' | abpLocalization }}
+  </span>
+  @if (busy) {
+    <i class="fas fa-spinner fa-spin text-muted"></i>
+  }
+</div>
+
+<div class="alert alert-info small py-2">
+  <i class="fas fa-circle-info me-1"></i>{{ 'Erp::ImportAllOrNothing' | abpLocalization }}
+</div>
+
+<!-- Step 1: table, file, options -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label" for="di-entity">{{ 'Erp::Table' | abpLocalization }} *</label>
+        <select id="di-entity" class="form-select" [ngModel]="entityName" (ngModelChange)="onEntityChange($event)">
+          <option value="">—</option>
+          @for (area of entityAreas; track area) {
+            <optgroup [label]="area.area">
+              @for (entity of area.tables; track entity) {
+                <option [value]="entity.entityName">{{ entity.displayName }}</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label" for="di-file">{{ 'Erp::File' | abpLocalization }} *</label>
+        <input
+          id="di-file"
+          type="file"
+          class="form-control"
+          accept=".csv,.xlsx,text/csv"
+          [disabled]="busy"
+          (change)="onFileChange($event)"
+          />
+        <div class="form-text">
+          @if (upload) {
+            <i class="fas fa-file me-1"></i>{{ upload.fileName }}
+          } @else {
+            {{ 'Erp::ImportFileHelp' | abpLocalization }}
+          }
+        </div>
+      </div>
+      <div class="col-md-3 text-end">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [disabled]="!entityName || busy"
+          [title]="'Erp::DownloadImportTemplateHelp' | abpLocalization"
+          (click)="downloadTemplate()"
+          >
+          <i class="fas fa-download me-1"></i>{{ 'Erp::DownloadImportTemplate' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+
+    @if (upload) {
+      <div class="row g-3 align-items-end mt-1">
+        @if ((preview?.sheets?.length ?? 0) > 1) {
+          <div class="col-md-3">
+            <label class="form-label small mb-1" for="di-sheet">{{ 'Erp::Sheet' | abpLocalization }}</label>
+            <select id="di-sheet" class="form-select form-select-sm" [(ngModel)]="sheetName" (ngModelChange)="parse()">
+              @for (sheet of preview?.sheets; track sheet) {
+                <option [value]="sheet">{{ sheet }}</option>
+              }
+            </select>
+          </div>
+        }
+        @if (isCsv) {
+          <div class="col-md-3">
+            <label class="form-label small mb-1" for="di-separator">{{ 'Erp::Separator' | abpLocalization }}</label>
+            <select id="di-separator" class="form-select form-select-sm" [(ngModel)]="separator" (ngModelChange)="parse()">
+              @for (option of separators; track option) {
+                <option [value]="option.value">{{ option.label | abpLocalization }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="col-md-3">
+          <div class="form-check form-switch mb-1">
+            <input id="di-headers" type="checkbox" class="form-check-input" [(ngModel)]="hasHeaders" (ngModelChange)="parse()" />
+            <label class="form-check-label small" for="di-headers">{{ 'Erp::FileHasHeaders' | abpLocalization }}</label>
+          </div>
+        </div>
+        <div class="col text-end">
+          <button type="button" class="btn btn-sm btn-link" (click)="startOver()">
+            <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::StartOver' | abpLocalization }}
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" [disabled]="!entityName || busy" (click)="parse()">
+            <i class="fas fa-magnifying-glass me-1"></i>{{ 'Erp::ReadFile' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Step 2: mapping -->
+@if (preview) {
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+      <span class="fw-bold me-auto">
+        {{ 'Erp::ColumnMapping' | abpLocalization }}
+        <span class="badge bg-primary ms-1">{{ 'Erp::RowsInFile' | abpLocalization: preview.totalRows + '' }}</span>
+      </span>
+      <label class="small text-muted mb-0" for="di-template">{{ 'Erp::DataTemplate' | abpLocalization }}</label>
+      <select id="di-template" class="form-select form-select-sm w-auto" [(ngModel)]="dataTemplateCode">
+        <option value="">—</option>
+        @for (t of templates; track t) {
+          <option [value]="t.code">{{ t.code }} · {{ t.description }}</option>
+        }
+      </select>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 22%">{{ 'Erp::FileColumn' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::SampleValues' | abpLocalization }}</th>
+              <th scope="col" style="width: 32%">{{ 'Erp::Field' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (column of columns; track column) {
+              <tr>
+                <td class="fw-semibold">{{ column.header || ('Erp::ColumnNumber' | abpLocalization: column.index + 1 + '') }}</td>
+                <td class="small text-muted">
+                  @for (value of samples(column); track value; let last = $last) {
+                    <span>
+                      {{ value }}@if (!last) {
+                      <span class="mx-1">·</span>
+                    }
+                  </span>
+                }
+              </td>
+              <td>
+                <select
+                  class="form-select form-select-sm"
+                  [class.is-invalid]="isDuplicate(column)"
+                  [class.border-success]="!!column.fieldName && !isDuplicate(column)"
+                  [attr.aria-label]="'Erp::Field' | abpLocalization"
+                  [(ngModel)]="column.fieldName"
+                  >
+                  <option value="">{{ 'Erp::DoNotImport' | abpLocalization }}</option>
+                  @for (field of fields; track field) {
+                    <option [value]="field.name">
+                      {{ field.displayName || field.name }}{{ field.isKey ? ' ' + ('Erp::KeyMarker' | abpLocalization) : '' }}{{ field.isRequired ? ' *' : '' }}
+                    </option>
+                  }
+                </select>
+                @if (fieldOf(column.fieldName); as field) {
+                  <div class="small text-muted mt-1">
+                    {{ field.dataType }}
+                    @if (field.relatedTable) {
+                      <span><i class="fas fa-link ms-1 me-1"></i>{{ field.relatedTable }}</span>
+                    }
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-white">
+    @if (duplicates.length) {
+      <div class="small text-danger mb-2">
+        <i class="fas fa-triangle-exclamation me-1"></i>{{ 'Erp::FieldMappedTwice' | abpLocalization: duplicates.join(', ') }}
+      </div>
+    }
+    @if (missingKeys.length) {
+      <div class="small text-warning mb-2">
+        <i class="fas fa-key me-1"></i>
+        {{ 'Erp::KeyFieldsNotMapped' | abpLocalization: missingKeyNames }}
+      </div>
+    }
+    <div class="d-flex align-items-center gap-2">
+      <span class="small text-muted me-auto">
+        {{ 'Erp::RequiredKeyLegend' | abpLocalization }}
+      </span>
+      <button type="button" class="btn btn-outline-primary" [disabled]="!canRun" (click)="testImport()">
+        <i class="fas fa-vial me-1"></i>{{ 'Erp::TestImport' | abpLocalization }}
+      </button>
+      <button type="button" class="btn btn-success" [disabled]="!canRun" (click)="runImport()">
+        <i class="fas fa-file-import me-1"></i>{{ 'Erp::RunImport' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Results -->
+@if (result) {
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      @if (result.succeeded) {
+        <div class="alert mb-0" [ngClass]="result.dryRun ? 'alert-info' : 'alert-success'">
+          <i class="fas me-2" [ngClass]="result.dryRun ? 'fa-vial' : 'fa-circle-check'"></i>
+          {{
+          (result.dryRun ? 'Erp::TestImportPassed' : 'Erp::ImportSucceeded')
+          | abpLocalization: result.inserted + '' : result.modified + '' : result.totalRows + ''
+          }}
+        </div>
+      } @else {
+        <div class="alert alert-danger">
+          <i class="fas fa-triangle-exclamation me-2"></i>
+          {{ 'Erp::ImportFailed' | abpLocalization: result.errors.length + '' : result.totalRows + '' }}
+        </div>
+        <div class="table-responsive" style="max-height: 400px">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="text-end" style="width: 90px">{{ 'Erp::RowNo' | abpLocalization }}</th>
+                <th scope="col" style="width: 25%">{{ 'Erp::Field' | abpLocalization }}</th>
+                <th scope="col">{{ 'Erp::ErrorText' | abpLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (error of result.errors; track error) {
+                <tr>
+                  <td class="text-end">{{ error.rowNo }}</td>
+                  <td>{{ fieldOf(error.fieldName)?.displayName || error.fieldName }}</td>
+                  <td class="text-danger">{{ error.message }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+}

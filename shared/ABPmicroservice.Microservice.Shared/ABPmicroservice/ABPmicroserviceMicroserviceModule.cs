@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using ABPmicroservice.Administration.EntityFrameworkCore;
 using Volo.Abp.AspNetCore;
 using Volo.Abp.AspNetCore.Authentication.JwtBearer;

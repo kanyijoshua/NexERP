@@ -26,6 +26,7 @@ using Volo.Abp.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
@@ -81,6 +82,11 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<ConfigPackage> ConfigPackages { get; set; }
     public DbSet<ConfigPackageTable> ConfigPackageTables { get; set; }
     public DbSet<ConfigPackageField> ConfigPackageFields { get; set; }
+    public DbSet<ConfigPackageRecord> ConfigPackageRecords { get; set; }
+    public DbSet<ConfigPackageError> ConfigPackageErrors { get; set; }
+    public DbSet<ConfigTemplate> ConfigTemplates { get; set; }
+    public DbSet<ConfigTemplateLine> ConfigTemplateLines { get; set; }
+    public DbSet<ConfigLine> ConfigLines { get; set; }
 
     public DbSet<Workflow> Workflows { get; set; }
     public DbSet<WorkflowStep> WorkflowSteps { get; set; }
@@ -176,10 +182,11 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     }
 
     protected override Expression<Func<TEntity, bool>> CreateFilterExpression<TEntity>(
-        ModelBuilder modelBuilder
+        ModelBuilder modelBuilder,
+        EntityTypeBuilder<TEntity> entityTypeBuilder
     )
     {
-        var expression = base.CreateFilterExpression<TEntity>(modelBuilder);
+        var expression = base.CreateFilterExpression<TEntity>(modelBuilder, entityTypeBuilder);
 
         if (typeof(ICompanyScoped).IsAssignableFrom(typeof(TEntity)))
         {

@@ -11,6 +11,7 @@ import { fieldsOf, visibleSections } from './record-form';
 @Component({
   selector: 'erp-record-form',
   templateUrl: './record-form.component.html',
+  standalone: false,
 })
 export class RecordFormComponent {
   @Input({ required: true }) entity!: RecordEntity;

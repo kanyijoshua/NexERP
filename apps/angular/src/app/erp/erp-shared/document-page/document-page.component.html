@@ -3,15 +3,19 @@
     <div class="me-auto">
       <h4 class="mb-0 fw-bold">
         {{ title?.includes('::') ? (title | abpLocalization) : title }}
-        <span *ngIf="status" class="badge ms-2 align-middle" [ngClass]="statusClass">{{
-          status?.includes('::') ? (status | abpLocalization) : status
-        }}</span>
+        @if (status) {
+          <span class="badge ms-2 align-middle" [ngClass]="statusClass">{{
+            status?.includes('::') ? (status | abpLocalization) : status
+          }}</span>
+        }
       </h4>
-      <div *ngIf="subtitle" class="small text-muted">{{ subtitle?.includes('::') ? (subtitle | abpLocalization) : subtitle }}</div>
+      @if (subtitle) {
+        <div class="small text-muted">{{ subtitle?.includes('::') ? (subtitle | abpLocalization) : subtitle }}</div>
+      }
     </div>
 
     <div class="d-flex flex-wrap gap-2" role="toolbar">
-      <ng-container *ngFor="let item of actions; trackBy: trackByKey">
+      @for (item of actions; track trackByKey($index, item)) {
         <button
           *abpPermission="item.permission"
           type="button"
@@ -19,10 +23,10 @@
           [ngClass]="item.cssClass || 'btn-outline-primary'"
           [disabled]="isActionDisabled(item)"
           (click)="runAction(item)"
-        >
+          >
           <i [class]="item.icon + ' me-1'"></i>{{ item.labelKey | abpLocalization }}
         </button>
-      </ng-container>
+      }
     </div>
   </div>
 
@@ -50,26 +54,32 @@
             (lineChange)="lineChange.emit($event)"
           ></erp-line-grid>
 
-          <div *ngIf="totals.length" class="row justify-content-end mt-3">
-            <div class="col-12 col-md-6 col-lg-5">
-              <table class="table table-sm table-borderless mb-0">
-                <tbody>
-                  <tr *ngFor="let total of totals" [class.fw-bold]="total.emphasis">
-                    <td class="text-muted">{{ total.labelKey | abpLocalization }}</td>
-                    <td class="text-end">{{ total.value | erpAmount: currencyCode }}</td>
-                  </tr>
-                </tbody>
-              </table>
+          @if (totals.length) {
+            <div class="row justify-content-end mt-3">
+              <div class="col-12 col-md-6 col-lg-5">
+                <table class="table table-sm table-borderless mb-0">
+                  <tbody>
+                    @for (total of totals; track total) {
+                      <tr [class.fw-bold]="total.emphasis">
+                        <td class="text-muted">{{ total.labelKey | abpLocalization }}</td>
+                        <td class="text-end">{{ total.value | erpAmount: currencyCode }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          }
         </div>
       </div>
 
       <ng-content></ng-content>
     </div>
 
-    <div *ngIf="showSide" class="col-12 col-xl-4">
-      <ng-content select="[side]"></ng-content>
-    </div>
+    @if (showSide) {
+      <div class="col-12 col-xl-4">
+        <ng-content select="[side]"></ng-content>
+      </div>
+    }
   </div>
 </div>

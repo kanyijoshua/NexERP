@@ -29,6 +29,7 @@ export const NEW_RECORD_ID = 'new';
 @Component({
   selector: 'app-record-card',
   templateUrl: './record-card.component.html',
+  standalone: false,
 })
 export class RecordCardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

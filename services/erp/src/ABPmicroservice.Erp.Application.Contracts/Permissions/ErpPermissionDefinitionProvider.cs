@@ -135,14 +135,18 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
         workflows.AddChild(ErpPermissions.Workflows.Approve, L("Permission:Erp:Workflows:Approve"));
 
         var rapidStart = erpGroup.AddPermission(ErpPermissions.RapidStart.Default, L("Permission:Erp:RapidStart"));
+        rapidStart.AddChild(ErpPermissions.RapidStart.Manage, L("Permission:Erp:RapidStart:Manage"));
         rapidStart.AddChild(ErpPermissions.RapidStart.Import, L("Permission:Erp:RapidStart:Import"));
         rapidStart.AddChild(ErpPermissions.RapidStart.Export, L("Permission:Erp:RapidStart:Export"));
+        rapidStart.AddChild(ErpPermissions.RapidStart.Apply, L("Permission:Erp:RapidStart:Apply"));
 
         var reports = erpGroup.AddPermission(ErpPermissions.Reports.Default, L("Permission:Erp:Reports"));
         reports.AddChild(ErpPermissions.Reports.ExportExcel, L("Permission:Erp:Reports:ExportExcel"));
 
         var modules = erpGroup.AddPermission(ErpPermissions.Modules.Default, L("Permission:Erp:Modules"));
         modules.AddChild(ErpPermissions.Modules.Manage, L("Permission:Erp:Modules:Manage"));
+
+        erpGroup.AddPermission(ErpPermissions.Theme.Default, L("Permission:Erp:Theme"));
 
         var companies = erpGroup.AddPermission(ErpPermissions.Companies.Default, L("Permission:Erp:Companies"));
         companies.AddChild(ErpPermissions.Companies.Create, L("Permission:Erp:Companies:Create"));

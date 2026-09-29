@@ -22,6 +22,7 @@ import { CompanyService } from '../../services/company.service';
   selector: 'app-record-list',
   templateUrl: './record-list.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class RecordListComponent implements OnInit {
   readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);

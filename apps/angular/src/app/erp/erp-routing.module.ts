@@ -57,6 +57,13 @@ const routes: Routes = [
     data: { module: 'Reporting' },
   },
   { path: 'setup', loadChildren: () => import('./setup/setup.module').then(m => m.SetupModule) },
+  {
+    path: 'rapid-start',
+    loadChildren: () => import('./rapid-start/rapid-start.module').then(m => m.RapidStartModule),
+    canActivate: [moduleGuard],
+    // Unknown to the module list until the backend registers it, which the guard treats as on.
+    data: { module: 'RapidStart' },
+  },
 ];
 
 @NgModule({

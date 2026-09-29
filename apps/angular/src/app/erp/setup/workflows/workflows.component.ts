@@ -19,6 +19,7 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'app-workflows',
   templateUrl: './workflows.component.html',
+  standalone: false,
 })
 export class WorkflowsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

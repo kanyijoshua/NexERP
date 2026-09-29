@@ -88,7 +88,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
                 a.Status == ApprovalStatus.Open && a.ApproverId == CurrentUser.Id
             );
 
-            cues.Add(Cue("PendingApprovals", waiting, "fas fa-user-clock", "/erp/approvals", ActivityCueTone.Attention));
+            cues.Add(Cue("PendingApprovals", "Module:Approvals", waiting, "fas fa-user-clock", "/erp/approvals", ActivityCueTone.Attention));
         }
 
         if (await CanSeeAsync(ErpModuleRegistry.Finance, ErpPermissions.Journals.Default))
@@ -96,14 +96,14 @@ public class HomeAppService : ErpAppService, IHomeAppService
             var unposted = await _journalLineRepository.CountAsync();
 
             cues.Add(
-                Cue("UnpostedJournalLines", unposted, "fas fa-pen-to-square", "/erp/finance/general-journal")
+                Cue("UnpostedJournalLines", "Menu:Finance", unposted, "fas fa-pen-to-square", "/erp/finance/general-journal")
             );
         }
 
         if (await CanSeeAsync(ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default))
         {
             var open = await _salesRepository.CountAsync(d => !d.Posted && d.Status != DocumentStatus.Cancelled);
-            cues.Add(Cue("OpenSalesInvoices", open, "fas fa-file-invoice-dollar", "/erp/sales-invoices"));
+            cues.Add(Cue("OpenSalesInvoices", "Menu:Sales", open, "fas fa-file-invoice-dollar", "/erp/sales-invoices"));
 
             // Totalled in memory: the test provider is SQLite, which cannot sum a decimal. Only
             // open, overdue entries are read, so the set is small.
@@ -113,6 +113,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
             cues.Add(
                 Cue(
                     "OverdueReceivables",
+                    "Menu:Sales",
                     overdue,
                     "fas fa-hand-holding-dollar",
                     "/erp/reports/financial",
@@ -125,7 +126,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
         if (await CanSeeAsync(ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default))
         {
             var open = await _purchaseRepository.CountAsync(d => !d.Posted && d.Status != DocumentStatus.Cancelled);
-            cues.Add(Cue("OpenPurchaseInvoices", open, "fas fa-file-invoice", "/erp/purchase-invoices"));
+            cues.Add(Cue("OpenPurchaseInvoices", "Menu:Purchasing", open, "fas fa-file-invoice", "/erp/purchase-invoices"));
 
             var overdueEntries = await _vendorLedgerRepository.GetListAsync(e => e.Open && e.DueDate < today);
             var overdue = overdueEntries.Sum(e => e.RemainingAmount);
@@ -133,6 +134,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
             cues.Add(
                 Cue(
                     "OverduePayables",
+                    "Menu:Purchasing",
                     overdue,
                     "fas fa-money-bill-transfer",
                     "/erp/reports/financial",
@@ -153,6 +155,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
 
     private ActivityCueDto Cue(
         string key,
+        string groupKey,
         decimal value,
         string icon,
         string route,
@@ -164,6 +167,7 @@ public class HomeAppService : ErpAppService, IHomeAppService
         {
             Key = key,
             DisplayName = L[$"Cue:{key}"],
+            Group = L[groupKey],
             Value = value,
             IsAmount = isAmount,
             Tone = value > 0 ? tone : ActivityCueTone.Neutral,

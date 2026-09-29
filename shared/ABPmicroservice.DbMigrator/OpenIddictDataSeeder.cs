@@ -97,6 +97,15 @@ public class OpenIddictDataSeeder(
         await _applicationManager.PopulateAsync(descriptor, client);
 
         var changed = false;
+
+        // OpenIddict 6 renamed these endpoint permissions; clients seeded before the upgrade still carry the old values.
+        changed |= ReplacePermission(descriptor, "ept:logout", OpenIddictConstants.Permissions.Endpoints.EndSession);
+        changed |= ReplacePermission(
+            descriptor,
+            "ept:device",
+            OpenIddictConstants.Permissions.Endpoints.DeviceAuthorization
+        );
+
         foreach (var scope in scopes)
         {
             // Only API scopes are topped up; the built-in ones were settled at creation.
@@ -120,6 +129,21 @@ public class OpenIddictDataSeeder(
         {
             await _applicationManager.UpdateAsync(client, descriptor);
         }
+    }
+
+    private static bool ReplacePermission(
+        OpenIddictApplicationDescriptor descriptor,
+        string oldPermission,
+        string newPermission
+    )
+    {
+        if (!descriptor.Permissions.Remove(oldPermission))
+        {
+            return false;
+        }
+
+        descriptor.Permissions.Add(newPermission);
+        return true;
     }
 
     private async Task CreateClientAsync(
@@ -165,7 +189,7 @@ public class OpenIddictDataSeeder(
         var client = await _applicationManager.FindByClientIdAsync(name);
         if (client != null)
         {
-            // Already seeded: only grant scopes added to the configuration since then.
+            // Already seeded: only grant scopes added to the configuration since then, and rename legacy permissions.
             await AddMissingScopesAsync(client, scopes);
             return;
         }
@@ -212,7 +236,7 @@ public class OpenIddictDataSeeder(
                 }
             }
 
-            application.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Logout);
+            application.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.EndSession);
 
             foreach (var grantType in grantTypes)
             {
@@ -286,7 +310,7 @@ public class OpenIddictDataSeeder(
                     application.Permissions.Add(
                         OpenIddictConstants.Permissions.GrantTypes.DeviceCode
                     );
-                    application.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Device);
+                    application.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.DeviceAuthorization);
                 }
 
                 if (grantType == OpenIddictConstants.GrantTypes.Implicit)

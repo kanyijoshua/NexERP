@@ -37,6 +37,7 @@ const ACCOUNT_KIND: Record<string, GenJournalAccountType> = {
 @Component({
   selector: 'app-general-journal',
   templateUrl: './general-journal.component.html',
+  standalone: false,
 })
 export class GeneralJournalComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

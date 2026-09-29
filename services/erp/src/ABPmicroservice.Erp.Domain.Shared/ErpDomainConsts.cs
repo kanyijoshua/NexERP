@@ -59,6 +59,24 @@ public static class ErpDomainConsts
     public const int MaxExportRowCount = 50_000;
 
     /// <summary>
+    /// Largest file a configuration package or data import may upload. The file arrives whole in
+    /// one request and is parsed in memory, so the cap is what keeps one upload from exhausting it.
+    /// </summary>
+    public const int MaxImportFileBytes = 10 * 1024 * 1024;
+
+    /// <summary>
+    /// Largest an xlsx part may grow to once unzipped. A zip can hide a gigabyte in a kilobyte;
+    /// reading stops here instead of trusting the sizes the archive claims.
+    /// </summary>
+    public const long MaxUnzippedPartBytes = 100L * 1024 * 1024;
+
+    public const int MaxConfigValueLength = 2000;
+    public const int MaxConfigErrorLength = 1000;
+
+    /// <summary>Stored filter lines and field mappings of a package table or field, as JSON.</summary>
+    public const int MaxConfigSettingsLength = 8000;
+
+    /// <summary>
     /// Days added to the posting date for the due date of a journal-posted receivable or payable.
     /// A stand-in until payment terms (BC table 3) carry their own date formula.
     /// </summary>

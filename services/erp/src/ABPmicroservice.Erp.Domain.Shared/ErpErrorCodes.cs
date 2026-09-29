@@ -107,6 +107,22 @@ public static class ErpErrorCodes
         public const string TemplateNameAlreadyExists = Prefix + ":Exporting:00007";
     }
 
+    public static class RapidStart
+    {
+        public const string PackageCodeAlreadyExists = Prefix + ":RapidStart:00001";
+        public const string TableAlreadyInPackage = Prefix + ":RapidStart:00002";
+        public const string TableNotImportable = Prefix + ":RapidStart:00003";
+        public const string FileNotValid = Prefix + ":RapidStart:00004";
+        public const string FileTooLarge = Prefix + ":RapidStart:00005";
+        public const string TemplateCodeAlreadyExists = Prefix + ":RapidStart:00006";
+        public const string TableNotInPackage = Prefix + ":RapidStart:00007";
+        public const string FileHasNoRows = Prefix + ":RapidStart:00008";
+        public const string FieldNotImportable = Prefix + ":RapidStart:00009";
+        public const string ColumnMappedTwice = Prefix + ":RapidStart:00010";
+        public const string KeyFieldNotMapped = Prefix + ":RapidStart:00011";
+        public const string ImportHasErrors = Prefix + ":RapidStart:00012";
+    }
+
     public static class Integration
     {
         public const string ServiceNameAlreadyExists = Prefix + ":Integration:00001";

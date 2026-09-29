@@ -17,5 +17,6 @@ export * from './journal-page/journal-balance';
 export * from './kanban-board/kanban-board.component';
 export * from './report-page/report-page.component';
 export * from './report-page/save-blob';
+export * from './file/read-file-base64';
 export * from './smart-buttons/smart-buttons.component';
 export * from './pipes/erp-amount.pipe';

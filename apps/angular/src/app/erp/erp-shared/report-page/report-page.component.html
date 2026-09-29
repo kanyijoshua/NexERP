@@ -2,24 +2,26 @@
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <div class="me-auto">
       <h4 class="mb-0 fw-bold">{{ title?.includes('::') ? (title | abpLocalization) : title }}</h4>
-      <div *ngIf="subtitle" class="small text-muted">
-        {{ subtitle.includes('::') ? (subtitle | abpLocalization) : subtitle }}
-      </div>
+      @if (subtitle) {
+        <div class="small text-muted">
+          {{ subtitle.includes('::') ? (subtitle | abpLocalization) : subtitle }}
+        </div>
+      }
     </div>
 
     <ng-content select="[actions]"></ng-content>
 
-    <ng-container *ngIf="showExport">
+    @if (showExport) {
       <button
         *abpPermission="exportPermission"
         type="button"
         class="btn btn-sm btn-success"
         [disabled]="busy || !hasRows"
         (click)="exportExcel.emit()"
-      >
+        >
         <i class="fas fa-file-excel me-1"></i>{{ 'Erp::ExportToExcel' | abpLocalization }}
       </button>
-    </ng-container>
+    }
   </div>
 
   <div class="card border-0 shadow-sm mb-3">
@@ -33,79 +35,99 @@
           class="btn btn-primary"
           [disabled]="busy || runDisabled"
           (click)="run.emit()"
-        >
-          <span
-            *ngIf="busy"
-            class="spinner-border spinner-border-sm me-1"
-            role="status"
-            aria-hidden="true"
-          ></span>
-          <i *ngIf="!busy" class="fas fa-play me-1"></i>{{ 'Erp::Run' | abpLocalization }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <ng-content select="[chart]"></ng-content>
-
-  <div class="card border-0 shadow-sm">
-    <div class="card-body">
-      <div *ngIf="hasRows; else empty" class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th
-                *ngFor="let column of columns; trackBy: trackByField"
-                scope="col"
-                [ngClass]="alignClass(column)"
-              >
-                {{ column.labelKey | abpLocalization }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of rows" [ngClass]="rowClass ? rowClass(row) : ''">
-              <td *ngFor="let column of columns; trackBy: trackByField" [ngClass]="alignClass(column)">
-                <ng-container
-                  [ngTemplateOutlet]="cell"
-                  [ngTemplateOutletContext]="{ $implicit: row[column.field], column: column }"
-                ></ng-container>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot *ngIf="totalsRow">
-            <tr class="fw-bold table-light">
-              <td *ngFor="let column of columns; trackBy: trackByField" [ngClass]="alignClass(column)">
-                <ng-container
-                  [ngTemplateOutlet]="cell"
-                  [ngTemplateOutletContext]="{ $implicit: totalsRow[column.field], column: column }"
-                ></ng-container>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <ng-template #empty>
-        <div class="text-center text-muted py-5">
-          <ng-container *ngIf="busy; else noData">
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span
-            >{{ 'Erp::Loading' | abpLocalization }}
-          </ng-container>
-          <ng-template #noData>
-            <i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ emptyKey | abpLocalization }}
-          </ng-template>
+          >
+          @if (busy) {
+            <span
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+              aria-hidden="true"
+            ></span>
+          }
+          @if (!busy) {
+            <i class="fas fa-play me-1"></i>
+            }{{ 'Erp::Run' | abpLocalization }}
+          </button>
         </div>
-      </ng-template>
+      </div>
     </div>
-  </div>
-</div>
 
-<ng-template #cell let-value let-column="column">
-  <ng-container [ngSwitch]="column.type">
-    <ng-container *ngSwitchCase="'currency'">{{ value | erpAmount: currencyCode }}</ng-container>
-    <ng-container *ngSwitchCase="'number'">{{ value | number: '1.0-4' }}</ng-container>
-    <ng-container *ngSwitchCase="'date'">{{ value | date: dateFormat }}</ng-container>
-    <ng-container *ngSwitchDefault>{{ value }}</ng-container>
-  </ng-container>
-</ng-template>
+    <ng-content select="[chart]"></ng-content>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        @if (hasRows) {
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  @for (column of columns; track trackByField($index, column)) {
+                    <th
+                      scope="col"
+                      [ngClass]="alignClass(column)"
+                      >
+                      {{ column.labelKey | abpLocalization }}
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows; track row) {
+                  <tr [ngClass]="rowClass ? rowClass(row) : ''">
+                    @for (column of columns; track trackByField($index, column)) {
+                      <td [ngClass]="alignClass(column)">
+                        <ng-container
+                          [ngTemplateOutlet]="cell"
+                          [ngTemplateOutletContext]="{ $implicit: row[column.field], column: column }"
+                        ></ng-container>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+              @if (totalsRow) {
+                <tfoot>
+                  <tr class="fw-bold table-light">
+                    @for (column of columns; track trackByField($index, column)) {
+                      <td [ngClass]="alignClass(column)">
+                        <ng-container
+                          [ngTemplateOutlet]="cell"
+                          [ngTemplateOutletContext]="{ $implicit: totalsRow[column.field], column: column }"
+                        ></ng-container>
+                      </td>
+                    }
+                  </tr>
+                </tfoot>
+              }
+            </table>
+          </div>
+        } @else {
+          <div class="text-center text-muted py-5">
+            @if (busy) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span
+                >{{ 'Erp::Loading' | abpLocalization }}
+              } @else {
+                <i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ emptyKey | abpLocalization }}
+              }
+            </div>
+          }
+
+        </div>
+      </div>
+    </div>
+
+    <ng-template #cell let-value let-column="column">
+      @switch (column.type) {
+        @case ('currency') {
+          {{ value | erpAmount: currencyCode }}
+        }
+        @case ('number') {
+          {{ value | number: '1.0-4' }}
+        }
+        @case ('date') {
+          {{ value | date: dateFormat }}
+        }
+        @default {
+          {{ value }}
+        }
+      }
+    </ng-template>

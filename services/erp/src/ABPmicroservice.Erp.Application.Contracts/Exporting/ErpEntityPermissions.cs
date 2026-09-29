@@ -42,6 +42,7 @@ public static class ErpEntityPermissions
         ["SalesLine"] = ErpPermissions.SalesDocuments.Default,
         ["PostedSalesHeader"] = ErpPermissions.SalesDocuments.Default,
         ["PostedSalesLine"] = ErpPermissions.SalesDocuments.Default,
+        ["SalesReceivablesSetup"] = ErpPermissions.SalesSetup.Default,
 
         // Purchasing
         ["Vendor"] = ErpPermissions.Vendors.Default,
@@ -51,6 +52,7 @@ public static class ErpEntityPermissions
         ["PurchaseLine"] = ErpPermissions.PurchaseDocuments.Default,
         ["PostedPurchaseHeader"] = ErpPermissions.PurchaseDocuments.Default,
         ["PostedPurchaseLine"] = ErpPermissions.PurchaseDocuments.Default,
+        ["PurchasesPayablesSetup"] = ErpPermissions.PurchaseSetup.Default,
 
         // Inventory
         ["Item"] = ErpPermissions.Items.Default,
@@ -86,6 +88,57 @@ public static class ErpEntityPermissions
         ["Company"] = ErpPermissions.Companies.Default,
     };
 
+    /// <summary>
+    /// What a caller needs, beyond reading a table, before a configuration package or a data
+    /// import may write to it: the same permissions that guard creating and changing its records
+    /// on screen, so an import can never do what the user could not do by hand.
+    /// <c>ErpEntityPermissions_Tests</c> fails if a table that may be imported has no entry here.
+    /// </summary>
+    private static readonly Dictionary<string, string[]> WriteMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["GLAccount"] = [ErpPermissions.GLAccounts.Create, ErpPermissions.GLAccounts.Update],
+        ["GeneralPostingSetup"] = [ErpPermissions.GLAccounts.Update],
+        ["GenJournalTemplate"] = [ErpPermissions.Journals.Manage],
+        ["GenJournalBatch"] = [ErpPermissions.Journals.Manage],
+
+        ["Customer"] = [ErpPermissions.Customers.Create, ErpPermissions.Customers.Update],
+        ["CustomerPostingGroup"] = [ErpPermissions.Customers.Create, ErpPermissions.Customers.Update],
+        ["SalesReceivablesSetup"] = [ErpPermissions.SalesSetup.Update],
+
+        ["Vendor"] = [ErpPermissions.Vendors.Create, ErpPermissions.Vendors.Update],
+        ["VendorPostingGroup"] = [ErpPermissions.Vendors.Create, ErpPermissions.Vendors.Update],
+        ["PurchasesPayablesSetup"] = [ErpPermissions.PurchaseSetup.Update],
+
+        ["Item"] = [ErpPermissions.Items.Create, ErpPermissions.Items.Update],
+        ["ItemCategory"] = [ErpPermissions.ItemCategories.Create, ErpPermissions.ItemCategories.Update],
+        ["UnitOfMeasure"] = [ErpPermissions.UnitsOfMeasure.Create, ErpPermissions.UnitsOfMeasure.Update],
+
+        ["Dimension"] = [ErpPermissions.Dimensions.Create, ErpPermissions.Dimensions.Update],
+        ["DimensionValue"] = [ErpPermissions.Dimensions.Create, ErpPermissions.Dimensions.Update],
+
+        ["NoSeries"] = [ErpPermissions.NoSeries.Create, ErpPermissions.NoSeries.Update],
+        ["NoSeriesLine"] = [ErpPermissions.NoSeries.Create, ErpPermissions.NoSeries.Update],
+
+        ["AccountSchedule"] = [ErpPermissions.AccountSchedules.Manage],
+        ["AccountScheduleLine"] = [ErpPermissions.AccountSchedules.Manage],
+        ["ColumnLayout"] = [ErpPermissions.AccountSchedules.Manage],
+        ["ColumnLayoutLine"] = [ErpPermissions.AccountSchedules.Manage],
+
+        ["KanbanStage"] = [ErpPermissions.Kanban.Manage],
+    };
+
     /// <summary>The permission guarding a table, or null when the table may not be exported.</summary>
     public static string Find(string entityName) => Map.GetValueOrDefault(entityName ?? string.Empty);
+
+    /// <summary>
+    /// Every permission needed to write to a table, the read permission included; null when the
+    /// table may not be written through an import.
+    /// </summary>
+    public static string[] FindWrite(string entityName)
+    {
+        var read = Find(entityName);
+        var write = WriteMap.GetValueOrDefault(entityName ?? string.Empty);
+
+        return read == null || write == null ? null : [read, .. write];
+    }
 }

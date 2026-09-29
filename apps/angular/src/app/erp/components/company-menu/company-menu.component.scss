@@ -1,0 +1,81 @@
+.company-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.company-menu__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.company-menu__caret {
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+
+/* In the top bar: reads like the other nav links. */
+.company-menu__trigger--nav {
+  max-width: 16rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 1px solid var(--erp-nav-divider, var(--erp-rule));
+  color: var(--bs-navbar-color);
+  font-size: 0.95rem;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--bs-navbar-hover-color);
+  }
+}
+
+/* As the home page title: the company is the page's heading, as on a Role Center. */
+.company-menu__trigger--title {
+  padding: 0;
+  color: var(--erp-ink);
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: left;
+
+  .company-menu__icon {
+    font-size: 1.25rem;
+    color: var(--erp-primary);
+  }
+
+  &:hover .company-menu__name,
+  &:focus-visible .company-menu__name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+}
+
+.company-menu__label {
+  padding: 0.5rem 1rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--erp-ink-muted);
+}
+
+.company-menu__check {
+  width: 1rem;
+  margin-right: 0.75rem;
+  color: var(--erp-accent);
+}
+
+.company-menu__item--active {
+  font-weight: 600;
+}
+
+.company-menu__tag {
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--erp-quiet);
+  font-size: 0.75rem;
+  color: var(--erp-ink-muted);
+}

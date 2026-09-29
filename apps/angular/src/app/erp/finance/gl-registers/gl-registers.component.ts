@@ -14,6 +14,7 @@ import { CompanyService } from '../../services/company.service';
   selector: 'app-gl-registers',
   templateUrl: './gl-registers.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class GLRegistersComponent implements OnInit {
   readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);

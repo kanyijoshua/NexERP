@@ -21,6 +21,7 @@ import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
   selector: 'app-column-layouts',
   templateUrl: './column-layouts.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class ColumnLayoutsComponent extends CrudListBase<
   ColumnLayoutDto,

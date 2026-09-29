@@ -1,5 +1,9 @@
 import { ABP, RoutesService, eLayoutType } from '@abp/ng.core';
-import { APP_INITIALIZER } from '@angular/core';
+import { NavItemsService } from '@abp/ng.theme.shared';
+import { APP_INITIALIZER, inject, provideAppInitializer } from '@angular/core';
+import { CompanyMenuComponent } from './erp/components/company-menu/company-menu.component';
+import { MenuSuiteButtonComponent } from './erp/components/menu-suite/menu-suite-button.component';
+import { PageSearchComponent } from './erp/components/menu-suite/page-search.component';
 
 /**
  * The module each ERP menu entry belongs to. Entries of a module this company has switched off are
@@ -23,13 +27,17 @@ export const ERP_ROUTE_MODULE: Record<string, string> = {
   'Erp::Menu:Items': 'Inventory',
   'Erp::Menu:UnitsOfMeasure': 'Inventory',
   'Erp::Menu:ItemCategories': 'Inventory',
+  'Erp::Menu:ConfigWorksheet': 'RapidStart',
+  'Erp::Menu:ConfigPackages': 'RapidStart',
+  'Erp::Menu:ConfigTemplates': 'RapidStart',
+  'Erp::Menu:ImportData': 'RapidStart',
 };
 
 /** The ERP menu, defined once so it can be rebuilt when a module is switched on or off. */
 export const ERP_ROUTES: ABP.Route[] = [
   {
     path: '/',
-    name: '::Menu:Home',
+    name: 'Erp::Menu:Home',
     iconClass: 'fas fa-home',
     order: 1,
     layout: eLayoutType.application,
@@ -220,7 +228,7 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 90,
     layout: eLayoutType.application,
     requiredPolicy:
-      'Erp.Modules || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport',
+      'Erp.Modules || Erp.Theme || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport || Erp.RapidStart',
   },
   {
     path: '/erp/setup/modules',
@@ -230,6 +238,15 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 1,
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.Modules',
+  },
+  {
+    path: '/erp/setup/theme',
+    name: 'Erp::Menu:Theme',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-palette',
+    order: 1,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Theme',
   },
   {
     path: '/erp/setup/no-series',
@@ -294,10 +311,55 @@ export const ERP_ROUTES: ABP.Route[] = [
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.DataExport',
   },
+  {
+    path: '/erp/rapid-start/worksheet',
+    name: 'Erp::Menu:ConfigWorksheet',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-list-check',
+    order: 9,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.RapidStart',
+  },
+  {
+    path: '/erp/rapid-start/packages',
+    name: 'Erp::Menu:ConfigPackages',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-box-open',
+    order: 10,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.RapidStart',
+  },
+  {
+    path: '/erp/rapid-start/templates',
+    name: 'Erp::Menu:ConfigTemplates',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-clone',
+    order: 11,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.RapidStart',
+  },
+  {
+    path: '/erp/rapid-start/import',
+    name: 'Erp::Menu:ImportData',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-file-import',
+    order: 12,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.RapidStart.Apply',
+  },
 ];
 
 export const APP_ROUTE_PROVIDER = [
   { provide: APP_INITIALIZER, useFactory: configureRoutes, deps: [RoutesService], multi: true },
+  // The top bar's right-hand side: page search, the menu suite, then the company, ahead of
+  // language and user.
+  provideAppInitializer(() => {
+    inject(NavItemsService).addItems([
+      { id: 'Erp.PageSearch', order: 1, component: PageSearchComponent },
+      { id: 'Erp.MenuSuite', order: 2, component: MenuSuiteButtonComponent },
+      { id: 'Erp.Company', order: 3, component: CompanyMenuComponent },
+    ]);
+  }),
 ];
 
 function configureRoutes(routesService: RoutesService) {

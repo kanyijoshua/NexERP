@@ -141,11 +141,21 @@ public class ErpPermissions
         public const string Approve = Default + ".Approve";
     }
 
+    /// <summary>Configuration packages, templates, the configuration worksheet and the import wizard.</summary>
     public static class RapidStart
     {
         public const string Default = GroupName + ".RapidStart";
+
+        /// <summary>Designing packages, data templates and the worksheet.</summary>
+        public const string Manage = Default + ".Manage";
+
+        /// <summary>Bringing data into staging: package files, Excel sheets, the database, record edits.</summary>
         public const string Import = Default + ".Import";
+
         public const string Export = Default + ".Export";
+
+        /// <summary>Validating and applying staged data, and the import wizard, which write to tables.</summary>
+        public const string Apply = Default + ".Apply";
     }
 
     public static class Reports
@@ -159,6 +169,12 @@ public class ErpPermissions
     {
         public const string Default = GroupName + ".Modules";
         public const string Manage = Default + ".Manage";
+    }
+
+    /// <summary>The look of the app: colours, top bar and corners, for everyone in the tenant.</summary>
+    public static class Theme
+    {
+        public const string Default = GroupName + ".Theme";
     }
 
     public static class Companies

@@ -18,8 +18,8 @@
     (focus)="onFocus()"
     (blur)="onBlur()"
     (selectItem)="onSelect($event)"
-  />
-  <ng-container *ngIf="recordEntity">
+    />
+  @if (recordEntity) {
     <button
       type="button"
       class="btn btn-outline-secondary"
@@ -28,37 +28,48 @@
       [title]="'Erp::SelectFromFullList' | abpLocalization"
       [attr.aria-label]="'Erp::SelectFromFullList' | abpLocalization"
       (click)="openList()"
-    >
+      >
       <i class="fas fa-ellipsis"></i>
     </button>
-    <button
-      *ngIf="value !== null"
-      type="button"
-      class="btn btn-outline-secondary"
-      tabindex="-1"
-      [title]="'Erp::OpenCard' | abpLocalization"
-      [attr.aria-label]="'Erp::OpenCard' | abpLocalization"
-      (click)="openCard()"
-    >
-      <i class="fas fa-arrow-right"></i>
-    </button>
-  </ng-container>
+    @if (value !== null) {
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        tabindex="-1"
+        [title]="'Erp::OpenCard' | abpLocalization"
+        [attr.aria-label]="'Erp::OpenCard' | abpLocalization"
+        (click)="openCard()"
+        >
+        <i class="fas fa-arrow-right"></i>
+      </button>
+    }
+  }
 </div>
 
 <ng-template #optionTemplate let-option="result" let-term="term">
-  <ng-container [ngSwitch]="option.action">
-    <span *ngSwitchCase="'searchMore'" class="erp-lookup__action text-primary" [class.erp-lookup__action--first]="!!option.first">
-      <i class="fas fa-list fa-fw me-1"></i>{{ 'Erp::SearchMore' | abpLocalization }}
-    </span>
-    <span *ngSwitchCase="'create'" class="erp-lookup__action text-primary">
-      <i class="fas fa-plus fa-fw me-1"></i>{{ 'Erp::CreateNamed' | abpLocalization: option.term }}
-    </span>
-    <span *ngSwitchCase="'createEdit'" class="erp-lookup__action text-primary">
-      <i class="fas fa-pen-to-square fa-fw me-1"></i>{{ 'Erp::CreateAndEdit' | abpLocalization }}
-    </span>
-    <span *ngSwitchDefault>
-      <ngb-highlight class="fw-semibold" [result]="option.code" [term]="term"></ngb-highlight>
-      <ngb-highlight *ngIf="option.name" class="text-muted ms-2" [result]="option.name" [term]="term"></ngb-highlight>
-    </span>
-  </ng-container>
+  @switch (option.action) {
+    @case ('searchMore') {
+      <span class="erp-lookup__action text-primary" [class.erp-lookup__action--first]="!!option.first">
+        <i class="fas fa-list fa-fw me-1"></i>{{ 'Erp::SearchMore' | abpLocalization }}
+      </span>
+    }
+    @case ('create') {
+      <span class="erp-lookup__action text-primary">
+        <i class="fas fa-plus fa-fw me-1"></i>{{ 'Erp::CreateNamed' | abpLocalization: option.term }}
+      </span>
+    }
+    @case ('createEdit') {
+      <span class="erp-lookup__action text-primary">
+        <i class="fas fa-pen-to-square fa-fw me-1"></i>{{ 'Erp::CreateAndEdit' | abpLocalization }}
+      </span>
+    }
+    @default {
+      <span>
+        <ngb-highlight class="fw-semibold" [result]="option.code" [term]="term"></ngb-highlight>
+        @if (option.name) {
+          <ngb-highlight class="text-muted ms-2" [result]="option.name" [term]="term"></ngb-highlight>
+        }
+      </span>
+    }
+  }
 </ng-template>

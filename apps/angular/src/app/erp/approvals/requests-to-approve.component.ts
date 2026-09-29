@@ -23,6 +23,7 @@ type PendingAction = 'approve' | 'reject';
   selector: 'app-requests-to-approve',
   templateUrl: './requests-to-approve.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class RequestsToApproveComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

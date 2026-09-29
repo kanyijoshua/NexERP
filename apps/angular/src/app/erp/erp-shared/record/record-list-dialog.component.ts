@@ -19,6 +19,7 @@ export const RECORD_LIST_FILTER_DEBOUNCE_MS = 300;
   selector: 'erp-record-list-dialog',
   templateUrl: './record-list-dialog.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class RecordListDialogComponent implements OnInit {
   readonly modal = inject(NgbActiveModal);

@@ -19,6 +19,7 @@ import { CrudListBase } from '../../erp-shared';
   selector: 'app-journal-templates',
   templateUrl: './journal-templates.component.html',
   providers: [ListService],
+  standalone: false,
 })
 export class JournalTemplatesComponent
   extends CrudListBase<GenJournalTemplateDto, CreateUpdateGenJournalTemplateDto>

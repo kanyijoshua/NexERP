@@ -4,6 +4,7 @@ import type { ErpModuleDto } from '../modules/models';
 export interface ActivityCueDto {
   key?: string;
   displayName?: string;
+  group?: string;
   value: number;
   isAmount: boolean;
   tone: ActivityCueTone;

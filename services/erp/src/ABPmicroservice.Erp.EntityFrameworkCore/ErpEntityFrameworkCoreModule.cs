@@ -57,6 +57,7 @@ public class ErpEntityFrameworkCoreModule : AbpModule
             options.Entity<ConfigPackage>(e =>
                 e.DefaultWithDetailsFunc = q => q.Include(x => x.Tables).ThenInclude(t => t.Fields)
             );
+            options.Entity<ConfigTemplate>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
         });
     }
 }

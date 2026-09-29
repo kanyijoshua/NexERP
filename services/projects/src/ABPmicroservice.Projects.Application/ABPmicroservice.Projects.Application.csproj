@@ -3,13 +3,13 @@
   
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>ABPmicroservice.Projects</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Volo.Abp.AutoMapper" Version="9.0.0" />
-        <PackageReference Include="Volo.Abp.Ddd.Application" Version="9.0.0" />
+        <PackageReference Include="Volo.Abp.AutoMapper" Version="10.6.1" />
+        <PackageReference Include="Volo.Abp.Ddd.Application" Version="10.6.1" />
         <ProjectReference Include="..\ABPmicroservice.Projects.Application.Contracts\ABPmicroservice.Projects.Application.Contracts.csproj" />
         <ProjectReference Include="..\ABPmicroservice.Projects.Domain\ABPmicroservice.Projects.Domain.csproj" />
     </ItemGroup>
