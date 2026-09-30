@@ -1,5 +1,6 @@
 import type { ItemType } from './item-type.enum';
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
+import type { CodeTableDto, CreateUpdateCodeTableDto } from '../companies/models';
 import type { ItemLedgerEntryType } from './item-ledger-entry-type.enum';
 
 export interface CreateUpdateItemCategoryDto {
@@ -20,6 +21,7 @@ export interface CreateUpdateItemDto {
   unitCost: number;
   genProdPostingGroup?: string;
   inventoryPostingGroup?: string;
+  vatProdPostingGroup?: string;
 }
 
 export interface CreateUpdateUnitOfMeasureDto {
@@ -28,22 +30,30 @@ export interface CreateUpdateUnitOfMeasureDto {
 }
 
 export interface GetItemCategoryListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
 }
 
 export interface GetItemLedgerEntryListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   itemId?: string;
   documentNo?: string;
   entryType?: ItemLedgerEntryType;
 }
 
 export interface GetItemListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
   type?: ItemType;
   itemCategoryId?: string;
 }
 
 export interface GetUnitOfMeasureListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
 }
 
@@ -85,4 +95,29 @@ export interface ItemLedgerEntryDto extends EntityDto<string> {
 export interface UnitOfMeasureDto extends FullAuditedEntityDto<string> {
   code?: string;
   description?: string;
+}
+
+export interface LocationDto extends CodeTableDto {
+  address?: string;
+  city?: string;
+  postCode?: string;
+  countryRegionCode?: string;
+  phoneNo?: string;
+  contact?: string;
+}
+
+export interface CreateUpdateLocationDto extends CreateUpdateCodeTableDto {
+  address?: string;
+  city?: string;
+  postCode?: string;
+  countryRegionCode?: string;
+  phoneNo?: string;
+  contact?: string;
+}
+
+export interface InventorySetupDto {
+  itemNos?: string;
+  locationMandatory: boolean;
+  preventNegativeInventory: boolean;
+  automaticCostPosting: boolean;
 }

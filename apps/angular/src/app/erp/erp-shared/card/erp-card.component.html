@@ -1,0 +1,115 @@
+<div class="erp-card-page">
+  <!-- Card Header Toolbar (Business Central Action Bar) -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="me-auto">
+      @if (breadcrumb) {
+        <div class="small text-muted mb-1">
+          @if (breadcrumbLink) {
+            <a [routerLink]="breadcrumbLink" class="text-decoration-none">
+              {{ breadcrumb.includes('::') ? (breadcrumb | abpLocalization) : breadcrumb }}
+            </a>
+          } @else {
+            {{ breadcrumb.includes('::') ? (breadcrumb | abpLocalization) : breadcrumb }}
+          }
+        </div>
+      }
+      <h4 class="mb-0 fw-bold d-flex align-items-center gap-2">
+        <i *ngIf="icon" [class]="icon + ' text-primary'"></i>
+        <span>{{ title.includes('::') ? (title | abpLocalization) : title }}</span>
+        @if (status) {
+          <span class="badge ms-1 align-middle" [ngClass]="statusClass">
+            {{ status.includes('::') ? (status | abpLocalization) : status }}
+          </span>
+        }
+      </h4>
+      @if (subtitle) {
+        <div class="small text-muted mt-1">
+          {{ subtitle.includes('::') ? (subtitle | abpLocalization) : subtitle }}
+        </div>
+      }
+    </div>
+
+    <!-- Actions & Process Buttons -->
+    <div class="d-flex flex-wrap align-items-center gap-2" role="toolbar">
+      <ng-content select="[actions]"></ng-content>
+
+      @for (act of actions; track act.key) {
+        @if (isActionVisible(act)) {
+          @if (act.permission) {
+            <button
+              *abpPermission="act.permission"
+              type="button"
+              class="btn btn-sm"
+              [ngClass]="act.cssClass || (act.primary ? 'btn-primary' : 'btn-outline-primary')"
+              [disabled]="isActionDisabled(act)"
+              (click)="runAction(act, $event)"
+            >
+              <i [class]="act.icon + ' me-1'"></i>{{ act.labelKey | abpLocalization }}
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn btn-sm"
+              [ngClass]="act.cssClass || (act.primary ? 'btn-primary' : 'btn-outline-primary')"
+              [disabled]="isActionDisabled(act)"
+              (click)="runAction(act, $event)"
+            >
+              <i [class]="act.icon + ' me-1'"></i>{{ act.labelKey | abpLocalization }}
+            </button>
+          }
+        }
+      }
+
+      <!-- FactBox Toggle Button (BC Alt+F2) -->
+      @if (showFactBoxToggle && (factBoxGroups.length > 0 || hasFactBoxSlot)) {
+        <button
+          type="button"
+          class="btn btn-sm erp-factbox-toggle-btn"
+          [ngClass]="showFactBox ? 'btn-primary' : 'btn-outline-secondary'"
+          title="FactBoxes (Alt+F2)"
+          [attr.aria-label]="'Erp::ToggleFactBox' | abpLocalization"
+          (click)="toggleFactBox()"
+        >
+          <i class="fas fa-table-columns"></i>
+        </button>
+      }
+
+      @if (busy) {
+        <i class="fas fa-spinner fa-spin text-muted ms-1"></i>
+      }
+    </div>
+  </div>
+
+  <!-- Smart Buttons Slot -->
+  <div class="mb-3">
+    <ng-content select="[smartButtons]"></ng-content>
+  </div>
+
+  <!-- Main Body + FactBox Layout -->
+  <div class="row g-3">
+    <!-- Main Card Body & FastTabs -->
+    <div [ngClass]="showFactBox && (factBoxGroups.length > 0 || hasFactBoxSlot) ? 'col-12 col-xl-8' : 'col-12'">
+      <ng-content select="[fasttabs]"></ng-content>
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Right FactBox Pane (Business Central FactBox Pane) -->
+    @if (showFactBox && (factBoxGroups.length > 0 || hasFactBoxSlot)) {
+      <div class="col-12 col-xl-4 erp-factbox-pane">
+        <!-- Built-in FactBox groups -->
+        @for (group of factBoxGroups; track group.id) {
+          <erp-factbox
+            [titleKey]="group.titleKey"
+            [icon]="group.icon || 'fas fa-info-circle'"
+            [collapsed]="group.collapsed || false"
+            [tiles]="group.tiles || []"
+            [facts]="group.facts || []"
+          ></erp-factbox>
+        }
+
+        <!-- Custom projected FactBoxes -->
+        <ng-content select="[factbox]"></ng-content>
+      </div>
+    }
+  </div>
+</div>

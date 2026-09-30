@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
+using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using ABPmicroservice.Erp.Workflows;
@@ -15,7 +18,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 
 [Authorize(ErpPermissions.PurchaseDocuments.Default)]
 public class PurchaseDocumentAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         PurchaseHeader,
         PurchaseHeaderDto,
         Guid,
@@ -79,8 +82,9 @@ public class PurchaseDocumentAppService
             input.PostingDate
         );
 
-        ApplyHeader(header, input);
+        await ApplyHeaderAsync(header, input, vendor);
         ReplaceLines(header, input);
+        await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, vendor);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -98,8 +102,10 @@ public class PurchaseDocumentAppService
             throw new DocumentNotOpenException(header.No);
         }
 
-        ApplyHeader(header, input);
+        var vendor = await _vendorRepository.GetAsync(header.VendorId);
+        await ApplyHeaderAsync(header, input, vendor);
         ReplaceLines(header, input);
+        await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, vendor);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -225,11 +231,25 @@ public class PurchaseDocumentAppService
         return vendor;
     }
 
-    private static void ApplyHeader(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input)
+    /// <summary>
+    /// The header fields; payment terms and currency default to the vendor's, and a blank due date
+    /// follows from the payment terms, as BC fills them in from the vendor.
+    /// </summary>
+    private async Task ApplyHeaderAsync(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input, Vendor vendor)
     {
-        header.SetDates(input.PostingDate, input.DueDate, input.ExpectedReceiptDate);
-        header.SetCurrency(input.CurrencyCode);
-        header.SetPaymentTerms(input.PaymentTermsCode);
+        var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+        await codes.EnsureExistsAsync<PaymentTerms>(input.PaymentTermsCode);
+        await codes.EnsureExistsAsync<Currency>(input.CurrencyCode);
+        await codes.EnsureExistsAsync<Location>(input.LocationCode);
+
+        var paymentTermsCode = CodeTableEntity.NormalizeCode(input.PaymentTermsCode) ?? vendor.PaymentTermsCode;
+        var dueDate = input.DueDate
+            ?? await LazyServiceProvider.LazyGetRequiredService<PaymentTermsManager>().CalculateDueDateAsync(paymentTermsCode, input.PostingDate);
+
+        header.SetDates(input.PostingDate, dueDate, input.ExpectedReceiptDate);
+        header.SetCurrency(CodeTableEntity.NormalizeCode(input.CurrencyCode) ?? vendor.CurrencyCode);
+        header.SetPaymentTerms(paymentTermsCode);
+        header.SetLocation(input.LocationCode);
         header.SetVendorInvoiceNo(input.VendorInvoiceNo);
     }
 

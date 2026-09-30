@@ -1,0 +1,109 @@
+<div class="card border-0 shadow-sm erp-factbox mb-3" [class.erp-factbox--collapsed]="collapsed">
+  <div
+    class="card-header bg-white d-flex align-items-center py-2 px-3 user-select-none cursor-pointer"
+    role="button"
+    tabindex="0"
+    (click)="toggle()"
+    (keydown.enter)="toggle()"
+    (keydown.space)="toggle()"
+  >
+    <div class="d-flex align-items-center gap-2 me-auto">
+      <i *ngIf="icon" [class]="icon + ' text-primary'"></i>
+      <span class="fw-bold text-dark small text-uppercase tracking-wider">{{ titleKey | abpLocalization }}</span>
+    </div>
+    <i class="fas fa-chevron-down text-muted transition-transform" [class.rotate-180]="!collapsed"></i>
+  </div>
+
+  <div class="erp-factbox-body collapse" [class.show]="!collapsed">
+    <div class="card-body p-3">
+      <!-- KPI Cue Tiles (BC Tile Cues) -->
+      @if (tiles.length) {
+        <div class="row g-2 mb-3">
+          @for (tile of tiles; track tile.titleKey) {
+            <div class="col-6">
+              <div
+                class="erp-cue-tile p-2 rounded border"
+                [class.erp-cue-tile--clickable]="tile.routerLink || tile.action"
+                [routerLink]="tile.routerLink"
+                [queryParams]="tile.queryParams"
+                (click)="onTileClick(tile)"
+              >
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <span class="small text-muted text-truncate" [title]="tile.titleKey | abpLocalization">
+                    {{ tile.titleKey | abpLocalization }}
+                  </span>
+                  <i *ngIf="tile.icon" [class]="tile.icon + ' text-' + (tile.color || 'primary')"></i>
+                </div>
+                <div class="fs-5 fw-bold font-monospace text-dark text-truncate">
+                  @switch (tile.type) {
+                    @case ('currency') {
+                      {{ tile.value | erpAmount }}
+                    }
+                    @default {
+                      {{ tile.value }}
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Key-Value Facts List -->
+      @if (facts.length) {
+        <div class="erp-facts-list">
+          @for (fact of facts; track fact.labelKey) {
+            <div
+              class="erp-fact-item d-flex align-items-center justify-content-between py-1 border-bottom"
+              [class.cursor-pointer]="fact.routerLink || fact.action"
+              [routerLink]="fact.routerLink"
+              (click)="onFactClick(fact)"
+            >
+              <span class="small text-muted me-2 text-truncate" [title]="fact.labelKey | abpLocalization">
+                {{ fact.labelKey | abpLocalization }}
+              </span>
+
+              <div class="text-end font-monospace small">
+                @switch (fact.type) {
+                  @case ('currency') {
+                    <span
+                      class="fw-semibold"
+                      [ngClass]="fact.warnWhenTrue && fact.value > 0 ? 'text-danger fw-bold' : 'text-dark'"
+                    >
+                      {{ fact.value | erpAmount }}
+                    </span>
+                  }
+                  @case ('boolean') {
+                    <i
+                      class="fas"
+                      [ngClass]="fact.value ? 'fa-check text-success' : 'fa-minus text-muted opacity-50'"
+                    ></i>
+                  }
+                  @case ('date') {
+                    <span class="text-secondary">{{ fact.value | date: 'mediumDate' }}</span>
+                  }
+                  @case ('badge') {
+                    <span class="badge" [ngClass]="fact.badgeClass || 'bg-light text-secondary border'">
+                      {{ fact.value }}
+                    </span>
+                  }
+                  @default {
+                    <span
+                      [ngClass]="fact.warnWhenTrue && fact.value === true ? 'text-danger fw-bold' : 'text-dark'"
+                    >
+                      {{ fact.value !== null && fact.value !== undefined && fact.value !== '' ? fact.value : '—' }}
+                    </span>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Custom slot -->
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

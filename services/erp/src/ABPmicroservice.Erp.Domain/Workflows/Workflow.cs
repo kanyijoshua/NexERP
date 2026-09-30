@@ -95,6 +95,15 @@ public class Workflow : CompanyAggregateRoot
         AddStep(newId, "An approval request is delegated.", "Always", "Send the request to the substitute, or to the approver's approver.");
     }
 
+    public void SetSteps(System.Collections.Generic.IEnumerable<(string EventName, string ConditionRule, string ResponseAction)> steps, Func<Guid> newId)
+    {
+        Steps.Clear();
+        foreach (var step in steps)
+        {
+            AddStep(newId, step.EventName, step.ConditionRule, step.ResponseAction);
+        }
+    }
+
     private void AddStep(Func<Guid> newId, string eventName, string condition, string response)
     {
         Steps.Add(new WorkflowStep(newId(), Id, Steps.Count + 1, eventName, condition, response));
@@ -120,7 +129,7 @@ public class WorkflowStep : FullAuditedEntity<Guid>
         WorkflowId = workflowId;
         SequenceNo = sequenceNo;
         EventName = Check.NotNullOrWhiteSpace(eventName, nameof(eventName));
-        ConditionRule = conditionRule;
+        ConditionRule = string.IsNullOrWhiteSpace(conditionRule) ? "Always" : conditionRule;
         ResponseAction = Check.NotNullOrWhiteSpace(responseAction, nameof(responseAction));
     }
 }

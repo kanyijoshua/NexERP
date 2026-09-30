@@ -26,6 +26,15 @@ public class GLAccount : CompanyAggregateRoot
     /// <summary>Whether direct posting is allowed to this account.</summary>
     public bool DirectPosting { get; private set; }
 
+    /// <summary>The VAT rate class of sales and purchase lines posted to this account.</summary>
+    public string VatProdPostingGroup { get; private set; }
+
+    /// <summary>Whether journal lines on this account are purchases or sales, so which VAT they carry.</summary>
+    public GeneralPostingType GenPostingType { get; private set; }
+
+    /// <summary>The VAT business group journal lines on this account default to.</summary>
+    public string VatBusPostingGroup { get; private set; }
+
     public bool Blocked { get; private set; }
 
     /// <summary>Running net change (denormalized, updated by posting).</summary>
@@ -94,5 +103,15 @@ public class GLAccount : CompanyAggregateRoot
     {
         NetChange += amount;
         Balance += amount;
+    }
+
+    public void SetVatProdPostingGroup(string vatProdPostingGroup) =>
+        VatProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatProdPostingGroup, nameof(vatProdPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
+
+    /// <summary>The VAT defaults a journal line takes when this account is chosen (BC's posting tab).</summary>
+    public void SetJournalVatDefaults(GeneralPostingType genPostingType, string vatBusPostingGroup)
+    {
+        GenPostingType = genPostingType;
+        VatBusPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatBusPostingGroup, nameof(vatBusPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
     }
 }

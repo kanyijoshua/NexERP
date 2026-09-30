@@ -20,7 +20,7 @@ using Volo.Abp.Uow;
 
 namespace ABPmicroservice.Erp.EntityFrameworkCore;
 
-public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependency
+public partial class ErpDataSeederContributor : IDataSeedContributor, ITransientDependency
 {
     private readonly IRepository<Company, Guid> _companyRepository;
     private readonly IRepository<CompanyInformation, Guid> _companyInformationRepository;
@@ -30,6 +30,11 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
     private readonly IRepository<CustomerPostingGroup, Guid> _custPostingGroupRepository;
     private readonly IRepository<VendorPostingGroup, Guid> _vendorPostingGroupRepository;
     private readonly IRepository<GeneralPostingSetup, Guid> _generalPostingSetupRepository;
+    private readonly IRepository<GenBusinessPostingGroup, Guid> _genBusPostingGroupRepository;
+    private readonly IRepository<GenProductPostingGroup, Guid> _genProdPostingGroupRepository;
+    private readonly IRepository<InventoryPostingGroup, Guid> _inventoryPostingGroupRepository;
+    private readonly IRepository<InventoryPostingSetup, Guid> _inventoryPostingSetupRepository;
+    private readonly IRepository<GeneralLedgerSetup, Guid> _glSetupRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<Vendor, Guid> _vendorRepository;
     private readonly IRepository<Item, Guid> _itemRepository;
@@ -52,6 +57,7 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
     private readonly ICurrentTenant _currentTenant;
     private readonly ICurrentCompany _currentCompany;
     private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly IServiceProvider _serviceProvider;
 
     public ErpDataSeederContributor(
         IRepository<Company, Guid> companyRepository,
@@ -61,6 +67,11 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         IRepository<CustomerPostingGroup, Guid> custPostingGroupRepository,
         IRepository<VendorPostingGroup, Guid> vendorPostingGroupRepository,
         IRepository<GeneralPostingSetup, Guid> generalPostingSetupRepository,
+        IRepository<GenBusinessPostingGroup, Guid> genBusPostingGroupRepository,
+        IRepository<GenProductPostingGroup, Guid> genProdPostingGroupRepository,
+        IRepository<InventoryPostingGroup, Guid> inventoryPostingGroupRepository,
+        IRepository<InventoryPostingSetup, Guid> inventoryPostingSetupRepository,
+        IRepository<GeneralLedgerSetup, Guid> glSetupRepository,
         IRepository<Customer, Guid> customerRepository,
         IRepository<Vendor, Guid> vendorRepository,
         IRepository<Item, Guid> itemRepository,
@@ -79,7 +90,8 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         IGuidGenerator guidGenerator,
         ICurrentTenant currentTenant,
         ICurrentCompany currentCompany,
-        IUnitOfWorkManager unitOfWorkManager
+        IUnitOfWorkManager unitOfWorkManager,
+        IServiceProvider serviceProvider
     )
     {
         _companyRepository = companyRepository;
@@ -90,6 +102,11 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         _custPostingGroupRepository = custPostingGroupRepository;
         _vendorPostingGroupRepository = vendorPostingGroupRepository;
         _generalPostingSetupRepository = generalPostingSetupRepository;
+        _genBusPostingGroupRepository = genBusPostingGroupRepository;
+        _genProdPostingGroupRepository = genProdPostingGroupRepository;
+        _inventoryPostingGroupRepository = inventoryPostingGroupRepository;
+        _inventoryPostingSetupRepository = inventoryPostingSetupRepository;
+        _glSetupRepository = glSetupRepository;
         _customerRepository = customerRepository;
         _vendorRepository = vendorRepository;
         _itemRepository = itemRepository;
@@ -112,6 +129,7 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         _currentTenant = currentTenant;
         _currentCompany = currentCompany;
         _unitOfWorkManager = unitOfWorkManager;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task SeedAsync(DataSeedContext context)
@@ -142,10 +160,16 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
                 using (_currentCompany.Change(company.Id, company.Name))
                 {
                     await SeedCompanySetupAsync();
+                    await SeedPostingSetupAsync();
                     await SeedNumberSeriesAsync();
                     await SeedApprovalWorkflowTemplatesAsync();
                     await SeedJournalTemplatesAsync();
                     await SeedFinancialReportsAsync();
+                    // After the number series: the "any series yet?" check above would skip them otherwise.
+                    await SeedTaxAndFinanceSetupAsync();
+                    await SeedInventoryAndSalesSetupAsync();
+                    await SeedCashManagementAsync();
+                    await SeedHumanResourcesAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {
@@ -198,6 +222,48 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
         var deptDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "DEPARTMENT", "Department"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "SALES", "Sales"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "ADMIN", "Administration"));
+    }
+
+    /// <summary>
+    /// The posting groups the sample customer, vendor and item carry, and the setups that turn
+    /// them into accounts. Each table is seeded on its own, so a database seeded before these
+    /// tables existed gets them too.
+    /// </summary>
+    private async Task SeedPostingSetupAsync()
+    {
+        if (await _genBusPostingGroupRepository.GetCountAsync() == 0)
+        {
+            await _genBusPostingGroupRepository.InsertAsync(new GenBusinessPostingGroup(NewId(), "DOMESTIC", "Domestic customers and vendors"));
+        }
+
+        if (await _genProdPostingGroupRepository.GetCountAsync() == 0)
+        {
+            await _genProdPostingGroupRepository.InsertAsync(new GenProductPostingGroup(NewId(), "RETAIL", "Retail goods"));
+            await _genProdPostingGroupRepository.InsertAsync(new GenProductPostingGroup(NewId(), "SERVICES", "Services"));
+        }
+
+        if (!await _generalPostingSetupRepository.AnyAsync(s => s.GenBusPostingGroup == "DOMESTIC" && s.GenProdPostingGroup == "SERVICES"))
+        {
+            await _generalPostingSetupRepository.InsertAsync(new GeneralPostingSetup(NewId(), "DOMESTIC", "SERVICES", "4000", "5000", "5000", "5000"));
+        }
+
+        if (await _inventoryPostingGroupRepository.GetCountAsync() == 0)
+        {
+            await _inventoryPostingGroupRepository.InsertAsync(new InventoryPostingGroup(NewId(), "RETAIL", "Resale items"));
+        }
+
+        if (await _inventoryPostingSetupRepository.GetCountAsync() == 0)
+        {
+            await _inventoryPostingSetupRepository.InsertAsync(new InventoryPostingSetup(NewId(), "RETAIL", "1400"));
+        }
+
+        if (await _glSetupRepository.GetCountAsync() == 0)
+        {
+            var glSetup = new GeneralLedgerSetup(NewId());
+            glSetup.SetGlobalDimensions("DEPARTMENT", null);
+            glSetup.SetNumbering("BANK");
+            await _glSetupRepository.InsertAsync(glSetup);
+        }
     }
 
     // The CRONUS set: documents may also be numbered by hand; posted documents may not,
@@ -281,14 +347,21 @@ public class ErpDataSeederContributor : IDataSeedContributor, ITransientDependen
 
         var cust = new Customer(NewId(), "C00010", "Adatum Corporation");
         cust.SetPostingGroups("DOMESTIC", "DOMESTIC");
+        cust.SetVatBusPostingGroup("DOMESTIC");
+        cust.SetPaymentTerms("30D");
+        cust.SetSalespersonCode("PS");
         await _customerRepository.InsertAsync(cust);
 
         var vend = new Vendor(NewId(), "V00010", "Fabrikam Inc.");
         vend.SetPostingGroups("DOMESTIC", "DOMESTIC");
+        vend.SetVatBusPostingGroup("DOMESTIC");
+        vend.SetPaymentTerms("30D");
+        vend.SetPurchaserCode("PS");
         await _vendorRepository.InsertAsync(vend);
 
         var item = new Item(NewId(), "1000", "Bicycle Assembly", ItemType.Inventory, "PCS", unitPrice: 300m, unitCost: 150m);
         item.SetPostingGroups("RETAIL", "RETAIL");
+        item.SetVatProdPostingGroup("STANDARD");
         await _itemRepository.InsertAsync(item);
     }
 

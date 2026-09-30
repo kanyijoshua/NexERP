@@ -1,0 +1,149 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::AdjustExchangeRates"
+  breadcrumb="Erp::Menu:PeriodicActivities"
+  icon="fas fa-right-left"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::AdjustExchangeRatesHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" class="card border-0 shadow-sm mb-3" (ngSubmit)="post()">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label" for="fx-ending">{{ 'Erp::EndingDate' | abpLocalization }} *</label>
+        <input id="fx-ending" type="date" class="form-control form-control-sm" formControlName="endingDate" />
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label" for="fx-posting">{{ 'Erp::PostingDate' | abpLocalization }} *</label>
+        <input id="fx-posting" type="date" class="form-control form-control-sm" formControlName="postingDate" />
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label" for="fx-docno">{{ 'Erp::DocumentNo' | abpLocalization }} *</label>
+        <input id="fx-docno" type="text" class="form-control form-control-sm" maxlength="20" formControlName="documentNo" />
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label" for="fx-currency">{{ 'Erp::CurrencyCode' | abpLocalization }}</label>
+        <erp-lookup inputId="fx-currency" formControlName="currencyCode" entity="currency"></erp-lookup>
+        <div class="form-text">{{ 'Erp::BlankForAllCurrencies' | abpLocalization }}</div>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-4 mt-3">
+      <div class="form-check">
+        <input id="fx-cust" class="form-check-input" type="checkbox" formControlName="adjustCustomers" />
+        <label class="form-check-label" for="fx-cust">{{ 'Erp::AdjustCustomers' | abpLocalization }}</label>
+      </div>
+      <div class="form-check">
+        <input id="fx-vend" class="form-check-input" type="checkbox" formControlName="adjustVendors" />
+        <label class="form-check-label" for="fx-vend">{{ 'Erp::AdjustVendors' | abpLocalization }}</label>
+      </div>
+      <div class="form-check">
+        <input id="fx-bank" class="form-check-input" type="checkbox" formControlName="adjustBankAccounts" />
+        <label class="form-check-label" for="fx-bank">{{ 'Erp::AdjustBankAccounts' | abpLocalization }}</label>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+    <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="preview()">
+      <i class="fas fa-eye me-1"></i>{{ 'Erp::Preview' | abpLocalization }}
+    </button>
+    <abp-button
+      *abpPermission="'Erp.PeriodicActivities.AdjustExchangeRates'"
+      buttonType="submit"
+      buttonClass="btn btn-sm btn-primary"
+      iconClass="fas fa-check"
+      [loading]="busy()"
+    >
+      {{ 'Erp::Post' | abpLocalization }}
+    </abp-button>
+  </div>
+</form>
+
+@if (result(); as r) {
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+      <span class="fw-bold me-auto">{{ (r.posted ? 'Erp::Posted' : 'Erp::Preview') | abpLocalization }}</span>
+      <span class="badge bg-success-subtle text-success-emphasis">{{ 'Erp::Gains' | abpLocalization }}: {{ r.totalGains | erpAmount }}</span>
+      <span class="badge bg-danger-subtle text-danger-emphasis">{{ 'Erp::Losses' | abpLocalization }}: {{ r.totalLosses | erpAmount }}</span>
+    </div>
+    <div class="card-body p-0 table-responsive">
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::AccountType' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::AccountNo' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::CurrencyCode' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::AdjustedBase' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::CarriedAtLcy' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::RevaluedLcy' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Difference' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of r.lines; track $index) {
+            <tr>
+              <td>{{ accountTypeKey(line.accountType) | abpLocalization }}</td>
+              <td>{{ line.accountNo }}</td>
+              <td>{{ line.currencyCode }}</td>
+              <td class="text-end font-monospace">{{ line.base | erpAmount }}</td>
+              <td class="text-end font-monospace">{{ line.oldAmountLcy | erpAmount }}</td>
+              <td class="text-end font-monospace">{{ line.newAmountLcy | erpAmount }}</td>
+              <td class="text-end font-monospace fw-semibold" [class.text-danger]="line.difference < 0" [class.text-success]="line.difference > 0">
+                {{ line.difference | erpAmount }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="text-center text-muted py-3">{{ 'Erp::NothingToAdjust' | abpLocalization }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white fw-bold">
+    <i class="fas fa-clock-rotate-left text-primary me-2"></i>{{ 'Erp::ExchRateAdjmtRegister' | abpLocalization }}
+  </div>
+  <div class="card-body p-0 table-responsive">
+    <table class="table table-sm mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::AccountType' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::AccountNo' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::CurrencyCode' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::AdjustedBase' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::CarriedAtLcy' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::Difference' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::RegisterNo' | abpLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of registers(); track row.id) {
+          <tr>
+            <td>{{ row.postingDate | date: 'yyyy-MM-dd' }}</td>
+            <td>{{ row.documentNo }}</td>
+            <td>{{ accountTypeKey(row.accountType) | abpLocalization }}</td>
+            <td>{{ row.accountNo }}</td>
+            <td>{{ row.currencyCode }}</td>
+            <td class="text-end font-monospace">{{ row.adjustedBase | erpAmount }}</td>
+            <td class="text-end font-monospace">{{ row.adjustedBaseLcy | erpAmount }}</td>
+            <td class="text-end font-monospace" [class.text-danger]="row.adjustedAmount < 0">{{ row.adjustedAmount | erpAmount }}</td>
+            <td class="text-end font-monospace">{{ row.glRegisterNo }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" class="text-center text-muted py-3">{{ 'Erp::NoRecordsFound' | abpLocalization }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

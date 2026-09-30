@@ -42,7 +42,12 @@ public class ConfigPackageAppService_Tests : ErpApplicationTestBase
     {
         var package = await CreatePackageAsync(DefaultCompanyName, "CUST", ["Customer"], includeRelated: true);
 
-        package.Tables.Select(t => t.EntityName).ShouldBe(["GLAccount", "CustomerPostingGroup", "Customer"]);
+        var order = package.Tables.Select(t => t.EntityName).ToList();
+        order.ShouldContain("GenBusinessPostingGroup");
+        order.ShouldContain("VatBusinessPostingGroup");
+        order.ShouldContain("PaymentTerms");
+        order.IndexOf("GLAccount").ShouldBeLessThan(order.IndexOf("CustomerPostingGroup"));
+        order.Last().ShouldBe("Customer");
         package.Tables.Select(t => t.ProcessingOrder).ShouldBeInOrder();
 
         var no = package.Tables.Single(t => t.EntityName == "Customer").Fields.Single(f => f.FieldName == "No");
@@ -77,7 +82,7 @@ public class ConfigPackageAppService_Tests : ErpApplicationTestBase
         using (var json = JsonDocument.Parse(file))
         {
             json.RootElement.GetProperty("code").GetString().ShouldBe("COPY");
-            json.RootElement.GetProperty("tables").GetArrayLength().ShouldBe(3);
+            json.RootElement.GetProperty("tables").GetArrayLength().ShouldBe(package.Tables.Count);
         }
 
         var imported = await InCompanyAsync(SecondCompanyName, () => _packages.ImportPackageAsync(Upload("COPY.json", file)));

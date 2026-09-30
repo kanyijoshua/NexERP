@@ -24,11 +24,11 @@ namespace ABPmicroservice.Administration;
 [DependsOn(typeof(AdministrationApplicationModule))]
 [DependsOn(typeof(AdministrationEntityFrameworkCoreModule))]
 [DependsOn(typeof(AdministrationHttpApiModule))]
-// Localization only: the gateway sends the UI's application-configuration call here, so every
-// service's texts (menus, permission names) have to be known to this host.
-[DependsOn(typeof(ErpDomainSharedModule))]
+// Every service's contracts and texts (menus, permission names) are referenced here so the
+// permission dialog, application configuration, and admin tools show permissions for all modules.
+[DependsOn(typeof(ErpApplicationContractsModule))]
 [DependsOn(typeof(IdentityServiceApplicationContractsModule))]
-[DependsOn(typeof(ProjectsDomainSharedModule))]
+[DependsOn(typeof(ProjectsApplicationContractsModule))]
 [DependsOn(typeof(IdentityServiceEntityFrameworkCoreModule))]
 [DependsOn(typeof(SaaSApplicationContractsModule))]
 [DependsOn(typeof(ABPmicroserviceMicroserviceModule))]

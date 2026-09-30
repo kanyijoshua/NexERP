@@ -126,6 +126,38 @@ public class GenJournalLine : CompanyEntity
 
     public string Comment { get; private set; }
 
+    /// <summary>The currency of <see cref="Amount"/>; null for LCY. BC "Currency Code".</summary>
+    public string CurrencyCode { get; private set; }
+
+    /// <summary>Units of the currency per unit of LCY at the posting date. 1 for LCY.</summary>
+    public decimal CurrencyFactor { get; private set; } = 1m;
+
+    /// <summary>The amount in LCY: what the G/L is posted with.</summary>
+    public decimal AmountLcy { get; private set; }
+
+    /// <summary>Purchase or sale; with a VAT product group it makes the account side carry VAT.</summary>
+    public GeneralPostingType GenPostingType { get; private set; }
+
+    public string VatBusPostingGroup { get; private set; }
+
+    public string VatProdPostingGroup { get; private set; }
+
+    /// <summary>The VAT inside the amount, as last calculated. Posting recalculates it.</summary>
+    public decimal VatAmount { get; private set; }
+
+    public decimal VatBaseAmount { get; private set; }
+
+    /// <summary>The same for the balancing account, which carries the opposite sign.</summary>
+    public GeneralPostingType BalGenPostingType { get; private set; }
+
+    public string BalVatBusPostingGroup { get; private set; }
+
+    public string BalVatProdPostingGroup { get; private set; }
+
+    public decimal BalVatAmount { get; private set; }
+
+    public decimal BalVatBaseAmount { get; private set; }
+
     protected GenJournalLine() { }
 
     public GenJournalLine(
@@ -191,6 +223,7 @@ public class GenJournalLine : CompanyEntity
         AccountNo = Check.NotNullOrWhiteSpace(accountNo, nameof(accountNo), ErpDomainConsts.MaxNoLength).Trim();
         Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
         Amount = amount;
+        AmountLcy = CurrencyExchangeRateManager.ToLcy(amount, CurrencyFactor);
 
         balAccountNo = Check.Length(balAccountNo, nameof(balAccountNo), ErpDomainConsts.MaxNoLength);
         BalAccountNo = balAccountNo.IsNullOrWhiteSpace() ? null : balAccountNo.Trim();
@@ -227,6 +260,59 @@ public class GenJournalLine : CompanyEntity
     }
 
     public void SetDimensionSet(Guid dimensionSetId) => DimensionSetId = dimensionSetId;
+
+    /// <summary>Sets the currency and its factor, and the LCY amount with them.</summary>
+    public void SetCurrency(string currencyCode, decimal currencyFactor)
+    {
+        CurrencyCode = CodeTableEntity.NormalizeCode(Check.Length(currencyCode, nameof(currencyCode), ErpDomainConsts.MaxCurrencyCodeLength));
+        CurrencyFactor = CurrencyCode == null || currencyFactor <= 0m ? 1m : currencyFactor;
+        AmountLcy = CurrencyExchangeRateManager.ToLcy(Amount, CurrencyFactor);
+    }
+
+    /// <summary>
+    /// Pins the LCY amount. The document posting engines use it so the party's entry equals the
+    /// sum of the converted G/L lines, with no cent lost to rounding.
+    /// </summary>
+    internal void SetAmountLcy(decimal amountLcy) => AmountLcy = amountLcy;
+
+    public void SetVat(GeneralPostingType genPostingType, string vatBusPostingGroup, string vatProdPostingGroup)
+    {
+        GenPostingType = genPostingType;
+        VatBusPostingGroup = VatCode(vatBusPostingGroup, nameof(vatBusPostingGroup));
+        VatProdPostingGroup = VatCode(vatProdPostingGroup, nameof(vatProdPostingGroup));
+    }
+
+    public void SetBalVat(GeneralPostingType genPostingType, string vatBusPostingGroup, string vatProdPostingGroup)
+    {
+        BalGenPostingType = genPostingType;
+        BalVatBusPostingGroup = VatCode(vatBusPostingGroup, nameof(vatBusPostingGroup));
+        BalVatProdPostingGroup = VatCode(vatProdPostingGroup, nameof(vatProdPostingGroup));
+    }
+
+    /// <summary>True when the account side carries VAT: a posting type and a VAT product group.</summary>
+    public bool HasVat => GenPostingType != GeneralPostingType.None && VatProdPostingGroup != null;
+
+    public bool HasBalVat => BalGenPostingType != GeneralPostingType.None && BalVatProdPostingGroup != null;
+
+    /// <summary>The VAT the line shows; worked out by <see cref="JournalVat"/> when the line is saved.</summary>
+    public void SetVatAmounts(decimal vatBaseAmount, decimal vatAmount, decimal balVatBaseAmount, decimal balVatAmount)
+    {
+        VatBaseAmount = vatBaseAmount;
+        VatAmount = vatAmount;
+        BalVatBaseAmount = balVatBaseAmount;
+        BalVatAmount = balVatAmount;
+    }
+
+    /// <summary>Copies what decides how a line posts, for the counterpart a reversing line writes.</summary>
+    internal void CopyPostingSetupFrom(GenJournalLine other)
+    {
+        SetCurrency(other.CurrencyCode, other.CurrencyFactor);
+        SetVat(other.GenPostingType, other.VatBusPostingGroup, other.VatProdPostingGroup);
+        SetBalVat(other.BalGenPostingType, other.BalVatBusPostingGroup, other.BalVatProdPostingGroup);
+    }
+
+    private static string VatCode(string code, string name) =>
+        CodeTableEntity.NormalizeCode(Check.Length(code, name, ErpDomainConsts.MaxPostingGroupLength));
 
     /// <summary>True while the recurring line is still due to be posted on that date.</summary>
     public bool IsExpiredOn(DateTime date) => ExpirationDate.HasValue && date > ExpirationDate.Value;

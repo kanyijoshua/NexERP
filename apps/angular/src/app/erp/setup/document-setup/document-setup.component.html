@@ -17,6 +17,21 @@
         <i class="fas fa-file-invoice-dollar text-primary me-2"></i>{{ 'Erp::Menu:SalesSetup' | abpLocalization }}
       </div>
       <form class="card-body" [formGroup]="salesForm" (ngSubmit)="saveSales()">
+        <div class="row align-items-center mb-2">
+          <label class="col-sm-5 col-form-label" for="sales-credit-warnings">{{ 'Erp::CreditWarnings' | abpLocalization }}</label>
+          <div class="col-sm-7">
+            <select id="sales-credit-warnings" class="form-select form-select-sm" formControlName="creditWarnings">
+              @for (option of creditWarningsOptions; track option.value) {
+                <option [ngValue]="option.value">{{ 'Erp::Enum:CreditWarnings.' + option.key | abpLocalization }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input id="sales-ext-doc" class="form-check-input" type="checkbox" role="switch" formControlName="extDocNoMandatory" />
+          <label class="form-check-label" for="sales-ext-doc">{{ 'Erp::ExtDocNoMandatory' | abpLocalization }}</label>
+        </div>
+        <hr class="my-2" />
         <ng-container
           *ngTemplateOutlet="seriesFields; context: { form: salesForm, fields: salesFields, prefix: 'sales' }"
         ></ng-container>
@@ -35,6 +50,11 @@
         <i class="fas fa-shopping-cart text-primary me-2"></i>{{ 'Erp::Menu:PurchaseSetup' | abpLocalization }}
       </div>
       <form class="card-body" [formGroup]="purchaseForm" (ngSubmit)="savePurchase()">
+        <div class="form-check form-switch mb-3">
+          <input id="purchase-ext-doc" class="form-check-input" type="checkbox" role="switch" formControlName="extDocNoMandatory" />
+          <label class="form-check-label" for="purchase-ext-doc">{{ 'Erp::ExtDocNoMandatory' | abpLocalization }}</label>
+        </div>
+        <hr class="my-2" />
         <ng-container
           *ngTemplateOutlet="seriesFields; context: { form: purchaseForm, fields: purchaseFields, prefix: 'purchase' }"
         ></ng-container>

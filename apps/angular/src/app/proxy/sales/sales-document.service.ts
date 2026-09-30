@@ -48,7 +48,7 @@ export class SalesDocumentService {
     this.restService.request<any, PagedResultDto<SalesHeaderDto>>({
       method: 'GET',
       url: '/api/erp/sales-document',
-      params: { filter: input.filter, documentType: input.documentType, status: input.status, customerId: input.customerId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, documentType: input.documentType, status: input.status, customerId: input.customerId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

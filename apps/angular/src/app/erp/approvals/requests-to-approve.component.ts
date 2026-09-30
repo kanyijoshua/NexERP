@@ -1,6 +1,5 @@
-import { ABP, ListService, PagedResultDto } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ApprovalDocumentKind,
@@ -8,8 +7,11 @@ import {
   ApprovalEntryService,
   ApprovalStatus,
   GetApprovalEntriesInput,
+  approvalDocumentKindOptions,
+  approvalStatusOptions,
 } from '@proxy/workflows';
 import { finalize } from 'rxjs';
+import { ErpTableColumn, ErpTableComponent, ErpTableQuery, ErpTableSource } from '../erp-shared';
 import { CompanyService } from '../services/company.service';
 
 type ApprovalView = 'toApprove' | 'sentByMe' | 'all';
@@ -22,16 +24,41 @@ type PendingAction = 'approve' | 'reject';
 @Component({
   selector: 'app-requests-to-approve',
   templateUrl: './requests-to-approve.component.html',
-  providers: [ListService],
   standalone: false,
 })
 export class RequestsToApproveComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly ApprovalStatus = ApprovalStatus;
-  readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);
+  @ViewChild(ErpTableComponent) table?: ErpTableComponent<ApprovalEntryDto>;
 
-  data: PagedResultDto<ApprovalEntryDto> = { items: [], totalCount: 0 };
+  readonly ApprovalStatus = ApprovalStatus;
+
+  readonly columns: ErpTableColumn<ApprovalEntryDto>[] = [
+    { field: 'documentNo', labelKey: 'Erp::Document', width: 150 },
+    {
+      field: 'documentKind',
+      labelKey: 'Erp::Type',
+      type: 'select',
+      width: 140,
+      options: approvalDocumentKindOptions.map(o => ({ value: o.value, label: 'Erp::Enum:ApprovalDocumentKind.' + o.key })),
+    },
+    { field: 'amount', labelKey: 'Erp::Amount', type: 'currency', width: 130 },
+    { field: 'senderUserName', labelKey: 'Erp::Sender', width: 130 },
+    { field: 'approverUserName', labelKey: 'Erp::Approver', width: 140 },
+    {
+      field: 'status',
+      labelKey: 'Erp::Status',
+      type: 'badge',
+      width: 120,
+      options: approvalStatusOptions.map(o => ({ value: o.value, label: 'Erp::Enum:ApprovalStatus.' + o.key })),
+      badgeClass: row => this.statusClass(row.status),
+    },
+    { field: 'dueDate', labelKey: 'Erp::DueDate', type: 'date', width: 120 },
+    { field: 'comment', labelKey: 'Erp::Comment', width: 180, sortable: false },
+  ];
+
+  readonly source: ErpTableSource<ApprovalEntryDto> = query => this.service.getList(this.toInput(query));
+
   view: ApprovalView = 'toApprove';
 
   // Approve and reject share one dialog: both may carry a comment, and a rejection should.
@@ -49,20 +76,14 @@ export class RequestsToApproveComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.list
-      .hookToQuery(query => this.service.getList(this.toInput(query)))
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => (this.data = result));
-
     this.companyService.companyChanged$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.list.get());
+      .subscribe(() => this.table?.reload());
   }
 
   setView(view: ApprovalView): void {
     this.view = view;
-    this.list.page = 0;
-    this.list.get();
+    this.table?.reload();
   }
 
   statusClass(status?: ApprovalStatus): string {
@@ -76,14 +97,6 @@ export class RequestsToApproveComponent implements OnInit {
       default:
         return 'bg-secondary';
     }
-  }
-
-  statusName(status?: ApprovalStatus): string {
-    return ApprovalStatus[status ?? ApprovalStatus.Created];
-  }
-
-  kindName(entry: ApprovalEntryDto): string {
-    return ApprovalDocumentKind[entry.documentKind ?? ApprovalDocumentKind.SalesDocument];
   }
 
   documentRoute(entry: ApprovalEntryDto): string[] {
@@ -129,7 +142,7 @@ export class RequestsToApproveComponent implements OnInit {
         this.toaster.success(
           this.action === 'approve' ? 'Erp::RequestApproved' : 'Erp::RequestRejected',
         );
-        this.list.get();
+        this.table?.reload();
       });
   }
 
@@ -149,13 +162,13 @@ export class RequestsToApproveComponent implements OnInit {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => {
               this.toaster.success('Erp::RequestDelegated');
-              this.list.get();
+              this.table?.reload();
             });
         }
       });
   }
 
-  private toInput(query: ABP.PageQueryParams): GetApprovalEntriesInput {
+  private toInput(query: ErpTableQuery): GetApprovalEntriesInput {
     return {
       ...query,
       onlyMine: this.view === 'toApprove',

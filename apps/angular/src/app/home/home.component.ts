@@ -84,7 +84,12 @@ export class HomeComponent implements OnInit {
   }
 
   login(): void {
-    this.authService.navigateToLogin();
+    const returnUrl = localStorage.getItem('nexerp_last_route');
+    if (returnUrl && returnUrl !== '/') {
+      this.authService.navigateToLogin({ returnUrl });
+    } else {
+      this.authService.navigateToLogin();
+    }
   }
 
   /**

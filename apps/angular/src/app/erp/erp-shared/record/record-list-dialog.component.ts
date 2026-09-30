@@ -1,29 +1,30 @@
-import { ABP, ListService, PagedResultDto, PermissionService } from '@abp/ng.core';
+import { PermissionService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { Component, DestroyRef, Injector, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, Injector, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ErpTableComponent } from '../table/erp-table.component';
+import { ErpTableColumn, ErpTableSource } from '../table/erp-table.models';
 import { openRecordCardDialog } from './record-card-dialog.component';
-import { RecordColumn, RecordEntity, recordPermission } from './record-entity';
+import { RecordEntity, recordPermission, toRecordTableColumns } from './record-entity';
 
-export const RECORD_LIST_FILTER_DEBOUNCE_MS = 300;
+type Row = Record<string, any>;
 
 /**
- * The full, paged, sortable list of a record table in a dialog: Odoo's "Search More..." and BC's
- * "Select from full list". Records can be opened, created, edited and deleted from it; with
- * `selectable` it closes with the picked record.
+ * The full list of a record table in a dialog: Odoo's "Search More..." and BC's "Select from full
+ * list". It is the same grid as the list pages (search, filter pane, columns, infinite scrolling).
+ * Records can be opened, created, edited and deleted from it; with `selectable` it closes with
+ * the picked record.
  */
 @Component({
   selector: 'erp-record-list-dialog',
   templateUrl: './record-list-dialog.component.html',
-  providers: [ListService],
   standalone: false,
 })
 export class RecordListDialogComponent implements OnInit {
+  @ViewChild(ErpTableComponent) table?: ErpTableComponent<Row>;
+
   readonly modal = inject(NgbActiveModal);
-  readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);
   private readonly ngbModal = inject(NgbModal);
   private readonly injector = inject(Injector);
   private readonly permissions = inject(PermissionService);
@@ -35,91 +36,81 @@ export class RecordListDialogComponent implements OnInit {
   selectable = false;
   initialFilter = '';
 
-  data: PagedResultDto<Record<string, any>> = { items: [], totalCount: 0 };
-  selected: Record<string, any> | null = null;
-  filter = '';
+  columns: ErpTableColumn[] = [];
+  source!: ErpTableSource<Row>;
+  loadedRows: Row[] = [];
+  selected: Row | null = null;
+  /** The grid's highlighted row, kept as one array so the grid is not re-bound on every check. */
+  selection: Row[] = [];
 
   canCreate = false;
   canDelete = false;
 
-  private readonly filter$ = new Subject<string>();
-
   ngOnInit(): void {
     this.canCreate = this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Create'));
     this.canDelete = this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Delete'));
-
-    this.filter = this.initialFilter;
-    this.list.filter = this.initialFilter;
-    this.list.maxResultCount = 10;
-
-    this.list
-      .hookToQuery(query => this.entity.getList(query as never))
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => {
-        this.data = result;
-        const current = this.selected?.['id'];
-        this.selected = result.items?.find(r => r['id'] === current) ?? null;
-      });
-
-    this.filter$
-      .pipe(
-        debounceTime(RECORD_LIST_FILTER_DEBOUNCE_MS),
-        distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(value => {
-        this.list.page = 0;
-        this.list.filter = value;
-      });
+    this.columns = toRecordTableColumns(this.entity.columns);
+    this.source = query => this.entity.getList(query);
   }
 
-  onFilterChange(value: string): void {
-    this.filter = value ?? '';
-    this.filter$.next(this.filter);
+  setSelected(row: Row | null): void {
+    this.selected = row;
+    this.selection = row ? [row] : [];
   }
 
-  onActivate(event: { type: string; row: Record<string, any> }): void {
-    if (event.type === 'click') {
-      this.selected = event.row;
-    } else if (event.type === 'dblclick') {
-      if (this.selectable) {
-        this.pick(event.row);
-      } else {
-        this.openCard(event.row);
-      }
+  /** A reload keeps the selection only if the record is still in the list. */
+  onRowsChange(rows: Row[]): void {
+    this.loadedRows = rows;
+    const current = this.selected?.['id'];
+    this.setSelected(rows.find(r => r['id'] === current) ?? null);
+  }
+
+  onDoubleClick(row: Row): void {
+    if (this.selectable) {
+      this.pick(row);
+    } else {
+      this.openCard(row);
     }
   }
 
-  pick(row: Record<string, any> | null = this.selected): void {
+  /** Enter in the search box picks the record when the search narrowed the list to one. */
+  onEnter(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (this.selectable && target?.matches('input[type="search"]') && this.loadedRows.length === 1) {
+      this.pick(this.loadedRows[0]);
+    }
+  }
+
+  pick(row: Row | null = this.selected): void {
     if (row) {
       this.modal.close(row);
     }
   }
 
-  openCard(row: Record<string, any>, event?: Event): void {
+  openCard(row: Row, event?: Event): void {
     event?.stopPropagation();
     this.card(row['id'], false).then(result => {
       if (result) {
-        this.list.get();
+        this.table?.reload();
       }
     });
   }
 
   /** A record created from the picker is the one wanted, so it is picked straight away (as Odoo does). */
   createNew(): void {
-    this.card(null, true, this.filter).then(result => {
+    this.card(null, true, this.table?.searchTerm ?? '').then(result => {
       if (!result) {
         return;
       }
       if (this.selectable) {
         this.pick(result.record);
       } else {
-        this.list.get();
+        this.table?.reload();
       }
     });
   }
 
-  remove(row: Record<string, any>, event?: Event): void {
+  remove(row: Row, event?: Event): void {
     event?.stopPropagation();
     this.confirmation
       .warn('Erp::ItemWillBeDeletedMessage', 'Erp::AreYouSure')
@@ -133,17 +124,9 @@ export class RecordListDialogComponent implements OnInit {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
             this.toaster.success('Erp::DeletedSuccessfully');
-            this.list.get();
+            this.table?.reload();
           });
       });
-  }
-
-  cellText(row: Record<string, any>, column: RecordColumn): unknown {
-    const value = row[column.field];
-    if (column.type === 'select') {
-      return column.options?.find(o => o.value === value)?.label ?? value;
-    }
-    return value;
   }
 
   private card(id: string | null, quick: boolean, term = '') {

@@ -41,6 +41,7 @@ public class SalesSetupAppService : ErpAppService, ISalesSetupAppService
         setup.SetNumberSeries(
             input.CustomerNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
             input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
+        setup.SetGeneral(input.CreditWarnings, input.ExtDocNoMandatory);
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<SalesReceivablesSetup, SalesReceivablesSetupDto>(setup);

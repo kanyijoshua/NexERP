@@ -19,7 +19,22 @@ export class ModuleRoutesService {
   private readonly service = inject(ModuleService);
   private readonly config = inject(ConfigStateService);
 
-  private readonly modules$ = new BehaviorSubject<ErpModuleDto[]>([]);
+  private readonly modules$ = new BehaviorSubject<ErpModuleDto[]>(this.loadCachedModules());
+
+  private loadCachedModules(): ErpModuleDto[] {
+    try {
+      const raw = localStorage.getItem('nexerp_cached_modules');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveCachedModules(modules: ErpModuleDto[]): void {
+    try {
+      localStorage.setItem('nexerp_cached_modules', JSON.stringify(modules));
+    } catch {}
+  }
 
   /** The modules as last read, for anything that needs to know without asking again. */
   get modules(): ErpModuleDto[] {
@@ -51,6 +66,9 @@ export class ModuleRoutesService {
       map(result => result.items ?? []),
       catchError(() => of([] as ErpModuleDto[])),
       tap(modules => {
+        if (modules?.length) {
+          this.saveCachedModules(modules);
+        }
         this.modules$.next(modules);
         this.apply(modules);
       }),

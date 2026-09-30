@@ -42,6 +42,15 @@ public class ApprovalEntryAppService : ErpAppService, IApprovalEntryAppService
             .WhereIf(input.OnlyMine, e => e.ApproverId == userId)
             .WhereIf(input.SentByMe, e => e.SenderId == userId);
 
+        var term = input.Filter?.Trim().ToLower();
+        query = query.WhereIf(
+            !term.IsNullOrEmpty(),
+            e => e.DocumentNo.ToLower().Contains(term)
+                || e.SenderUserName.ToLower().Contains(term)
+                || e.ApproverUserName.ToLower().Contains(term)
+        );
+        query = ErpListQuery.Filter(query, input, Clock.Now, null);
+
         var totalCount = await AsyncExecuter.CountAsync(query);
 
         query = input.Sorting.IsNullOrWhiteSpace()

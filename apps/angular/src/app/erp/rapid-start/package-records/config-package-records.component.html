@@ -27,10 +27,10 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm erp-table-card">
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
+      <table class="table table-hover table-sm align-middle mb-0">
         <thead class="table-light">
           <tr>
             <th scope="col" class="text-end">{{ 'Erp::RecordNo' | abpLocalization }}</th>
@@ -48,7 +48,7 @@
           <tbody>
             @for (record of records; track record) {
               <tr [class.table-danger]="record.invalid">
-                <td class="text-end text-muted">{{ record.recordNo }}</td>
+                <td class="text-end text-muted font-monospace">{{ record.recordNo }}</td>
                 @for (column of columns; track column) {
                   <td [title]="fieldErrors(record, column.fieldName).join('; ')">
                     <span [class.text-danger]="fieldErrors(record, column.fieldName).length">
@@ -68,24 +68,26 @@
                 </td>
                 <td class="text-end text-nowrap">
                   <ng-container *abpPermission="'Erp.RapidStart.Import'">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-primary me-1"
-                      [title]="'Erp::Edit' | abpLocalization"
-                      [attr.aria-label]="'Erp::Edit' | abpLocalization"
-                      (click)="openEdit(record)"
-                      >
-                      <i class="fas fa-pen"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-danger"
-                      [title]="'Erp::Delete' | abpLocalization"
-                      [attr.aria-label]="'Erp::Delete' | abpLocalization"
-                      (click)="remove(record)"
-                      >
-                      <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="d-inline-flex align-items-center gap-1">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary erp-action-btn"
+                        [title]="'Erp::Edit' | abpLocalization"
+                        [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                        (click)="openEdit(record)"
+                        >
+                        <i class="fas fa-pen"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger erp-action-btn"
+                        [title]="'Erp::Delete' | abpLocalization"
+                        [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                        (click)="remove(record)"
+                        >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </ng-container>
                 </td>
               </tr>

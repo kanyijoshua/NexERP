@@ -2,6 +2,7 @@ import { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DocumentLineOption, LookupItem, SmartButton } from '../models';
+import { ErpTableColumn } from '../table/erp-table.models';
 
 /** The page query every record list sends: ABP's paged, sorted, filtered request. */
 export interface RecordQuery {
@@ -9,6 +10,8 @@ export interface RecordQuery {
   sorting?: string;
   skipCount: number;
   maxResultCount: number;
+  /** The list's filter pane conditions as JSON (see `erp-table`). */
+  dynamicFilter?: string;
 }
 
 export type RecordFieldType =
@@ -17,6 +20,7 @@ export type RecordFieldType =
   | 'email'
   | 'number'
   | 'currency'
+  | 'date'
   | 'select'
   | 'checkbox'
   | 'lookup'
@@ -61,7 +65,7 @@ export interface RecordSection {
   collapsed?: boolean;
 }
 
-export type RecordColumnType = 'text' | 'number' | 'currency' | 'boolean' | 'select';
+export type RecordColumnType = 'text' | 'number' | 'currency' | 'boolean' | 'select' | 'date';
 
 /** One column of the full list. */
 export interface RecordColumn {
@@ -73,6 +77,21 @@ export interface RecordColumn {
   /** Server-side sortable; defaults to `true`. */
   sortable?: boolean;
   width?: number;
+  /** Offered in the list's filter pane; defaults to `true`. Turn off for values the server computes. */
+  filterable?: boolean;
+}
+
+/** A record table's columns as grid columns: the first one links to the card, as in BC. */
+export function toRecordTableColumns(columns: RecordColumn[]): ErpTableColumn[] {
+  return columns.map((column, index) => ({
+    field: column.field,
+    labelKey: column.labelKey,
+    type: index === 0 ? 'code' : (column.type ?? 'text'),
+    width: column.width,
+    sortable: column.sortable !== false,
+    filterable: column.filterable !== false,
+    options: column.options,
+  }));
 }
 
 /** A value of the FactBox on the card page (BC FactBox, Odoo stat info). */

@@ -14,6 +14,12 @@ namespace ABPmicroservice.Erp.Finance;
 /// </summary>
 public class GLRegister : CompanyBasicEntity, IHasCreationTime
 {
+    /// <summary>Source code of an exchange rate adjustment run. Mirrors BC "EXCHRATADJ".</summary>
+    public const string ExchRateAdjustmentSourceCode = "EXCHRATADJ";
+
+    /// <summary>Source code of a VAT settlement. Mirrors BC "VATSTMT".</summary>
+    public const string VatSettlementSourceCode = "VATSTMT";
+
     /// <summary>Consecutive register number within the company. Mirrors BC "No.".</summary>
     public long No { get; private set; }
 
@@ -29,6 +35,18 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
     public long FromVendorEntryNo { get; internal set; }
 
     public long ToVendorEntryNo { get; internal set; }
+
+    public long FromBankEntryNo { get; internal set; }
+
+    public long ToBankEntryNo { get; internal set; }
+
+    public long FromVatEntryNo { get; internal set; }
+
+    public long ToVatEntryNo { get; internal set; }
+
+    public long FromEmployeeEntryNo { get; internal set; }
+
+    public long ToEmployeeEntryNo { get; internal set; }
 
     public DateTime CreationTime { get; private set; }
 
@@ -80,13 +98,22 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
     }
 
     /// <summary>True when the register wrote no entry at all, which is never worth keeping.</summary>
-    public bool IsEmpty => FromEntryNo == 0 && FromCustomerEntryNo == 0 && FromVendorEntryNo == 0;
+    public bool IsEmpty => FromEntryNo == 0 && FromCustomerEntryNo == 0 && FromVendorEntryNo == 0 && FromBankEntryNo == 0
+        && FromVatEntryNo == 0 && FromEmployeeEntryNo == 0;
 
     /// <summary>
     /// A register can be reversed once, and only if it was not itself a reversal.
     /// Mirrors what BC's "Reverse Transaction" refuses.
+    /// <para>
+    /// Adjustments and settlements are not reversible: they change entries they did not write
+    /// (the carried LCY of open entries, the closed flag of VAT entries), which a mirror image
+    /// cannot put back. BC refuses them the same way.
+    /// </para>
     /// </summary>
-    public bool IsReversible => !Reversed && ReversedRegisterNo == 0;
+    public bool IsReversible =>
+        !Reversed
+        && ReversedRegisterNo == 0
+        && SourceCode is not (ExchRateAdjustmentSourceCode or VatSettlementSourceCode);
 
     internal void NoteGLEntry(long entryNo)
     {
@@ -116,5 +143,35 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
         }
 
         ToVendorEntryNo = entryNo;
+    }
+
+    internal void NoteBankEntry(long entryNo)
+    {
+        if (FromBankEntryNo == 0)
+        {
+            FromBankEntryNo = entryNo;
+        }
+
+        ToBankEntryNo = entryNo;
+    }
+
+    internal void NoteEmployeeEntry(long entryNo)
+    {
+        if (FromEmployeeEntryNo == 0)
+        {
+            FromEmployeeEntryNo = entryNo;
+        }
+
+        ToEmployeeEntryNo = entryNo;
+    }
+
+    internal void NoteVatEntry(long entryNo)
+    {
+        if (FromVatEntryNo == 0)
+        {
+            FromVatEntryNo = entryNo;
+        }
+
+        ToVatEntryNo = entryNo;
     }
 }

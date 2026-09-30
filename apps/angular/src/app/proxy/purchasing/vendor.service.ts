@@ -56,7 +56,7 @@ export class VendorService {
     this.restService.request<any, PagedResultDto<VendorDto>>({
       method: 'GET',
       url: '/api/erp/vendor',
-      params: { filter: input.filter, blocked: input.blocked, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, blocked: input.blocked, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

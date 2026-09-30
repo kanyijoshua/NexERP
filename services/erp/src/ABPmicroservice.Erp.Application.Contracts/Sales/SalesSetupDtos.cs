@@ -27,6 +27,10 @@ public class SalesReceivablesSetupDto
 
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
     public string PostedCreditMemoNos { get; set; }
+
+    public CreditWarnings CreditWarnings { get; set; }
+
+    public bool ExtDocNoMandatory { get; set; }
 }
 
 public interface ISalesSetupAppService : IApplicationService

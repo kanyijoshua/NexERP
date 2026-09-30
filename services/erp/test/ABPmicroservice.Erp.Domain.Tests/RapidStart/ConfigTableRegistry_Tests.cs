@@ -91,7 +91,13 @@ public class ConfigTableRegistry_Tests
     [Fact]
     public void Related_Tables_Bring_What_A_Table_Depends_On_And_Its_Lines()
     {
-        _tables.GetRelatedTables(["Customer"]).ShouldBe(["Customer", "CustomerPostingGroup", "GLAccount"], ignoreOrder: true);
+        _tables.GetRelatedTables(["Customer"]).ShouldBe(
+            [
+                "Customer", "CustomerPostingGroup", "GenBusinessPostingGroup", "VatBusinessPostingGroup", "GLAccount",
+                "PaymentTerms", "Currency", "SalespersonPurchaser", "PaymentMethod",
+            ],
+            ignoreOrder: true
+        );
         _tables.GetRelatedTables(["NoSeries"]).ShouldBe(["NoSeries", "NoSeriesLine"], ignoreOrder: true);
     }
 

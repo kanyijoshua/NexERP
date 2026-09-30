@@ -14,6 +14,9 @@ namespace ABPmicroservice.Erp.Companies;
 
 public class CompanyScoping_Tests : ErpDomainTestBase
 {
+    /// <summary>The chart of accounts the seeder gives every company: 7 core accounts, 3 VAT accounts, employee payables.</summary>
+    private const int SeededAccountCount = 15;
+
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<GLAccount, Guid> _glAccountRepository;
     private readonly IDataFilter _dataFilter;
@@ -33,8 +36,8 @@ public class CompanyScoping_Tests : ErpDomainTestBase
         (await InCompanyAsync(DefaultCompanyName, () => _customerRepository.GetCountAsync())).ShouldBe(1);
         (await InCompanyAsync(SecondCompanyName, () => _customerRepository.GetCountAsync())).ShouldBe(0);
 
-        (await InCompanyAsync(DefaultCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(7);
-        (await InCompanyAsync(SecondCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(7);
+        (await InCompanyAsync(DefaultCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(SeededAccountCount);
+        (await InCompanyAsync(SecondCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(SeededAccountCount);
     }
 
     [Fact]
@@ -115,7 +118,7 @@ public class CompanyScoping_Tests : ErpDomainTestBase
             }
         });
 
-        all.ShouldBe(14);
+        all.ShouldBe(2 * SeededAccountCount);
     }
 
     [Fact]
@@ -126,9 +129,9 @@ public class CompanyScoping_Tests : ErpDomainTestBase
 
         await WithUnitOfWorkAsync(() => engine.CopyCompanyAsync(source.Id, "CRONUS Copy", "CRONUS Copy"));
 
-        (await InCompanyAsync("CRONUS Copy", () => _glAccountRepository.GetCountAsync())).ShouldBe(7);
+        (await InCompanyAsync("CRONUS Copy", () => _glAccountRepository.GetCountAsync())).ShouldBe(SeededAccountCount);
         (await InCompanyAsync("CRONUS Copy", () => _customerRepository.GetCountAsync())).ShouldBe(0);
-        (await InCompanyAsync(DefaultCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(7);
+        (await InCompanyAsync(DefaultCompanyName, () => _glAccountRepository.GetCountAsync())).ShouldBe(SeededAccountCount);
 
         var duplicate = await Should.ThrowAsync<BusinessException>(
             () => WithUnitOfWorkAsync(() => engine.CopyCompanyAsync(source.Id, "CRONUS Copy", "Again"))

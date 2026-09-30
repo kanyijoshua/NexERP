@@ -15,14 +15,26 @@ public enum GenJournalTemplateType
 
 /// <summary>
 /// Mirrors Business Central "Gen. Journal Account Type" (table 81 field 3).
-/// Only the three account types the posting engine can post to are listed;
-/// Bank Account and Fixed Asset arrive with their own ledgers.
+/// Only the account types the posting engine can post to are listed; Fixed Asset arrives with its
+/// own ledger.
 /// </summary>
 public enum GenJournalAccountType
 {
     GLAccount = 0,
     Customer = 1,
     Vendor = 2,
+    BankAccount = 3,
+
+    /// <summary>An employee's expense payables: what the company owes the employee back.</summary>
+    Employee = 4,
+}
+
+/// <summary>What an exchange rate adjustment revalued. Mirrors BC "Exch. Rate Adjmt. Register" Account Type.</summary>
+public enum ExchRateAdjmtAccountType
+{
+    Customer = 0,
+    Vendor = 1,
+    BankAccount = 2,
 }
 
 /// <summary>

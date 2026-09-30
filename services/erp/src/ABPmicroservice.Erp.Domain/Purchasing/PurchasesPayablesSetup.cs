@@ -22,10 +22,18 @@ public class PurchasesPayablesSetup : CompanyEntity
     public string PostedInvoiceNos { get; private set; }
     public string PostedCreditMemoNos { get; private set; }
 
+    /// <summary>An invoice cannot be posted without the vendor's invoice number (BC "Ext. Doc. No. Mandatory").</summary>
+    public bool ExtDocNoMandatory { get; private set; }
+
     protected PurchasesPayablesSetup() { }
 
     public PurchasesPayablesSetup(Guid id)
         : base(id) { }
+
+    public void SetGeneral(bool extDocNoMandatory)
+    {
+        ExtDocNoMandatory = extDocNoMandatory;
+    }
 
     public void SetNumberSeries(
         string vendorNos,

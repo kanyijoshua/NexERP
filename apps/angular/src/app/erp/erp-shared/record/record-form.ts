@@ -25,7 +25,9 @@ export function buildRecordForm(
   const controls: Record<string, FormControl> = {};
 
   for (const field of editableFields(entity)) {
-    const value = record?.[field.field];
+    const raw = record?.[field.field];
+    // Dates arrive as ISO date-times; a date input wants yyyy-MM-dd.
+    const value = field.type === 'date' && typeof raw === 'string' ? raw.substring(0, 10) : raw;
     controls[field.field] = new FormControl(
       {
         value: value === undefined ? defaultValue(field) : value,

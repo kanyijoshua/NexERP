@@ -67,6 +67,12 @@ public static class ErpErrorCodes
         public const string StandardJournalCodeAlreadyExists = Prefix + ":Journals:00013";
         public const string BatchNotEmpty = Prefix + ":Journals:00014";
         public const string PreviewNeedsATransaction = Prefix + ":Journals:00015";
+        public const string AppliesToEntryNotFound = Prefix + ":Journals:00016";
+        public const string AppliesToEntryMismatch = Prefix + ":Journals:00017";
+        public const string VatOnlyOnGLAccounts = Prefix + ":Journals:00018";
+        public const string CurrencyMismatch = Prefix + ":Journals:00019";
+        public const string EmployeeDocumentTypeNotAllowed = Prefix + ":Journals:00020";
+        public const string EmployeeInLocalCurrencyOnly = Prefix + ":Journals:00021";
     }
 
     public static class Registers
@@ -188,5 +194,84 @@ public static class ErpErrorCodes
         public const string DocumentNotReleased = Prefix + ":Documents:00004";
         public const string CannotModifyPostedDocument = Prefix + ":Documents:00005";
         public const string DocumentNoAlreadyExists = Prefix + ":Documents:00006";
+    }
+
+    public static class PostingSetup
+    {
+        public const string CodeAlreadyExists = Prefix + ":PostingSetup:00001";
+        public const string CodeNotFound = Prefix + ":PostingSetup:00002";
+        public const string SetupAlreadyExists = Prefix + ":PostingSetup:00003";
+        public const string GeneralPostingSetupMissing = Prefix + ":PostingSetup:00004";
+        public const string AccountMissing = Prefix + ":PostingSetup:00005";
+        public const string InventoryPostingSetupMissing = Prefix + ":PostingSetup:00006";
+        public const string GLAccountNotFound = Prefix + ":PostingSetup:00007";
+        public const string InvalidPercent = Prefix + ":PostingSetup:00008";
+        public const string VatPostingSetupMissing = Prefix + ":PostingSetup:00009";
+        public const string ExchangeRateAlreadyExists = Prefix + ":PostingSetup:00010";
+        public const string InvalidExchangeRate = Prefix + ":PostingSetup:00011";
+    }
+
+    public static class GeneralLedger
+    {
+        public const string PostingDateNotAllowed = Prefix + ":GeneralLedger:00001";
+        public const string InvalidPostingDateRange = Prefix + ":GeneralLedger:00002";
+        public const string InvalidRoundingPrecision = Prefix + ":GeneralLedger:00003";
+        public const string SameGlobalDimensions = Prefix + ":GeneralLedger:00004";
+        public const string DimensionNotFound = Prefix + ":GeneralLedger:00005";
+        public const string AccountingPeriodExists = Prefix + ":GeneralLedger:00006";
+        public const string NoOpenFiscalYear = Prefix + ":GeneralLedger:00007";
+        public const string FiscalYearNotComplete = Prefix + ":GeneralLedger:00008";
+        public const string InvalidPeriodCount = Prefix + ":GeneralLedger:00009";
+        public const string PeriodClosed = Prefix + ":GeneralLedger:00010";
+        public const string ExchangeRateNotFound = Prefix + ":GeneralLedger:00011";
+        public const string CurrencyAccountMissing = Prefix + ":GeneralLedger:00012";
+        public const string NothingToSettle = Prefix + ":GeneralLedger:00013";
+        public const string InvalidDateRange = Prefix + ":GeneralLedger:00014";
+        public const string NothingToAdjust = Prefix + ":GeneralLedger:00015";
+    }
+
+    public static class CashManagement
+    {
+        public const string BankAccountNotFound = Prefix + ":CashManagement:00001";
+        public const string BankAccountBlocked = Prefix + ":CashManagement:00002";
+        public const string BankAccountAlreadyExists = Prefix + ":CashManagement:00003";
+        public const string PostingGroupNotFound = Prefix + ":CashManagement:00004";
+        public const string CannotDeleteWithEntries = Prefix + ":CashManagement:00005";
+        public const string InvalidBalAccountType = Prefix + ":CashManagement:00006";
+    }
+
+    public static class Inventory
+    {
+        public const string InsufficientInventory = Prefix + ":Inventory:00001";
+        public const string LocationMandatory = Prefix + ":Inventory:00002";
+    }
+
+    public static class Purchasing
+    {
+        public const string VendorInvoiceNoRequired = Prefix + ":Purchasing:00001";
+    }
+
+    public static class Sales
+    {
+        public const string ExternalDocumentNoRequired = Prefix + ":Sales:00001";
+        public const string CreditLimitExceeded = Prefix + ":Sales:00002";
+    }
+
+    public static class HumanResources
+    {
+        public const string EmployeeAlreadyExists = Prefix + ":HumanResources:00001";
+        public const string InvalidAbsencePeriod = Prefix + ":HumanResources:00002";
+        public const string EmployeeNotFound = Prefix + ":HumanResources:00003";
+        public const string EmployeeBlocked = Prefix + ":HumanResources:00004";
+        public const string PostingGroupNotFound = Prefix + ":HumanResources:00005";
+        public const string CannotDeleteWithEntries = Prefix + ":HumanResources:00006";
+    }
+
+    public static class Querying
+    {
+        public const string InvalidFilter = Prefix + ":Querying:00001";
+        public const string FieldNotFilterable = Prefix + ":Querying:00002";
+        public const string InvalidValue = Prefix + ":Querying:00003";
+        public const string OperatorNotSupported = Prefix + ":Querying:00004";
     }
 }

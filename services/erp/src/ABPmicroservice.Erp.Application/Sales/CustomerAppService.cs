@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.Companies;
+using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +15,7 @@ namespace ABPmicroservice.Erp.Sales;
 
 [Authorize(ErpPermissions.Customers.Default)]
 public class CustomerAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         Customer,
         CustomerDto,
         Guid,
@@ -51,6 +54,7 @@ public class CustomerAppService
         var no = await _noSeriesManager.ResolveNoAsync(setup.CustomerNos, input.No, Clock.Now);
 
         var customer = await _customerManager.CreateAsync(no, input.Name);
+        await EnsurePostingGroupsExistAsync(input);
         ApplyInput(customer, input);
 
         await Repository.InsertAsync(customer, autoSave: true);
@@ -68,6 +72,7 @@ public class CustomerAppService
         }
 
         customer.SetName(input.Name);
+        await EnsurePostingGroupsExistAsync(input);
         ApplyInput(customer, input);
 
         await Repository.UpdateAsync(customer, autoSave: true);
@@ -96,14 +101,33 @@ public class CustomerAppService
         await Repository.UpdateAsync(customer, autoSave: true);
     }
 
+    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    private async Task EnsurePostingGroupsExistAsync(CreateUpdateCustomerDto input)
+    {
+        var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+        await codes.EnsureExistsAsync<CustomerPostingGroup>(input.CustomerPostingGroup);
+        await codes.EnsureExistsAsync<GenBusinessPostingGroup>(input.GenBusPostingGroup);
+        await codes.EnsureExistsAsync<VatBusinessPostingGroup>(input.VatBusPostingGroup);
+        await codes.EnsureExistsAsync<PaymentTerms>(input.PaymentTermsCode);
+        await codes.EnsureExistsAsync<Currency>(input.CurrencyCode);
+        await codes.EnsureExistsAsync<SalespersonPurchaser>(input.SalespersonCode);
+        await codes.EnsureExistsAsync<PaymentMethod>(input.PaymentMethodCode);
+    }
+
     private static void ApplyInput(Customer customer, CreateUpdateCustomerDto input)
     {
         customer.SetAddress(input.Address, input.City, input.PostCode, input.CountryRegionCode);
         customer.SetContact(input.PhoneNo, input.Email);
         customer.SetCreditLimit(input.CreditLimit);
-        customer.SetPaymentTerms(input.PaymentTermsCode);
-        customer.SetPostingGroups(input.CustomerPostingGroup, input.GenBusPostingGroup);
-        customer.SetCurrency(input.CurrencyCode);
+        customer.SetPaymentTerms(CodeTableEntity.NormalizeCode(input.PaymentTermsCode));
+        customer.SetPostingGroups(
+            PostingGroupBase.NormalizeCode(input.CustomerPostingGroup),
+            PostingGroupBase.NormalizeCode(input.GenBusPostingGroup)
+        );
+        customer.SetCurrency(CodeTableEntity.NormalizeCode(input.CurrencyCode));
+        customer.SetVatBusPostingGroup(input.VatBusPostingGroup);
+        customer.SetSalespersonCode(input.SalespersonCode);
+        customer.SetPaymentMethodCode(input.PaymentMethodCode);
     }
 
     protected override async Task<IQueryable<Customer>> CreateFilteredQueryAsync(

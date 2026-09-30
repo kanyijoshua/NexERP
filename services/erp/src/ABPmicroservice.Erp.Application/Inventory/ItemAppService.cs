@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.Companies;
+using ABPmicroservice.Erp.Numbering;
+using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
@@ -11,7 +14,7 @@ namespace ABPmicroservice.Erp.Inventory;
 
 [Authorize(ErpPermissions.Items.Default)]
 public class ItemAppService
-    : CrudAppService<Item, ItemDto, Guid, GetItemListInput, CreateUpdateItemDto, CreateUpdateItemDto>,
+    : ErpCrudAppService<Item, ItemDto, Guid, GetItemListInput, CreateUpdateItemDto, CreateUpdateItemDto>,
         IItemAppService
 {
     private readonly ItemManager _itemManager;
@@ -29,8 +32,14 @@ public class ItemAppService
 
     public override async Task<ItemDto> CreateAsync(CreateUpdateItemDto input)
     {
+        await EnsurePostingGroupsExistAsync(input);
+
+        // Blank takes the next number of the Inventory Setup's Item Nos. series (BC: InitSeries).
+        var setup = await LazyServiceProvider.LazyGetRequiredService<InventorySetupManager>().GetAsync();
+        var no = await LazyServiceProvider.LazyGetRequiredService<NoSeriesManager>().ResolveNoAsync(setup.ItemNos, input.No, Clock.Now);
+
         var item = await _itemManager.CreateAsync(
-            input.No,
+            no,
             input.Description,
             input.Type,
             input.BaseUnitOfMeasureCode,
@@ -39,7 +48,11 @@ public class ItemAppService
             input.ItemCategoryId,
             input.ItemCategoryCode
         );
-        item.SetPostingGroups(input.GenProdPostingGroup, input.InventoryPostingGroup);
+        item.SetPostingGroups(
+            PostingGroupBase.NormalizeCode(input.GenProdPostingGroup),
+            PostingGroupBase.NormalizeCode(input.InventoryPostingGroup)
+        );
+        item.SetVatProdPostingGroup(input.VatProdPostingGroup);
 
         await Repository.InsertAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
@@ -55,16 +68,31 @@ public class ItemAppService
             item.SetNo(input.No);
         }
 
+        await EnsurePostingGroupsExistAsync(input);
+
         item.SetDescription(input.Description);
         item.SetType(input.Type);
         item.SetBaseUnitOfMeasureCode(input.BaseUnitOfMeasureCode);
         item.SetPrice(input.UnitPrice);
         item.SetCost(input.UnitCost);
         item.SetCategory(input.ItemCategoryId, input.ItemCategoryCode);
-        item.SetPostingGroups(input.GenProdPostingGroup, input.InventoryPostingGroup);
+        item.SetPostingGroups(
+            PostingGroupBase.NormalizeCode(input.GenProdPostingGroup),
+            PostingGroupBase.NormalizeCode(input.InventoryPostingGroup)
+        );
+        item.SetVatProdPostingGroup(input.VatProdPostingGroup);
 
         await Repository.UpdateAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
+    }
+
+    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    private async Task EnsurePostingGroupsExistAsync(CreateUpdateItemDto input)
+    {
+        var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+        await codes.EnsureExistsAsync<GenProductPostingGroup>(input.GenProdPostingGroup);
+        await codes.EnsureExistsAsync<InventoryPostingGroup>(input.InventoryPostingGroup);
+        await codes.EnsureExistsAsync<VatProductPostingGroup>(input.VatProdPostingGroup);
     }
 
     public override async Task DeleteAsync(Guid id)

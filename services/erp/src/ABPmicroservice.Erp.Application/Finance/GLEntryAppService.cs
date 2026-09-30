@@ -11,7 +11,7 @@ namespace ABPmicroservice.Erp.Finance;
 
 [Authorize(ErpPermissions.GLEntries.Default)]
 public class GLEntryAppService
-    : ReadOnlyAppService<GLEntry, GLEntryDto, Guid, GetGLEntryListInput>,
+    : ErpReadOnlyAppService<GLEntry, GLEntryDto, Guid, GetGLEntryListInput>,
         IGLEntryAppService
 {
     public GLEntryAppService(IRepository<GLEntry, Guid> repository)

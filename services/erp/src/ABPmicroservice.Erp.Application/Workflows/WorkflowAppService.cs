@@ -43,7 +43,14 @@ public class WorkflowAppService : ErpAppService, IWorkflowAppService
 
         var workflow = new Workflow(GuidGenerator.Create(), code, input.Description, input.DocumentKind,
             input.MinimumAmount, input.ApproverLimitType, input.DueDays);
-        workflow.RebuildSteps(GuidGenerator.Create);
+        if (input.Steps != null && input.Steps.Count > 0)
+        {
+            workflow.SetSteps(input.Steps.OrderBy(s => s.SequenceNo).Select(s => (s.EventName, s.ConditionRule, s.ResponseAction)), GuidGenerator.Create);
+        }
+        else
+        {
+            workflow.RebuildSteps(GuidGenerator.Create);
+        }
 
         await _workflowRepository.InsertAsync(workflow, autoSave: true);
         return Map(workflow);
@@ -61,7 +68,14 @@ public class WorkflowAppService : ErpAppService, IWorkflowAppService
         }
 
         workflow.Update(input.Description, input.DocumentKind, input.MinimumAmount, input.ApproverLimitType, input.DueDays);
-        workflow.RebuildSteps(GuidGenerator.Create);
+        if (input.Steps != null && input.Steps.Count > 0)
+        {
+            workflow.SetSteps(input.Steps.OrderBy(s => s.SequenceNo).Select(s => (s.EventName, s.ConditionRule, s.ResponseAction)), GuidGenerator.Create);
+        }
+        else
+        {
+            workflow.RebuildSteps(GuidGenerator.Create);
+        }
 
         await _workflowRepository.UpdateAsync(workflow, autoSave: true);
         return Map(workflow);

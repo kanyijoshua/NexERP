@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
@@ -271,6 +273,7 @@ public class ConfigTableRegistry : ISingletonDependency
     public const string AreaDimensions = "Dimensions";
     public const string AreaSetup = "Setup";
     public const string AreaReporting = "Reporting";
+    public const string AreaHumanResources = "HumanResources";
 
     /// <summary>The order the worksheet lists the areas in: what everything else depends on first.</summary>
     public static readonly IReadOnlyList<string> Areas =
@@ -281,6 +284,7 @@ public class ConfigTableRegistry : ISingletonDependency
         AreaSales,
         AreaPurchasing,
         AreaInventory,
+        AreaHumanResources,
         AreaReporting,
     ];
 
@@ -319,9 +323,23 @@ public class ConfigTableRegistry : ISingletonDependency
 
             // Finance
             Table<GLAccount>(AreaFinance, "No").Requires("Name").Calculated("NetChange", "Balance"),
+            Table<GeneralLedgerSetup>(AreaFinance)
+                .Length("LcyCode", ErpDomainConsts.MaxCurrencyCodeLength)
+                .Capitals("LcyCode", "GlobalDimension1Code", "GlobalDimension2Code")
+                .RelatesTo("GlobalDimension1Code", nameof(Dimension), "Code")
+                .RelatesTo("GlobalDimension2Code", nameof(Dimension), "Code"),
+            Table<GenBusinessPostingGroup>(AreaFinance, "Code")
+                .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code"),
+            Table<GenProductPostingGroup>(AreaFinance, "Code")
+                .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code"),
             Table<GeneralPostingSetup>(AreaFinance, "GenBusPostingGroup", "GenProdPostingGroup")
-                .Requires("SalesAccountNo", "PurchAccountNo", "COGSAccountNo", "InventoryAdjmtAccountNo")
                 .Length("GenBusPostingGroup", ErpDomainConsts.MaxGeneralBusPostingGroupLength)
+                .Length("GenProdPostingGroup", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("GenBusPostingGroup", "GenProdPostingGroup")
+                .RelatesTo("GenBusPostingGroup", nameof(GenBusinessPostingGroup), "Code")
+                .RelatesTo("GenProdPostingGroup", nameof(GenProductPostingGroup), "Code")
                 .RelatesTo("SalesAccountNo", nameof(GLAccount), "No")
                 .RelatesTo("SalesCreditMemoAccountNo", nameof(GLAccount), "No")
                 .RelatesTo("SalesDiscountAccountNo", nameof(GLAccount), "No")
@@ -330,6 +348,39 @@ public class ConfigTableRegistry : ISingletonDependency
                 .RelatesTo("PurchDiscountAccountNo", nameof(GLAccount), "No")
                 .RelatesTo("COGSAccountNo", nameof(GLAccount), "No")
                 .RelatesTo("InventoryAdjmtAccountNo", nameof(GLAccount), "No"),
+            // Tax
+            Table<VatBusinessPostingGroup>(AreaFinance, "Code").Length("Code", ErpDomainConsts.MaxPostingGroupLength).Capitals("Code"),
+            Table<VatProductPostingGroup>(AreaFinance, "Code").Length("Code", ErpDomainConsts.MaxPostingGroupLength).Capitals("Code"),
+            Table<VatPostingSetup>(AreaFinance, "VatBusPostingGroup", "VatProdPostingGroup")
+                .Capitals("VatBusPostingGroup", "VatProdPostingGroup", "VatIdentifier")
+                .RelatesTo("VatBusPostingGroup", nameof(VatBusinessPostingGroup), "Code")
+                .RelatesTo("VatProdPostingGroup", nameof(VatProductPostingGroup), "Code")
+                .RelatesTo("SalesVatAccountNo", nameof(GLAccount), "No")
+                .RelatesTo("PurchaseVatAccountNo", nameof(GLAccount), "No")
+                .RelatesTo("ReverseChrgVatAccountNo", nameof(GLAccount), "No"),
+
+            // Finance setup
+            Table<PaymentTerms>(AreaFinance, "Code").Length("Code", ErpDomainConsts.MaxPaymentTermsCodeLength).Capitals("Code", "DueDateCalculation", "DiscountDateCalculation"),
+            Table<Currency>(AreaFinance, "Code")
+                .Length("Code", ErpDomainConsts.MaxCurrencyCodeLength)
+                .Capitals("Code")
+                .RelatesTo("RealizedGainsAccountNo", nameof(GLAccount), "No")
+                .RelatesTo("RealizedLossesAccountNo", nameof(GLAccount), "No"),
+            Table<CurrencyExchangeRate>(AreaFinance, "CurrencyCode", "StartingDate")
+                .Capitals("CurrencyCode")
+                .RelatesTo("CurrencyCode", nameof(Currency), "Code"),
+            Table<AccountingPeriod>(AreaFinance, "StartingDate").Requires("Name"),
+            Table<BankAccountPostingGroup>(AreaFinance, "Code")
+                .Requires("GLAccountNo")
+                .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code")
+                .RelatesTo("GLAccountNo", nameof(GLAccount), "No"),
+            Table<BankAccount>(AreaFinance, "No")
+                .Requires("Name")
+                .Calculated("Balance")
+                .RelatesTo("BankAccPostingGroup", nameof(BankAccountPostingGroup), "Code")
+                .RelatesTo("CurrencyCode", nameof(Currency), "Code"),
+            Table<PaymentMethod>(AreaFinance, "Code").Capitals("Code"),
             Table<GenJournalTemplate>(AreaFinance, "Name")
                 .Length("Name", ErpDomainConsts.MaxJournalTemplateNameLength)
                 .Length("SourceCode", ErpDomainConsts.MaxSourceCodeLength)
@@ -356,37 +407,88 @@ public class ConfigTableRegistry : ISingletonDependency
                 .References("DimensionId", nameof(Dimension), "Code", codeField: "DimensionCode"),
 
             // Sales
+            Table<SalespersonPurchaser>(AreaSales, "Code").Capitals("Code"),
             Table<CustomerPostingGroup>(AreaSales, "Code")
                 .Requires("ReceivablesAccountNo")
                 .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code")
                 .RelatesTo("ReceivablesAccountNo", nameof(GLAccount), "No"),
             Table<Customer>(AreaSales, "No")
                 .Requires("Name")
                 .Calculated("Balance")
-                .RelatesTo("CustomerPostingGroup", nameof(CustomerPostingGroup), "Code"),
+                .RelatesTo("CustomerPostingGroup", nameof(CustomerPostingGroup), "Code")
+                .RelatesTo("GenBusPostingGroup", nameof(GenBusinessPostingGroup), "Code")
+                .RelatesTo("VatBusPostingGroup", nameof(VatBusinessPostingGroup), "Code")
+                .RelatesTo("PaymentTermsCode", nameof(PaymentTerms), "Code")
+                .RelatesTo("CurrencyCode", nameof(Currency), "Code")
+                .RelatesTo("SalespersonCode", nameof(SalespersonPurchaser), "Code")
+                .RelatesTo("PaymentMethodCode", nameof(PaymentMethod), "Code"),
 
             // Purchasing
             Table<VendorPostingGroup>(AreaPurchasing, "Code")
                 .Requires("PayablesAccountNo")
                 .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code")
                 .RelatesTo("PayablesAccountNo", nameof(GLAccount), "No"),
             Table<Vendor>(AreaPurchasing, "No")
                 .Requires("Name")
                 .Calculated("Balance")
-                .RelatesTo("VendorPostingGroup", nameof(VendorPostingGroup), "Code"),
+                .RelatesTo("VendorPostingGroup", nameof(VendorPostingGroup), "Code")
+                .RelatesTo("GenBusPostingGroup", nameof(GenBusinessPostingGroup), "Code")
+                .RelatesTo("VatBusPostingGroup", nameof(VatBusinessPostingGroup), "Code")
+                .RelatesTo("PaymentTermsCode", nameof(PaymentTerms), "Code")
+                .RelatesTo("CurrencyCode", nameof(Currency), "Code")
+                .RelatesTo("PurchaserCode", nameof(SalespersonPurchaser), "Code")
+                .RelatesTo("PaymentMethodCode", nameof(PaymentMethod), "Code"),
 
             // Inventory
+            Table<Location>(AreaInventory, "Code").Length("Code", ErpDomainConsts.MaxLocationCodeLength).Capitals("Code"),
+            Table<InventorySetup>(AreaSetup).RelatesTo("ItemNos", nameof(NoSeries), "Code"),
             Table<UnitOfMeasure>(AreaInventory, "Code").Length("Code", ErpDomainConsts.MaxUnitOfMeasureCodeLength),
             Table<ItemCategory>(AreaInventory, "Code")
                 .References("ParentCategoryId", nameof(ItemCategory), "Code", codeField: "ParentCategoryCode")
                 .RelatesTo("ParentCategoryCode", nameof(ItemCategory), "Code"),
+            Table<InventoryPostingGroup>(AreaInventory, "Code")
+                .Length("Code", ErpDomainConsts.MaxPostingGroupLength)
+                .Capitals("Code"),
+            Table<InventoryPostingSetup>(AreaInventory, "InventoryPostingGroup")
+                .Capitals("InventoryPostingGroup")
+                .RelatesTo("InventoryPostingGroup", nameof(InventoryPostingGroup), "Code")
+                .RelatesTo("InventoryAccountNo", nameof(GLAccount), "No"),
             Table<Item>(AreaInventory, "No")
                 .Requires("Description")
                 .Calculated("Inventory")
                 .Length("BaseUnitOfMeasureCode", ErpDomainConsts.MaxUnitOfMeasureCodeLength)
                 .RelatesTo("BaseUnitOfMeasureCode", nameof(UnitOfMeasure), "Code")
+                .RelatesTo("GenProdPostingGroup", nameof(GenProductPostingGroup), "Code")
+                .RelatesTo("InventoryPostingGroup", nameof(InventoryPostingGroup), "Code")
                 .RelatesTo("ItemCategoryCode", nameof(ItemCategory), "Code")
-                .References("ItemCategoryId", nameof(ItemCategory), "Code", codeField: "ItemCategoryCode"),
+                .References("ItemCategoryId", nameof(ItemCategory), "Code", codeField: "ItemCategoryCode")
+                .RelatesTo("VatProdPostingGroup", nameof(VatProductPostingGroup), "Code"),
+
+            // Human resources
+            Table<HumanResourcesSetup>(AreaHumanResources)
+                .RelatesTo("EmployeeNos", nameof(NoSeries), "Code")
+                .RelatesTo("BaseUnitOfMeasure", nameof(HumanResourceUnitOfMeasure), "Code"),
+            Table<HumanResourceUnitOfMeasure>(AreaHumanResources, "Code").Length("Code", ErpDomainConsts.MaxUnitOfMeasureCodeLength).Capitals("Code"),
+            Table<EmployeePostingGroup>(AreaHumanResources, "Code")
+                .Requires("PayablesAccountNo")
+                .Capitals("Code")
+                .RelatesTo("PayablesAccountNo", nameof(GLAccount), "No"),
+            Table<CauseOfAbsence>(AreaHumanResources, "Code")
+                .Capitals("Code", "UnitOfMeasureCode")
+                .RelatesTo("UnitOfMeasureCode", nameof(HumanResourceUnitOfMeasure), "Code"),
+            Table<Qualification>(AreaHumanResources, "Code").Capitals("Code"),
+            Table<Union>(AreaHumanResources, "Code").Capitals("Code"),
+            Table<EmploymentContract>(AreaHumanResources, "Code").Capitals("Code"),
+            Table<GroundsForTermination>(AreaHumanResources, "Code").Capitals("Code"),
+            Table<Employee>(AreaHumanResources, "No")
+                .Requires("FirstName")
+                .RelatesTo("EmplymtContractCode", nameof(EmploymentContract), "Code")
+                .RelatesTo("UnionCode", nameof(Union), "Code")
+                .RelatesTo("GroundsForTermCode", nameof(GroundsForTermination), "Code")
+                .RelatesTo("EmployeePostingGroup", nameof(EmployeePostingGroup), "Code")
+                .RelatesTo("SalespersPurchCode", nameof(SalespersonPurchaser), "Code"),
 
             // Reporting
             Table<ColumnLayout>(AreaReporting, "Name"),

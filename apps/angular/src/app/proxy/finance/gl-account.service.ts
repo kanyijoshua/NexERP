@@ -56,7 +56,7 @@ export class GlAccountService {
     this.restService.request<any, PagedResultDto<GLAccountDto>>({
       method: 'GET',
       url: '/api/erp/gl-account',
-      params: { filter: input.filter, accountCategory: input.accountCategory, accountType: input.accountType, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, accountCategory: input.accountCategory, accountType: input.accountType, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

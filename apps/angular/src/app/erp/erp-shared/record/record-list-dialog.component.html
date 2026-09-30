@@ -2,19 +2,6 @@
   <h5 class="modal-title me-auto">
     <i [class]="entity.icon + ' text-primary me-2'"></i>{{ (selectable ? 'Erp::SelectFrom' : 'Erp::AllRecordsOf') | abpLocalization: (entity.pluralKey | abpLocalization) }}
   </h5>
-  <div class="input-group input-group-sm w-auto">
-    <span class="input-group-text"><i class="fas fa-search"></i></span>
-    <input
-      type="search"
-      class="form-control"
-      ngbAutofocus
-      [attr.aria-label]="'Erp::Search' | abpLocalization"
-      [placeholder]="'Erp::Search' | abpLocalization"
-      [ngModel]="filter"
-      (ngModelChange)="onFilterChange($event)"
-      (keydown.enter)="selectable && data.items?.length === 1 && pick(data.items![0])"
-      />
-  </div>
   @if (canCreate) {
     <button type="button" class="btn btn-sm btn-primary" (click)="createNew()">
       <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
@@ -24,78 +11,54 @@
 </div>
 
 <div class="modal-body p-0">
-  <ngx-datatable
+  <erp-table
     class="erp-record-list"
-    [rows]="data.items"
-    [count]="data.totalCount"
-    [list]="list"
-    [selected]="selected ? [selected] : []"
+    [tableId]="'record-dialog-' + entity.key"
+    height="60vh"
+    [wrapInCard]="false"
+    [source]="source"
+    [columns]="columns"
+    [initialSearch]="initialFilter"
+    [actionsWidth]="selectable ? 170 : 110"
+    [selectable]="true"
     selectionType="single"
-    default
-    (activate)="onActivate($event)"
-    >
-    @for (column of entity.columns; track column) {
-      <ngx-datatable-column
-        [name]="column.labelKey | abpLocalization"
-        [prop]="column.field"
-        [sortable]="column.sortable !== false"
-        [width]="column.width || 150"
-        [headerClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-        [cellClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-        >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          @switch (column.type) {
-            @case ('currency') {
-              <span>{{ $any(row[column.field]) ?? 0 | erpAmount }}</span>
-            }
-            @case ('boolean') {
-              <i class="fas" [ngClass]="row[column.field] ? 'fa-check' : 'fa-minus text-muted opacity-25'"></i>
-            }
-            @case ('select') {
-              <span>{{ $any(cellText(row, column)) | abpLocalization }}</span>
-            }
-            @default {
-              <span [class.fw-bold]="column === entity.columns[0]">{{ row[column.field] }}</span>
-            }
-          }
-        </ng-template>
-      </ngx-datatable-column>
-    }
-
-    <ngx-datatable-column [name]="''" [sortable]="false" [width]="selectable ? 170 : 110" cellClass="text-end">
-      <ng-template let-row="row" ngx-datatable-cell-template>
+    [selected]="selection"
+    (rowClick)="setSelected($event)"
+    (rowDblClick)="onDoubleClick($event)"
+    (codeClick)="selectable ? pick($event) : openCard($event)"
+    (rowsChange)="onRowsChange($event.rows)"
+    (keydown.enter)="onEnter($event)"
+  >
+    <ng-template erpTableActions let-row="row">
+      <div class="d-inline-flex align-items-center gap-1">
         @if (selectable) {
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            (click)="pick(row); $event.stopPropagation()"
-            >
+          <button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="pick(row); $event.stopPropagation()">
             {{ 'Erp::Select' | abpLocalization }}
           </button>
         }
         <button
           type="button"
-          class="btn btn-sm btn-link px-1"
+          class="btn btn-sm btn-outline-secondary erp-action-btn"
           [title]="'Erp::OpenCard' | abpLocalization"
           [attr.aria-label]="'Erp::OpenCard' | abpLocalization"
           (click)="openCard(row, $event)"
-          >
+        >
           <i class="fas fa-pen-to-square"></i>
         </button>
         @if (canDelete) {
           <button
             type="button"
-            class="btn btn-sm btn-link text-danger px-1"
+            class="btn btn-sm btn-outline-danger erp-action-btn"
             [title]="'Erp::Delete' | abpLocalization"
             [attr.aria-label]="'Erp::Delete' | abpLocalization"
             (click)="remove(row, $event)"
-            >
+          >
             <i class="fas fa-trash-alt"></i>
           </button>
         }
-      </ng-template>
-    </ngx-datatable-column>
-  </ngx-datatable>
+      </div>
+    </ng-template>
+  </erp-table>
 </div>
 
 <div class="modal-footer">

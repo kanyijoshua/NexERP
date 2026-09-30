@@ -4,65 +4,64 @@
   title="Erp::Menu:JournalTemplates"
   breadcrumb="Erp::Menu:Journals"
   icon="fas fa-layer-group"
-  [(filter)]="filter"
+  [showSearch]="false"
   permission="Erp.Journals.Manage"
   (create)="openCreate()"
 ></erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::Code' | abpLocalization" prop="name" [width]="120"></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::Description' | abpLocalization"
-        prop="description"
-        [width]="260"
-      ></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::TemplateType' | abpLocalization" [width]="150">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ typeOptions[row.type]?.label | abpLocalization }}
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Recurring' | abpLocalization" prop="recurring" [width]="110">
-        <ng-template let-value="value" ngx-datatable-cell-template>
-          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::SourceCode' | abpLocalization"
-        prop="sourceCode"
-        [width]="120"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::BatchCount' | abpLocalization"
-        prop="batchCount"
-        [width]="100"
-      ></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            *abpPermission="'Erp.Journals.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            (click)="openEdit(row)"
-            >
-            <i class="fas fa-pen"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.Journals.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [title]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row)"
-            >
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="journal-templates"
+  [items]="data.items"
+  [columns]="columns"
+  [actionsWidth]="110"
+  [clickableRows]="false"
+>
+  <ng-template erpTableCol="name" let-row="row">
+    <a
+      class="fw-bold text-primary font-monospace text-decoration-none erp-record-link"
+      role="button"
+      (click)="openEdit(row)"
+    >
+      {{ row.name }}
+    </a>
+  </ng-template>
+  <ng-template erpTableCol="type" let-row="row">
+    <span class="badge bg-light text-secondary border fw-normal">
+      {{ typeOptions[row.type]?.label | abpLocalization }}
+    </span>
+  </ng-template>
+  <ng-template erpTableCol="recurring" let-value="value">
+    <i class="fas" [ngClass]="value ? 'fa-check text-success fs-6' : 'fa-minus text-muted opacity-50'"></i>
+  </ng-template>
+  <ng-template erpTableCol="sourceCode" let-value="value">
+    <span class="font-monospace text-secondary">{{ value || '—' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="batchCount" let-value="value">
+    <span class="font-monospace fw-semibold">{{ value || 0 }}</span>
+  </ng-template>
+  <ng-template erpTableActions let-row="row">
+    <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+      <button
+        *abpPermission="'Erp.Journals.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-primary erp-action-btn"
+        [title]="'Erp::Edit' | abpLocalization"
+        (click)="openEdit(row)"
+      >
+        <i class="fas fa-pen"></i>
+      </button>
+      <button
+        *abpPermission="'Erp.Journals.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-danger erp-action-btn"
+        [title]="'Erp::Delete' | abpLocalization"
+        (click)="remove(row)"
+      >
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
   <ng-template #abpHeader>

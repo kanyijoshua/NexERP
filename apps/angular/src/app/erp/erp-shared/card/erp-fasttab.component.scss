@@ -1,0 +1,36 @@
+.erp-fasttab {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--erp-border, #e2e8f0);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .card-header {
+    border-bottom: 1px solid var(--erp-border, #e2e8f0);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: #f8fafc !important;
+    }
+  }
+
+  &--collapsed .card-header {
+    border-bottom: none;
+  }
+
+  .transition-transform {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rotate-180 {
+    transform: rotate(180deg);
+  }
+
+  .erp-fasttab-summary {
+    max-width: 380px;
+    font-size: 0.82rem;
+  }
+}

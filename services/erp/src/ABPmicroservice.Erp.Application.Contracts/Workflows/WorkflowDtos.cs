@@ -28,6 +28,14 @@ public class WorkflowStepDto : EntityDto<Guid>
     public string ResponseAction { get; set; }
 }
 
+public class CreateUpdateWorkflowStepDto
+{
+    public int SequenceNo { get; set; }
+    public string EventName { get; set; }
+    public string ConditionRule { get; set; }
+    public string ResponseAction { get; set; }
+}
+
 public class CreateUpdateWorkflowDto
 {
     [Required]
@@ -47,7 +55,10 @@ public class CreateUpdateWorkflowDto
 
     [Range(0, 3650)]
     public int DueDays { get; set; }
+
+    public List<CreateUpdateWorkflowStepDto> Steps { get; set; } = new();
 }
+
 
 public class ApprovalEntryDto : EntityDto<Guid>
 {
@@ -71,8 +82,11 @@ public class ApprovalEntryDto : EntityDto<Guid>
     public bool CanAct { get; set; }
 }
 
-public class GetApprovalEntriesInput : PagedAndSortedResultRequestDto
+public class GetApprovalEntriesInput : ErpPagedListInput
 {
+    /// <summary>Searches the document no., sender and approver.</summary>
+    public string Filter { get; set; }
+
     /// <summary>Defaults to Open unless a document is given or AllStatuses is set.</summary>
     public ApprovalStatus? Status { get; set; }
 
@@ -181,11 +195,17 @@ public class CreateUpdateApprovalUserSetupDto
     public bool IsApprovalAdministrator { get; set; }
 }
 
+public class GetApprovalUserSetupListInput : ErpPagedListInput
+{
+    /// <summary>Searches the user name.</summary>
+    public string Filter { get; set; }
+}
+
 public interface IApprovalUserSetupAppService
     : ICrudAppService<
         ApprovalUserSetupDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetApprovalUserSetupListInput,
         CreateUpdateApprovalUserSetupDto,
         CreateUpdateApprovalUserSetupDto
     > { }

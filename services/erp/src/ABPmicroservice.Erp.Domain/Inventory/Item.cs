@@ -34,6 +34,8 @@ public class Item : CompanyAggregateRoot
 
     public string InventoryPostingGroup { get; private set; }
 
+    public string VatProdPostingGroup { get; private set; }
+
     public bool Blocked { get; private set; }
 
     public bool SalesBlocked { get; private set; }
@@ -118,4 +120,7 @@ public class Item : CompanyAggregateRoot
     public void Unblock() => Blocked = false;
 
     internal void AdjustInventory(decimal quantity) => Inventory += quantity;
+
+    public void SetVatProdPostingGroup(string vatProdPostingGroup) =>
+        VatProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatProdPostingGroup, nameof(vatProdPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
 }

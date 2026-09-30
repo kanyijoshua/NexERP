@@ -1,0 +1,98 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::CalcAndPostVatSettlement"
+  breadcrumb="Erp::Menu:PeriodicActivities"
+  icon="fas fa-scale-balanced"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::VatSettlementHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" class="card border-0 shadow-sm mb-3" (ngSubmit)="post()">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-2">
+        <label class="form-label" for="vs-from">{{ 'Erp::StartingDate' | abpLocalization }}</label>
+        <input id="vs-from" type="date" class="form-control form-control-sm" formControlName="startingDate" />
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <label class="form-label" for="vs-to">{{ 'Erp::EndingDate' | abpLocalization }} *</label>
+        <input id="vs-to" type="date" class="form-control form-control-sm" formControlName="endingDate" />
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <label class="form-label" for="vs-posting">{{ 'Erp::PostingDate' | abpLocalization }} *</label>
+        <input id="vs-posting" type="date" class="form-control form-control-sm" formControlName="postingDate" />
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <label class="form-label" for="vs-docno">{{ 'Erp::DocumentNo' | abpLocalization }} *</label>
+        <input id="vs-docno" type="text" class="form-control form-control-sm" maxlength="20" formControlName="documentNo" />
+      </div>
+      <div class="col-sm-12 col-lg-4">
+        <label class="form-label" for="vs-account">{{ 'Erp::SettlementAccountNo' | abpLocalization }} *</label>
+        <erp-lookup inputId="vs-account" formControlName="settlementAccountNo" entity="glAccount"></erp-lookup>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+    <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="preview()">
+      <i class="fas fa-eye me-1"></i>{{ 'Erp::Preview' | abpLocalization }}
+    </button>
+    <abp-button
+      *abpPermission="'Erp.PeriodicActivities.SettleVat'"
+      buttonType="submit"
+      buttonClass="btn btn-sm btn-primary"
+      iconClass="fas fa-check"
+      [loading]="busy()"
+    >
+      {{ 'Erp::Post' | abpLocalization }}
+    </abp-button>
+  </div>
+</form>
+
+@if (result(); as r) {
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex align-items-center gap-2">
+      <span class="fw-bold me-auto">{{ (r.posted ? 'Erp::Posted' : 'Erp::Preview') | abpLocalization }}</span>
+      <span class="badge" [class.bg-primary]="r.netVatPayable >= 0" [class.bg-success]="r.netVatPayable < 0">
+        {{ (r.netVatPayable < 0 ? 'Erp::NetVatReclaimable' : 'Erp::NetVatDue') | abpLocalization }}:
+        {{ (r.netVatPayable < 0 ? -r.netVatPayable : r.netVatPayable) | erpAmount }}
+      </span>
+    </div>
+    <div class="card-body p-0 table-responsive">
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::VatBusPostingGroup' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::VatProdPostingGroup' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Type' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::VatIdentifier' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::VatPercent' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Entries' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Base' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::VatAmount' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of r.lines; track $index) {
+            <tr>
+              <td>{{ line.vatBusPostingGroup }}</td>
+              <td>{{ line.vatProdPostingGroup }}</td>
+              <td>{{ 'Erp::Enum:VatEntryType.' + vatEntryType[line.type] | abpLocalization }}</td>
+              <td>{{ line.vatIdentifier }}</td>
+              <td class="text-end">{{ line.vatPercent }}%</td>
+              <td class="text-end">{{ line.entryCount }}</td>
+              <td class="text-end font-monospace">{{ line.base | erpAmount }}</td>
+              <td class="text-end font-monospace">{{ line.amount | erpAmount }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="text-center text-muted py-3">{{ 'Erp::NothingToSettle' | abpLocalization }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

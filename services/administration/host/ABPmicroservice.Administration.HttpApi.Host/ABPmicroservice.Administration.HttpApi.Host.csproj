@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   
 
@@ -17,8 +17,8 @@
         <ProjectReference Include="..\..\..\identity\src\ABPmicroservice.IdentityService.Application.Contracts\ABPmicroservice.IdentityService.Application.Contracts.csproj" />
         <ProjectReference Include="..\..\..\identity\src\ABPmicroservice.IdentityService.EntityFrameworkCore\ABPmicroservice.IdentityService.EntityFrameworkCore.csproj" />
         <ProjectReference Include="..\..\..\saas\src\ABPmicroservice.SaaS.Application.Contracts\ABPmicroservice.SaaS.Application.Contracts.csproj" />
-        <ProjectReference Include="..\..\..\erp\src\ABPmicroservice.Erp.Domain.Shared\ABPmicroservice.Erp.Domain.Shared.csproj" />
-        <ProjectReference Include="..\..\..\projects\src\ABPmicroservice.Projects.Domain.Shared\ABPmicroservice.Projects.Domain.Shared.csproj" />
+        <ProjectReference Include="..\..\..\erp\src\ABPmicroservice.Erp.Application.Contracts\ABPmicroservice.Erp.Application.Contracts.csproj" />
+        <ProjectReference Include="..\..\..\projects\src\ABPmicroservice.Projects.Application.Contracts\ABPmicroservice.Projects.Application.Contracts.csproj" />
         <ProjectReference Include="..\..\src\ABPmicroservice.Administration.HttpApi\ABPmicroservice.Administration.HttpApi.csproj" />
         <ProjectReference Include="..\..\src\ABPmicroservice.Administration.Application\ABPmicroservice.Administration.Application.csproj" />
         <ProjectReference Include="..\..\src\ABPmicroservice.Administration.EntityFrameworkCore\ABPmicroservice.Administration.EntityFrameworkCore.csproj" />

@@ -1,0 +1,48 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::HumanResourcesSetup"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-id-badge"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::HumanResourcesSetupHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card border-0 shadow-sm" style="max-width: 720px">
+    <div class="card-body">
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="hr-employee-nos">{{ 'Erp::EmployeeNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="hr-employee-nos" class="form-select form-select-sm" formControlName="employeeNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center">
+        <label class="col-sm-5 col-form-label" for="hr-base-unit">{{ 'Erp::BaseUnitOfMeasureHr' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="hr-base-unit" class="form-select form-select-sm" formControlName="baseUnitOfMeasure">
+            <option [ngValue]="null">{{ 'Erp::None' | abpLocalization }}</option>
+            @for (u of units(); track u.id) {
+              <option [ngValue]="u.code">{{ u.code }} — {{ u.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.HumanResourcesSetup.Update'" class="mt-3" style="max-width: 720px">
+    <div class="text-end">
+      <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+        {{ 'Erp::Save' | abpLocalization }}
+      </abp-button>
+    </div>
+  </div>
+</form>

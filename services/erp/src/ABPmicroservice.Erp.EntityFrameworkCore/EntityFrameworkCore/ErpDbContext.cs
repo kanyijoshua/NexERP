@@ -6,11 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Automations;
 using ABPmicroservice.Erp.Chatter;
+using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Modules;
@@ -42,6 +44,9 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<GLAccount> GLAccounts { get; set; }
     public DbSet<GLEntry> GLEntries { get; set; }
     public DbSet<GeneralPostingSetup> GeneralPostingSetups { get; set; }
+    public DbSet<GeneralLedgerSetup> GeneralLedgerSetups { get; set; }
+    public DbSet<GenBusinessPostingGroup> GenBusinessPostingGroups { get; set; }
+    public DbSet<GenProductPostingGroup> GenProductPostingGroups { get; set; }
     public DbSet<GenJournalTemplate> GenJournalTemplates { get; set; }
     public DbSet<GenJournalBatch> GenJournalBatches { get; set; }
     public DbSet<GenJournalLine> GenJournalLines { get; set; }
@@ -69,6 +74,35 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<Item> Items { get; set; }
     public DbSet<ItemCategory> ItemCategories { get; set; }
     public DbSet<UnitOfMeasure> UnitsOfMeasure { get; set; }
+    public DbSet<InventoryPostingGroup> InventoryPostingGroups { get; set; }
+    public DbSet<InventoryPostingSetup> InventoryPostingSetups { get; set; }
+    public DbSet<PaymentTerms> PaymentTerms { get; set; }
+    public DbSet<Currency> Currencies { get; set; }
+    public DbSet<CurrencyExchangeRate> CurrencyExchangeRates { get; set; }
+    public DbSet<AccountingPeriod> AccountingPeriods { get; set; }
+    public DbSet<VatBusinessPostingGroup> VatBusinessPostingGroups { get; set; }
+    public DbSet<VatProductPostingGroup> VatProductPostingGroups { get; set; }
+    public DbSet<VatPostingSetup> VatPostingSetups { get; set; }
+    public DbSet<VatEntry> VatEntries { get; set; }
+    public DbSet<Location> Locations { get; set; }
+    public DbSet<InventorySetup> InventorySetups { get; set; }
+    public DbSet<SalespersonPurchaser> SalespeoplePurchasers { get; set; }
+    public DbSet<BankAccountPostingGroup> BankAccountPostingGroups { get; set; }
+    public DbSet<BankAccount> BankAccounts { get; set; }
+    public DbSet<BankAccountLedgerEntry> BankAccountLedgerEntries { get; set; }
+    public DbSet<PaymentMethod> PaymentMethods { get; set; }
+    public DbSet<HumanResourcesSetup> HumanResourcesSetups { get; set; }
+    public DbSet<HumanResourceUnitOfMeasure> HumanResourceUnitsOfMeasure { get; set; }
+    public DbSet<EmployeePostingGroup> EmployeePostingGroups { get; set; }
+    public DbSet<CauseOfAbsence> CausesOfAbsence { get; set; }
+    public DbSet<Qualification> Qualifications { get; set; }
+    public DbSet<Union> Unions { get; set; }
+    public DbSet<EmploymentContract> EmploymentContracts { get; set; }
+    public DbSet<GroundsForTermination> GroundsForTermination { get; set; }
+    public DbSet<Employee> Employees { get; set; }
+    public DbSet<EmployeeAbsence> EmployeeAbsences { get; set; }
+    public DbSet<EmployeeLedgerEntry> EmployeeLedgerEntries { get; set; }
+    public DbSet<ExchRateAdjmtRegister> ExchRateAdjmtRegisters { get; set; }
     public DbSet<ItemLedgerEntry> ItemLedgerEntries { get; set; }
     public DbSet<ValueEntry> ValueEntries { get; set; }
     public DbSet<ItemJournalBatch> ItemJournalBatches { get; set; }
@@ -131,12 +165,16 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     [
         "Open",
         "RemainingAmount",
+        // An exchange rate adjustment carries the open amount of an entry at a new rate.
+        "RemainingAmountLcy",
         "RemainingQuantity",
         "InvoicedQuantity",
         "ClosedByEntryId",
         "ClosedByEntryNo",
         "ClosedAtDate",
         "CostPostedToGL",
+        // A VAT settlement marks the entries it settled.
+        "Closed",
         // A reversal never deletes the original; it stamps it as reversed and points at its mirror.
         "Reversed",
         "ReversedByEntryNo",

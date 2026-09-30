@@ -1,7 +1,6 @@
-using ABPmicroservice.Erp.Companies;
 using System;
+using ABPmicroservice.Erp.Finance;
 using Volo.Abp;
-using Volo.Abp.Domain.Entities.Auditing;
 
 namespace ABPmicroservice.Erp.Purchasing;
 
@@ -9,19 +8,20 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Vendor Posting Group. Mirrors Business Central table 93 "Vendor Posting Group".
 /// Maps Vendor Posting Group Code -> Payables G/L Account.
 /// </summary>
-public class VendorPostingGroup : CompanyEntity
+public class VendorPostingGroup : PostingGroupBase
 {
-    public string Code { get; private set; }
-    public string Description { get; private set; }
     public string PayablesAccountNo { get; private set; }
 
     protected VendorPostingGroup() { }
 
     public VendorPostingGroup(Guid id, string code, string payablesAccountNo, string description = null)
-        : base(id)
+        : base(id, code, description)
     {
-        Code = Check.NotNullOrWhiteSpace(code, nameof(code), ErpDomainConsts.MaxPostingGroupLength);
+        SetPayablesAccount(payablesAccountNo);
+    }
+
+    public void SetPayablesAccount(string payablesAccountNo)
+    {
         PayablesAccountNo = Check.NotNullOrWhiteSpace(payablesAccountNo, nameof(payablesAccountNo), ErpDomainConsts.MaxNoLength);
-        Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
     }
 }

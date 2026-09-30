@@ -22,7 +22,7 @@ export class ItemLedgerEntryService {
     this.restService.request<any, PagedResultDto<ItemLedgerEntryDto>>({
       method: 'GET',
       url: '/api/erp/item-ledger-entry',
-      params: { itemId: input.itemId, documentNo: input.documentNo, entryType: input.entryType, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, itemId: input.itemId, documentNo: input.documentNo, entryType: input.entryType, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
 

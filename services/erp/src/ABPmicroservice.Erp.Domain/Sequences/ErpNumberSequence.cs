@@ -40,6 +40,9 @@ public static class ErpSequenceNames
     public const string ItemLedgerEntry = "ITEMLEDG";
     public const string ValueEntry = "VALUEENTRY";
     public const string GLRegister = "GLREGISTER";
+    public const string BankAccountLedgerEntry = "BANKLEDG";
+    public const string VatEntry = "VATENTRY";
+    public const string EmployeeLedgerEntry = "EMPLLEDG";
 
     /// <summary>
     /// Groups the entries written by one posting run. Mirrors BC's "Transaction No.",

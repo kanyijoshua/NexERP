@@ -4,101 +4,86 @@
   title="Erp::Menu:ReportLayouts"
   breadcrumb="Erp::Menu:Reports"
   icon="fas fa-file-invoice"
-  [(filter)]="filter"
+  [showSearch]="false"
   permission="Erp.ReportLayouts.Manage"
   (create)="openCreate()"
 ></erp-page-toolbar>
 
 <p class="text-muted small">{{ 'Erp::ReportLayoutsDescription' | abpLocalization }}</p>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body">
-    <div class="row g-2 align-items-end mb-3">
-      <div class="col-md-5">
-        <label class="form-label" for="rl-report">{{ 'Erp::ReportName' | abpLocalization }}</label>
-        <select
-          id="rl-report"
-          class="form-select"
-          [(ngModel)]="reportFilter"
-          (ngModelChange)="onReportFilterChange()"
-        >
-          <option value="">{{ 'Erp::All' | abpLocalization }}</option>
-          <option *ngFor="let report of reportNames" [value]="report.name">
-            {{ report.displayName }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column
-        [name]="'Erp::ReportName' | abpLocalization"
-        prop="reportName"
-        [width]="200"
-      >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ displayNameOf(row.reportName) }}
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::LayoutName' | abpLocalization"
-        prop="layoutName"
-        [width]="200"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::Description' | abpLocalization"
-        prop="description"
-        [width]="240"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::IsDefaultLayout' | abpLocalization"
-        [sortable]="false"
-        [width]="100"
-      >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <span *ngIf="row.isDefault" class="badge bg-success">
-            {{ 'Erp::LayoutInUse' | abpLocalization }}
-          </span>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::Actions' | abpLocalization"
-        [sortable]="false"
-        [width]="240"
-      >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            *abpPermission="'Erp.ReportLayouts.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-success me-1"
-            [disabled]="row.isDefault"
-            (click)="useThisLayout(row)"
-          >
-            <i class="fas fa-check me-1"></i>{{ 'Erp::UseThisLayout' | abpLocalization }}
-          </button>
-          <button
-            *abpPermission="'Erp.ReportLayouts.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            (click)="openEdit(row)"
-          >
-            <i class="fas fa-pen"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.ReportLayouts.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [title]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row)"
-          >
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
+<div class="row g-2 align-items-end mb-3">
+  <div class="col-md-5">
+    <label class="form-label fw-semibold" for="rl-report">{{ 'Erp::ReportName' | abpLocalization }}</label>
+    <select
+      id="rl-report"
+      class="form-select"
+      [(ngModel)]="reportFilter"
+      (ngModelChange)="onReportFilterChange()"
+    >
+      <option value="">{{ 'Erp::All' | abpLocalization }}</option>
+      <option *ngFor="let report of reportNames" [value]="report.name">
+        {{ report.displayName }}
+      </option>
+    </select>
   </div>
 </div>
+
+<erp-table
+  tableId="report-layouts"
+  [items]="data.items"
+  [columns]="columns"
+  [actionsWidth]="200"
+  height="calc(100vh - 340px)"
+  (rowClick)="openEdit($event)"
+>
+  <ng-template erpTableCol="reportName" let-row="row">
+    <span class="fw-semibold text-primary font-monospace">{{ displayNameOf(row.reportName) }}</span>
+  </ng-template>
+  <ng-template erpTableCol="layoutName" let-row="row">
+    <span class="fw-medium text-dark">{{ row.layoutName }}</span>
+  </ng-template>
+  <ng-template erpTableCol="description" let-value="value">
+    <span class="text-secondary">{{ value || '—' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="isDefault" let-row="row">
+    <span *ngIf="row.isDefault" class="badge bg-success-subtle text-success border border-success-subtle">
+      <i class="fas fa-check me-1"></i>{{ 'Erp::LayoutInUse' | abpLocalization }}
+    </span>
+    <span *ngIf="!row.isDefault" class="text-muted opacity-40">—</span>
+  </ng-template>
+  <ng-template erpTableActions let-row="row">
+    <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+      <button
+        *abpPermission="'Erp.ReportLayouts.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-success erp-action-btn"
+        [disabled]="row.isDefault"
+        [title]="'Erp::UseThisLayout' | abpLocalization"
+        (click)="useThisLayout(row)"
+      >
+        <i class="fas fa-check"></i>
+      </button>
+      <button
+        *abpPermission="'Erp.ReportLayouts.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-primary erp-action-btn"
+        [title]="'Erp::Edit' | abpLocalization"
+        (click)="openEdit(row)"
+      >
+        <i class="fas fa-pen"></i>
+      </button>
+      <button
+        *abpPermission="'Erp.ReportLayouts.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-danger erp-action-btn"
+        [title]="'Erp::Delete' | abpLocalization"
+        (click)="remove(row)"
+      >
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
   <ng-template #abpHeader>

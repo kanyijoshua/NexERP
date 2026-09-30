@@ -12,7 +12,7 @@ import {
   ReportNameDto,
 } from '@proxy/reporting';
 import { Observable, map } from 'rxjs';
-import { CrudListBase, saveBlob } from '../../erp-shared';
+import { CrudListBase, ErpTableColumn, saveBlob } from '../../erp-shared';
 
 /**
  * Report layouts: what a report looks like when it is printed.
@@ -39,6 +39,14 @@ export class ReportLayoutsComponent
 
   /** Blank shows every report's layouts, which is how the page opens. */
   reportFilter = '';
+
+  // The service returns every layout of the report at once, so the grid searches and filters in memory.
+  readonly columns: ErpTableColumn<ReportLayoutDto>[] = [
+    { field: 'reportName', labelKey: 'Erp::ReportName', width: 200 },
+    { field: 'layoutName', labelKey: 'Erp::LayoutName', width: 200 },
+    { field: 'description', labelKey: 'Erp::Description', width: 240 },
+    { field: 'isDefault', labelKey: 'Erp::IsDefaultLayout', type: 'boolean', width: 120 },
+  ];
 
   builtInTemplate = '';
 

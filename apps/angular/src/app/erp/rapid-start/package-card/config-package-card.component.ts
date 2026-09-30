@@ -19,7 +19,7 @@ import {
 } from '@proxy/rapid-start';
 import { Observable } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
-import { readUploadFile, saveBlob } from '../../erp-shared';
+import { ErpFactBoxGroup, readUploadFile, saveBlob } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 import { MAX_IMPORT_FILE_BYTES, TableArea, groupTablesByArea, sortFieldsByProcessingOrder } from '../rapid-start.helpers';
 
@@ -78,6 +78,51 @@ export class ConfigPackageCardComponent implements OnInit {
   packageId = '';
   pkg: ConfigPackageDetailDto | null = null;
   loading = false;
+  showFactBox = true;
+
+  get factBoxGroups(): ErpFactBoxGroup[] {
+    if (!this.pkg) return [];
+    const totalRecords = this.tables.reduce((sum, t) => sum + (t.noOfRecords || 0), 0);
+    return [
+      {
+        id: 'statistics',
+        titleKey: 'Erp::Statistics',
+        icon: 'fas fa-chart-pie',
+        tiles: [
+          {
+            titleKey: 'Erp::NoOfTables',
+            value: this.tables.length,
+            icon: 'fas fa-table',
+            color: 'primary',
+          },
+          {
+            titleKey: 'Erp::NoOfRecords',
+            value: totalRecords,
+            icon: 'fas fa-database',
+            color: 'info',
+          },
+          {
+            titleKey: 'Erp::NoOfErrors',
+            value: this.pkg.noOfErrors || 0,
+            icon: 'fas fa-triangle-exclamation',
+            color: (this.pkg.noOfErrors || 0) > 0 ? 'danger' : 'success',
+            action: () => this.showErrors(),
+          },
+        ],
+      },
+      {
+        id: 'details',
+        titleKey: 'Erp::Details',
+        icon: 'fas fa-circle-info',
+        facts: [
+          { labelKey: 'Erp::Code', value: this.pkg.code, type: 'text' },
+          { labelKey: 'Erp::ProductVersion', value: this.pkg.productVersion || '—', type: 'text' },
+          { labelKey: 'Erp::LastImported', value: this.pkg.lastImportedTime, type: 'date' },
+          { labelKey: 'Erp::LastApplied', value: this.pkg.lastAppliedTime, type: 'date' },
+        ],
+      },
+    ];
+  }
   busy = false;
 
   packageName = '';

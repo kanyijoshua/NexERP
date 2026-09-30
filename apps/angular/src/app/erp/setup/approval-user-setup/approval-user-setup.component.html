@@ -11,46 +11,39 @@
 
 <p class="text-muted">{{ 'Erp::ApprovalUserSetupHelp' | abpLocalization }}</p>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::User' | abpLocalization" prop="userName" [width]="160">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <span class="fw-bold">{{ row.userName }}</span>
-          @if (row.isApprovalAdministrator) {
-            <span class="badge bg-info ms-1">{{ 'Erp::Administrator' | abpLocalization }}</span>
-          }
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Approver' | abpLocalization" prop="approverUserName" [sortable]="false" [width]="140">
-        <ng-template let-value="value" ngx-datatable-cell-template>{{ value || '—' }}</ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Substitute' | abpLocalization" prop="substituteUserName" [sortable]="false" [width]="140">
-        <ng-template let-value="value" ngx-datatable-cell-template>{{ value || '—' }}</ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::SalesAmountApprovalLimit' | abpLocalization" prop="salesAmountApprovalLimit" [width]="170">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ row.unlimitedSalesApproval ? ('Erp::Unlimited' | abpLocalization) : (row.salesAmountApprovalLimit | erpAmount) }}
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::PurchaseAmountApprovalLimit' | abpLocalization" prop="purchaseAmountApprovalLimit" [width]="180">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ row.unlimitedPurchaseApproval ? ('Erp::Unlimited' | abpLocalization) : (row.purchaseAmountApprovalLimit | erpAmount) }}
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button *abpPermission="'Erp.ApprovalUserSetup.Update'" type="button" class="btn btn-sm btn-outline-primary me-1" [title]="'Erp::Edit' | abpLocalization" (click)="openEdit(row)">
-            <i class="fas fa-pen"></i>
-          </button>
-          <button *abpPermission="'Erp.ApprovalUserSetup.Delete'" type="button" class="btn btn-sm btn-outline-danger" [title]="'Erp::Delete' | abpLocalization" (click)="remove(row)">
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="approval-user-setup"
+  height="calc(100vh - 320px)"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  (rowClick)="onRowClick($event)"
+>
+  <ng-template erpTableCol="userName" let-row="row">
+    <a class="fw-bold text-primary text-decoration-none erp-record-link" role="button" tabindex="0" (click)="openEdit(row); $event.stopPropagation()" (keydown.enter)="openEdit(row)">
+      {{ row.userName }}
+    </a>
+    @if (row.isApprovalAdministrator) {
+      <span class="badge bg-info-subtle text-info border border-info-subtle ms-1">{{ 'Erp::Administrator' | abpLocalization }}</span>
+    }
+  </ng-template>
+  <ng-template erpTableCol="approverUserName" let-value="value">
+    <span class="text-secondary">{{ value || '—' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="substituteUserName" let-value="value">
+    <span class="text-secondary">{{ value || '—' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="salesAmountApprovalLimit" let-row="row">
+    <span class="font-monospace fw-semibold">
+      {{ row.unlimitedSalesApproval ? ('Erp::Unlimited' | abpLocalization) : (row.salesAmountApprovalLimit | erpAmount) }}
+    </span>
+  </ng-template>
+  <ng-template erpTableCol="purchaseAmountApprovalLimit" let-row="row">
+    <span class="font-monospace fw-semibold">
+      {{ row.unlimitedPurchaseApproval ? ('Erp::Unlimited' | abpLocalization) : (row.purchaseAmountApprovalLimit | erpAmount) }}
+    </span>
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
   <ng-template #abpHeader>

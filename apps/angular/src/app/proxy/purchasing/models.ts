@@ -1,4 +1,5 @@
 import type { PurchaseDocumentType } from './purchase-document-type.enum';
+import type { VatCalculationType } from '../finance/vat-calculation-type.enum';
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { DocumentStatus } from '../documents/document-status.enum';
 import type { DocumentLineType } from '../documents/document-line-type.enum';
@@ -12,6 +13,7 @@ export interface CreateUpdatePurchaseHeaderDto {
   expectedReceiptDate?: string;
   currencyCode?: string;
   paymentTermsCode?: string;
+  locationCode?: string;
   vendorInvoiceNo?: string;
   lines: PurchaseLineInputDto[];
 }
@@ -28,10 +30,15 @@ export interface CreateUpdateVendorDto {
   paymentTermsCode?: string;
   vendorPostingGroup?: string;
   genBusPostingGroup?: string;
+  vatBusPostingGroup?: string;
+  purchaserCode?: string;
+  paymentMethodCode?: string;
   currencyCode?: string;
 }
 
 export interface GetPurchaseDocumentListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
   documentType?: PurchaseDocumentType;
   status?: DocumentStatus;
@@ -39,6 +46,8 @@ export interface GetPurchaseDocumentListInput extends PagedAndSortedResultReques
 }
 
 export interface GetVendorListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
   blocked?: boolean;
 }
@@ -57,6 +66,7 @@ export interface PurchaseHeaderDto extends FullAuditedEntityDto<string> {
   status: DocumentStatus;
   currencyCode?: string;
   paymentTermsCode?: string;
+  locationCode?: string;
   vendorInvoiceNo?: string;
   totalAmount: number;
   totalAmountIncludingVat: number;
@@ -76,6 +86,13 @@ export interface PurchaseLineDto extends EntityDto<string> {
   lineDiscountPercent: number;
   lineAmount: number;
   lineAmountIncludingVat: number;
+  vatBusPostingGroup?: string;
+  vatProdPostingGroup?: string;
+  vatCalculationType: VatCalculationType;
+  vatIdentifier?: string;
+  vatPercent: number;
+  vatBaseAmount: number;
+  vatAmount: number;
   unitOfMeasureCode?: string;
 }
 
@@ -98,6 +115,7 @@ export interface PurchasesPayablesSetupDto {
   creditMemoNos?: string;
   postedInvoiceNos?: string;
   postedCreditMemoNos?: string;
+  extDocNoMandatory: boolean;
 }
 
 export interface VendorDto extends FullAuditedEntityDto<string> {
@@ -113,6 +131,9 @@ export interface VendorDto extends FullAuditedEntityDto<string> {
   paymentTermsCode?: string;
   vendorPostingGroup?: string;
   genBusPostingGroup?: string;
+  vatBusPostingGroup?: string;
+  purchaserCode?: string;
+  paymentMethodCode?: string;
   currencyCode?: string;
   blocked: boolean;
 }

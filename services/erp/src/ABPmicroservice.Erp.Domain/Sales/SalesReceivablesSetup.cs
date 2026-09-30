@@ -22,6 +22,12 @@ public class SalesReceivablesSetup : CompanyEntity
     public string PostedInvoiceNos { get; private set; }
     public string PostedCreditMemoNos { get; private set; }
 
+    /// <summary>What releasing or posting a document checks the customer's credit against.</summary>
+    public CreditWarnings CreditWarnings { get; private set; } = CreditWarnings.BothWarnings;
+
+    /// <summary>A document cannot be posted without the customer's own reference (BC "Ext. Doc. No. Mandatory").</summary>
+    public bool ExtDocNoMandatory { get; private set; }
+
     protected SalesReceivablesSetup() { }
 
     public SalesReceivablesSetup(Guid id)
@@ -44,6 +50,12 @@ public class SalesReceivablesSetup : CompanyEntity
         CreditMemoNos = Code(creditMemoNos, nameof(creditMemoNos));
         PostedInvoiceNos = Code(postedInvoiceNos, nameof(postedInvoiceNos));
         PostedCreditMemoNos = Code(postedCreditMemoNos, nameof(postedCreditMemoNos));
+    }
+
+    public void SetGeneral(CreditWarnings creditWarnings, bool extDocNoMandatory)
+    {
+        CreditWarnings = creditWarnings;
+        ExtDocNoMandatory = extDocNoMandatory;
     }
 
     /// <summary>The series that numbers a new, unposted document of this type.</summary>

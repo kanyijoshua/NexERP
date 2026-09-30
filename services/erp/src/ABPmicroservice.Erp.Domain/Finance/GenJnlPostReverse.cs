@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Sales;
 using ABPmicroservice.Erp.Sequences;
@@ -23,6 +25,12 @@ public class ReversalResult
     public int CustomerEntryCount { get; set; }
 
     public int VendorEntryCount { get; set; }
+
+    public int BankEntryCount { get; set; }
+
+    public int VatEntryCount { get; set; }
+
+    public int EmployeeEntryCount { get; set; }
 }
 
 /// <summary>
@@ -44,6 +52,12 @@ public class GenJnlPostReverse : DomainService
     private readonly IRepository<Vendor, Guid> _vendorRepository;
     private readonly IEntryNoGenerator _entryNoGenerator;
     private readonly GLRegisterManager _registerManager;
+
+    private IRepository<BankAccountLedgerEntry, Guid> BankLedgerEntryRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<BankAccountLedgerEntry, Guid>>();
+    private IRepository<BankAccount, Guid> BankAccountRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<BankAccount, Guid>>();
+    private IRepository<EmployeeLedgerEntry, Guid> EmployeeLedgerEntryRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<EmployeeLedgerEntry, Guid>>();
+    private IRepository<Employee, Guid> EmployeeRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<Employee, Guid>>();
+    private IRepository<VatEntry, Guid> VatEntryRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<VatEntry, Guid>>();
 
     public GenJnlPostReverse(
         IRepository<GLRegister, Guid> registerRepository,
@@ -89,13 +103,23 @@ public class GenJnlPostReverse : DomainService
         var glEntries = await _glEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
         var customerEntries = await _custLedgerEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
         var vendorEntries = await _vendorLedgerEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
+        var bankEntries = await BankLedgerEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
+        var vatEntries = await VatEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
+        var employeeEntries = await EmployeeLedgerEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
 
-        if (glEntries.Count == 0 && customerEntries.Count == 0 && vendorEntries.Count == 0)
+        if (glEntries.Count == 0 && customerEntries.Count == 0 && vendorEntries.Count == 0 && bankEntries.Count == 0 && employeeEntries.Count == 0)
         {
             throw new BusinessException(ErpErrorCodes.Registers.NotReversible).WithData("registerNo", registerNo);
         }
 
         EnsureNotApplied(customerEntries, vendorEntries);
+
+        var appliedEmployee = employeeEntries.FirstOrDefault(e => e.RemainingAmount != e.Amount);
+        if (appliedEmployee != null)
+        {
+            throw new BusinessException(ErpErrorCodes.Registers.AppliedEntryCannotBeReversed)
+                .WithData("entryNo", appliedEmployee.EntryNo);
+        }
 
         var reversalRegister = await _registerManager.OpenAsync(
             register.PostingDate,
@@ -114,6 +138,9 @@ public class GenJnlPostReverse : DomainService
             GLEntryCount = glEntries.Count,
             CustomerEntryCount = customerEntries.Count,
             VendorEntryCount = vendorEntries.Count,
+            BankEntryCount = bankEntries.Count,
+            VatEntryCount = vatEntries.Count,
+            EmployeeEntryCount = employeeEntries.Count,
         };
 
         foreach (var entry in glEntries.OrderBy(e => e.EntryNo))
@@ -129,6 +156,21 @@ public class GenJnlPostReverse : DomainService
         foreach (var entry in vendorEntries.OrderBy(e => e.EntryNo))
         {
             await ReverseVendorEntryAsync(entry, reversalRegister, text);
+        }
+
+        foreach (var entry in bankEntries.OrderBy(e => e.EntryNo))
+        {
+            await ReverseBankEntryAsync(entry, reversalRegister, text);
+        }
+
+        foreach (var entry in employeeEntries.OrderBy(e => e.EntryNo))
+        {
+            await ReverseEmployeeEntryAsync(entry, reversalRegister, text);
+        }
+
+        foreach (var entry in vatEntries.OrderBy(e => e.EntryNo))
+        {
+            await ReverseVatEntryAsync(entry, reversalRegister);
         }
 
         register.Reversed = true;
@@ -228,7 +270,9 @@ public class GenJnlPostReverse : DomainService
             description,
             -entry.Amount,
             entry.DueDate,
-            entry.DimensionSetId
+            entry.DimensionSetId,
+            entry.CurrencyCode,
+            -entry.AmountLcy
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.CustomerLedgerEntry),
@@ -240,6 +284,7 @@ public class GenJnlPostReverse : DomainService
 
         // The two entries settle each other, so neither is left open for application.
         counter.RemainingAmount = 0m;
+        counter.RemainingAmountLcy = 0m;
         counter.Open = false;
 
         reversalRegister.NoteCustomerEntry(counter.EntryNo);
@@ -248,13 +293,14 @@ public class GenJnlPostReverse : DomainService
         entry.Reversed = true;
         entry.ReversedByEntryNo = counter.EntryNo;
         entry.RemainingAmount = 0m;
+        entry.RemainingAmountLcy = 0m;
         entry.Open = false;
         await _custLedgerEntryRepository.UpdateAsync(entry);
 
         var customer = await _customerRepository.FindAsync(entry.CustomerId);
         if (customer != null)
         {
-            customer.ApplyBalance(-entry.Amount);
+            customer.ApplyBalance(-entry.AmountLcy);
             await _customerRepository.UpdateAsync(customer);
         }
     }
@@ -280,7 +326,9 @@ public class GenJnlPostReverse : DomainService
             description,
             -entry.Amount,
             entry.DueDate,
-            entry.DimensionSetId
+            entry.DimensionSetId,
+            entry.CurrencyCode,
+            -entry.AmountLcy
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.VendorLedgerEntry),
@@ -291,6 +339,7 @@ public class GenJnlPostReverse : DomainService
         };
 
         counter.RemainingAmount = 0m;
+        counter.RemainingAmountLcy = 0m;
         counter.Open = false;
 
         reversalRegister.NoteVendorEntry(counter.EntryNo);
@@ -299,14 +348,133 @@ public class GenJnlPostReverse : DomainService
         entry.Reversed = true;
         entry.ReversedByEntryNo = counter.EntryNo;
         entry.RemainingAmount = 0m;
+        entry.RemainingAmountLcy = 0m;
         entry.Open = false;
         await _vendorLedgerEntryRepository.UpdateAsync(entry);
 
         var vendor = await _vendorRepository.FindAsync(entry.VendorId);
         if (vendor != null)
         {
-            vendor.ApplyBalance(-entry.Amount);
+            vendor.ApplyBalance(-entry.AmountLcy);
             await _vendorRepository.UpdateAsync(vendor);
         }
+    }
+
+    private async Task ReverseBankEntryAsync(BankAccountLedgerEntry entry, GLRegister reversalRegister, string description)
+    {
+        if (entry.Reversed)
+        {
+            throw new BusinessException(ErpErrorCodes.Registers.EntryAlreadyReversed).WithData("entryNo", entry.EntryNo);
+        }
+
+        var counter = new BankAccountLedgerEntry(
+            GuidGenerator.Create(),
+            entry.BankAccountId,
+            entry.BankAccountNo,
+            entry.PostingDate,
+            entry.DocumentType,
+            entry.DocumentNo,
+            description,
+            -entry.Amount,
+            entry.DimensionSetId,
+            entry.CurrencyCode,
+            -entry.AmountLcy
+        )
+        {
+            EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.BankAccountLedgerEntry),
+            TransactionNo = reversalRegister.TransactionNo,
+            RegisterNo = reversalRegister.No,
+            ReversedEntryNo = entry.EntryNo,
+            Reversed = true,
+        };
+
+        counter.RemainingAmount = 0m;
+        counter.Open = false;
+
+        reversalRegister.NoteBankEntry(counter.EntryNo);
+        await BankLedgerEntryRepository.InsertAsync(counter);
+
+        entry.Reversed = true;
+        entry.ReversedByEntryNo = counter.EntryNo;
+        entry.RemainingAmount = 0m;
+        entry.Open = false;
+        await BankLedgerEntryRepository.UpdateAsync(entry);
+
+        var bankAccount = await BankAccountRepository.FindAsync(entry.BankAccountId);
+        if (bankAccount != null)
+        {
+            bankAccount.ApplyBalance(-entry.Amount, -entry.AmountLcy);
+            await BankAccountRepository.UpdateAsync(bankAccount);
+        }
+    }
+
+    private async Task ReverseEmployeeEntryAsync(EmployeeLedgerEntry entry, GLRegister reversalRegister, string description)
+    {
+        if (entry.Reversed)
+        {
+            throw new BusinessException(ErpErrorCodes.Registers.EntryAlreadyReversed).WithData("entryNo", entry.EntryNo);
+        }
+
+        var counter = new EmployeeLedgerEntry(
+            GuidGenerator.Create(),
+            entry.EmployeeId,
+            entry.EmployeeNo,
+            entry.PostingDate,
+            entry.DocumentDate,
+            entry.DocumentType,
+            entry.DocumentNo,
+            description,
+            -entry.Amount,
+            entry.DimensionSetId
+        )
+        {
+            EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.EmployeeLedgerEntry),
+            TransactionNo = reversalRegister.TransactionNo,
+            RegisterNo = reversalRegister.No,
+            ReversedEntryNo = entry.EntryNo,
+            Reversed = true,
+        };
+
+        counter.RemainingAmount = 0m;
+        counter.Open = false;
+
+        reversalRegister.NoteEmployeeEntry(counter.EntryNo);
+        await EmployeeLedgerEntryRepository.InsertAsync(counter);
+
+        entry.Reversed = true;
+        entry.ReversedByEntryNo = counter.EntryNo;
+        entry.RemainingAmount = 0m;
+        entry.Open = false;
+        await EmployeeLedgerEntryRepository.UpdateAsync(entry);
+
+        var employee = await EmployeeRepository.FindAsync(entry.EmployeeId);
+        if (employee != null)
+        {
+            employee.ApplyBalance(-entry.Amount);
+            await EmployeeRepository.UpdateAsync(employee);
+        }
+    }
+
+    // The G/L side of the VAT is reversed with the other G/L entries; this mirrors the VAT entry itself.
+    private async Task ReverseVatEntryAsync(VatEntry entry, GLRegister reversalRegister)
+    {
+        if (entry.Reversed)
+        {
+            throw new BusinessException(ErpErrorCodes.Registers.EntryAlreadyReversed).WithData("entryNo", entry.EntryNo);
+        }
+
+        var counter = new VatEntry(GuidGenerator.Create(), entry)
+        {
+            EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.VatEntry),
+            TransactionNo = reversalRegister.TransactionNo,
+            RegisterNo = reversalRegister.No,
+        };
+
+        reversalRegister.NoteVatEntry(counter.EntryNo);
+        await VatEntryRepository.InsertAsync(counter);
+
+        entry.Reversed = true;
+        entry.ReversedByEntryNo = counter.EntryNo;
+        await VatEntryRepository.UpdateAsync(entry);
     }
 }

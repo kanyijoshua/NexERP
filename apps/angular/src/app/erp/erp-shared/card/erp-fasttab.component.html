@@ -1,0 +1,33 @@
+<div class="card border-0 shadow-sm erp-fasttab mb-3" [class.erp-fasttab--collapsed]="collapsed">
+  <div
+    class="card-header bg-white d-flex align-items-center py-2 px-3 user-select-none cursor-pointer"
+    role="button"
+    tabindex="0"
+    (click)="toggle()"
+    (keydown.enter)="toggle()"
+    (keydown.space)="toggle()"
+  >
+    <div class="d-flex align-items-center gap-2 me-auto">
+      <i *ngIf="icon" [class]="icon + ' text-primary'"></i>
+      <span class="fw-bold text-dark">{{ titleKey | abpLocalization }}</span>
+      <span *ngIf="badge !== null && badge !== undefined" class="badge ms-1" [ngClass]="badgeClass">
+        {{ badge }}
+      </span>
+    </div>
+
+    <!-- Summary preview shown when collapsed, mirroring Business Central FastTabs -->
+    @if (collapsed && summary) {
+      <div class="erp-fasttab-summary small text-muted text-truncate me-3 d-none d-md-block">
+        {{ summary }}
+      </div>
+    }
+
+    <i class="fas fa-chevron-down text-muted transition-transform" [class.rotate-180]="!collapsed"></i>
+  </div>
+
+  <div class="erp-fasttab-body collapse" [class.show]="!collapsed">
+    <div class="card-body">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

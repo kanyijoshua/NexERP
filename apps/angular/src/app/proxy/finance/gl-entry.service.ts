@@ -31,7 +31,7 @@ export class GlEntryService {
     this.restService.request<any, PagedResultDto<GLEntryDto>>({
       method: 'GET',
       url: '/api/erp/gl-entry',
-      params: { glAccountId: input.glAccountId, documentNo: input.documentNo, fromDate: input.fromDate, toDate: input.toDate, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, glAccountId: input.glAccountId, documentNo: input.documentNo, fromDate: input.fromDate, toDate: input.toDate, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
 

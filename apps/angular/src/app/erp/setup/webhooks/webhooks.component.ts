@@ -12,7 +12,7 @@ import {
   WebhookSubscriptionService,
 } from '@proxy/integration';
 import { Observable, map } from 'rxjs';
-import { CrudListBase } from '../../erp-shared';
+import { CrudListBase, ErpTableColumn } from '../../erp-shared';
 
 /**
  * Outbound notifications to other systems, and the log of every call made.
@@ -29,6 +29,16 @@ export class WebhooksComponent
   implements OnInit
 {
   readonly DeliveryStatus = WebhookDeliveryStatus;
+
+  // The service returns every subscription at once, so the grid searches and filters them in memory.
+  readonly columns: ErpTableColumn<WebhookSubscriptionDto>[] = [
+    { field: 'name', labelKey: 'Erp::Name', width: 180 },
+    { field: 'entityName', labelKey: 'Erp::EntityName', width: 150 },
+    { field: 'endpointUrl', labelKey: 'Erp::EndpointUrl', width: 260 },
+    { field: 'changeKinds', labelKey: 'Erp::ChangeKinds', width: 180, sortable: false, filterable: false },
+    { field: 'active', labelKey: 'Erp::Active', type: 'boolean', width: 90 },
+    { field: 'failureCount', labelKey: 'Erp::FailureCount', type: 'number', width: 120 },
+  ];
 
   entities: ExportableEntityDto[] = [];
 

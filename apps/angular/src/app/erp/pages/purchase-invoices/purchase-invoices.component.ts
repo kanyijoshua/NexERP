@@ -1,4 +1,3 @@
-import { ABP, ListService } from '@abp/ng.core';
 import { Component } from '@angular/core';
 import {
   PurchaseDocumentService,
@@ -7,7 +6,7 @@ import {
   VendorService,
 } from '@proxy/purchasing';
 import { Observable, map } from 'rxjs';
-import { LookupItem } from '../../erp-shared';
+import { ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
   DocumentListBase,
@@ -18,7 +17,6 @@ import {
 @Component({
   selector: 'app-purchase-invoices',
   templateUrl: '../documents/document-list.component.html',
-  providers: [ListService],
   standalone: false,
 })
 export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDto> {
@@ -28,7 +26,10 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
   readonly unitAmountLabelKey = 'Erp::DirectUnitCost';
   readonly permissionPrefix = 'Erp.PurchaseDocuments';
   readonly chatterEntityType = 'PurchaseHeader';
+  readonly partyNoField = 'buyFromVendorNo';
+  readonly partyNameField = 'buyFromVendorName';
   readonly partyEntity = 'vendor';
+  readonly externalDocumentNoLabelKey = 'Erp::VendorInvoiceNo';
   readonly itemAmountField = 'unitCost' as const;
 
   constructor(
@@ -38,7 +39,7 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
     super();
   }
 
-  protected getList = (query: ABP.PageQueryParams) =>
+  protected getList = (query: ErpTableQuery) =>
     this.documents.getList({
       ...query,
       documentType: PurchaseDocumentType.Invoice,
@@ -68,6 +69,8 @@ export class PurchaseInvoicesComponent extends DocumentListBase<PurchaseHeaderDt
       no: input.no,
       vendorId: input.partyId,
       postingDate: input.postingDate,
+      locationCode: input.locationCode,
+      vendorInvoiceNo: input.externalDocumentNo,
       lines: input.lines.map(l => ({
         type: l.type,
         no: l.no,

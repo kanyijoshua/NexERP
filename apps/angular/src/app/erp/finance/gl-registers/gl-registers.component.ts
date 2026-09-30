@@ -1,9 +1,9 @@
-import { ABP, ListService, LocalizationService, PagedResultDto } from '@abp/ng.core';
+import { LocalizationService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { GLRegisterDto, GlRegisterService, PostingPreviewLineDto } from '@proxy/finance';
-import { Observable } from 'rxjs';
+import { GLRegisterDto, GetGLRegistersInput, GlRegisterService, PostingPreviewLineDto } from '@proxy/finance';
+import { ErpTableAction, ErpTableColumn, ErpTableComponent, ErpTableSource } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
 /**
@@ -13,11 +13,10 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'app-gl-registers',
   templateUrl: './gl-registers.component.html',
-  providers: [ListService],
   standalone: false,
 })
 export class GLRegistersComponent implements OnInit {
-  readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);
+  @ViewChild(ErpTableComponent) table?: ErpTableComponent<GLRegisterDto>;
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly toaster = inject(ToasterService);
@@ -26,7 +25,32 @@ export class GLRegistersComponent implements OnInit {
   private readonly localization = inject(LocalizationService);
   private readonly registers = inject(GlRegisterService);
 
-  data: PagedResultDto<GLRegisterDto> = { items: [], totalCount: 0 };
+  readonly columns: ErpTableColumn<GLRegisterDto>[] = [
+    { field: 'no', labelKey: 'Erp::RegisterNo', type: 'code', width: 110 },
+    { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 140 },
+    { field: 'journalBatchName', labelKey: 'Erp::Batch', width: 200 },
+    { field: 'sourceCode', labelKey: 'Erp::SourceCode', width: 120 },
+    { field: 'userName', labelKey: 'Erp::PostedBy', width: 150 },
+    { field: 'transactionNo', labelKey: 'Erp::TransactionNo', type: 'number', width: 130 },
+    { field: 'reversed', labelKey: 'Erp::Reversed', type: 'boolean', width: 160 },
+  ];
+
+  readonly actions: ErpTableAction<GLRegisterDto>[] = [
+    { key: 'entries', title: 'Erp::ViewEntries', icon: 'fas fa-list', action: row => this.showEntries(row) },
+    {
+      key: 'reverse',
+      title: 'Erp::Reverse',
+      icon: 'fas fa-undo',
+      btnClass: 'btn-outline-danger',
+      permission: 'Erp.GLRegisters.Reverse',
+      disabled: row => this.busy || !row.isReversible,
+      action: row => this.reverse(row),
+    },
+  ];
+
+  readonly source: ErpTableSource<GLRegisterDto> = query =>
+    this.registers.getList({ ...query, onlyReversible: this.onlyReversible } as GetGLRegistersInput);
+
   onlyReversible = false;
   busy = false;
 
@@ -35,21 +59,15 @@ export class GLRegistersComponent implements OnInit {
   entries: PostingPreviewLineDto[] = [];
 
   ngOnInit(): void {
-    this.list
-      .hookToQuery(query => this.getList(query))
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => (this.data = result));
-
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.closeEntries();
-      this.list.get();
+      this.table?.reload();
     });
   }
 
   toggleOnlyReversible(value: boolean): void {
     this.onlyReversible = value;
-    this.list.page = 0;
-    this.list.get();
+    this.table?.reload();
   }
 
   showEntries(register: GLRegisterDto): void {
@@ -102,14 +120,10 @@ export class GLRegistersComponent implements OnInit {
                 ),
               );
               this.closeEntries();
-              this.list.get();
+              this.table?.reload();
             },
             error: () => (this.busy = false),
           });
       });
-  }
-
-  private getList(query: ABP.PageQueryParams): Observable<PagedResultDto<GLRegisterDto>> {
-    return this.registers.getList({ ...query, onlyReversible: this.onlyReversible } as never);
   }
 }

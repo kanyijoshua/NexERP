@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
@@ -11,7 +12,7 @@ namespace ABPmicroservice.Erp.Finance;
 
 [Authorize(ErpPermissions.GLAccounts.Default)]
 public class GLAccountAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         GLAccount,
         GLAccountDto,
         Guid,
@@ -39,6 +40,9 @@ public class GLAccountAppService
 
     public override async Task<GLAccountDto> CreateAsync(CreateUpdateGLAccountDto input)
     {
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<VatProductPostingGroup>(input.VatProdPostingGroup);
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<VatBusinessPostingGroup>(input.VatBusPostingGroup);
+
         var account = await _glAccountManager.CreateAsync(
             input.No,
             input.Name,
@@ -48,6 +52,8 @@ public class GLAccountAppService
             input.Subcategory,
             input.DirectPosting
         );
+        account.SetVatProdPostingGroup(input.VatProdPostingGroup);
+        account.SetJournalVatDefaults(input.GenPostingType, input.VatBusPostingGroup);
 
         await Repository.InsertAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);
@@ -55,6 +61,9 @@ public class GLAccountAppService
 
     public override async Task<GLAccountDto> UpdateAsync(Guid id, CreateUpdateGLAccountDto input)
     {
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<VatProductPostingGroup>(input.VatProdPostingGroup);
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<VatBusinessPostingGroup>(input.VatBusPostingGroup);
+
         var account = await GetEntityByIdAsync(id);
 
         if (!string.Equals(account.No, input.No, StringComparison.OrdinalIgnoreCase))
@@ -69,6 +78,8 @@ public class GLAccountAppService
         account.SetIncomeBalance(input.IncomeBalance);
         account.SetSubcategory(input.Subcategory);
         account.SetDirectPosting(input.DirectPosting);
+        account.SetVatProdPostingGroup(input.VatProdPostingGroup);
+        account.SetJournalVatDefaults(input.GenPostingType, input.VatBusPostingGroup);
 
         await Repository.UpdateAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);

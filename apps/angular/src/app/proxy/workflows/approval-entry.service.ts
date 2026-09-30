@@ -31,7 +31,7 @@ export class ApprovalEntryService {
     this.restService.request<any, PagedResultDto<ApprovalEntryDto>>({
       method: 'GET',
       url: '/api/erp/approval-entry',
-      params: { status: input.status, allStatuses: input.allStatuses, onlyMine: input.onlyMine, sentByMe: input.sentByMe, documentId: input.documentId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { filter: input.filter, status: input.status, allStatuses: input.allStatuses, onlyMine: input.onlyMine, sentByMe: input.sentByMe, documentId: input.documentId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount, dynamicFilter: input.dynamicFilter },
     },
     { apiName: this.apiName,...config });
   

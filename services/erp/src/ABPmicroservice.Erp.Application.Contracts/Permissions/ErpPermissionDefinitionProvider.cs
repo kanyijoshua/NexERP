@@ -180,6 +180,81 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
             "ApprovalUserSetup"
         );
 
+        AddCrud(
+            erpGroup,
+            ErpPermissions.PostingSetup.Default,
+            ErpPermissions.PostingSetup.Create,
+            ErpPermissions.PostingSetup.Update,
+            ErpPermissions.PostingSetup.Delete,
+            "PostingSetup"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.FinanceSetup.Default,
+            ErpPermissions.FinanceSetup.Create,
+            ErpPermissions.FinanceSetup.Update,
+            ErpPermissions.FinanceSetup.Delete,
+            "FinanceSetup"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.BankAccounts.Default,
+            ErpPermissions.BankAccounts.Create,
+            ErpPermissions.BankAccounts.Update,
+            ErpPermissions.BankAccounts.Delete,
+            "BankAccounts"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.Locations.Default,
+            ErpPermissions.Locations.Create,
+            ErpPermissions.Locations.Update,
+            ErpPermissions.Locations.Delete,
+            "Locations"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.SalespeoplePurchasers.Default,
+            ErpPermissions.SalespeoplePurchasers.Create,
+            ErpPermissions.SalespeoplePurchasers.Update,
+            ErpPermissions.SalespeoplePurchasers.Delete,
+            "SalespeoplePurchasers"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.Employees.Default,
+            ErpPermissions.Employees.Create,
+            ErpPermissions.Employees.Update,
+            ErpPermissions.Employees.Delete,
+            "Employees"
+        );
+
+        AddCrud(
+            erpGroup,
+            ErpPermissions.HumanResourcesSetup.Default,
+            ErpPermissions.HumanResourcesSetup.Create,
+            ErpPermissions.HumanResourcesSetup.Update,
+            ErpPermissions.HumanResourcesSetup.Delete,
+            "HumanResourcesSetup"
+        );
+
+        erpGroup.AddPermission(ErpPermissions.VatEntries.Default, L("Permission:Erp:VatEntries"));
+
+        var periodic = erpGroup.AddPermission(ErpPermissions.PeriodicActivities.Default, L("Permission:Erp:PeriodicActivities"));
+        periodic.AddChild(ErpPermissions.PeriodicActivities.AdjustExchangeRates, L("Permission:Erp:PeriodicActivities:AdjustExchangeRates"));
+        periodic.AddChild(ErpPermissions.PeriodicActivities.SettleVat, L("Permission:Erp:PeriodicActivities:SettleVat"));
+
+        var inventorySetup = erpGroup.AddPermission(ErpPermissions.InventorySetup.Default, L("Permission:Erp:InventorySetup"));
+        inventorySetup.AddChild(ErpPermissions.InventorySetup.Update, L("Permission:Erp:InventorySetup:Update"));
+
+        var glSetup = erpGroup.AddPermission(ErpPermissions.GeneralLedgerSetup.Default, L("Permission:Erp:GeneralLedgerSetup"));
+        glSetup.AddChild(ErpPermissions.GeneralLedgerSetup.Update, L("Permission:Erp:GeneralLedgerSetup:Update"));
+
         var salesSetup = erpGroup.AddPermission(ErpPermissions.SalesSetup.Default, L("Permission:Erp:SalesSetup"));
         salesSetup.AddChild(ErpPermissions.SalesSetup.Update, L("Permission:Erp:SalesSetup:Update"));
 

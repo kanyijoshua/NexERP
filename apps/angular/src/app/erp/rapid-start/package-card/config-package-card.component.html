@@ -1,67 +1,65 @@
 <app-company-switcher></app-company-switcher>
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-  <div class="me-auto">
-    <div class="small text-muted">
-      <a routerLink="/erp/rapid-start/packages">{{ 'Erp::Menu:ConfigPackages' | abpLocalization }}</a>
-    </div>
-    <h4 class="mb-0 fw-bold">
-      <i class="fas fa-box-open text-primary me-2"></i>{{ pkg?.code }}
-      <span class="text-muted fw-normal" *ngIf="pkg?.packageName">· {{ pkg?.packageName }}</span>
-    </h4>
-  </div>
-  <i *ngIf="busy || loading" class="fas fa-spinner fa-spin text-muted"></i>
-</div>
-
-<ng-container *ngIf="pkg">
-  <!-- General -->
-  <div class="card border-0 shadow-sm mb-3">
-    <div class="card-body">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-2">
-          <label class="form-label small mb-1" for="pc-code">{{ 'Erp::Code' | abpLocalization }}</label>
-          <input id="pc-code" type="text" class="form-control form-control-sm" [value]="pkg.code" disabled />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label small mb-1" for="pc-name">{{ 'Erp::PackageName' | abpLocalization }} *</label>
-          <input
-            id="pc-name"
-            type="text"
-            class="form-control form-control-sm"
-            maxlength="100"
-            [(ngModel)]="packageName"
-            [disabled]="!canManage"
-          />
-        </div>
-        <div class="col-md-2">
-          <label class="form-label small mb-1" for="pc-version">{{ 'Erp::ProductVersion' | abpLocalization }}</label>
-          <input
-            id="pc-version"
-            type="text"
-            class="form-control form-control-sm"
-            maxlength="20"
-            [(ngModel)]="productVersion"
-            [disabled]="!canManage"
-          />
-        </div>
-        <div class="col-md-2 small text-muted">
-          <div>{{ 'Erp::LastImported' | abpLocalization }}: {{ (pkg.lastImportedTime | date: 'short') || '—' }}</div>
-          <div>{{ 'Erp::LastApplied' | abpLocalization }}: {{ (pkg.lastAppliedTime | date: 'short') || '—' }}</div>
-        </div>
-        <div class="col-md-2 text-end">
-          <button
-            *abpPermission="'Erp.RapidStart.Manage'"
-            type="button"
-            class="btn btn-sm btn-primary"
-            [disabled]="!headerChanged || !packageName.trim() || busy"
-            (click)="saveHeader()"
-          >
-            <i class="fas fa-check me-1"></i>{{ 'Erp::Save' | abpLocalization }}
-          </button>
-        </div>
+<erp-card
+  *ngIf="pkg"
+  [title]="pkg.code + (pkg.packageName ? ' · ' + pkg.packageName : '')"
+  icon="fas fa-box-open"
+  breadcrumb="Erp::Menu:ConfigPackages"
+  [breadcrumbLink]="['/erp/rapid-start/packages']"
+  [busy]="busy || loading"
+  [factBoxGroups]="factBoxGroups"
+  [(showFactBox)]="showFactBox"
+>
+  <!-- General FastTab (BC FastTab) -->
+  <erp-fasttab
+    titleKey="Erp::General"
+    icon="fas fa-sliders"
+    [summary]="(packageName || pkg.packageName) + ' (v' + (productVersion || pkg.productVersion || '1.0') + ')'"
+  >
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label small mb-1" for="pc-code">{{ 'Erp::Code' | abpLocalization }}</label>
+        <input id="pc-code" type="text" class="form-control form-control-sm" [value]="pkg.code" disabled />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small mb-1" for="pc-name">{{ 'Erp::PackageName' | abpLocalization }} *</label>
+        <input
+          id="pc-name"
+          type="text"
+          class="form-control form-control-sm"
+          maxlength="100"
+          [(ngModel)]="packageName"
+          [disabled]="!canManage"
+        />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-1" for="pc-version">{{ 'Erp::ProductVersion' | abpLocalization }}</label>
+        <input
+          id="pc-version"
+          type="text"
+          class="form-control form-control-sm"
+          maxlength="20"
+          [(ngModel)]="productVersion"
+          [disabled]="!canManage"
+        />
+      </div>
+      <div class="col-md-2 small text-muted">
+        <div>{{ 'Erp::LastImported' | abpLocalization }}: {{ (pkg.lastImportedTime | date: 'short') || '—' }}</div>
+        <div>{{ 'Erp::LastApplied' | abpLocalization }}: {{ (pkg.lastAppliedTime | date: 'short') || '—' }}</div>
+      </div>
+      <div class="col-md-2 text-end">
+        <button
+          *abpPermission="'Erp.RapidStart.Manage'"
+          type="button"
+          class="btn btn-sm btn-primary"
+          [disabled]="!headerChanged || !packageName.trim() || busy"
+          (click)="saveHeader()"
+        >
+          <i class="fas fa-check me-1"></i>{{ 'Erp::Save' | abpLocalization }}
+        </button>
       </div>
     </div>
-  </div>
+  </erp-fasttab>
 
   <!-- Actions -->
   <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -132,7 +130,7 @@
   </div>
 
   <!-- Tables -->
-  <div class="card border-0 shadow-sm mb-3">
+  <div class="card border-0 shadow-sm mb-3 erp-table-card">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-sm table-hover align-middle mb-0">
@@ -177,63 +175,65 @@
                   </span>
                 </div>
               </td>
-              <td class="text-end">{{ table.processingOrder }}</td>
+              <td class="text-end font-monospace">{{ table.processingOrder }}</td>
               <td class="text-center">
                 <i class="fas" [ngClass]="table.deleteRecordsBeforeProcessing ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
               </td>
               <td>{{ table.dataTemplateCode }}</td>
-              <td class="text-end">
-                <a [routerLink]="['tables', table.id]">{{ table.noOfRecords }}</a>
+              <td class="text-end font-monospace">
+                <a [routerLink]="['tables', table.id]" class="erp-code-link fw-semibold font-monospace">{{ table.noOfRecords }}</a>
               </td>
               <td class="text-end">
                 <a
                   *ngIf="table.noOfErrors > 0; else noErrors"
-                  class="text-danger fw-bold"
+                  class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace text-decoration-none"
                   [routerLink]="['tables', table.id]"
                   [queryParams]="{ errorsOnly: true }"
                 >
                   {{ table.noOfErrors }}
                 </a>
-                <ng-template #noErrors>0</ng-template>
+                <ng-template #noErrors><span class="text-muted font-monospace">0</span></ng-template>
               </td>
               <td class="text-end text-nowrap">
-                <a
-                  class="btn btn-sm btn-outline-secondary me-1"
-                  [routerLink]="['tables', table.id]"
-                  [title]="'Erp::PackageRecords' | abpLocalization"
-                  [attr.aria-label]="'Erp::PackageRecords' | abpLocalization"
-                >
-                  <i class="fas fa-table-list"></i>
-                </a>
-                <ng-container *abpPermission="'Erp.RapidStart.Manage'">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary me-1"
-                    [title]="'Erp::TableSettings' | abpLocalization"
-                    [attr.aria-label]="'Erp::TableSettings' | abpLocalization"
-                    (click)="openTable(table)"
+                <div class="d-inline-flex align-items-center gap-1">
+                  <a
+                    class="btn btn-sm btn-outline-secondary erp-action-btn"
+                    [routerLink]="['tables', table.id]"
+                    [title]="'Erp::PackageRecords' | abpLocalization"
+                    [attr.aria-label]="'Erp::PackageRecords' | abpLocalization"
                   >
-                    <i class="fas fa-sliders"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary me-1"
-                    [title]="'Erp::Fields' | abpLocalization"
-                    [attr.aria-label]="'Erp::Fields' | abpLocalization"
-                    (click)="openTable(table, 3)"
-                  >
-                    <i class="fas fa-list-check"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    [title]="'Erp::ExcludeTable' | abpLocalization"
-                    [attr.aria-label]="'Erp::ExcludeTable' | abpLocalization"
-                    (click)="excludeTable(table)"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </ng-container>
+                    <i class="fas fa-table-list"></i>
+                  </a>
+                  <ng-container *abpPermission="'Erp.RapidStart.Manage'">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary erp-action-btn"
+                      [title]="'Erp::TableSettings' | abpLocalization"
+                      [attr.aria-label]="'Erp::TableSettings' | abpLocalization"
+                      (click)="openTable(table)"
+                    >
+                      <i class="fas fa-sliders"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary erp-action-btn"
+                      [title]="'Erp::Fields' | abpLocalization"
+                      [attr.aria-label]="'Erp::Fields' | abpLocalization"
+                      (click)="openTable(table, 3)"
+                    >
+                      <i class="fas fa-list-check"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger erp-action-btn"
+                      [title]="'Erp::ExcludeTable' | abpLocalization"
+                      [attr.aria-label]="'Erp::ExcludeTable' | abpLocalization"
+                      (click)="excludeTable(table)"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </ng-container>
+                </div>
               </td>
             </tr>
             <tr *ngIf="!tables.length">
@@ -335,7 +335,7 @@
       </div>
     </div>
   </div>
-</ng-container>
+</erp-card>
 
 <!-- Add tables -->
 <abp-modal [(visible)]="isAddOpen" [busy]="busy" [options]="{ size: 'lg', scrollable: true }">

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
@@ -188,6 +190,9 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<GLAccount>(),
             Define<GLEntry>(),
             Define<GLRegister>(),
+            Define<GeneralLedgerSetup>(),
+            Define<GenBusinessPostingGroup>(),
+            Define<GenProductPostingGroup>(),
             Define<GeneralPostingSetup>(),
             Define<GenJournalTemplate>(),
             Define<GenJournalBatch>(),
@@ -219,6 +224,8 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<Item>(),
             Define<ItemCategory>(),
             Define<UnitOfMeasure>(),
+            Define<InventoryPostingGroup>(),
+            Define<InventoryPostingSetup>(),
             Define<ItemLedgerEntry>(),
             Define<ValueEntry>(),
 
@@ -245,6 +252,35 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<DocumentNote>(),
             Define<ActivityStreamEntry>(),
             Define<DocumentActivityTask>(),
+
+            // Tax, cash management, finance and human resources setup
+            Define<PaymentTerms>(),
+            Define<Currency>(),
+            Define<CurrencyExchangeRate>(),
+            Define<AccountingPeriod>(),
+            Define<VatBusinessPostingGroup>(),
+            Define<VatProductPostingGroup>(),
+            Define<VatPostingSetup>(),
+            Define<VatEntry>(),
+            Define<Location>(),
+            Define<InventorySetup>(),
+            Define<SalespersonPurchaser>(),
+            Define<BankAccountPostingGroup>(),
+            Define<BankAccount>(),
+            Define<BankAccountLedgerEntry>(),
+            Define<EmployeeLedgerEntry>(),
+            Define<ExchRateAdjmtRegister>(),
+            Define<PaymentMethod>(),
+            Define<HumanResourcesSetup>(),
+            Define<HumanResourceUnitOfMeasure>(),
+            Define<EmployeePostingGroup>(),
+            Define<CauseOfAbsence>(),
+            Define<Qualification>(),
+            Define<Union>(),
+            Define<EmploymentContract>(),
+            Define<GroundsForTermination>(),
+            Define<Employee>(),
+            Define<EmployeeAbsence>(),
 
             Define<Company>(),
         };

@@ -12,7 +12,7 @@ namespace ABPmicroservice.Erp.Inventory;
 
 [Authorize(ErpPermissions.ItemCategories.Default)]
 public class ItemCategoryAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         ItemCategory,
         ItemCategoryDto,
         Guid,

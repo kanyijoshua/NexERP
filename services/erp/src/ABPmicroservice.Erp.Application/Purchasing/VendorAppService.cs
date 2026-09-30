@@ -1,6 +1,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.Companies;
+using ABPmicroservice.Erp.Sales;
+using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +16,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 
 [Authorize(ErpPermissions.Vendors.Default)]
 public class VendorAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         Vendor,
         VendorDto,
         Guid,
@@ -51,6 +55,7 @@ public class VendorAppService
         var no = await _noSeriesManager.ResolveNoAsync(setup.VendorNos, input.No, Clock.Now);
 
         var vendor = await _vendorManager.CreateAsync(no, input.Name);
+        await EnsurePostingGroupsExistAsync(input);
         ApplyInput(vendor, input);
 
         await Repository.InsertAsync(vendor, autoSave: true);
@@ -68,6 +73,7 @@ public class VendorAppService
         }
 
         vendor.SetName(input.Name);
+        await EnsurePostingGroupsExistAsync(input);
         ApplyInput(vendor, input);
 
         await Repository.UpdateAsync(vendor, autoSave: true);
@@ -96,13 +102,32 @@ public class VendorAppService
         await Repository.UpdateAsync(vendor, autoSave: true);
     }
 
+    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    private async Task EnsurePostingGroupsExistAsync(CreateUpdateVendorDto input)
+    {
+        var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+        await codes.EnsureExistsAsync<VendorPostingGroup>(input.VendorPostingGroup);
+        await codes.EnsureExistsAsync<GenBusinessPostingGroup>(input.GenBusPostingGroup);
+        await codes.EnsureExistsAsync<VatBusinessPostingGroup>(input.VatBusPostingGroup);
+        await codes.EnsureExistsAsync<PaymentTerms>(input.PaymentTermsCode);
+        await codes.EnsureExistsAsync<Currency>(input.CurrencyCode);
+        await codes.EnsureExistsAsync<SalespersonPurchaser>(input.PurchaserCode);
+        await codes.EnsureExistsAsync<PaymentMethod>(input.PaymentMethodCode);
+    }
+
     private static void ApplyInput(Vendor vendor, CreateUpdateVendorDto input)
     {
         vendor.SetAddress(input.Address, input.City, input.PostCode, input.CountryRegionCode);
         vendor.SetContact(input.PhoneNo, input.Email);
-        vendor.SetPaymentTerms(input.PaymentTermsCode);
-        vendor.SetPostingGroups(input.VendorPostingGroup, input.GenBusPostingGroup);
-        vendor.SetCurrency(input.CurrencyCode);
+        vendor.SetPaymentTerms(CodeTableEntity.NormalizeCode(input.PaymentTermsCode));
+        vendor.SetPostingGroups(
+            PostingGroupBase.NormalizeCode(input.VendorPostingGroup),
+            PostingGroupBase.NormalizeCode(input.GenBusPostingGroup)
+        );
+        vendor.SetCurrency(CodeTableEntity.NormalizeCode(input.CurrencyCode));
+        vendor.SetVatBusPostingGroup(input.VatBusPostingGroup);
+        vendor.SetPurchaserCode(input.PurchaserCode);
+        vendor.SetPaymentMethodCode(input.PaymentMethodCode);
     }
 
     protected override async Task<IQueryable<Vendor>> CreateFilteredQueryAsync(

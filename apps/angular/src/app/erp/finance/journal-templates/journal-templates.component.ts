@@ -9,7 +9,7 @@ import {
 } from '@proxy/finance';
 import { NoSeriesService } from '@proxy/numbering';
 import { Observable, map } from 'rxjs';
-import { CrudListBase } from '../../erp-shared';
+import { CrudListBase, ErpTableColumn } from '../../erp-shared';
 
 /**
  * Journal templates. Mirrors Business Central page 100 "Gen. Journal Templates": the kinds of
@@ -31,6 +31,16 @@ export class JournalTemplatesComponent
     { value: GenJournalTemplateType.Purchases, label: 'Erp::TemplateTypePurchases' },
     { value: GenJournalTemplateType.CashReceipts, label: 'Erp::TemplateTypeCashReceipts' },
     { value: GenJournalTemplateType.Payments, label: 'Erp::TemplateTypePayments' },
+  ];
+
+  // The service returns every template at once, so the grid searches and filters them in memory.
+  readonly columns: ErpTableColumn<GenJournalTemplateDto>[] = [
+    { field: 'name', labelKey: 'Erp::Code', width: 130 },
+    { field: 'description', labelKey: 'Erp::Description', width: 260 },
+    { field: 'type', labelKey: 'Erp::TemplateType', type: 'select', width: 150, options: this.typeOptions },
+    { field: 'recurring', labelKey: 'Erp::Recurring', type: 'boolean', width: 110 },
+    { field: 'sourceCode', labelKey: 'Erp::SourceCode', width: 130 },
+    { field: 'batchCount', labelKey: 'Erp::BatchCount', type: 'number', width: 110 },
   ];
 
   seriesCodes: string[] = [];

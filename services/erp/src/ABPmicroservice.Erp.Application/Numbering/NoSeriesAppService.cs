@@ -13,7 +13,7 @@ namespace ABPmicroservice.Erp.Numbering;
 
 [Authorize(ErpPermissions.NoSeries.Default)]
 public class NoSeriesAppService
-    : CrudAppService<NoSeries, NoSeriesDto, Guid, GetNoSeriesListInput, CreateUpdateNoSeriesDto, CreateUpdateNoSeriesDto>,
+    : ErpCrudAppService<NoSeries, NoSeriesDto, Guid, GetNoSeriesListInput, CreateUpdateNoSeriesDto, CreateUpdateNoSeriesDto>,
         INoSeriesAppService
 {
     public NoSeriesAppService(IRepository<NoSeries, Guid> repository)

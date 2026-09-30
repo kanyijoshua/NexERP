@@ -35,7 +35,28 @@ export class PageToolbarComponent {
   /** Permission required to see the "New" button. Empty means always visible. */
   @Input() permission?: string;
 
+  /** Allows toggling between Table format and Card format (like BC & Odoo). */
+  @Input() showViewSwitcher = false;
+  @Input() viewMode: 'table' | 'card' = 'table';
+  @Output() viewModeChange = new EventEmitter<'table' | 'card'>();
+
+  /** Displays export dropdown for Excel, CSV, Print, and Clipboard. */
+  @Input() showExport = false;
+  @Input() exportDisabled = false;
+  @Output() export = new EventEmitter<'excel' | 'csv' | 'print' | 'clipboard'>();
+
   @Output() create = new EventEmitter<void>();
+
+  setViewMode(mode: 'table' | 'card'): void {
+    if (this.viewMode !== mode) {
+      this.viewMode = mode;
+      this.viewModeChange.emit(mode);
+    }
+  }
+
+  onExport(format: 'excel' | 'csv' | 'print' | 'clipboard'): void {
+    this.export.emit(format);
+  }
 
   onFilterChange(value: string): void {
     this.filter = value;

@@ -23,7 +23,7 @@ export class GlRegisterService {
     this.restService.request<any, PagedResultDto<GLRegisterDto>>({
       method: 'GET',
       url: '/api/erp/gl-register',
-      params: { fromDate: input.fromDate, toDate: input.toDate, onlyReversible: input.onlyReversible, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { filter: input.filter, fromDate: input.fromDate, toDate: input.toDate, onlyReversible: input.onlyReversible, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount, dynamicFilter: input.dynamicFilter },
     },
     { apiName: this.apiName,...config });
   

@@ -49,6 +49,8 @@ export interface PublishedWebServiceDto extends EntityDto<string> {
   published: boolean;
   excludedFields?: string;
   url?: string;
+  requestBody?: string;
+  fieldsUrl?: string;
 }
 
 export interface SetWebServicePublishedInput {

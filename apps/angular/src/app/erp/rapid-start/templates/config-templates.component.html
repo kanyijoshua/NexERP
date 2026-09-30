@@ -25,7 +25,7 @@
   </select>
 </erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm erp-table-card">
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover table-sm align-middle mb-0">
@@ -42,34 +42,46 @@
         <tbody>
           @for (template of templates; track template) {
             <tr>
-              <td class="fw-semibold">{{ template.code }}</td>
+              <td>
+                <a
+                  class="fw-bold text-primary font-monospace text-decoration-none erp-record-link"
+                  role="button"
+                  (click)="openEdit(template)"
+                >
+                  {{ template.code }}
+                </a>
+              </td>
               <td>{{ template.description }}</td>
-              <td>{{ tableName(template.entityName) }}</td>
-              <td class="text-end">{{ template.lines?.length ?? 0 }}</td>
+              <td>
+                <span class="badge bg-light text-secondary border fw-normal">{{ tableName(template.entityName) }}</span>
+              </td>
+              <td class="text-end font-monospace fw-semibold">{{ template.lines?.length ?? 0 }}</td>
               <td class="text-center">
-                <i class="fas" [ngClass]="template.enabled ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
+                <i class="fas" [ngClass]="template.enabled ? 'fa-check text-success fs-6' : 'fa-minus text-muted opacity-50'"></i>
               </td>
               <td class="text-end text-nowrap">
-                <ng-container *abpPermission="'Erp.RapidStart.Manage'">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary me-1"
-                    [title]="'Erp::Edit' | abpLocalization"
-                    [attr.aria-label]="'Erp::Edit' | abpLocalization"
-                    (click)="openEdit(template)"
+                <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+                  <ng-container *abpPermission="'Erp.RapidStart.Manage'">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary erp-action-btn"
+                      [title]="'Erp::Edit' | abpLocalization"
+                      [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                      (click)="openEdit(template)"
                     >
-                    <i class="fas fa-pen"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    [title]="'Erp::Delete' | abpLocalization"
-                    [attr.aria-label]="'Erp::Delete' | abpLocalization"
-                    (click)="remove(template)"
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger erp-action-btn"
+                      [title]="'Erp::Delete' | abpLocalization"
+                      [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                      (click)="remove(template)"
                     >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </ng-container>
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </ng-container>
+                </div>
               </td>
             </tr>
           }

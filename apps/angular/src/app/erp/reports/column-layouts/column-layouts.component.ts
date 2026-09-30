@@ -11,7 +11,7 @@ import {
   CreateUpdateColumnLayoutDto,
 } from '@proxy/reporting';
 import { Observable, forkJoin, map } from 'rxjs';
-import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
+import { CrudListBase, DocumentLineColumn, ErpTableColumn } from '../../erp-shared';
 
 /**
  * Column layouts: the periods a financial report is shown across.
@@ -32,6 +32,13 @@ export class ColumnLayoutsComponent extends CrudListBase<
     { value: ColumnLayoutType.BalanceAtDate, label: 'Erp::ColumnBalanceAtDate' },
     { value: ColumnLayoutType.BeginningBalance, label: 'Erp::ColumnBeginningBalance' },
     { value: ColumnLayoutType.YearToDateNetChange, label: 'Erp::ColumnYearToDate' },
+  ];
+
+  // The service returns every column layout at once, so the grid searches and filters them in memory.
+  readonly columns: ErpTableColumn<ColumnLayoutDto>[] = [
+    { field: 'name', labelKey: 'Erp::Code', width: 180 },
+    { field: 'description', labelKey: 'Erp::Description', width: 340 },
+    { field: 'lineCount', labelKey: 'Erp::LineCount', type: 'number', width: 110 },
   ];
 
   readonly lineColumns: DocumentLineColumn[] = [

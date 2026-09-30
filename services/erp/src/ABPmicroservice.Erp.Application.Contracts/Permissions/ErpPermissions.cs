@@ -54,6 +54,91 @@ public class ErpPermissions
         public const string Delete = Default + ".Delete";
     }
 
+    /// <summary>The posting groups and the setups that turn them into G/L accounts.</summary>
+    public static class PostingSetup
+    {
+        public const string Default = GroupName + ".PostingSetup";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class GeneralLedgerSetup
+    {
+        public const string Default = GroupName + ".GeneralLedgerSetup";
+        public const string Update = Default + ".Update";
+    }
+
+    /// <summary>Payment terms, currencies, exchange rates, accounting periods and payment methods.</summary>
+    public static class FinanceSetup
+    {
+        public const string Default = GroupName + ".FinanceSetup";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class BankAccounts
+    {
+        public const string Default = GroupName + ".BankAccounts";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class Locations
+    {
+        public const string Default = GroupName + ".Locations";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class SalespeoplePurchasers
+    {
+        public const string Default = GroupName + ".SalespeoplePurchasers";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    /// <summary>Employees and their absences.</summary>
+    public static class Employees
+    {
+        public const string Default = GroupName + ".Employees";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    /// <summary>The Human Resources Setup and the HR code tables.</summary>
+    public static class HumanResourcesSetup
+    {
+        public const string Default = GroupName + ".HumanResourcesSetup";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class VatEntries
+    {
+        public const string Default = GroupName + ".VatEntries";
+    }
+
+    /// <summary>The finance period-end jobs: exchange rate adjustment and VAT settlement.</summary>
+    public static class PeriodicActivities
+    {
+        public const string Default = GroupName + ".PeriodicActivities";
+        public const string AdjustExchangeRates = Default + ".AdjustExchangeRates";
+        public const string SettleVat = Default + ".SettleVat";
+    }
+
+    public static class InventorySetup
+    {
+        public const string Default = GroupName + ".InventorySetup";
+        public const string Update = Default + ".Update";
+    }
+
     public static class GLEntries
     {
         public const string Default = GroupName + ".GLEntries";

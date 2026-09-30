@@ -237,3 +237,1154 @@ body {
     border-top: 1px solid var(--bs-border-color);
   }
 }
+
+/* ==========================================================================
+   ERP MODERN UI ENHANCEMENTS (Odoo & Business Central Style)
+   ========================================================================== */
+
+/* --- 1. Page Toolbar --- */
+.erp-page-toolbar {
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--erp-ink);
+    letter-spacing: -0.01em;
+  }
+
+  &__icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--erp-radius-sm);
+    background: rgb(var(--erp-accent-rgb) / 10%);
+    font-size: 0.95rem;
+  }
+
+  &__search {
+    width: 220px;
+    transition: width 0.2s ease;
+
+    &:focus-within {
+      width: 280px;
+    }
+
+    .form-control, .input-group-text {
+      border-color: var(--erp-rule);
+    }
+  }
+}
+
+/* --- 2. View Mode Toggle (Table / Cards) --- */
+.erp-view-mode-toggle {
+  .btn {
+    border-color: var(--erp-rule);
+    color: var(--erp-ink-muted);
+    font-size: 0.825rem;
+    padding: 0.25rem 0.65rem;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background-color: rgb(var(--erp-accent-rgb) / 6%);
+      color: var(--erp-brand);
+      border-color: var(--erp-rule);
+    }
+
+    &.active {
+      background-color: var(--erp-brand);
+      border-color: var(--erp-brand);
+      color: var(--erp-on-accent);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+    }
+  }
+}
+
+/* --- 3. Export Dropdown --- */
+.erp-export-menu {
+  .dropdown-menu {
+    min-width: 250px;
+    border-radius: var(--erp-radius);
+    border-color: var(--erp-rule);
+    box-shadow: var(--erp-shadow-raised);
+
+    .dropdown-item {
+      font-size: 0.85rem;
+      border-radius: 4px;
+      margin: 0 4px;
+      width: calc(100% - 8px);
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: rgb(var(--erp-accent-rgb) / 8%);
+      }
+
+      &:active {
+        background-color: var(--erp-accent);
+        color: var(--erp-on-accent);
+
+        .text-muted, i {
+          color: var(--erp-on-accent) !important;
+        }
+      }
+    }
+  }
+}
+
+/* --- 4. Modern Datatable & Table Styling (Business Central / ERP style) --- */
+.card:has(ngx-datatable),
+.card:has(.ngx-datatable),
+.card:has(table.table),
+.card:has(.table-responsive),
+.erp-table-card {
+  border: 1px solid var(--erp-rule, #e2e8f0) !important;
+  border-radius: var(--erp-radius, 8px) !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Standard HTML tables (Bootstrap table enhancements for ERP) */
+table.table {
+  width: 100%;
+  margin-bottom: 0;
+  color: #1e293b;
+  font-size: 0.875rem;
+
+  thead,
+  thead.table-light {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid var(--erp-rule, #e2e8f0) !important;
+
+    tr th {
+      background-color: #f8fafc !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.04em !important;
+      color: #475569 !important;
+      padding: 0.75rem 1rem !important;
+      border: none !important;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.15s ease;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:nth-child(even):not(.table-light):not(.table-active) {
+        background-color: #fafbfc;
+      }
+
+      &:hover:not(.table-light):not(.table-active) {
+        background-color: rgb(var(--erp-accent-rgb, 1 126 132) / 4%) !important;
+      }
+
+      td {
+        padding: 0.75rem 1rem !important;
+        vertical-align: middle;
+        font-size: 0.865rem;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+      }
+    }
+  }
+}
+
+.ngx-datatable,
+.ngx-datatable.material {
+  box-shadow: none !important;
+  width: 100% !important;
+  background: #ffffff;
+  font-family: inherit;
+
+  .datatable-header {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid var(--erp-rule, #e2e8f0) !important;
+
+    .datatable-header-inner {
+      align-items: center;
+    }
+
+    .datatable-header-cell {
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.04em !important;
+      color: #475569 !important;
+      padding: 0.75rem 1rem !important;
+      display: flex !important;
+      align-items: center !important;
+      min-height: 44px;
+      border-right: 1px solid rgba(226, 232, 240, 0.7);
+      box-sizing: border-box !important;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      &.text-end {
+        justify-content: flex-end !important;
+        text-align: right !important;
+
+        .datatable-header-cell-wrapper,
+        .datatable-header-cell-template-wrap {
+          justify-content: flex-end !important;
+          text-align: right !important;
+          width: 100%;
+          display: flex !important;
+          align-items: center !important;
+        }
+      }
+
+      &.text-center {
+        justify-content: center !important;
+        text-align: center !important;
+
+        .datatable-header-cell-wrapper,
+        .datatable-header-cell-template-wrap {
+          justify-content: center !important;
+          text-align: center !important;
+          width: 100%;
+          display: flex !important;
+          align-items: center !important;
+        }
+      }
+
+      .sort-btn {
+        opacity: 0.5;
+        margin-left: 4px;
+        transition: opacity 0.15s ease;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .datatable-body {
+    background: #ffffff;
+
+    .datatable-body-row {
+      border-bottom: 1px solid #f1f5f9 !important;
+      transition: background-color 0.15s ease;
+
+      &:nth-child(even) {
+        background-color: #fafbfc;
+      }
+
+      &:hover {
+        background-color: rgb(var(--erp-accent-rgb) / 4%) !important;
+      }
+
+      &.active {
+        background-color: rgb(var(--erp-accent-rgb) / 8%) !important;
+        border-left: 3px solid var(--erp-accent) !important;
+      }
+
+      .datatable-body-cell {
+        padding: 0.65rem 1rem !important;
+        font-size: 0.865rem !important;
+        color: #1e293b !important;
+        display: flex !important;
+        align-items: center !important;
+        min-height: 48px;
+        border-right: 1px solid rgba(0, 0, 0, 0.02);
+        box-sizing: border-box !important;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        &.text-end {
+          justify-content: flex-end !important;
+          text-align: right !important;
+        }
+
+        &.text-center {
+          justify-content: center !important;
+          text-align: center !important;
+        }
+
+        a.erp-record-link,
+        a.erp-code-link {
+          color: var(--erp-accent) !important;
+          font-weight: 600 !important;
+          text-decoration: none !important;
+
+          &:hover {
+            text-decoration: underline !important;
+          }
+        }
+      }
+    }
+  }
+
+  a.erp-code-link,
+  a.erp-record-link {
+    color: var(--erp-accent, #005a9e);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--erp-accent-hover, #004578);
+      text-decoration: underline;
+    }
+  }
+
+  .datatable-footer {
+    background: #f8fafc !important;
+    border-top: 1px solid var(--erp-rule, #e2e8f0) !important;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 0.6rem 1rem !important;
+
+    .datatable-footer-inner {
+      height: auto !important;
+      min-height: 40px;
+      align-items: center;
+    }
+
+    .page-count {
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .datatable-pager {
+      li {
+        margin: 0 2px;
+
+        a {
+          border-radius: 6px;
+          color: #475569;
+          transition: all 0.15s ease;
+          padding: 4px 8px;
+
+          &:hover {
+            background: rgb(var(--erp-accent-rgb) / 10%);
+            color: var(--erp-accent);
+          }
+        }
+
+        &.active a {
+          background-color: var(--erp-accent) !important;
+          color: var(--erp-on-accent) !important;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+.erp-clickable-rows .datatable-body-row {
+  cursor: pointer;
+}
+
+.erp-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    transform: scale(1.08);
+  }
+}
+
+.erp-action-hover {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+  }
+}
+
+/* --- 5. Card Format / Tile View (Odoo & BC Cards) --- */
+.erp-card-grid {
+  margin-top: 0.25rem;
+}
+
+.erp-record-card {
+  border: 1px solid var(--erp-rule) !important;
+  border-radius: var(--erp-radius) !important;
+  background-color: #ffffff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+    border-color: rgb(var(--erp-accent-rgb) / 40%) !important;
+  }
+
+  &.erp-card--selected {
+    border: 2px solid var(--erp-accent) !important;
+    box-shadow: 0 0 0 3px rgb(var(--erp-accent-rgb) / 15%) !important;
+  }
+
+  .erp-record-card__details {
+    font-size: 0.825rem;
+  }
+
+  .erp-card-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border-color: var(--erp-rule);
+
+    &:hover {
+      background-color: rgb(var(--erp-accent-rgb) / 8%);
+      border-color: var(--erp-accent);
+      color: var(--erp-accent);
+    }
+  }
+}
+
+/* Colorful Avatars for Record Cards */
+.erp-record-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: -0.02em;
+}
+
+.erp-avatar--teal {
+  background-color: #ccfbf1;
+  color: #0f766e;
+}
+
+.erp-avatar--blue {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.erp-avatar--purple {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.erp-avatar--emerald {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.erp-avatar--amber {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.erp-avatar--rose {
+  background-color: #ffe4e6;
+  color: #be123c;
+}
+
+.erp-avatar--indigo {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+/* Card view pagination */
+.erp-card-pagination {
+  border: 1px solid var(--erp-rule) !important;
+  border-radius: var(--erp-radius) !important;
+  background-color: #ffffff;
+}
+
+/* Empty state container */
+.erp-empty-state {
+  border: 1px dashed var(--erp-rule) !important;
+  border-radius: var(--erp-radius) !important;
+  background-color: #ffffff;
+}
+
+/* --- 6. Soft Status Badges (Odoo / BC Style) --- */
+.badge.bg-success {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0;
+  font-weight: 500;
+}
+
+.badge.bg-warning {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a;
+  font-weight: 500;
+}
+
+.badge.bg-primary {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe;
+  font-weight: 500;
+}
+
+.badge.bg-secondary {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1;
+  font-weight: 500;
+}
+
+.badge.bg-danger {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca;
+  font-weight: 500;
+}
+
+.btn-xs {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+/* --- 7. Resizable & Draggable Modals (Business Central / Odoo Style) --- */
+
+.modal-dialog-resizable {
+  max-width: calc(100vw - 2rem) !important;
+  transition: width 0.12s ease-out, height 0.12s ease-out;
+
+  &.is-resizing,
+  &.is-dragging {
+    transition: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+
+  .modal-content-resizable {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 320px;
+    min-height: 200px;
+    height: 100% !important;
+    overflow: visible !important;
+    border-radius: var(--erp-radius, 8px) !important;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.2), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .modal-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    min-height: 80px;
+  }
+
+  .modal-header-draggable {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+
+    button,
+    input,
+    select,
+    textarea,
+    a,
+    .btn-close,
+    .erp-modal-maximize-btn {
+      cursor: pointer;
+    }
+  }
+
+  &.modal-is-maximized {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border-radius: 0;
+
+    .modal-content-resizable {
+      border-radius: 6px !important;
+    }
+
+    .modal-header-draggable {
+      cursor: default;
+    }
+
+    .modal-resize-handle {
+      display: none !important;
+    }
+  }
+}
+
+/* Modal Resize Handles */
+.modal-resize-handle {
+  position: absolute;
+  z-index: 1060;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Corner SE (Bottom-Right) */
+.modal-resize-handle--se {
+  right: 2px;
+  bottom: 2px;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--erp-ink-muted, #94a3b8);
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+    color: var(--erp-accent, #017e84);
+    transform: scale(1.15);
+  }
+
+  .modal-resize-grip-icon {
+    width: 11px;
+    height: 11px;
+    pointer-events: none;
+  }
+}
+
+/* Right Border (E) */
+.modal-resize-handle--e {
+  top: 10px;
+  right: -5px;
+  width: 10px;
+  height: calc(100% - 20px);
+  cursor: ew-resize;
+
+  &:hover {
+    background: linear-gradient(to right, transparent, rgba(1, 126, 132, 0.12));
+  }
+}
+
+/* Bottom Border (S) */
+.modal-resize-handle--s {
+  bottom: -5px;
+  left: 10px;
+  width: calc(100% - 20px);
+  height: 10px;
+  cursor: ns-resize;
+
+  &:hover {
+    background: linear-gradient(to bottom, transparent, rgba(1, 126, 132, 0.12));
+  }
+}
+
+/* Left Border (W) */
+.modal-resize-handle--w {
+  top: 10px;
+  left: -5px;
+  width: 10px;
+  height: calc(100% - 20px);
+  cursor: ew-resize;
+
+  &:hover {
+    background: linear-gradient(to left, transparent, rgba(1, 126, 132, 0.12));
+  }
+}
+
+/* Bottom-Left Corner (SW) */
+.modal-resize-handle--sw {
+  left: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nesw-resize;
+}
+
+/* Maximize and Minimize to Normal Size Buttons in Modal Header (Business Central style) */
+.erp-modal-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.45rem;
+  color: var(--erp-ink-muted, #64748b);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease-in-out;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: var(--erp-ink, #0f172a);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  svg {
+    display: block;
+    pointer-events: none;
+  }
+}
+
+.erp-modal-btn.erp-modal-maximize-btn {
+  margin-right: 0.35rem;
+
+  &.is-maximized {
+    color: var(--erp-accent, #017e84);
+    background-color: rgba(1, 126, 132, 0.08);
+
+    &:hover {
+      background-color: rgba(1, 126, 132, 0.16);
+      color: var(--erp-accent, #017e84);
+    }
+  }
+}
+
+.erp-modal-btn.erp-modal-restore-btn {
+  margin-right: 0.25rem;
+  color: var(--erp-accent, #017e84);
+
+  &:hover {
+    background-color: rgba(1, 126, 132, 0.12);
+  }
+}
+
+/* Global Drag & Resize Active Cursors */
+body.modal-is-resizing {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+
+  iframe {
+    pointer-events: none !important;
+  }
+}
+
+body.modal-is-resizing-se,
+body.modal-is-resizing-se * {
+  cursor: nwse-resize !important;
+}
+
+body.modal-is-resizing-e,
+body.modal-is-resizing-e * {
+  cursor: ew-resize !important;
+}
+
+body.modal-is-resizing-s,
+body.modal-is-resizing-s * {
+  cursor: ns-resize !important;
+}
+
+body.modal-is-resizing-w,
+body.modal-is-resizing-w * {
+  cursor: ew-resize !important;
+}
+
+body.modal-is-resizing-sw,
+body.modal-is-resizing-sw * {
+  cursor: nesw-resize !important;
+}
+
+body.modal-is-dragging,
+body.modal-is-dragging * {
+  cursor: move !important;
+}
+
+/* --- 8. Mobile Table Responsiveness --- */
+@media (max-width: 767.98px) {
+  /* Eliminate padding around tables in cards to maximize touch screen estate */
+  .card:has(ngx-datatable),
+  .card:has(.ngx-datatable),
+  .card.erp-table-card {
+    border-radius: var(--erp-radius-sm, 6px);
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+    overflow: hidden;
+
+    .card-body {
+      padding: 0 !important;
+    }
+  }
+
+  /* Make ngx-datatable scroll horizontally with inertia on mobile */
+  .ngx-datatable.material {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin;
+
+    /* Enforce min-width so columns NEVER squish or collapse vertically */
+    .datatable-header,
+    .datatable-body {
+      min-width: 520px !important;
+    }
+
+    .datatable-scroll {
+      width: 100% !important;
+    }
+
+    /* Actions / First column */
+    .datatable-header-cell:first-child,
+    .datatable-body-cell:first-child {
+      min-width: 85px !important;
+      max-width: 110px !important;
+      justify-content: center !important;
+
+      .btn,
+      .dropdown-toggle {
+        padding: 0.25rem 0.6rem !important;
+        font-size: 0.8rem !important;
+      }
+    }
+
+    /* Cells have whitespace nowrap so text does not break into awkward vertical stacks */
+    .datatable-body-cell {
+      white-space: nowrap !important;
+      font-size: 0.825rem !important;
+      padding: 0.65rem 0.85rem !important;
+    }
+
+    .datatable-header-cell {
+      white-space: nowrap !important;
+      font-size: 0.725rem !important;
+      padding: 0.65rem 0.85rem !important;
+    }
+
+    /* Responsive footer pagination on mobile */
+    .datatable-footer {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.5rem !important;
+      padding: 0.65rem 0.85rem !important;
+      min-width: 100% !important;
+
+      .page-count {
+        margin: 0 !important;
+        text-align: center !important;
+        font-size: 0.75rem !important;
+      }
+
+      .datatable-pager {
+        margin: 0 !important;
+
+        .pager {
+          display: flex !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          flex-wrap: wrap !important;
+          gap: 3px !important;
+
+          li a {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.75rem !important;
+          }
+        }
+      }
+    }
+  }
+
+  /* Standard HTML/Bootstrap tables */
+  .table-responsive,
+  table.table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}
+
+/* --- 9. Mobile Off-Canvas Sidenav --- */
+@media (max-width: 991.98px) {
+  #main-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    height: 3.5rem !important;
+    min-height: 3.5rem !important;
+    max-height: 3.5rem !important;
+    padding: 0 0.85rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+
+    .container {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      flex-wrap: nowrap !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+    }
+
+    .navbar-brand {
+      margin: 0 !important;
+      font-size: 1.15rem !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .navbar-toggler {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      border-radius: 6px;
+      background: transparent;
+      outline: none !important;
+      box-shadow: none !important;
+
+      .navbar-toggler-icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    /* Backdrop overlay when sidenav is open */
+    .navbar-toggler[aria-expanded='true']::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 1045;
+      cursor: pointer;
+      animation: erpFadeIn 0.25s ease forwards;
+    }
+
+    /* Sidenav Drawer */
+    #main-navbar-collapse {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      width: 305px !important;
+      max-width: 82vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      z-index: 1050 !important;
+      background: #ffffff !important;
+      color: #1e293b !important;
+      box-shadow: 8px 0 36px rgba(15, 23, 42, 0.28) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 0 !important;
+      transform: translateX(-100%) !important;
+      transition: transform 0.28s cubic-bezier(0.25, 0.8, 0.25, 1), visibility 0.28s !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+
+      /* When OPEN */
+      &:has(.abp-collapse-margin:not(.abp-collapse-margin-collapsed)),
+      &.show,
+      &.open {
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+      }
+    }
+
+    .navbar-toggler[aria-expanded='true'] ~ #main-navbar-collapse {
+      transform: translateX(0) !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+  }
+
+  /* Drawer Header */
+  .erp-mobile-sidenav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid var(--erp-rule, #e2e8f0);
+    background: #f8fafc;
+
+    .erp-mobile-sidenav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+
+      .erp-mobile-sidenav-logo-badge {
+        width: 30px;
+        height: 30px;
+        background: var(--erp-primary, #714b67);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .erp-mobile-sidenav-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--erp-ink, #1e293b);
+        letter-spacing: -0.01em;
+      }
+    }
+
+    .erp-mobile-sidenav-close {
+      border: none;
+      background: transparent;
+      color: #64748b;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+    }
+  }
+
+  /* Drawer Navigation Links & Items */
+  #main-navbar-collapse {
+    .abp-collapse-margin {
+      padding: 0.75rem 0.5rem 1.5rem !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 0.25rem !important;
+    }
+
+    .navbar-nav {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 0.2rem !important;
+      margin: 0 !important;
+
+      .nav-item {
+        width: 100% !important;
+
+        .nav-link {
+          color: #334155 !important;
+          padding: 0.65rem 0.85rem !important;
+          border-radius: 6px !important;
+          font-size: 0.925rem !important;
+          font-weight: 500 !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 0.65rem !important;
+          transition: background-color 0.15s ease, color 0.15s ease !important;
+
+          &:hover {
+            background-color: #f1f5f9 !important;
+            color: var(--erp-accent, #017e84) !important;
+          }
+
+          &.active {
+            background-color: rgb(var(--erp-accent-rgb, 1 126 132) / 10%) !important;
+            color: var(--erp-accent, #017e84) !important;
+            font-weight: 600 !important;
+          }
+        }
+
+        /* Inline accordion for dropdowns inside mobile sidenav */
+        .dropdown-menu {
+          position: static !important;
+          float: none !important;
+          width: 100% !important;
+          box-shadow: none !important;
+          border: 1px solid #e2e8f0 !important;
+          background: #f8fafc !important;
+          border-radius: 6px !important;
+          margin: 0.25rem 0 0.5rem !important;
+          padding: 0.35rem !important;
+
+          .dropdown-item {
+            color: #475569 !important;
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important;
+            border-radius: 4px !important;
+
+            &:hover {
+              background-color: #e2e8f0 !important;
+              color: #0f172a !important;
+            }
+
+            &.active {
+              background-color: var(--erp-accent, #017e84) !important;
+              color: #ffffff !important;
+            }
+          }
+        }
+      }
+    }
+
+    /* Search & Company tools inside Sidenav */
+    #main-navbar-tools,
+    app-company-menu {
+      width: 100% !important;
+      margin: 0.5rem 0 !important;
+
+      .btn,
+      .dropdown-toggle {
+        width: 100% !important;
+        justify-content: space-between !important;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 0.55rem 0.85rem !important;
+        border-radius: 6px !important;
+        font-size: 0.875rem !important;
+      }
+    }
+  }
+}
+
+@keyframes erpFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+

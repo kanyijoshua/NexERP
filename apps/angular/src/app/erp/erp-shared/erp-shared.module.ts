@@ -22,6 +22,12 @@ import { ErpAmountPipe } from './pipes/erp-amount.pipe';
 import { ReportPageComponent } from './report-page/report-page.component';
 import { SmartButtonsComponent } from './smart-buttons/smart-buttons.component';
 
+import { ErpCardComponent } from './card/erp-card.component';
+import { ErpFactBoxComponent } from './card/erp-factbox.component';
+import { ErpFastTabComponent } from './card/erp-fasttab.component';
+import { ErpTableActionsDirective, ErpTableCardDirective, ErpTableColDirective } from './table/erp-table-col.directive';
+import { ErpTableComponent } from './table/erp-table.component';
+
 const DECLARATIONS = [
   // On every ERP page, so every lazy ERP module needs it.
   CompanySwitcherComponent,
@@ -37,6 +43,13 @@ const DECLARATIONS = [
   RecordFormComponent,
   RecordCardDialogComponent,
   RecordListDialogComponent,
+  ErpTableComponent,
+  ErpTableColDirective,
+  ErpTableActionsDirective,
+  ErpTableCardDirective,
+  ErpCardComponent,
+  ErpFastTabComponent,
+  ErpFactBoxComponent,
   ErpAmountPipe,
 ];
 

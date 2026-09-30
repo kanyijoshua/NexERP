@@ -1,5 +1,6 @@
 using System;
 using ABPmicroservice.Erp.Documents;
+using ABPmicroservice.Erp.Finance;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 
@@ -33,6 +34,22 @@ public class SalesLine : Entity<Guid>
     public decimal LineAmountIncludingVat { get; private set; }
 
     public string UnitOfMeasureCode { get; private set; }
+
+    public string VatBusPostingGroup { get; private set; }
+
+    public string VatProdPostingGroup { get; private set; }
+
+    public VatCalculationType VatCalculationType { get; private set; }
+
+    public string VatIdentifier { get; private set; }
+
+    public decimal VatPercent { get; private set; }
+
+    /// <summary>The amount VAT is calculated on; zero for Full VAT.</summary>
+    public decimal VatBaseAmount { get; private set; }
+
+    /// <summary>The VAT of the line, also for reverse charge where the party does not pay it.</summary>
+    public decimal VatAmount { get; private set; }
 
     protected SalesLine() { }
 
@@ -75,12 +92,27 @@ public class SalesLine : Entity<Guid>
         RecalculateAmounts();
     }
 
+    /// <summary>Takes the rate and groups of a VAT Posting Setup, or none with a null setup.</summary>
+    public void SetVat(VatPostingSetup setup)
+    {
+        VatBusPostingGroup = setup?.VatBusPostingGroup;
+        VatProdPostingGroup = setup?.VatProdPostingGroup;
+        VatCalculationType = setup?.VatCalculationType ?? VatCalculationType.NormalVat;
+        VatIdentifier = setup?.VatIdentifier;
+        VatPercent = setup?.VatPercent ?? 0m;
+        RecalculateAmounts();
+    }
+
     private void RecalculateAmounts()
     {
         var gross = Quantity * UnitPrice;
         var discount = gross * (LineDiscountPercent / 100m);
         LineAmount = Math.Round(gross - discount, 2, MidpointRounding.AwayFromZero);
-        // VAT calculation is intentionally out of scope; equals line amount.
-        LineAmountIncludingVat = LineAmount;
+
+        // Without a VAT setup the rate is zero, which is the same as no VAT.
+        var vat = LineVat.Calculate(LineAmount, VatCalculationType, VatPercent);
+        VatBaseAmount = vat.Base;
+        VatAmount = vat.Amount;
+        LineAmountIncludingVat = vat.AmountIncludingVat;
     }
 }

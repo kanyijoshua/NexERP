@@ -1,5 +1,6 @@
 import { CoreModule, provideAbpCore, withOptions } from '@abp/ng.core';
 import { provideAbpOAuth } from '@abp/ng.oauth';
+import { OAuthStorage } from 'angular-oauth2-oidc';
 import { provideSettingManagementConfig } from '@abp/ng.setting-management/config';
 import { provideFeatureManagementConfig } from '@abp/ng.feature-management';
 import { ThemeSharedModule, provideAbpThemeShared } from '@abp/ng.theme.shared';
@@ -17,6 +18,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { APP_ROUTE_PROVIDER } from './route.provider';
 import { CompanyInterceptor } from './erp/services/company.interceptor';
+
+export function oAuthStorageFactory(): OAuthStorage {
+  return typeof window !== 'undefined' && window.localStorage
+    ? window.localStorage
+    : (new Map() as any);
+}
 
 @NgModule({
   declarations: [AppComponent],
@@ -41,6 +48,12 @@ import { CompanyInterceptor } from './erp/services/company.interceptor';
       })
     ),
     provideAbpOAuth(),
+    // Use persistent browser localStorage instead of MemoryTokenStorageService so that
+    // auth tokens and user sessions are retained synchronously across page reloads (F5).
+    {
+      provide: OAuthStorage,
+      useFactory: oAuthStorageFactory,
+    },
     provideIdentityConfig(),
     provideSettingManagementConfig(),
     provideFeatureManagementConfig(),

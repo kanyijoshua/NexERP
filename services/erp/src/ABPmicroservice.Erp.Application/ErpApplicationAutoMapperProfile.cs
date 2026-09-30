@@ -1,8 +1,10 @@
+using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
@@ -64,6 +66,59 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<SalesReceivablesSetup, SalesReceivablesSetupDto>();
         CreateMap<PurchasesPayablesSetup, PurchasesPayablesSetupDto>();
 
+        // Posting groups and setups
+        CreateMap<GenBusinessPostingGroup, PostingGroupDto>();
+        CreateMap<GenProductPostingGroup, PostingGroupDto>();
+        CreateMap<InventoryPostingGroup, PostingGroupDto>();
+        CreateMap<CustomerPostingGroup, CustomerPostingGroupDto>();
+        CreateMap<VendorPostingGroup, VendorPostingGroupDto>();
+        CreateMap<GeneralPostingSetup, GeneralPostingSetupDto>();
+        CreateMap<InventoryPostingSetup, InventoryPostingSetupDto>();
+        CreateMap<GeneralLedgerSetup, GeneralLedgerSetupDto>();
+        CreateMap<VatBusinessPostingGroup, PostingGroupDto>();
+        CreateMap<VatProductPostingGroup, PostingGroupDto>();
+        CreateMap<VatPostingSetup, VatPostingSetupDto>();
+        CreateMap<VatEntry, VatEntryDto>();
+        CreateMap<VatReturnLine, VatReturnLineDto>();
+        CreateMap<VatReturnResult, VatReturnDto>();
+        CreateMap<VatSettlementLine, VatSettlementLineDto>();
+        CreateMap<VatSettlementResult, VatSettlementDto>();
+        CreateMap<ExchRateAdjustmentLine, ExchRateAdjustmentLineDto>();
+        CreateMap<ExchRateAdjustmentResult, ExchRateAdjustmentDto>();
+        CreateMap<ExchRateAdjmtRegister, ExchRateAdjmtRegisterDto>();
+        CreateMap<CustomerLedgerEntry, PartyLedgerEntryDto>().ForMember(d => d.PartyNo, o => o.MapFrom(s => s.CustomerNo));
+        CreateMap<VendorLedgerEntry, PartyLedgerEntryDto>().ForMember(d => d.PartyNo, o => o.MapFrom(s => s.VendorNo));
+
+        // Finance setup
+        CreateMap<PaymentTerms, PaymentTermsDto>();
+        CreateMap<Currency, CurrencyDto>();
+        CreateMap<CurrencyExchangeRate, CurrencyExchangeRateDto>();
+        CreateMap<AccountingPeriod, AccountingPeriodDto>();
+
+        // Cash management
+        CreateMap<BankAccountPostingGroup, BankAccountPostingGroupDto>();
+        CreateMap<BankAccount, BankAccountDto>();
+        CreateMap<BankAccountLedgerEntry, BankAccountLedgerEntryDto>();
+        CreateMap<PaymentMethod, PaymentMethodDto>();
+
+        // Inventory and sales setup
+        CreateMap<Location, LocationDto>();
+        CreateMap<InventorySetup, InventorySetupDto>();
+        CreateMap<SalespersonPurchaser, SalespersonPurchaserDto>();
+
+        // Human resources
+        CreateMap<HumanResourcesSetup, HumanResourcesSetupDto>();
+        CreateMap<HumanResourceUnitOfMeasure, HumanResourceUnitOfMeasureDto>();
+        CreateMap<EmployeePostingGroup, EmployeePostingGroupDto>();
+        CreateMap<CauseOfAbsence, CauseOfAbsenceDto>();
+        CreateMap<Qualification, CodeTableDto>();
+        CreateMap<Union, CodeTableDto>();
+        CreateMap<EmploymentContract, CodeTableDto>();
+        CreateMap<GroundsForTermination, CodeTableDto>();
+        CreateMap<Employee, EmployeeDto>();
+        CreateMap<EmployeeLedgerEntry, EmployeeLedgerEntryDto>();
+        CreateMap<EmployeeAbsence, EmployeeAbsenceDto>();
+
         // Dimensions
         CreateMap<Dimension, DimensionDto>();
         CreateMap<DimensionValue, DimensionValueDto>();
@@ -90,7 +145,10 @@ public class ErpApplicationAutoMapperProfile : Profile
         // Exporting and integration
         CreateMap<ExportTemplate, ExportTemplateDto>().ForMember(d => d.Fields, o => o.MapFrom(s => s.GetFields()));
         // The URL is built by the service, which knows the route; the secret is shown only once.
-        CreateMap<PublishedWebService, PublishedWebServiceDto>().ForMember(d => d.Url, o => o.Ignore());
+        CreateMap<PublishedWebService, PublishedWebServiceDto>()
+            .ForMember(d => d.Url, o => o.Ignore())
+            .ForMember(d => d.RequestBody, o => o.Ignore())
+            .ForMember(d => d.FieldsUrl, o => o.Ignore());
         CreateMap<WebhookSubscription, WebhookSubscriptionDto>().ForMember(d => d.Secret, o => o.Ignore());
         CreateMap<WebhookDelivery, WebhookDeliveryDto>();
 

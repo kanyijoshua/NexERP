@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
+using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using ABPmicroservice.Erp.Workflows;
@@ -15,7 +18,7 @@ namespace ABPmicroservice.Erp.Sales;
 
 [Authorize(ErpPermissions.SalesDocuments.Default)]
 public class SalesDocumentAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         SalesHeader,
         SalesHeaderDto,
         Guid,
@@ -79,8 +82,9 @@ public class SalesDocumentAppService
             input.PostingDate
         );
 
-        ApplyHeader(header, input);
+        await ApplyHeaderAsync(header, input, customer);
         ReplaceLines(header, input);
+        await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, customer);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -98,8 +102,10 @@ public class SalesDocumentAppService
             throw new DocumentNotOpenException(header.No);
         }
 
-        ApplyHeader(header, input);
+        var customer = await _customerRepository.GetAsync(header.CustomerId);
+        await ApplyHeaderAsync(header, input, customer);
         ReplaceLines(header, input);
+        await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, customer);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -129,6 +135,7 @@ public class SalesDocumentAppService
 
         // With an approval workflow in force, only a completed approval releases the document.
         await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, header);
+        await EnsureWithinCreditLimitAsync(header);
 
         header.Release();
         await Repository.UpdateAsync(header, autoSave: true);
@@ -157,7 +164,12 @@ public class SalesDocumentAppService
     public async Task<SalesHeaderDto> RunPostingAsync(Guid id)
     {
         // Posting releases an open document first, so the same approval rule applies.
-        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, await GetEntityByIdAsync(id));
+        var toPost = await GetEntityByIdAsync(id);
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, toPost);
+        if (toPost.Status == DocumentStatus.Open)
+        {
+            await EnsureWithinCreditLimitAsync(toPost);
+        }
 
         await _salesPostingEngine.PostAsync(id);
         return await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id));
@@ -225,12 +237,54 @@ public class SalesDocumentAppService
         return customer;
     }
 
-    private static void ApplyHeader(SalesHeader header, CreateUpdateSalesHeaderDto input)
+    /// <summary>
+    /// The header fields; payment terms and currency default to the customer's, and a blank due
+    /// date follows from the payment terms, as BC fills them in from the customer.
+    /// </summary>
+    private async Task ApplyHeaderAsync(SalesHeader header, CreateUpdateSalesHeaderDto input, Customer customer)
     {
-        header.SetDates(input.PostingDate, input.DueDate);
-        header.SetCurrency(input.CurrencyCode);
-        header.SetPaymentTerms(input.PaymentTermsCode);
+        var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+        await codes.EnsureExistsAsync<PaymentTerms>(input.PaymentTermsCode);
+        await codes.EnsureExistsAsync<Currency>(input.CurrencyCode);
+        await codes.EnsureExistsAsync<Location>(input.LocationCode);
+
+        var paymentTermsCode = CodeTableEntity.NormalizeCode(input.PaymentTermsCode) ?? customer.PaymentTermsCode;
+        var dueDate = input.DueDate
+            ?? await LazyServiceProvider.LazyGetRequiredService<PaymentTermsManager>().CalculateDueDateAsync(paymentTermsCode, input.PostingDate);
+
+        header.SetDates(input.PostingDate, dueDate);
+        header.SetCurrency(CodeTableEntity.NormalizeCode(input.CurrencyCode) ?? customer.CurrencyCode);
+        header.SetPaymentTerms(paymentTermsCode);
+        header.SetLocation(input.LocationCode);
         header.SetExternalDocumentNo(input.ExternalDocumentNo);
+    }
+
+    /// <summary>
+    /// BC's credit limit check on release: a customer with a credit limit may not be sold more than
+    /// the limit allows. A credit limit of zero means no limit.
+    /// </summary>
+    private async Task EnsureWithinCreditLimitAsync(SalesHeader header)
+    {
+        if (header.DocumentType == SalesDocumentType.CreditMemo)
+        {
+            return;
+        }
+
+        var setup = await _setupManager.GetAsync();
+        if (setup.CreditWarnings is not (CreditWarnings.BothWarnings or CreditWarnings.CreditLimit))
+        {
+            return;
+        }
+
+        var customer = await _customerRepository.GetAsync(header.CustomerId);
+        var exposure = customer.Balance + header.TotalAmountIncludingVat;
+        if (customer.CreditLimit > 0 && exposure > customer.CreditLimit)
+        {
+            throw new BusinessException(ErpErrorCodes.Sales.CreditLimitExceeded)
+                .WithData("customerNo", customer.No)
+                .WithData("creditLimit", customer.CreditLimit.ToString("N2"))
+                .WithData("exposure", exposure.ToString("N2"));
+        }
     }
 
     // The client always sends the whole document, so the line set is replaced wholesale.

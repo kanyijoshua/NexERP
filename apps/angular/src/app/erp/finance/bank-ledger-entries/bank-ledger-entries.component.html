@@ -1,0 +1,29 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="fas fa-building-columns text-primary me-2"></i>{{ 'Erp::BankAccountLedgerEntries' | abpLocalization }}
+    @if (bankAccountNo) {
+      <span class="badge bg-light text-secondary border fw-normal ms-2">
+        {{ bankAccountNo }}
+        <button type="button" class="btn-close btn-close-sm ms-1 align-middle" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="showAll()"></button>
+      </span>
+    }
+  </h4>
+</div>
+
+<erp-table tableId="bank-ledger-entries" [source]="source" [columns]="columns" [clickableRows]="false">
+  <ng-template erpTableCol="entryNo" let-value="value">
+    <span class="font-monospace small">{{ value }}</span>
+  </ng-template>
+  <ng-template erpTableCol="open" let-value="value">
+    @if (value) {
+      <i class="fas fa-circle text-success small" [attr.aria-label]="'Erp::Open' | abpLocalization"></i>
+    }
+  </ng-template>
+  <ng-template erpTableCol="reversed" let-value="value">
+    @if (value) {
+      <i class="fas fa-undo text-muted" [attr.aria-label]="'Erp::Reversed' | abpLocalization"></i>
+    }
+  </ng-template>
+</erp-table>

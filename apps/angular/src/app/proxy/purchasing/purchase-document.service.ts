@@ -48,7 +48,7 @@ export class PurchaseDocumentService {
     this.restService.request<any, PagedResultDto<PurchaseHeaderDto>>({
       method: 'GET',
       url: '/api/erp/purchase-document',
-      params: { filter: input.filter, documentType: input.documentType, status: input.status, vendorId: input.vendorId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, documentType: input.documentType, status: input.status, vendorId: input.vendorId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

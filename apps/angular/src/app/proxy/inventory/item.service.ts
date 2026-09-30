@@ -56,7 +56,7 @@ export class ItemService {
     this.restService.request<any, PagedResultDto<ItemDto>>({
       method: 'GET',
       url: '/api/erp/item',
-      params: { filter: input.filter, type: input.type, itemCategoryId: input.itemCategoryId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, type: input.type, itemCategoryId: input.itemCategoryId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

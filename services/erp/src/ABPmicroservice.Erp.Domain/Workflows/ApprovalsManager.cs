@@ -56,11 +56,18 @@ public class ApprovalsManager : DomainService
     /// The enabled workflow that applies to a document of this kind and amount, or null.
     /// With several, the one with the highest threshold still met wins.
     /// </summary>
-    public async Task<Workflow> FindWorkflowAsync(ApprovalDocumentKind kind, decimal amount)
+    public async Task<Workflow> FindWorkflowAsync(ApprovalDocumentKind kind, decimal amount, IApprovalDocument document = null)
     {
-        var workflows = await _workflowRepository.GetListAsync(w => w.Enabled && w.DocumentKind == kind);
+        var workflows = await _workflowRepository.GetListAsync(w => w.Enabled && w.DocumentKind == kind, includeDetails: true);
 
-        return workflows.Where(w => w.MinimumAmount <= amount).OrderByDescending(w => w.MinimumAmount).FirstOrDefault();
+        var matching = workflows.Where(w => w.MinimumAmount <= amount);
+
+        if (document != null)
+        {
+            matching = matching.Where(w => MatchesConditions(w, document));
+        }
+
+        return matching.OrderByDescending(w => w.MinimumAmount).FirstOrDefault();
     }
 
     /// <summary>
@@ -73,7 +80,7 @@ public class ApprovalsManager : DomainService
             throw new BusinessException(ErpErrorCodes.Approvals.PendingApproval).WithData("documentNo", document.No);
         }
 
-        if (document.Status == DocumentStatus.Open && await FindWorkflowAsync(kind, document.ApprovalAmount) != null)
+        if (document.Status == DocumentStatus.Open && await FindWorkflowAsync(kind, document.ApprovalAmount, document) != null)
         {
             throw new BusinessException(ErpErrorCodes.Approvals.ApprovalRequired).WithData("documentNo", document.No);
         }
@@ -99,7 +106,7 @@ public class ApprovalsManager : DomainService
         }
 
         var amount = document.ApprovalAmount;
-        var workflow = await FindWorkflowAsync(kind, amount);
+        var workflow = await FindWorkflowAsync(kind, amount, document);
         if (workflow == null)
         {
             throw new BusinessException(ErpErrorCodes.Approvals.NoWorkflowApplies).WithData("documentNo", document.No);
@@ -378,5 +385,144 @@ public class ApprovalsManager : DomainService
             document.Status.ToString(),
             description
         ));
+    }
+
+    private static bool MatchesConditions(Workflow workflow, IApprovalDocument document)
+    {
+        if (workflow.Steps == null || workflow.Steps.Count == 0)
+        {
+            return true;
+        }
+
+        var triggerStep = workflow.Steps.FirstOrDefault(s =>
+            s.EventName != null && s.EventName.Contains("requested", StringComparison.OrdinalIgnoreCase))
+            ?? workflow.Steps.FirstOrDefault();
+
+        if (triggerStep == null || string.IsNullOrWhiteSpace(triggerStep.ConditionRule) || triggerStep.ConditionRule.Equals("Always", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var rules = triggerStep.ConditionRule.Split(new[] { ';', '\n', '|' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var ruleRaw in rules)
+        {
+            var rule = ruleRaw.Trim();
+            if (string.IsNullOrWhiteSpace(rule) || rule.Equals("Always", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!EvaluateConditionRule(rule, document))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool EvaluateConditionRule(string rule, IApprovalDocument document)
+    {
+        string op = null;
+        string left = null;
+        string right = null;
+
+        var operators = new[] { ">=", "<=", "<>", "!=", ">", "<", "=", " contains " };
+        foreach (var candidate in operators)
+        {
+            var idx = rule.IndexOf(candidate, StringComparison.OrdinalIgnoreCase);
+            if (idx > 0)
+            {
+                op = candidate.Trim();
+                left = rule.Substring(0, idx).Trim();
+                right = rule.Substring(idx + candidate.Length).Trim();
+                break;
+            }
+        }
+
+        if (op == null || left == null || right == null)
+        {
+            return true;
+        }
+
+        left = left.Replace(" ", "").Replace("-", "").ToLowerInvariant();
+        right = right.Trim('\'', '"', ' ');
+
+        var purch = document as PurchaseHeader;
+        var sales = document as SalesHeader;
+
+        if (left.Contains("amount") && !left.Contains("vat"))
+        {
+            if (decimal.TryParse(right, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var targetAmount))
+            {
+                return CompareDecimals(document.ApprovalAmount, op, targetAmount);
+            }
+            return true;
+        }
+
+        if (left.Contains("amountincludingvat") || left.Contains("totalamountincludingvat") || (left.Contains("amount") && left.Contains("vat")))
+        {
+            var docAmountVat = purch?.TotalAmountIncludingVat ?? sales?.TotalAmountIncludingVat ?? document.ApprovalAmount;
+            if (decimal.TryParse(right, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var targetAmount))
+            {
+                return CompareDecimals(docAmountVat, op, targetAmount);
+            }
+            return true;
+        }
+
+        string docVal = null;
+        if (left.Contains("documenttype"))
+        {
+            docVal = purch != null ? purch.DocumentType.ToString() : sales?.DocumentType.ToString();
+        }
+        else if (left.Contains("vendor") || left.Contains("buyfromvendorno"))
+        {
+            docVal = purch?.BuyFromVendorNo ?? purch?.BuyFromVendorName;
+        }
+        else if (left.Contains("customer") || left.Contains("selltocustomerno"))
+        {
+            docVal = sales?.SellToCustomerNo ?? sales?.SellToCustomerName;
+        }
+        else if (left.Contains("currency"))
+        {
+            docVal = purch?.CurrencyCode ?? sales?.CurrencyCode ?? "";
+        }
+        else if (left.Contains("paymentterms"))
+        {
+            docVal = purch?.PaymentTermsCode ?? sales?.PaymentTermsCode ?? "";
+        }
+
+        if (docVal != null)
+        {
+            return CompareStrings(docVal, op, right);
+        }
+
+        return true;
+    }
+
+    private static bool CompareDecimals(decimal actual, string op, decimal target)
+    {
+        return op switch
+        {
+            ">=" => actual >= target,
+            "<=" => actual <= target,
+            ">" => actual > target,
+            "<" => actual < target,
+            "=" => actual == target,
+            "!=" or "<>" => actual != target,
+            _ => true
+        };
+    }
+
+    private static bool CompareStrings(string actual, string op, string target)
+    {
+        var eq = string.Equals(actual, target, StringComparison.OrdinalIgnoreCase);
+        return op switch
+        {
+            "=" => eq,
+            "!=" or "<>" => !eq,
+            "contains" => (actual ?? "").Contains(target, StringComparison.OrdinalIgnoreCase),
+            _ => eq
+        };
     }
 }

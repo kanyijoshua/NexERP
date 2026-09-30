@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -50,12 +51,26 @@ public class GLRegisterAppService : ErpAppService, IGLRegisterAppService
             queryable = queryable.Where(r => !r.Reversed && r.ReversedRegisterNo == 0);
         }
 
+        if (!input.Filter.IsNullOrWhiteSpace())
+        {
+            var term = input.Filter.Trim().ToLower();
+            queryable = queryable.Where(r =>
+                r.JournalBatchName.ToLower().Contains(term)
+                || r.SourceCode.ToLower().Contains(term)
+                || r.UserName.ToLower().Contains(term)
+            );
+        }
+
+        queryable = ErpListQuery.Filter(queryable, input, Clock.Now, null);
+
         var totalCount = await AsyncExecuter.CountAsync(queryable);
 
         // Newest first: the register someone wants to reverse is almost always the last one.
-        var registers = await AsyncExecuter.ToListAsync(
-            queryable.OrderByDescending(r => r.No).PageBy(input.SkipCount, input.MaxResultCount)
-        );
+        queryable = input.Sorting.IsNullOrWhiteSpace()
+            ? queryable.OrderByDescending(r => r.No)
+            : queryable.OrderBy(input.Sorting);
+
+        var registers = await AsyncExecuter.ToListAsync(queryable.PageBy(input.SkipCount, input.MaxResultCount));
 
         var dtos = ObjectMapper.Map<List<GLRegister>, List<GLRegisterDto>>(registers);
 

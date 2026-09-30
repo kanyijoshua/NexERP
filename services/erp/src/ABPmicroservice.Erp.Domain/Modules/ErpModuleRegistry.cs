@@ -79,6 +79,8 @@ public static class ErpModuleRegistry
     public const string RapidStart = "RapidStart";
     public const string Chatter = "Chatter";
     public const string Kanban = "Kanban";
+    public const string CashManagement = "CashManagement";
+    public const string HumanResources = "HumanResources";
 
     private static readonly List<ErpModuleDefinition> Definitions =
     [
@@ -102,6 +104,8 @@ public static class ErpModuleRegistry
         new(Sales, GroupOperations, "fas fa-file-invoice-dollar", "/erp/sales-invoices", false, [Finance], ["Sales"]),
         new(Purchasing, GroupOperations, "fas fa-truck", "/erp/purchase-invoices", false, [Finance], ["Purchasing"]),
         new(Inventory, GroupOperations, "fas fa-boxes-stacked", null, false, [Finance], ["Inventory"]),
+        new(CashManagement, GroupFinance, "fas fa-building-columns", "/erp/bank-accounts", false, [Finance], ["CashManagement"]),
+        new(HumanResources, GroupOperations, "fas fa-id-badge", "/erp/employees", false, [], ["HumanResources"]),
         new(Reporting, GroupFinance, "fas fa-chart-line", "/erp/reports/financial", false, [Finance], ["Reporting"]),
         new(Approvals, GroupCollaboration, "fas fa-user-check", "/erp/approvals", false, [], ["Workflows"]),
         new(Chatter, GroupCollaboration, "fas fa-comments", null, false, [], ["Chatter"]),

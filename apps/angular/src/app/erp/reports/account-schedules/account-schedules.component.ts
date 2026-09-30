@@ -13,7 +13,7 @@ import {
   CreateUpdateAccountScheduleDto,
 } from '@proxy/reporting';
 import { Observable, forkJoin, map } from 'rxjs';
-import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
+import { CrudListBase, DocumentLineColumn, ErpTableColumn } from '../../erp-shared';
 
 /**
  * Account schedules: the rows of a financial report, defined by the user rather than in code.
@@ -34,6 +34,14 @@ export class AccountSchedulesComponent
     { value: AccountScheduleTotalingType.TotalAccounts, label: 'Erp::TotalingTotalAccounts' },
     { value: AccountScheduleTotalingType.Formula, label: 'Erp::TotalingFormula' },
     { value: AccountScheduleTotalingType.Description, label: 'Erp::TotalingDescription' },
+  ];
+
+  // The service returns every schedule at once, so the grid searches and filters them in memory.
+  readonly columns: ErpTableColumn<AccountScheduleDto>[] = [
+    { field: 'name', labelKey: 'Erp::Code', width: 160 },
+    { field: 'description', labelKey: 'Erp::Description', width: 280 },
+    { field: 'defaultColumnLayoutName', labelKey: 'Erp::ColumnLayout', width: 180 },
+    { field: 'lineCount', labelKey: 'Erp::LineCount', type: 'number', width: 110 },
   ];
 
   readonly lineColumns: DocumentLineColumn[] = [

@@ -21,7 +21,7 @@
   </button>
 </erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm erp-table-card">
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-sm table-hover align-middle mb-0">
@@ -49,7 +49,7 @@
                   }
                   @default {
                     @if (link(line); as target) {
-                      <a [routerLink]="target.path" [queryParams]="target.queryParams">{{ line.name }}</a>
+                      <a [routerLink]="target.path" [queryParams]="target.queryParams" class="erp-code-link fw-semibold">{{ line.name }}</a>
                     } @else {
                       {{ line.name }}
                     }
@@ -73,58 +73,61 @@
                 @if (line.packageCode && packageIdOf(line.packageCode); as packageId) {
                   <a
                     [routerLink]="['/erp/rapid-start/packages', packageId]"
+                    class="erp-code-link font-monospace fw-semibold"
                     >
                     {{ line.packageCode }}
                   </a>
                 } @else {
-                  {{ line.packageCode }}
+                  <span class="font-monospace">{{ line.packageCode }}</span>
                 }
               </td>
-              <td class="text-end">{{ line.noOfRecords }}</td>
+              <td class="text-end font-monospace">{{ line.noOfRecords }}</td>
               <td class="small text-muted text-truncate" style="max-width: 240px" [title]="line.comments ?? ''">
                 {{ line.comments }}
               </td>
               <td class="text-end text-nowrap">
                 <ng-container *abpPermission="'Erp.RapidStart.Manage'">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary me-1"
-                    [disabled]="busy || isFirst(line)"
-                    [title]="'Erp::MoveUp' | abpLocalization"
-                    [attr.aria-label]="'Erp::MoveUp' | abpLocalization"
-                    (click)="move(line, true)"
-                    >
-                    <i class="fas fa-arrow-up"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary me-1"
-                    [disabled]="busy || isLast(line)"
-                    [title]="'Erp::MoveDown' | abpLocalization"
-                    [attr.aria-label]="'Erp::MoveDown' | abpLocalization"
-                    (click)="move(line, false)"
-                    >
-                    <i class="fas fa-arrow-down"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary me-1"
-                    [title]="'Erp::Edit' | abpLocalization"
-                    [attr.aria-label]="'Erp::Edit' | abpLocalization"
-                    (click)="openEdit(line)"
-                    >
-                    <i class="fas fa-pen"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    [disabled]="busy"
-                    [title]="'Erp::Delete' | abpLocalization"
-                    [attr.aria-label]="'Erp::Delete' | abpLocalization"
-                    (click)="remove(line)"
-                    >
-                    <i class="fas fa-trash"></i>
-                  </button>
+                  <div class="d-inline-flex align-items-center gap-1">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary erp-action-btn"
+                      [disabled]="busy || isFirst(line)"
+                      [title]="'Erp::MoveUp' | abpLocalization"
+                      [attr.aria-label]="'Erp::MoveUp' | abpLocalization"
+                      (click)="move(line, true)"
+                      >
+                      <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary erp-action-btn"
+                      [disabled]="busy || isLast(line)"
+                      [title]="'Erp::MoveDown' | abpLocalization"
+                      [attr.aria-label]="'Erp::MoveDown' | abpLocalization"
+                      (click)="move(line, false)"
+                      >
+                      <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary erp-action-btn"
+                      [title]="'Erp::Edit' | abpLocalization"
+                      [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                      (click)="openEdit(line)"
+                      >
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger erp-action-btn"
+                      [disabled]="busy"
+                      [title]="'Erp::Delete' | abpLocalization"
+                      [attr.aria-label]="'Erp::Delete' | abpLocalization"
+                      (click)="remove(line)"
+                      >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
                 </ng-container>
               </td>
             </tr>

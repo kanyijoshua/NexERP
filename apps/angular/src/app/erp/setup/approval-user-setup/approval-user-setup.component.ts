@@ -1,4 +1,3 @@
-import { ABP, ListService } from '@abp/ng.core';
 import { IdentityUserService } from '@abp/ng.identity/proxy';
 import { Component, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,9 +6,10 @@ import {
   ApprovalUserSetupDto,
   ApprovalUserSetupService,
   CreateUpdateApprovalUserSetupDto,
+  GetApprovalUserSetupListInput,
 } from '@proxy/workflows';
 import { Observable, map } from 'rxjs';
-import { CrudListBase, LookupItem } from '../../erp-shared';
+import { ErpTableColumn, ErpTableCrudBase, LookupItem } from '../../erp-shared';
 
 /**
  * Who approves whose requests, and up to what amount.
@@ -18,13 +18,24 @@ import { CrudListBase, LookupItem } from '../../erp-shared';
 @Component({
     selector: 'app-approval-user-setup',
     templateUrl: './approval-user-setup.component.html',
-    providers: [ListService],
     standalone: false
 })
 export class ApprovalUserSetupComponent
-  extends CrudListBase<ApprovalUserSetupDto, CreateUpdateApprovalUserSetupDto>
+  extends ErpTableCrudBase<ApprovalUserSetupDto, CreateUpdateApprovalUserSetupDto>
   implements OnInit
 {
+  override readonly columns: ErpTableColumn<ApprovalUserSetupDto>[] = [
+    { field: 'userName', labelKey: 'Erp::User', width: 190 },
+    // Names looked up after the query: shown, not filtered or sorted.
+    { field: 'approverUserName', labelKey: 'Erp::Approver', width: 150, sortable: false, filterable: false },
+    { field: 'substituteUserName', labelKey: 'Erp::Substitute', width: 150, sortable: false, filterable: false },
+    { field: 'salesAmountApprovalLimit', labelKey: 'Erp::SalesAmountApprovalLimit', type: 'currency', width: 180 },
+    { field: 'purchaseAmountApprovalLimit', labelKey: 'Erp::PurchaseAmountApprovalLimit', type: 'currency', width: 190 },
+    { field: 'isApprovalAdministrator', labelKey: 'Erp::Administrator', type: 'boolean', width: 130, visible: false },
+  ];
+
+  protected override permissionPrefix = 'Erp.ApprovalUserSetup';
+
   /** Approver and substitute are chosen among users that already have a row here. */
   allSetups: ApprovalUserSetupDto[] = [];
 
@@ -36,7 +47,7 @@ export class ApprovalUserSetupComponent
     super();
   }
 
-  protected getList = (query: ABP.PageQueryParams) => this.service.getList(query as never);
+  protected getList = (query: GetApprovalUserSetupListInput) => this.service.getList(query);
   protected create = (input: CreateUpdateApprovalUserSetupDto) => this.service.create(input);
   protected update = (id: string, input: CreateUpdateApprovalUserSetupDto) =>
     this.service.update(id, input);
@@ -58,10 +69,12 @@ export class ApprovalUserSetupComponent
 
   override ngOnInit(): void {
     super.ngOnInit();
-    // Refresh the approver choices whenever the list itself reloads.
-    this.list.query$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadAllSetups());
+    this.loadAllSetups();
+  }
+
+  /** A saved or deleted row changes the approver choices too. */
+  protected override refresh(): void {
+    super.refresh();
     this.loadAllSetups();
   }
 

@@ -1,0 +1,124 @@
+<app-company-switcher></app-company-switcher>
+
+<erp-page-toolbar
+  title="Erp::GeneralLedgerSetup"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-book"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::GeneralLedgerSetupHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-calendar-check text-primary me-2"></i>{{ 'Erp::PostingPeriod' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-allow-from">{{ 'Erp::AllowPostingFrom' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-allow-from" type="date" class="form-control form-control-sm" formControlName="allowPostingFrom" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-allow-to">{{ 'Erp::AllowPostingTo' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-allow-to" type="date" class="form-control form-control-sm" formControlName="allowPostingTo" />
+            </div>
+          </div>
+          <div class="form-text">{{ 'Erp::AllowedPostingDatesHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-coins text-primary me-2"></i>{{ 'Erp::General' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-lcy">{{ 'Erp::LcyCode' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-lcy" type="text" class="form-control form-control-sm text-uppercase" maxlength="10" formControlName="lcyCode" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-bank-nos">{{ 'Erp::BankAccountNos' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <select id="gl-bank-nos" class="form-select form-select-sm" formControlName="bankAccountNos">
+                <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+                @for (s of series(); track s.id) {
+                  <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-bullseye text-primary me-2"></i>{{ 'Erp::Rounding' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-amount-rounding">{{ 'Erp::AmountRoundingPrecision' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-amount-rounding" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="amountRoundingPrecision" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-unit-rounding">{{ 'Erp::UnitAmountRoundingPrecision' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-unit-rounding" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="unitAmountRoundingPrecision" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-inv-rounding">{{ 'Erp::InvRoundingPrecisionLcy' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-inv-rounding" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="invRoundingPrecisionLcy" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-cubes text-primary me-2"></i>{{ 'Erp::GlobalDimensions' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          @for (control of ['globalDimension1Code', 'globalDimension2Code']; track control; let i = $index) {
+            <div class="row align-items-center mb-2">
+              <label class="col-sm-5 col-form-label" [for]="'gl-' + control">
+                {{ (i === 0 ? 'Erp::GlobalDimension1Code' : 'Erp::GlobalDimension2Code') | abpLocalization }}
+              </label>
+              <div class="col-sm-7">
+                <select class="form-select form-select-sm" [id]="'gl-' + control" [formControlName]="control">
+                  <option [ngValue]="null">{{ 'Erp::None' | abpLocalization }}</option>
+                  @for (d of dimensions(); track d.id) {
+                    <option [ngValue]="d.code">{{ d.code }} — {{ d.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.GeneralLedgerSetup.Update'" class="text-end mt-3">
+    <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </div>
+</form>

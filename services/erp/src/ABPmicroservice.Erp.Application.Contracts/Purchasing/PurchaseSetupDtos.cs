@@ -27,6 +27,8 @@ public class PurchasesPayablesSetupDto
 
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
     public string PostedCreditMemoNos { get; set; }
+
+    public bool ExtDocNoMandatory { get; set; }
 }
 
 public interface IPurchaseSetupAppService : IApplicationService

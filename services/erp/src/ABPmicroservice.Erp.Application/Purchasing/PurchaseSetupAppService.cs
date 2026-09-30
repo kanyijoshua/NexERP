@@ -41,6 +41,7 @@ public class PurchaseSetupAppService : ErpAppService, IPurchaseSetupAppService
         setup.SetNumberSeries(
             input.VendorNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
             input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
+        setup.SetGeneral(input.ExtDocNoMandatory);
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<PurchasesPayablesSetup, PurchasesPayablesSetupDto>(setup);

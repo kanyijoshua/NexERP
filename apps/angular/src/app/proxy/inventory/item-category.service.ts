@@ -39,7 +39,7 @@ export class ItemCategoryService {
     this.restService.request<any, PagedResultDto<ItemCategoryDto>>({
       method: 'GET',
       url: '/api/erp/item-category',
-      params: { filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

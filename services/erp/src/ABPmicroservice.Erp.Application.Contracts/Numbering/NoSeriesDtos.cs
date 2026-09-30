@@ -79,7 +79,7 @@ public class NoSeriesLineInputDto
     public int IncrementByNo { get; set; } = 1;
 }
 
-public class GetNoSeriesListInput : PagedAndSortedResultRequestDto
+public class GetNoSeriesListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
 }

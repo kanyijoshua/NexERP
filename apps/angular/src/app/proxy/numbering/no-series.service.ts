@@ -39,7 +39,7 @@ export class NoSeriesService {
     this.restService.request<any, PagedResultDto<NoSeriesDto>>({
       method: 'GET',
       url: '/api/erp/no-series',
-      params: { filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

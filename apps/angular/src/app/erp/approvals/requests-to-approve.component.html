@@ -25,57 +25,43 @@
   </li>
 </ul>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::Document' | abpLocalization" prop="documentNo" [width]="150">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <a [routerLink]="documentRoute(row)" [queryParams]="{ id: row.documentId }" class="fw-bold">{{ row.documentNo }}</a>
-          <div class="small text-muted">{{ 'Erp::Enum:ApprovalDocumentKind.' + kindName(row) | abpLocalization }}</div>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Amount' | abpLocalization" prop="amount" [width]="120" headerClass="text-end" cellClass="text-end">
-        <ng-template let-value="value" ngx-datatable-cell-template>{{ value | erpAmount }}</ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Sender' | abpLocalization" prop="senderUserName" [width]="120"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Approver' | abpLocalization" prop="approverUserName" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ row.approverUserName }} <span class="text-muted small">#{{ row.sequenceNo }}</span>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Status' | abpLocalization" prop="status" [width]="110">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <span class="badge" [ngClass]="statusClass(row.status)">{{ 'Erp::Enum:ApprovalStatus.' + statusName(row.status) | abpLocalization }}</span>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::DueDate' | abpLocalization" prop="dueDate" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <span [class.text-danger]="isOverdue(row)" [class.fw-bold]="isOverdue(row)">{{ row.dueDate ? (row.dueDate | date: 'mediumDate') : '—' }}</span>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Comment' | abpLocalization" prop="comment" [sortable]="false" [width]="200">
-        <ng-template let-value="value" ngx-datatable-cell-template><span class="small">{{ value }}</span></ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="250">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          @if (row.canAct) {
-            <ng-container *abpPermission="'Erp.Workflows.Approve'">
-              <button type="button" class="btn btn-sm btn-success me-1" (click)="open('approve', row)">
-                <i class="fas fa-check me-1"></i>{{ 'Erp::Approve' | abpLocalization }}
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-danger me-1" (click)="open('reject', row)">
-                <i class="fas fa-times me-1"></i>{{ 'Erp::Reject' | abpLocalization }}
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" [title]="'Erp::DelegateHelp' | abpLocalization" (click)="delegate(row)">
-                <i class="fas fa-share me-1"></i>{{ 'Erp::Delegate' | abpLocalization }}
-              </button>
-            </ng-container>
-          }
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="requests-to-approve"
+  height="calc(100vh - 330px)"
+  [source]="source"
+  [columns]="columns"
+  [actionsWidth]="110"
+  [clickableRows]="false"
+>
+  <ng-template erpTableCol="documentNo" let-row="row">
+    <a [routerLink]="documentRoute(row)" [queryParams]="{ id: row.documentId }" class="fw-bold font-monospace text-primary text-decoration-none erp-record-link">{{ row.documentNo }}</a>
+  </ng-template>
+  <ng-template erpTableCol="approverUserName" let-row="row">
+    {{ row.approverUserName }} <span class="text-muted small">#{{ row.sequenceNo }}</span>
+  </ng-template>
+  <ng-template erpTableCol="dueDate" let-row="row">
+    <span [class.text-danger]="isOverdue(row)" [class.fw-bold]="isOverdue(row)">{{ row.dueDate ? (row.dueDate | date: 'mediumDate') : '—' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="comment" let-value="value">
+    <span class="small text-secondary">{{ value }}</span>
+  </ng-template>
+
+  <ng-template erpTableActions let-row="row">
+    @if (row.canAct) {
+      <div class="d-inline-flex align-items-center gap-1" *abpPermission="'Erp.Workflows.Approve'">
+        <button type="button" class="btn btn-sm btn-success erp-action-btn" [title]="'Erp::Approve' | abpLocalization" [attr.aria-label]="'Erp::Approve' | abpLocalization" (click)="open('approve', row)">
+          <i class="fas fa-check"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger erp-action-btn" [title]="'Erp::Reject' | abpLocalization" [attr.aria-label]="'Erp::Reject' | abpLocalization" (click)="open('reject', row)">
+          <i class="fas fa-times"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary erp-action-btn" [title]="'Erp::DelegateHelp' | abpLocalization" [attr.aria-label]="'Erp::Delegate' | abpLocalization" (click)="delegate(row)">
+          <i class="fas fa-share"></i>
+        </button>
+      </div>
+    }
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
   <ng-template #abpHeader>

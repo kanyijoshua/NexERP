@@ -20,8 +20,17 @@ public class PublishedWebServiceDto : EntityDto<Guid>
 
     public string ExcludedFields { get; set; }
 
-    /// <summary>Path other systems call, filled in by the service so the UI can show it.</summary>
+    /// <summary>
+    /// Path other systems POST their query to, with <see cref="RequestBody"/> naming this service.
+    /// Filled in by the service so the UI can show it; relative to the API host.
+    /// </summary>
     public string Url { get; set; }
+
+    /// <summary>The smallest body the query endpoint accepts for this service, as JSON.</summary>
+    public string RequestBody { get; set; }
+
+    /// <summary>Path that lists the columns this service returns (GET), relative to the API host.</summary>
+    public string FieldsUrl { get; set; }
 }
 
 public class CreateUpdateWebServiceDto

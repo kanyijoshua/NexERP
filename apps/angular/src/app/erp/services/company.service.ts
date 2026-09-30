@@ -46,6 +46,13 @@ export class CompanyService {
     return this.activeCompanyId$.getValue();
   }
 
+  getActiveCompanyName(): string {
+    const activeId = this.getActiveCompanyId();
+    const companies = this.companiesSubject.getValue();
+    const active = companies.find(c => c.id === activeId);
+    return active?.displayName || active?.name || 'NexERP';
+  }
+
   setActiveCompany(companyId: string): void {
     const changed = companyId !== this.activeCompanyId$.getValue();
     localStorage.setItem('active_company_id', companyId);

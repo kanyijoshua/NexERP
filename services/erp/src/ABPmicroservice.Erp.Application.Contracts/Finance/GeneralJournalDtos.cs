@@ -149,6 +149,32 @@ public class GenJournalLineDto : EntityDto<Guid>
     public string AppliesToDocNo { get; set; }
 
     public string Comment { get; set; }
+
+    public string CurrencyCode { get; set; }
+
+    public decimal CurrencyFactor { get; set; }
+
+    public decimal AmountLcy { get; set; }
+
+    public GeneralPostingType GenPostingType { get; set; }
+
+    public string VatBusPostingGroup { get; set; }
+
+    public string VatProdPostingGroup { get; set; }
+
+    public decimal VatAmount { get; set; }
+
+    public decimal VatBaseAmount { get; set; }
+
+    public GeneralPostingType BalGenPostingType { get; set; }
+
+    public string BalVatBusPostingGroup { get; set; }
+
+    public string BalVatProdPostingGroup { get; set; }
+
+    public decimal BalVatAmount { get; set; }
+
+    public decimal BalVatBaseAmount { get; set; }
 }
 
 public class CreateUpdateGenJournalLineDto
@@ -196,6 +222,31 @@ public class CreateUpdateGenJournalLineDto
 
     [StringLength(ErpDomainConsts.MaxCommentLength)]
     public string Comment { get; set; }
+
+    /// <summary>Blank for LCY. The rate is the one in force on the posting date.</summary>
+    [StringLength(ErpDomainConsts.MaxCurrencyCodeLength)]
+    public string CurrencyCode { get; set; }
+
+    /// <summary>
+    /// Null takes the posting type and VAT groups from the G/L account, as BC does when the
+    /// account is chosen; None or a type sets them from the fields below.
+    /// </summary>
+    public GeneralPostingType? GenPostingType { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxPostingGroupLength)]
+    public string VatBusPostingGroup { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxPostingGroupLength)]
+    public string VatProdPostingGroup { get; set; }
+
+    /// <summary>The same for the balancing account.</summary>
+    public GeneralPostingType? BalGenPostingType { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxPostingGroupLength)]
+    public string BalVatBusPostingGroup { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxPostingGroupLength)]
+    public string BalVatProdPostingGroup { get; set; }
 }
 
 public class GenJournalPostingResultDto
@@ -275,6 +326,10 @@ public class GLRegisterDto : EntityDto<Guid>
 
     public long ToEntryNo { get; set; }
 
+    public long FromEmployeeEntryNo { get; set; }
+
+    public long ToEmployeeEntryNo { get; set; }
+
     public bool Reversed { get; set; }
 
     public long ReversedByRegisterNo { get; set; }
@@ -284,8 +339,11 @@ public class GLRegisterDto : EntityDto<Guid>
     public bool IsReversible { get; set; }
 }
 
-public class GetGLRegistersInput : PagedAndSortedResultRequestDto
+public class GetGLRegistersInput : ErpPagedListInput
 {
+    /// <summary>Searches the batch, source code and user name.</summary>
+    public string Filter { get; set; }
+
     public DateTime? FromDate { get; set; }
 
     public DateTime? ToDate { get; set; }
@@ -313,6 +371,12 @@ public class ReversalResultDto
     public int CustomerEntryCount { get; set; }
 
     public int VendorEntryCount { get; set; }
+
+    public int BankEntryCount { get; set; }
+
+    public int VatEntryCount { get; set; }
+
+    public int EmployeeEntryCount { get; set; }
 }
 
 public class StandardJournalDto : EntityDto<Guid>

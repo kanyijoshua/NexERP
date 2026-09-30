@@ -12,6 +12,9 @@ public class GLAccountDto : FullAuditedEntityDto<Guid>
     public string Subcategory { get; set; }
     public IncomeBalanceType IncomeBalance { get; set; }
     public bool DirectPosting { get; set; }
+    public string VatProdPostingGroup { get; set; }
+    public GeneralPostingType GenPostingType { get; set; }
+    public string VatBusPostingGroup { get; set; }
     public bool Blocked { get; set; }
     public decimal NetChange { get; set; }
     public decimal Balance { get; set; }
@@ -26,9 +29,12 @@ public class CreateUpdateGLAccountDto
     public string Subcategory { get; set; }
     public IncomeBalanceType IncomeBalance { get; set; }
     public bool DirectPosting { get; set; }
+    public string VatProdPostingGroup { get; set; }
+    public GeneralPostingType GenPostingType { get; set; }
+    public string VatBusPostingGroup { get; set; }
 }
 
-public class GetGLAccountListInput : PagedAndSortedResultRequestDto
+public class GetGLAccountListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public GLAccountCategory? AccountCategory { get; set; }

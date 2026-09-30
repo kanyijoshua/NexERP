@@ -4,73 +4,33 @@
   title="Erp::Menu:NoSeries"
   breadcrumb="Erp::Menu:Setup"
   icon="fas fa-list-ol"
-  [(filter)]="filter"
+  [showSearch]="false"
   permission="Erp.NoSeries.Create"
   (create)="openCreate()"
 ></erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::Code' | abpLocalization" prop="code" [width]="120"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Description' | abpLocalization" prop="description" [width]="220"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::StartingNo' | abpLocalization" prop="startingNo" [sortable]="false" [width]="130"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::LastNoUsed' | abpLocalization" prop="lastNoUsed" [sortable]="false" [width]="130"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::NextNo' | abpLocalization" [sortable]="false" [width]="150">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          @if (row.nextNo) {
-            <span class="font-monospace">{{ row.nextNo }}</span>
-          } @else {
-            <span class="badge bg-danger">{{ 'Erp::SeriesUsedUp' | abpLocalization }}</span>
-          }
-          @if (row.warning && row.nextNo) {
-            <i
-              class="fas fa-exclamation-triangle text-warning ms-1"
-              [title]="'Erp::SeriesWarning' | abpLocalization"
-            ></i>
-          }
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::DefaultNos' | abpLocalization" prop="defaultNos" [width]="100">
-        <ng-template let-value="value" ngx-datatable-cell-template>
-          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::ManualNos' | abpLocalization" prop="manualNos" [width]="100">
-        <ng-template let-value="value" ngx-datatable-cell-template>
-          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::DateOrder' | abpLocalization" prop="dateOrder" [width]="100">
-        <ng-template let-value="value" ngx-datatable-cell-template>
-          <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted'"></i>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            *abpPermission="'Erp.NoSeries.Update'"
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            (click)="openEdit(row)"
-            >
-            <i class="fas fa-pen"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.NoSeries.Delete'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [title]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row)"
-            >
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="no-series"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  (codeClick)="openEdit($event)"
+  (rowClick)="openEdit($event)"
+>
+  <ng-template erpTableCol="nextNo" let-row="row">
+    @if (row.nextNo) {
+      <span class="font-monospace fw-semibold text-dark">{{ row.nextNo }}</span>
+    } @else {
+      <span class="badge bg-danger">{{ 'Erp::SeriesUsedUp' | abpLocalization }}</span>
+    }
+    @if (row.warning && row.nextNo) {
+      <i
+        class="fas fa-exclamation-triangle text-warning ms-1"
+        [title]="'Erp::SeriesWarning' | abpLocalization"
+      ></i>
+    }
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
   <ng-template #abpHeader>

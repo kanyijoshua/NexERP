@@ -10,6 +10,8 @@ export interface CreateUpdateNoSeriesDto {
 }
 
 export interface GetNoSeriesListInput extends PagedAndSortedResultRequestDto {
+  /** Filter pane conditions as JSON (see erp-table). */
+  dynamicFilter?: string;
   filter?: string;
 }
 

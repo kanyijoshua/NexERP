@@ -1,0 +1,87 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="fas fa-calendar-alt text-primary me-2"></i>{{ 'Erp::AccountingPeriods' | abpLocalization }}
+  </h4>
+  <button
+    *abpPermission="'Erp.FinanceSetup.Update'"
+    type="button"
+    class="btn btn-outline-secondary btn-sm"
+    [disabled]="busy()"
+    (click)="closeYear()"
+    >
+    <i class="fas fa-lock me-1"></i>{{ 'Erp::CloseYear' | abpLocalization }}
+  </button>
+  <button
+    *abpPermission="'Erp.FinanceSetup.Create'"
+    type="button"
+    class="btn btn-primary btn-sm"
+    [disabled]="busy()"
+    (click)="openCreateYear()"
+    >
+    <i class="fas fa-plus me-1"></i>{{ 'Erp::CreateYear' | abpLocalization }}
+  </button>
+</div>
+
+<p class="text-muted small">{{ 'Erp::AccountingPeriodsHelp' | abpLocalization }}</p>
+
+<erp-table
+  tableId="accounting-periods"
+  height="calc(100vh - 320px)"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  [actionsWidth]="80"
+  [clickableRows]="false"
+>
+  <ng-template erpTableCol="startingDate" let-row="row" let-value="value">
+    <span [class.fw-bold]="row.newFiscalYear">{{ value | date: 'yyyy-MM-dd' }}</span>
+  </ng-template>
+  <ng-template erpTableCol="newFiscalYear" let-value="value">
+    @if (value) {
+      <i class="fas fa-check text-primary" [attr.aria-label]="'Erp::NewFiscalYear' | abpLocalization"></i>
+    }
+  </ng-template>
+  <ng-template erpTableCol="closed" let-value="value">
+    @if (value) {
+      <span class="badge bg-secondary-subtle text-secondary border">{{ 'Erp::Closed' | abpLocalization }}</span>
+    }
+  </ng-template>
+  <ng-template erpTableCol="dateLocked" let-value="value">
+    @if (value) {
+      <i class="fas fa-lock text-muted" [attr.aria-label]="'Erp::DateLocked' | abpLocalization"></i>
+    }
+  </ng-template>
+</erp-table>
+
+<abp-modal [visible]="creating()" (visibleChange)="creating.set($event)" [busy]="busy()">
+  <ng-template #abpHeader>
+    <h5 class="modal-title mb-0">{{ 'Erp::CreateYear' | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form [formGroup]="yearForm" (ngSubmit)="createYear()" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label small mb-1" for="year-start">{{ 'Erp::StartingDate' | abpLocalization }}</label>
+        <input id="year-start" type="date" class="form-control form-control-sm" formControlName="startingDate" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small mb-1" for="year-periods">{{ 'Erp::NoOfPeriods' | abpLocalization }}</label>
+        <input id="year-periods" type="number" min="1" max="366" class="form-control form-control-sm" formControlName="noOfPeriods" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small mb-1" for="year-length">{{ 'Erp::PeriodLength' | abpLocalization }}</label>
+        <input id="year-length" type="text" class="form-control form-control-sm text-uppercase" formControlName="periodLength" />
+      </div>
+      <div class="col-12 form-text">{{ 'Erp::DateFormulaHelp' | abpLocalization }}</div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [loading]="busy()" [disabled]="yearForm.invalid" (click)="createYear()">
+      {{ 'Erp::CreateYear' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>

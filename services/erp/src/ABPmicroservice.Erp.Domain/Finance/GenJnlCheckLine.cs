@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Sales;
 using Volo.Abp;
@@ -21,13 +23,16 @@ public class GenJnlCheckLine : DomainService
     private readonly IRepository<GLAccount, Guid> _glAccountRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<Vendor, Guid> _vendorRepository;
+    private readonly GeneralLedgerSetupManager _glSetupManager;
 
     public GenJnlCheckLine(
         IRepository<GLAccount, Guid> glAccountRepository,
         IRepository<Customer, Guid> customerRepository,
-        IRepository<Vendor, Guid> vendorRepository
+        IRepository<Vendor, Guid> vendorRepository,
+        GeneralLedgerSetupManager glSetupManager
     )
     {
+        _glSetupManager = glSetupManager;
         _glAccountRepository = glAccountRepository;
         _customerRepository = customerRepository;
         _vendorRepository = vendorRepository;
@@ -41,6 +46,8 @@ public class GenJnlCheckLine : DomainService
         {
             throw Failed(line, ErpErrorCodes.Journals.PostingDateRequired);
         }
+
+        await _glSetupManager.CheckPostingDateAsync(line.PostingDate);
 
         if (line.AccountNo.IsNullOrWhiteSpace())
         {
@@ -63,10 +70,37 @@ public class GenJnlCheckLine : DomainService
         }
 
         await CheckAccountAsync(line, line.AccountType, line.AccountNo);
+        await CheckVatAsync(line, line.AccountType, line.HasVat, line.VatBusPostingGroup, line.VatProdPostingGroup);
 
         if (line.BalAccountNo != null)
         {
             await CheckAccountAsync(line, line.BalAccountType!.Value, line.BalAccountNo);
+            await CheckVatAsync(line, line.BalAccountType!.Value, line.HasBalVat, line.BalVatBusPostingGroup, line.BalVatProdPostingGroup);
+        }
+    }
+
+    /// <summary>VAT belongs on G/L account lines only, and its posting setup must exist (BC checks the same).</summary>
+    private async Task CheckVatAsync(GenJournalLine line, GenJournalAccountType accountType, bool hasVat, string bus, string prod)
+    {
+        if (!hasVat)
+        {
+            return;
+        }
+
+        if (accountType != GenJournalAccountType.GLAccount)
+        {
+            throw Failed(line, ErpErrorCodes.Journals.VatOnlyOnGLAccounts);
+        }
+
+        try
+        {
+            await LazyServiceProvider.LazyGetRequiredService<PostingSetupManager>().GetVatPostingSetupAsync(bus, prod);
+        }
+        catch (BusinessException exception)
+        {
+            throw Failed(line, exception.Code)
+                .WithData("vatBusPostingGroup", bus ?? "")
+                .WithData("vatProdPostingGroup", prod ?? "");
         }
     }
 
@@ -118,6 +152,62 @@ public class GenJnlCheckLine : DomainService
                 if (vendor.Blocked)
                 {
                     throw Failed(line, ErpErrorCodes.Vendors.VendorBlocked).WithData("accountNo", accountNo);
+                }
+
+                break;
+
+            case GenJournalAccountType.BankAccount:
+                var bankAccounts = LazyServiceProvider.LazyGetRequiredService<IRepository<BankAccount, Guid>>();
+                var bankAccount = await bankAccounts.FirstOrDefaultAsync(b => b.No == accountNo);
+                if (bankAccount == null)
+                {
+                    throw Failed(line, ErpErrorCodes.CashManagement.BankAccountNotFound).WithData("accountNo", accountNo);
+                }
+
+                if (bankAccount.Blocked)
+                {
+                    throw Failed(line, ErpErrorCodes.CashManagement.BankAccountBlocked).WithData("accountNo", accountNo);
+                }
+
+                // A bank account moves in its own currency only: the line must be in it.
+                if (!string.Equals(bankAccount.CurrencyCode, line.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw Failed(line, ErpErrorCodes.Journals.CurrencyMismatch)
+                        .WithData("accountNo", accountNo)
+                        .WithData("currencyCode", bankAccount.CurrencyCode ?? "LCY");
+                }
+
+                break;
+
+            case GenJournalAccountType.Employee:
+                var employees = LazyServiceProvider.LazyGetRequiredService<IRepository<Employee, Guid>>();
+                var employee = await employees.FirstOrDefaultAsync(e => e.No == accountNo);
+                if (employee == null)
+                {
+                    throw Failed(line, ErpErrorCodes.HumanResources.EmployeeNotFound).WithData("no", accountNo);
+                }
+
+                if (employee.Blocked)
+                {
+                    throw Failed(line, ErpErrorCodes.HumanResources.EmployeeBlocked).WithData("no", accountNo);
+                }
+
+                if (employee.EmployeePostingGroup == null)
+                {
+                    throw Failed(line, ErpErrorCodes.HumanResources.PostingGroupNotFound)
+                        .WithData("employeeNo", accountNo)
+                        .WithData("postingGroup", "");
+                }
+
+                // Employees are paid back, not invoiced: BC allows only blank, payment and refund.
+                if (line.DocumentType is not (GLEntryDocumentType.None or GLEntryDocumentType.Payment or GLEntryDocumentType.Refund))
+                {
+                    throw Failed(line, ErpErrorCodes.Journals.EmployeeDocumentTypeNotAllowed).WithData("no", accountNo);
+                }
+
+                if (line.CurrencyCode != null)
+                {
+                    throw Failed(line, ErpErrorCodes.Journals.EmployeeInLocalCurrencyOnly).WithData("no", accountNo);
                 }
 
                 break;

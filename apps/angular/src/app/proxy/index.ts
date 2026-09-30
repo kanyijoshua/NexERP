@@ -1,9 +1,11 @@
+import * as CashManagement from './cash-management';
 import * as Chatter from './chatter';
 import * as Companies from './companies';
 import * as Dimensions from './dimensions';
 import * as Documents from './documents';
 import * as Exporting from './exporting';
 import * as Finance from './finance';
+import * as HumanResources from './human-resources';
 import * as Integration from './integration';
 import * as Inventory from './inventory';
 import * as Kanban from './kanban';
@@ -13,4 +15,4 @@ import * as RapidStart from './rapid-start';
 import * as Reporting from './reporting';
 import * as Sales from './sales';
 import * as Workflows from './workflows';
-export { Chatter, Companies, Dimensions, Documents, Exporting, Finance, Integration, Inventory, Kanban, Numbering, Purchasing, RapidStart, Reporting, Sales, Workflows };
+export { CashManagement, Chatter, Companies, Dimensions, Documents, Exporting, Finance, HumanResources, Integration, Inventory, Kanban, Numbering, Purchasing, RapidStart, Reporting, Sales, Workflows };

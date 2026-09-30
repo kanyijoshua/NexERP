@@ -1,6 +1,23 @@
 import { Injectable, inject } from '@angular/core';
 import {
+  CreateUpdateCustomerPostingGroupDto,
+  CreateUpdateGeneralPostingSetupDto,
   CreateUpdateGLAccountDto,
+  CreateUpdateInventoryPostingSetupDto,
+  CreateUpdatePostingGroupDto,
+  CreateUpdateVendorPostingGroupDto,
+  CustomerPostingGroupDto,
+  CustomerPostingGroupService,
+  GenBusinessPostingGroupService,
+  GeneralPostingSetupDto,
+  GeneralPostingSetupService,
+  GenProductPostingGroupService,
+  InventoryPostingGroupService,
+  InventoryPostingSetupDto,
+  InventoryPostingSetupService,
+  PostingGroupDto,
+  VendorPostingGroupDto,
+  VendorPostingGroupService,
   GLAccountCategory,
   GLAccountDto,
   GlAccountService,
@@ -9,6 +26,10 @@ import {
   glAccountCategoryOptions,
   glAccountTypeOptions,
   incomeBalanceTypeOptions,
+  CustomerLedgerEntryService,
+  VendorLedgerEntryService,
+  GeneralPostingType,
+  generalPostingTypeOptions,
 } from '@proxy/finance';
 import {
   CreateUpdateItemCategoryDto,
@@ -37,48 +58,12 @@ import {
   SalesDocumentService,
   SalesDocumentType,
 } from '@proxy/sales';
-import { Observable, map } from 'rxjs';
-import {
-  DocumentLineOption,
-  RecordAction,
-  RecordEntity,
-  RecordField,
-  SmartButton,
-} from '../erp-shared';
+import { Observable, forkJoin, map } from 'rxjs';
+import { accountField, blockActions, codeField, codeOf, enumOptions, postingGroupEntity } from './entity-helpers';
+import { SetupEntities } from './setup-entities';
 
-/** Enum options labelled `Erp::Enum:<EnumName>.<Member>`. */
-function enumOptions(
-  options: { key: string; value: number }[],
-  enumName: string,
-): DocumentLineOption[] {
-  return options.map(o => ({ value: o.value, label: `Erp::Enum:${enumName}.${o.key}` }));
-}
-
-/** BC's Block / Unblock on customers, vendors, items and G/L accounts. */
-function blockActions<T extends { id?: string; blocked: boolean }>(
-  permission: string,
-  service: { block(id: string): Observable<void>; unblock(id: string): Observable<void> },
-): RecordAction<T>[] {
-  return [
-    {
-      key: 'block',
-      labelKey: 'Erp::Block',
-      icon: 'fas fa-ban',
-      permission: `${permission}.Update`,
-      visible: dto => !dto.blocked,
-      confirmKey: 'Erp::BlockConfirmation',
-      run: dto => service.block(dto.id!),
-    },
-    {
-      key: 'unblock',
-      labelKey: 'Erp::Unblock',
-      icon: 'fas fa-circle-check',
-      permission: `${permission}.Update`,
-      visible: dto => dto.blocked,
-      run: dto => service.unblock(dto.id!),
-    },
-  ];
-}
+export { codeOf } from './entity-helpers';
+import { RecordEntity, RecordField, SmartButton } from '../erp-shared';
 
 /** The address and contact FastTab shared by customers and vendors (BC "Address & Contact"). */
 const ADDRESS_FIELDS: RecordField[] = [
@@ -122,6 +107,30 @@ function documentCount(
   );
 }
 
+/** A party's ledger entries as a smart button, ahead of its other related buttons. */
+function withLedger(
+  count$: Observable<{ totalCount?: number }>,
+  labelKey: string,
+  route: string,
+  partyNo: string,
+  permission: string,
+  others$: Observable<SmartButton[]>,
+): Observable<SmartButton[]> {
+  return forkJoin({ ledger: count$, others: others$ }).pipe(
+    map(({ ledger, others }) => [
+      {
+        labelKey,
+        icon: 'fas fa-file-invoice',
+        count: ledger.totalCount ?? 0,
+        routerLink: [route],
+        queryParams: { partyNo },
+        permission,
+      },
+      ...others,
+    ]),
+  );
+}
+
 /**
  * The master-data tables the generic record UI works on: lookups, "Search More...", the card
  * dialog and the list and card pages all read these descriptors. Registered once by `ErpModule`.
@@ -136,6 +145,16 @@ export class MasterDataEntities {
   private readonly categories = inject(ItemCategoryService);
   private readonly salesDocuments = inject(SalesDocumentService);
   private readonly purchaseDocuments = inject(PurchaseDocumentService);
+  private readonly genBusGroups = inject(GenBusinessPostingGroupService);
+  private readonly genProdGroups = inject(GenProductPostingGroupService);
+  private readonly customerGroups = inject(CustomerPostingGroupService);
+  private readonly vendorGroups = inject(VendorPostingGroupService);
+  private readonly inventoryGroups = inject(InventoryPostingGroupService);
+  private readonly generalPostingSetups = inject(GeneralPostingSetupService);
+  private readonly inventoryPostingSetups = inject(InventoryPostingSetupService);
+  private readonly setup = inject(SetupEntities);
+  private readonly customerLedgerEntries = inject(CustomerLedgerEntryService);
+  private readonly vendorLedgerEntries = inject(VendorLedgerEntryService);
 
   readonly customer: RecordEntity<CustomerDto, CreateUpdateCustomerDto> = {
     key: 'customer',
@@ -166,10 +185,13 @@ export class MasterDataEntities {
       { field: 'creditLimit', labelKey: 'Erp::CreditLimit', type: 'currency', min: 0, cardOnly: true },
       { field: 'balance', labelKey: 'Erp::BalanceLcy', type: 'readonly' },
       ...ADDRESS_FIELDS,
-      { field: 'customerPostingGroup', labelKey: 'Erp::CustomerPostingGroup', type: 'text', section: 'invoicing', maxLength: 20, cardOnly: true },
-      { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', type: 'text', section: 'invoicing', maxLength: 20, cardOnly: true },
-      { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'text', section: 'invoicing', maxLength: 10, cardOnly: true },
-      { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'text', section: 'payments', maxLength: 10, cardOnly: true },
+      { field: 'customerPostingGroup', labelKey: 'Erp::CustomerPostingGroup', type: 'lookup', lookupEntity: 'customerPostingGroup', section: 'invoicing', cardOnly: true },
+      { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', type: 'lookup', lookupEntity: 'genBusPostingGroup', section: 'invoicing', cardOnly: true },
+      codeField('vatBusPostingGroup', 'Erp::VatBusPostingGroup', 'vatBusPostingGroup', 'invoicing', { cardOnly: true }),
+      codeField('currencyCode', 'Erp::CurrencyCode', 'currency', 'invoicing', { cardOnly: true }),
+      codeField('salespersonCode', 'Erp::SalespersonCode', 'salespersonPurchaser', 'general', { cardOnly: true }),
+      codeField('paymentTermsCode', 'Erp::PaymentTermsCode', 'paymentTerms', 'payments', { cardOnly: true }),
+      codeField('paymentMethodCode', 'Erp::PaymentMethodCode', 'paymentMethod', 'payments', { cardOnly: true }),
     ],
     getList: query => this.customers.getList(query),
     get: id => this.customers.get(id),
@@ -186,6 +208,12 @@ export class MasterDataEntities {
     ],
     actions: blockActions<CustomerDto>('Erp.Customers', this.customers),
     related: dto =>
+      withLedger(
+        this.customerLedgerEntries.getList({ partyNo: dto.no, maxResultCount: 1, skipCount: 0 }),
+        'Erp::CustomerLedgerEntries',
+        '/erp/finance/customer-ledger-entries',
+        dto.no ?? '',
+        'Erp.Customers',
       documentCount(
         this.salesDocuments.getList({
           customerId: dto.id,
@@ -198,7 +226,7 @@ export class MasterDataEntities {
         '/erp/sales-invoices',
         dto.id!,
         'Erp.SalesDocuments',
-      ),
+      )),
   };
 
   readonly vendor: RecordEntity<VendorDto, CreateUpdateVendorDto> = {
@@ -228,10 +256,13 @@ export class MasterDataEntities {
       { field: 'name', labelKey: 'Erp::Name', type: 'text', required: true, maxLength: 100 },
       { field: 'balance', labelKey: 'Erp::BalanceLcy', type: 'readonly' },
       ...ADDRESS_FIELDS,
-      { field: 'vendorPostingGroup', labelKey: 'Erp::VendorPostingGroup', type: 'text', section: 'invoicing', maxLength: 20, cardOnly: true },
-      { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', type: 'text', section: 'invoicing', maxLength: 20, cardOnly: true },
-      { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'text', section: 'invoicing', maxLength: 10, cardOnly: true },
-      { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'text', section: 'payments', maxLength: 10, cardOnly: true },
+      { field: 'vendorPostingGroup', labelKey: 'Erp::VendorPostingGroup', type: 'lookup', lookupEntity: 'vendorPostingGroup', section: 'invoicing', cardOnly: true },
+      { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', type: 'lookup', lookupEntity: 'genBusPostingGroup', section: 'invoicing', cardOnly: true },
+      codeField('vatBusPostingGroup', 'Erp::VatBusPostingGroup', 'vatBusPostingGroup', 'invoicing', { cardOnly: true }),
+      codeField('currencyCode', 'Erp::CurrencyCode', 'currency', 'invoicing', { cardOnly: true }),
+      codeField('purchaserCode', 'Erp::PurchaserCode', 'salespersonPurchaser', 'general', { cardOnly: true }),
+      codeField('paymentTermsCode', 'Erp::PaymentTermsCode', 'paymentTerms', 'payments', { cardOnly: true }),
+      codeField('paymentMethodCode', 'Erp::PaymentMethodCode', 'paymentMethod', 'payments', { cardOnly: true }),
     ],
     getList: query => this.vendors.getList(query),
     get: id => this.vendors.get(id),
@@ -247,6 +278,12 @@ export class MasterDataEntities {
     ],
     actions: blockActions<VendorDto>('Erp.Vendors', this.vendors),
     related: dto =>
+      withLedger(
+        this.vendorLedgerEntries.getList({ partyNo: dto.no, maxResultCount: 1, skipCount: 0 }),
+        'Erp::VendorLedgerEntries',
+        '/erp/finance/vendor-ledger-entries',
+        dto.no ?? '',
+        'Erp.Vendors',
       documentCount(
         this.purchaseDocuments.getList({
           vendorId: dto.id,
@@ -259,7 +296,7 @@ export class MasterDataEntities {
         '/erp/purchase-invoices',
         dto.id!,
         'Erp.PurchaseDocuments',
-      ),
+      )),
   };
 
   readonly item: RecordEntity<ItemDto, CreateUpdateItemDto> = {
@@ -286,7 +323,7 @@ export class MasterDataEntities {
       { key: 'costs', labelKey: 'Erp::CostsAndPosting', collapsed: true },
     ],
     fields: [
-      { field: 'no', labelKey: 'Erp::No', type: 'text', required: true, maxLength: 20 },
+      SERIES_NO_FIELD,
       { field: 'description', labelKey: 'Erp::Description', type: 'text', required: true, maxLength: 250 },
       { field: 'type', labelKey: 'Erp::Type', type: 'select', required: true, options: enumOptions(itemTypeOptions, 'ItemType') },
       { field: 'baseUnitOfMeasureCode', labelKey: 'Erp::BaseUnitOfMeasure', type: 'lookup', required: true, lookupEntity: 'unitOfMeasure' },
@@ -302,8 +339,9 @@ export class MasterDataEntities {
       { field: 'inventory', labelKey: 'Erp::Inventory', type: 'readonly' },
       { field: 'unitPrice', labelKey: 'Erp::UnitPrice', type: 'currency', section: 'prices', min: 0 },
       { field: 'unitCost', labelKey: 'Erp::UnitCost', type: 'currency', section: 'costs', min: 0, cardOnly: true },
-      { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', type: 'text', section: 'costs', maxLength: 20, cardOnly: true },
-      { field: 'inventoryPostingGroup', labelKey: 'Erp::InventoryPostingGroup', type: 'text', section: 'costs', maxLength: 20, cardOnly: true },
+      { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', type: 'lookup', lookupEntity: 'genProdPostingGroup', section: 'costs', cardOnly: true },
+      { field: 'inventoryPostingGroup', labelKey: 'Erp::InventoryPostingGroup', type: 'lookup', lookupEntity: 'inventoryPostingGroup', section: 'costs', cardOnly: true },
+      codeField('vatProdPostingGroup', 'Erp::VatProdPostingGroup', 'vatProdPostingGroup', 'costs', { cardOnly: true }),
     ],
     getList: query => this.items.getList(query),
     get: id => this.items.get(id),
@@ -353,6 +391,17 @@ export class MasterDataEntities {
       { field: 'balance', labelKey: 'Erp::Balance', type: 'readonly' },
       { field: 'accountType', labelKey: 'Erp::AccountType', type: 'select', section: 'posting', required: true, options: enumOptions(glAccountTypeOptions, 'GLAccountType') },
       { field: 'directPosting', labelKey: 'Erp::DirectPosting', type: 'checkbox', section: 'posting' },
+      codeField('vatProdPostingGroup', 'Erp::VatProdPostingGroup', 'vatProdPostingGroup', 'posting'),
+      // What a general journal line on this account defaults to (BC's Gen. Posting Type and VAT Bus. Posting Group).
+      {
+        field: 'genPostingType',
+        labelKey: 'Erp::GenPostingType',
+        type: 'select',
+        section: 'posting',
+        cardOnly: true,
+        options: enumOptions(generalPostingTypeOptions, 'GeneralPostingType'),
+      },
+      codeField('vatBusPostingGroup', 'Erp::VatBusPostingGroup', 'vatBusPostingGroup', 'posting', { cardOnly: true }),
       { field: 'netChange', labelKey: 'Erp::NetChange', type: 'readonly', section: 'posting' },
     ],
     getList: query => this.glAccounts.getList(query),
@@ -367,6 +416,7 @@ export class MasterDataEntities {
       accountCategory: GLAccountCategory.Assets,
       incomeBalance: IncomeBalanceType.BalanceSheet,
       directPosting: true,
+      genPostingType: GeneralPostingType.None,
     }),
     facts: dto => [
       { labelKey: 'Erp::NetChange', value: dto.netChange, type: 'currency' },
@@ -437,6 +487,145 @@ export class MasterDataEntities {
     quickCreate: term => ({ code: codeOf(term, 20), description: '' }),
   };
 
+  readonly genBusPostingGroup = postingGroupEntity(
+    'genBusPostingGroup',
+    'Erp::GenBusPostingGroup',
+    'Erp::GenBusPostingGroups',
+    'fas fa-people-group',
+    '/erp/gen-bus-posting-groups',
+    this.genBusGroups,
+  );
+
+  readonly genProdPostingGroup = postingGroupEntity(
+    'genProdPostingGroup',
+    'Erp::GenProdPostingGroup',
+    'Erp::GenProdPostingGroups',
+    'fas fa-tags',
+    '/erp/gen-prod-posting-groups',
+    this.genProdGroups,
+  );
+
+  readonly customerPostingGroup = postingGroupEntity(
+    'customerPostingGroup',
+    'Erp::CustomerPostingGroup',
+    'Erp::CustomerPostingGroups',
+    'fas fa-user-tag',
+    '/erp/customer-posting-groups',
+    this.customerGroups,
+    { field: 'receivablesAccountNo', labelKey: 'Erp::ReceivablesAccount' },
+  );
+
+  readonly vendorPostingGroup = postingGroupEntity(
+    'vendorPostingGroup',
+    'Erp::VendorPostingGroup',
+    'Erp::VendorPostingGroups',
+    'fas fa-truck-ramp-box',
+    '/erp/vendor-posting-groups',
+    this.vendorGroups,
+    { field: 'payablesAccountNo', labelKey: 'Erp::PayablesAccount' },
+  );
+
+  readonly inventoryPostingGroup = postingGroupEntity(
+    'inventoryPostingGroup',
+    'Erp::InventoryPostingGroup',
+    'Erp::InventoryPostingGroups',
+    'fas fa-warehouse',
+    '/erp/inventory-posting-groups',
+    this.inventoryGroups,
+  );
+
+  /** BC General Posting Setup: the accounts per business and product group pair. */
+  readonly generalPostingSetup: RecordEntity<GeneralPostingSetupDto, CreateUpdateGeneralPostingSetupDto> = {
+    key: 'generalPostingSetup',
+    titleKey: 'Erp::GeneralPostingSetup',
+    pluralKey: 'Erp::GeneralPostingSetup',
+    icon: 'fas fa-table-cells',
+    permission: 'Erp.PostingSetup',
+    listRoute: ['/erp/general-posting-setup'],
+    columns: [
+      { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', width: 160 },
+      { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', width: 160 },
+      { field: 'salesAccountNo', labelKey: 'Erp::SalesAccount', sortable: false },
+      { field: 'purchAccountNo', labelKey: 'Erp::PurchAccount', sortable: false },
+      { field: 'cogsAccountNo', labelKey: 'Erp::COGSAccount', sortable: false },
+      { field: 'inventoryAdjmtAccountNo', labelKey: 'Erp::InventoryAdjmtAccount', sortable: false },
+    ],
+    sections: [
+      { key: 'general', labelKey: 'Erp::General' },
+      { key: 'sales', labelKey: 'Erp::Sales' },
+      { key: 'purchases', labelKey: 'Erp::Purchases' },
+      { key: 'inventory', labelKey: 'Erp::Inventory' },
+    ],
+    fields: [
+      {
+        field: 'genBusPostingGroup',
+        labelKey: 'Erp::GenBusPostingGroup',
+        type: 'lookup',
+        lookupEntity: 'genBusPostingGroup',
+        helpKey: 'Erp::GenBusPostingGroupBlankHelp',
+      },
+      {
+        field: 'genProdPostingGroup',
+        labelKey: 'Erp::GenProdPostingGroup',
+        type: 'lookup',
+        lookupEntity: 'genProdPostingGroup',
+        required: true,
+      },
+      accountField('salesAccountNo', 'Erp::SalesAccount', 'sales'),
+      accountField('salesCreditMemoAccountNo', 'Erp::SalesCreditMemoAccount', 'sales'),
+      accountField('salesDiscountAccountNo', 'Erp::SalesDiscountAccount', 'sales'),
+      accountField('purchAccountNo', 'Erp::PurchAccount', 'purchases'),
+      accountField('purchCreditMemoAccountNo', 'Erp::PurchCreditMemoAccount', 'purchases'),
+      accountField('purchDiscountAccountNo', 'Erp::PurchDiscountAccount', 'purchases'),
+      accountField('cogsAccountNo', 'Erp::COGSAccount', 'inventory'),
+      accountField('inventoryAdjmtAccountNo', 'Erp::InventoryAdjmtAccount', 'inventory'),
+    ],
+    getList: query => this.generalPostingSetups.getList(query),
+    get: id => this.generalPostingSetups.get(id),
+    create: input => this.generalPostingSetups.create(input),
+    update: (id, input) => this.generalPostingSetups.update(id, input),
+    delete: id => this.generalPostingSetups.delete(id),
+    toItem: dto => ({
+      id: dto.id,
+      code: `${dto.genBusPostingGroup ?? ''} / ${dto.genProdPostingGroup ?? ''}`.trim(),
+    }),
+    newRecord: () => ({}),
+  };
+
+  /** BC Inventory Posting Setup: the inventory account per inventory posting group. */
+  readonly inventoryPostingSetup: RecordEntity<InventoryPostingSetupDto, CreateUpdateInventoryPostingSetupDto> = {
+    key: 'inventoryPostingSetup',
+    titleKey: 'Erp::InventoryPostingSetup',
+    pluralKey: 'Erp::InventoryPostingSetup',
+    icon: 'fas fa-boxes-stacked',
+    permission: 'Erp.PostingSetup',
+    listRoute: ['/erp/inventory-posting-setup'],
+    columns: [
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', width: 140 },
+      { field: 'inventoryPostingGroup', labelKey: 'Erp::InventoryPostingGroup', width: 200 },
+      { field: 'inventoryAccountNo', labelKey: 'Erp::InventoryAccount', sortable: false },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('locationCode', 'Erp::LocationCode', 'location'),
+      {
+        field: 'inventoryPostingGroup',
+        labelKey: 'Erp::InventoryPostingGroup',
+        type: 'lookup',
+        lookupEntity: 'inventoryPostingGroup',
+        required: true,
+      },
+      accountField('inventoryAccountNo', 'Erp::InventoryAccount', 'general'),
+    ],
+    getList: query => this.inventoryPostingSetups.getList(query),
+    get: id => this.inventoryPostingSetups.get(id),
+    create: input => this.inventoryPostingSetups.create(input),
+    update: (id, input) => this.inventoryPostingSetups.update(id, input),
+    delete: id => this.inventoryPostingSetups.delete(id),
+    toItem: dto => ({ id: dto.id, code: `${dto.locationCode ?? ''} ${dto.inventoryPostingGroup ?? ''}`.trim() }),
+    newRecord: () => ({}),
+  };
+
   get all(): RecordEntity[] {
     return [
       this.customer,
@@ -445,11 +634,14 @@ export class MasterDataEntities {
       this.glAccount,
       this.unitOfMeasure,
       this.itemCategory,
+      this.genBusPostingGroup,
+      this.genProdPostingGroup,
+      this.customerPostingGroup,
+      this.vendorPostingGroup,
+      this.inventoryPostingGroup,
+      this.generalPostingSetup,
+      this.inventoryPostingSetup,
+      ...this.setup.all,
     ];
   }
-}
-
-/** A typed term as a BC code: upper case, no spaces at the ends, cut to the field length. */
-export function codeOf(term: string | undefined, maxLength: number): string {
-  return (term ?? '').trim().toUpperCase().substring(0, maxLength);
 }

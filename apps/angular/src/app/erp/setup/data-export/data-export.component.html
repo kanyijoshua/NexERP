@@ -192,18 +192,18 @@
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-bold">
-        {{ 'Erp::Preview' | abpLocalization }}
+    <div class="card border-0 shadow-sm erp-table-card">
+      <div class="card-header bg-white fw-bold py-2 px-3">
+        <i class="fas fa-table text-primary me-2"></i>{{ 'Erp::Preview' | abpLocalization }}
         @if (totalCount) {
-          <span class="badge bg-primary ms-2">
+          <span class="badge bg-primary ms-2 font-monospace">
             {{ 'Erp::RowsFound' | abpLocalization: totalCount }}
           </span>
         }
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-sm mb-0">
+          <table class="table table-hover table-sm align-middle mb-0">
             <thead class="table-light">
               <tr>
                 @for (column of previewColumns; track column) {

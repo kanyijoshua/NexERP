@@ -13,11 +13,11 @@ namespace ABPmicroservice.Erp.Workflows;
 
 [Authorize(ErpPermissions.ApprovalUserSetup.Default)]
 public class ApprovalUserSetupAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         ApprovalUserSetup,
         ApprovalUserSetupDto,
         Guid,
-        PagedAndSortedResultRequestDto,
+        GetApprovalUserSetupListInput,
         CreateUpdateApprovalUserSetupDto,
         CreateUpdateApprovalUserSetupDto
     >,
@@ -69,15 +69,22 @@ public class ApprovalUserSetupAppService
         return (await WithNamesAsync(new[] { await GetEntityByIdAsync(id) })).Single();
     }
 
-    public override async Task<PagedResultDto<ApprovalUserSetupDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+    public override async Task<PagedResultDto<ApprovalUserSetupDto>> GetListAsync(GetApprovalUserSetupListInput input)
     {
         await CheckGetListPolicyAsync();
 
-        var query = await CreateFilteredQueryAsync(input);
+        var query = ErpListQuery.Filter(await CreateFilteredQueryAsync(input), input, Clock.Now, DynamicFilterAliases);
         var totalCount = await AsyncExecuter.CountAsync(query);
         var setups = await AsyncExecuter.ToListAsync(ApplyPaging(ApplySorting(query, input), input));
 
         return new PagedResultDto<ApprovalUserSetupDto>(totalCount, await WithNamesAsync(setups));
+    }
+
+    protected override async Task<IQueryable<ApprovalUserSetup>> CreateFilteredQueryAsync(GetApprovalUserSetupListInput input)
+    {
+        var term = input.Filter?.Trim().ToLower();
+        return (await base.CreateFilteredQueryAsync(input))
+            .WhereIf(!term.IsNullOrEmpty(), s => s.UserName.ToLower().Contains(term));
     }
 
     protected override IQueryable<ApprovalUserSetup> ApplyDefaultSorting(IQueryable<ApprovalUserSetup> query)

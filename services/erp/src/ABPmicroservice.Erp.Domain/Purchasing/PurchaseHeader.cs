@@ -41,6 +41,9 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
 
     public string PaymentTermsCode { get; private set; }
 
+    /// <summary>Where the stock of the document's item lines is shipped from or received at.</summary>
+    public string LocationCode { get; private set; }
+
     public string VendorInvoiceNo { get; private set; }
 
     public decimal TotalAmount { get; private set; }
@@ -109,6 +112,12 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
             nameof(paymentTermsCode),
             ErpDomainConsts.MaxPaymentTermsCodeLength
         );
+    }
+
+    public void SetLocation(string locationCode)
+    {
+        EnsureNotPosted();
+        LocationCode = CodeTableEntity.NormalizeCode(Check.Length(locationCode, nameof(locationCode), ErpDomainConsts.MaxLocationCodeLength));
     }
 
     public void SetCurrency(string currencyCode)

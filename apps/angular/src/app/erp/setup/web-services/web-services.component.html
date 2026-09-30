@@ -4,7 +4,7 @@
   title="Erp::Menu:WebServices"
   breadcrumb="Erp::Menu:Setup"
   icon="fas fa-plug"
-  [(filter)]="filter"
+  [showSearch]="false"
   permission="Erp.WebServices.Manage"
   (create)="openCreate()"
 ></erp-page-toolbar>
@@ -13,55 +13,55 @@
   <i class="fas fa-info-circle me-1"></i>{{ 'Erp::WebServicesHint' | abpLocalization }}
 </div>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::ServiceName' | abpLocalization" prop="serviceName" [width]="180"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::EntityName' | abpLocalization" prop="entityName" [width]="180"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::ObjectType' | abpLocalization" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          {{ objectTypeOptions[row.objectType]?.label | abpLocalization }}
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::ExcludedFields' | abpLocalization" prop="excludedFields" [width]="220"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Published' | abpLocalization" [width]="140" [sortable]="false">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <div class="form-check form-switch mb-0">
-            <input
-              type="checkbox"
-              class="form-check-input"
-              [checked]="row.published"
-              [attr.aria-label]="'Erp::Published' | abpLocalization"
-              (change)="setPublished(row, !row.published)"
-              />
-          </div>
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="120">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            *abpPermission="'Erp.WebServices.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            (click)="openEdit(row)"
-            >
-            <i class="fas fa-pen"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.WebServices.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [title]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row)"
-            >
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="web-services"
+  [items]="data.items"
+  [columns]="columns"
+  [actions]="actions"
+  (codeClick)="openEdit($event)"
+  (rowClick)="openEdit($event)"
+  (switchChange)="setPublished($event.row, $event.checked)"
+>
+  <ng-template erpTableCol="objectType" let-row="row">
+    <span class="badge bg-light text-secondary border fw-normal">
+      {{ objectTypeOptions[row.objectType]?.label | abpLocalization }}
+    </span>
+  </ng-template>
+  <ng-template erpTableCol="url" let-row="row">
+    @if (row.published) {
+      <div class="d-flex align-items-center gap-1 w-100" style="min-width: 0">
+        <span class="badge bg-primary-subtle text-primary border fw-semibold">POST</span>
+        <code class="small text-truncate" [title]="apiUrl + row.url">{{ apiUrl + row.url }}</code>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-auto" [title]="'Erp::CopyToClipboard' | abpLocalization" [attr.aria-label]="'Erp::CopyToClipboard' | abpLocalization" (click)="copy(apiUrl + row.url, $event)">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    } @else {
+      <span class="small text-muted fst-italic">{{ 'Erp::PublishToGetAddress' | abpLocalization }}</span>
+    }
+  </ng-template>
+  <ng-template erpTableCol="requestBody" let-row="row">
+    @if (row.published) {
+      <div class="d-flex align-items-center gap-1 w-100" style="min-width: 0">
+        <code class="small text-truncate" [title]="'Erp::CopyEndpointHint' | abpLocalization">{{ requestBodyOf(row) }}</code>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-auto" [title]="'Erp::CopyToClipboard' | abpLocalization" [attr.aria-label]="'Erp::CopyToClipboard' | abpLocalization" (click)="copy(requestBodyOf(row), $event)">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    }
+  </ng-template>
+  <ng-template erpTableCol="fieldsUrl" let-row="row">
+    @if (row.published && row.fieldsUrl) {
+      <div class="d-flex align-items-center gap-1 w-100" style="min-width: 0">
+        <span class="badge bg-success-subtle text-success border fw-semibold">GET</span>
+        <code class="small text-truncate" [title]="apiUrl + row.fieldsUrl">{{ apiUrl + row.fieldsUrl }}</code>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-auto" [title]="'Erp::CopyToClipboard' | abpLocalization" [attr.aria-label]="'Erp::CopyToClipboard' | abpLocalization" (click)="copy(apiUrl + row.fieldsUrl, $event)">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    }
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
   <ng-template #abpHeader>

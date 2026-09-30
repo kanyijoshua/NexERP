@@ -61,6 +61,15 @@
                     [class.is-invalid]="isInvalid(field)"
                     />
                 }
+                @case ('date') {
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    [id]="controlId(field)"
+                    [formControlName]="field.field"
+                    [class.is-invalid]="isInvalid(field)"
+                    />
+                }
                 @case ('textarea') {
                   <textarea
                     rows="3"

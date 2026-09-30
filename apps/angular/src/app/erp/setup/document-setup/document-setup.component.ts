@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import { PurchaseSetupService } from '@proxy/purchasing';
-import { SalesSetupService } from '@proxy/sales';
+import { CreditWarnings, SalesSetupService, creditWarningsOptions } from '@proxy/sales';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
@@ -40,9 +40,14 @@ export class DocumentSetupComponent implements OnInit {
     ...this.salesFields.slice(1),
   ];
 
+  readonly creditWarningsOptions = creditWarningsOptions;
+
   series: NoSeriesDto[] = [];
-  salesForm: FormGroup = this.buildForm(this.salesFields);
-  purchaseForm: FormGroup = this.buildForm(this.purchaseFields);
+  salesForm: FormGroup = this.withControls(this.buildForm(this.salesFields), {
+    creditWarnings: CreditWarnings.BothWarnings,
+    extDocNoMandatory: false,
+  });
+  purchaseForm: FormGroup = this.withControls(this.buildForm(this.purchaseFields), { extDocNoMandatory: false });
   loading = false;
   savingSales = false;
   savingPurchase = false;
@@ -112,6 +117,12 @@ export class DocumentSetupComponent implements OnInit {
         this.salesForm.reset(sales);
         this.purchaseForm.reset(purchase);
       });
+  }
+
+  /** The General fields BC shows above the number series on the same setup page. */
+  private withControls(group: FormGroup, values: Record<string, unknown>): FormGroup {
+    Object.entries(values).forEach(([name, value]) => group.addControl(name, this.fb.control(value)));
+    return group;
   }
 
   private buildForm(fields: SeriesField[]): FormGroup {

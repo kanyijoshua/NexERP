@@ -40,6 +40,9 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
 
     public string PaymentTermsCode { get; private set; }
 
+    /// <summary>Where the stock of the document's item lines is shipped from or received at.</summary>
+    public string LocationCode { get; private set; }
+
     public string ExternalDocumentNo { get; private set; }
 
     /// <summary>Total amount (denormalized, recalculated from lines).</summary>
@@ -108,6 +111,12 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
             nameof(paymentTermsCode),
             ErpDomainConsts.MaxPaymentTermsCodeLength
         );
+    }
+
+    public void SetLocation(string locationCode)
+    {
+        EnsureNotPosted();
+        LocationCode = CodeTableEntity.NormalizeCode(Check.Length(locationCode, nameof(locationCode), ErpDomainConsts.MaxLocationCodeLength));
     }
 
     public void SetCurrency(string currencyCode)

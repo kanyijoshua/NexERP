@@ -52,6 +52,13 @@ export interface CreateUpdateApprovalUserSetupDto {
   isApprovalAdministrator: boolean;
 }
 
+export interface CreateUpdateWorkflowStepDto {
+  sequenceNo: number;
+  eventName?: string;
+  conditionRule?: string;
+  responseAction?: string;
+}
+
 export interface CreateUpdateWorkflowDto {
   code: string;
   description?: string;
@@ -59,9 +66,12 @@ export interface CreateUpdateWorkflowDto {
   minimumAmount: number;
   approverLimitType: ApproverLimitType;
   dueDays: number;
+  steps?: CreateUpdateWorkflowStepDto[];
 }
 
 export interface GetApprovalEntriesInput extends PagedAndSortedResultRequestDto {
+  filter?: string;
+  dynamicFilter?: string;
   status?: ApprovalStatus;
   allStatuses: boolean;
   onlyMine: boolean;
@@ -92,4 +102,9 @@ export interface ApprovalRequestResultDto {
   autoApproved: boolean;
   approverCount: number;
   firstApproverUserName?: string;
+}
+
+export interface GetApprovalUserSetupListInput extends PagedAndSortedResultRequestDto {
+  filter?: string;
+  dynamicFilter?: string;
 }

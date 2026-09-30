@@ -16,6 +16,7 @@ public class ItemDto : FullAuditedEntityDto<Guid>
     public decimal Inventory { get; set; }
     public string GenProdPostingGroup { get; set; }
     public string InventoryPostingGroup { get; set; }
+    public string VatProdPostingGroup { get; set; }
     public bool Blocked { get; set; }
 }
 
@@ -31,22 +32,23 @@ public class CreateUpdateItemDto
     public decimal UnitCost { get; set; }
     public string GenProdPostingGroup { get; set; }
     public string InventoryPostingGroup { get; set; }
+    public string VatProdPostingGroup { get; set; }
 }
 
-public class GetItemListInput : PagedAndSortedResultRequestDto
+public class GetItemListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public ItemType? Type { get; set; }
     public Guid? ItemCategoryId { get; set; }
 }
 
-public class GetItemCategoryListInput : PagedAndSortedResultRequestDto
+public class GetItemCategoryListInput : ErpPagedListInput
 {
     /// <summary>Matches code or description, ignoring case.</summary>
     public string Filter { get; set; }
 }
 
-public class GetUnitOfMeasureListInput : PagedAndSortedResultRequestDto
+public class GetUnitOfMeasureListInput : ErpPagedListInput
 {
     /// <summary>Matches code or description, ignoring case.</summary>
     public string Filter { get; set; }
@@ -94,7 +96,7 @@ public class ItemLedgerEntryDto : EntityDto<Guid>
     public string LocationCode { get; set; }
 }
 
-public class GetItemLedgerEntryListInput : PagedAndSortedResultRequestDto
+public class GetItemLedgerEntryListInput : ErpPagedListInput
 {
     public Guid? ItemId { get; set; }
     public string DocumentNo { get; set; }

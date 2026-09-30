@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -163,7 +164,7 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
             input.BalAccountNo ?? batch.BalAccountNo
         );
 
-        ApplyOptionalFields(line, input, documentNo);
+        await ApplyOptionalFieldsAsync(line, batch, input, documentNo);
 
         await _lineRepository.InsertAsync(line, autoSave: true);
         return ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
@@ -176,7 +177,7 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         var batch = await _batchRepository.GetAsync(line.GenJournalBatchId);
         await EnsureRecurringIsAllowedAsync(batch, input.RecurringMethod);
 
-        ApplyOptionalFields(line, input, input.DocumentNo);
+        await ApplyOptionalFieldsAsync(line, batch, input, input.DocumentNo);
 
         await _lineRepository.UpdateAsync(line, autoSave: true);
         return ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
@@ -275,12 +276,17 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         return await _noSeriesManager.GetNextNoAsync(batch.NoSeriesCode, input.PostingDate);
     }
 
-    private static void ApplyOptionalFields(
+    private async Task ApplyOptionalFieldsAsync(
         GenJournalLine line,
+        GenJournalBatch batch,
         CreateUpdateGenJournalLineDto input,
         string documentNo
     )
     {
+        // A line without its own balancing account takes the batch's, as a new line does in BC.
+        var balAccountNo = input.BalAccountNo.IsNullOrWhiteSpace() ? batch.BalAccountNo : input.BalAccountNo;
+        var balAccountType = input.BalAccountNo.IsNullOrWhiteSpace() ? batch.BalAccountType : input.BalAccountType;
+
         line.Update(
             input.PostingDate,
             input.DocumentType,
@@ -289,8 +295,8 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
             input.AccountNo,
             input.Description,
             input.Amount,
-            input.BalAccountType,
-            input.BalAccountNo,
+            balAccountType,
+            balAccountNo,
             input.DocumentDate,
             input.ExternalDocumentNo,
             input.AppliesToDocNo,
@@ -298,6 +304,82 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         );
 
         line.SetRecurring(input.RecurringMethod, input.RecurringFrequency, input.ExpirationDate);
+
+        await ApplyCurrencyAsync(line, input);
+        await ApplyVatAsync(line, input);
+    }
+
+    /// <summary>The line's currency and its rate on the posting date, so the LCY amount shows at once.</summary>
+    private async Task ApplyCurrencyAsync(GenJournalLine line, CreateUpdateGenJournalLineDto input)
+    {
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<Currency>(input.CurrencyCode);
+
+        var currencies = LazyServiceProvider.LazyGetRequiredService<CurrencyExchangeRateManager>();
+        var currencyCode = await currencies.NormalizeAsync(input.CurrencyCode);
+        var factor = currencyCode == null ? 1m : await currencies.GetCurrencyFactorAsync(currencyCode, input.PostingDate);
+
+        line.SetCurrency(currencyCode, factor);
+    }
+
+    /// <summary>
+    /// The posting type and VAT groups of both sides, then the VAT they carry. A null posting type
+    /// takes the G/L account's defaults, as choosing the account does in BC.
+    /// </summary>
+    private async Task ApplyVatAsync(GenJournalLine line, CreateUpdateGenJournalLineDto input)
+    {
+        var (type, bus, prod) = await ResolveVatAsync(line.AccountType, line.AccountNo, input.GenPostingType, input.VatBusPostingGroup, input.VatProdPostingGroup);
+        line.SetVat(type, bus, prod);
+
+        var (balType, balBus, balProd) = line.BalAccountNo == null
+            ? (GeneralPostingType.None, null, null)
+            : await ResolveVatAsync(line.BalAccountType!.Value, line.BalAccountNo, input.BalGenPostingType, input.BalVatBusPostingGroup, input.BalVatProdPostingGroup);
+        line.SetBalVat(balType, balBus, balProd);
+
+        var vat = await CalculateVatAsync(line.HasVat, line.Amount, line.GenPostingType, line.VatBusPostingGroup, line.VatProdPostingGroup);
+        var balVat = await CalculateVatAsync(line.HasBalVat, -line.Amount, line.BalGenPostingType, line.BalVatBusPostingGroup, line.BalVatProdPostingGroup);
+        line.SetVatAmounts(vat.Base, vat.Vat, balVat.Base, balVat.Vat);
+    }
+
+    private async Task<(GeneralPostingType Type, string Bus, string Prod)> ResolveVatAsync(
+        GenJournalAccountType accountType,
+        string accountNo,
+        GeneralPostingType? genPostingType,
+        string vatBusPostingGroup,
+        string vatProdPostingGroup
+    )
+    {
+        if (genPostingType.HasValue)
+        {
+            var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
+            await codes.EnsureExistsAsync<VatBusinessPostingGroup>(vatBusPostingGroup);
+            await codes.EnsureExistsAsync<VatProductPostingGroup>(vatProdPostingGroup);
+            return (genPostingType.Value, vatBusPostingGroup, vatProdPostingGroup);
+        }
+
+        if (accountType != GenJournalAccountType.GLAccount)
+        {
+            return (GeneralPostingType.None, null, null);
+        }
+
+        var accounts = LazyServiceProvider.LazyGetRequiredService<IRepository<GLAccount, Guid>>();
+        var account = await accounts.FirstOrDefaultAsync(a => a.No == accountNo);
+
+        return account == null || account.GenPostingType == GeneralPostingType.None
+            ? (GeneralPostingType.None, null, null)
+            : (account.GenPostingType, account.VatBusPostingGroup, account.VatProdPostingGroup);
+    }
+
+    // A missing setup leaves the amounts blank here; the check before posting reports it.
+    private async Task<JournalVatAmounts> CalculateVatAsync(bool hasVat, decimal amount, GeneralPostingType type, string bus, string prod)
+    {
+        if (!hasVat)
+        {
+            return new JournalVatAmounts(amount, 0m);
+        }
+
+        var setups = LazyServiceProvider.LazyGetRequiredService<IRepository<VatPostingSetup, Guid>>();
+        var setup = await setups.FirstOrDefaultAsync(s => s.VatBusPostingGroup == bus && s.VatProdPostingGroup == prod);
+        return setup == null ? new JournalVatAmounts(amount, 0m) : JournalVat.Calculate(amount, setup, type);
     }
 
     private async Task<GenJournalBatchDto> ToBatchDtoAsync(GenJournalBatch batch)

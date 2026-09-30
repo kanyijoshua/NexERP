@@ -1,4 +1,3 @@
-import { ABP, ListService } from '@abp/ng.core';
 import { Component } from '@angular/core';
 import {
   CustomerService,
@@ -7,7 +6,7 @@ import {
   SalesHeaderDto,
 } from '@proxy/sales';
 import { Observable, map } from 'rxjs';
-import { LookupItem } from '../../erp-shared';
+import { ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
   DocumentListBase,
@@ -18,7 +17,6 @@ import {
 @Component({
   selector: 'app-sales-invoices',
   templateUrl: '../documents/document-list.component.html',
-  providers: [ListService],
   standalone: false,
 })
 export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
@@ -28,7 +26,10 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
   readonly unitAmountLabelKey = 'Erp::UnitPrice';
   readonly permissionPrefix = 'Erp.SalesDocuments';
   readonly chatterEntityType = 'SalesHeader';
+  readonly partyNoField = 'sellToCustomerNo';
+  readonly partyNameField = 'sellToCustomerName';
   readonly partyEntity = 'customer';
+  readonly externalDocumentNoLabelKey = 'Erp::ExternalDocumentNo';
   readonly itemAmountField = 'unitPrice' as const;
 
   constructor(
@@ -38,7 +39,7 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
     super();
   }
 
-  protected getList = (query: ABP.PageQueryParams) =>
+  protected getList = (query: ErpTableQuery) =>
     this.documents.getList({
       ...query,
       documentType: SalesDocumentType.Invoice,
@@ -68,6 +69,8 @@ export class SalesInvoicesComponent extends DocumentListBase<SalesHeaderDto> {
       no: input.no,
       customerId: input.partyId,
       postingDate: input.postingDate,
+      locationCode: input.locationCode,
+      externalDocumentNo: input.externalDocumentNo,
       lines: input.lines.map(l => ({
         type: l.type,
         no: l.no,

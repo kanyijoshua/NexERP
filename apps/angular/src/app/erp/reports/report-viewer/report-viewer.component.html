@@ -189,8 +189,8 @@
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
+    <div class="card border-0 shadow-sm erp-table-card">
+      <div class="card-body p-0">
         @if (rows.length) {
           <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
@@ -216,9 +216,7 @@
                         >
                         @switch (column.type) {
                           @case ('currency') {
-                            {{
-                            row[column.field] | erpAmount
-                            }}
+                            <span class="font-monospace fw-semibold">{{ row[column.field] | erpAmount }}</span>
                           }
                           @case ('date') {
                             {{
@@ -229,7 +227,7 @@
                             @if (first && row['__drill']) {
                               <button
                                 type="button"
-                                class="btn btn-link btn-sm p-0 text-decoration-none"
+                                class="btn btn-link btn-sm p-0 text-decoration-none erp-code-link fw-semibold"
                                 [title]="'Erp::DrillDown' | abpLocalization"
                                 (click)="drillDown(row)"
                                 >

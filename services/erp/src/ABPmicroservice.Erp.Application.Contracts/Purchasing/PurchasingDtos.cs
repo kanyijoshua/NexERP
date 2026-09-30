@@ -19,6 +19,9 @@ public class VendorDto : FullAuditedEntityDto<Guid>
     public string PaymentTermsCode { get; set; }
     public string VendorPostingGroup { get; set; }
     public string GenBusPostingGroup { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string PurchaserCode { get; set; }
+    public string PaymentMethodCode { get; set; }
     public string CurrencyCode { get; set; }
     public bool Blocked { get; set; }
 }
@@ -36,10 +39,13 @@ public class CreateUpdateVendorDto
     public string PaymentTermsCode { get; set; }
     public string VendorPostingGroup { get; set; }
     public string GenBusPostingGroup { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string PurchaserCode { get; set; }
+    public string PaymentMethodCode { get; set; }
     public string CurrencyCode { get; set; }
 }
 
-public class GetVendorListInput : PagedAndSortedResultRequestDto
+public class GetVendorListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public bool? Blocked { get; set; }
@@ -60,6 +66,7 @@ public class PurchaseHeaderDto : FullAuditedEntityDto<Guid>
     public DocumentStatus Status { get; set; }
     public string CurrencyCode { get; set; }
     public string PaymentTermsCode { get; set; }
+    public string LocationCode { get; set; }
     public string VendorInvoiceNo { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal TotalAmountIncludingVat { get; set; }
@@ -80,6 +87,13 @@ public class PurchaseLineDto : EntityDto<Guid>
     public decimal LineDiscountPercent { get; set; }
     public decimal LineAmount { get; set; }
     public decimal LineAmountIncludingVat { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string VatProdPostingGroup { get; set; }
+    public ABPmicroservice.Erp.Finance.VatCalculationType VatCalculationType { get; set; }
+    public string VatIdentifier { get; set; }
+    public decimal VatPercent { get; set; }
+    public decimal VatBaseAmount { get; set; }
+    public decimal VatAmount { get; set; }
     public string UnitOfMeasureCode { get; set; }
 }
 
@@ -93,6 +107,7 @@ public class CreateUpdatePurchaseHeaderDto
     public DateTime? ExpectedReceiptDate { get; set; }
     public string CurrencyCode { get; set; }
     public string PaymentTermsCode { get; set; }
+    public string LocationCode { get; set; }
     public string VendorInvoiceNo { get; set; }
     public List<PurchaseLineInputDto> Lines { get; set; } = new();
 }
@@ -109,7 +124,7 @@ public class PurchaseLineInputDto
     public string UnitOfMeasureCode { get; set; }
 }
 
-public class GetPurchaseDocumentListInput : PagedAndSortedResultRequestDto
+public class GetPurchaseDocumentListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public PurchaseDocumentType? DocumentType { get; set; }

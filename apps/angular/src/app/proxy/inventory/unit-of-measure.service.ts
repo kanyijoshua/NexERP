@@ -39,7 +39,7 @@ export class UnitOfMeasureService {
     this.restService.request<any, PagedResultDto<UnitOfMeasureDto>>({
       method: 'GET',
       url: '/api/erp/unit-of-measure',
-      params: { filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

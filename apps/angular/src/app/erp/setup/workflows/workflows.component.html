@@ -11,38 +11,59 @@
 
 <p class="text-muted">{{ 'Erp::WorkflowsHelp' | abpLocalization }}</p>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm erp-table-card mb-4">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th style="width: 40px"></th>
+          <th style="width: 44px"></th>
           <th>{{ 'Erp::Code' | abpLocalization }}</th>
           <th>{{ 'Erp::Description' | abpLocalization }}</th>
           <th>{{ 'Erp::AppliesTo' | abpLocalization }}</th>
           <th class="text-end">{{ 'Erp::MinimumAmount' | abpLocalization }}</th>
           <th>{{ 'Erp::ApproverLimitType' | abpLocalization }}</th>
           <th class="text-end">{{ 'Erp::DueDays' | abpLocalization }}</th>
-          <th>{{ 'Erp::Enabled' | abpLocalization }}</th>
-          <th style="width: 110px"></th>
+          <th class="text-center">{{ 'Erp::Enabled' | abpLocalization }}</th>
+          <th class="text-end" style="width: 110px"></th>
         </tr>
       </thead>
       <tbody>
-        @for (w of workflows; track w) {
+        @for (w of workflows; track w.id) {
           <tr>
-            <td>
-              <button type="button" class="btn btn-sm btn-link p-0" [attr.aria-expanded]="expandedId === w.id" (click)="toggleSteps(w)">
-                <i class="fas" [ngClass]="expandedId === w.id ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+            <td class="text-center">
+              <button
+                type="button"
+                class="btn btn-sm btn-link p-0 text-secondary"
+                [attr.aria-expanded]="expandedId === w.id"
+                (click)="toggleSteps(w)"
+              >
+                <i class="fas" [ngClass]="expandedId === w.id ? 'fa-chevron-down text-primary' : 'fa-chevron-right'"></i>
               </button>
             </td>
-            <td class="fw-bold">{{ w.code }}</td>
-            <td>{{ w.description }}</td>
-            <td>{{ 'Erp::Enum:ApprovalDocumentKind.' + kindName(w) | abpLocalization }}</td>
-            <td class="text-end">{{ w.minimumAmount ? (w.minimumAmount | erpAmount) : ('Erp::AnyAmount' | abpLocalization) }}</td>
-            <td>{{ 'Erp::Enum:ApproverLimitType.' + limitTypeName(w) | abpLocalization }}</td>
-            <td class="text-end">{{ w.dueDays || '—' }}</td>
             <td>
-              <div class="form-check form-switch mb-0">
+              <a
+                class="fw-bold text-primary font-monospace text-decoration-none erp-record-link"
+                role="button"
+                (click)="openEdit(w)"
+              >
+                {{ w.code }}
+              </a>
+            </td>
+            <td>{{ w.description }}</td>
+            <td>
+              <span class="badge bg-light text-dark border">
+                {{ 'Erp::Enum:ApprovalDocumentKind.' + kindName(w) | abpLocalization }}
+              </span>
+            </td>
+            <td class="text-end font-monospace">{{ w.minimumAmount ? (w.minimumAmount | erpAmount) : ('Erp::AnyAmount' | abpLocalization) }}</td>
+            <td>
+              <span class="badge bg-info-subtle text-info border border-info-subtle">
+                {{ 'Erp::Enum:ApproverLimitType.' + limitTypeName(w) | abpLocalization }}
+              </span>
+            </td>
+            <td class="text-end">{{ w.dueDays || '—' }}</td>
+            <td class="text-center">
+              <div class="form-check form-switch mb-0 d-inline-flex justify-content-center">
                 <input
                   type="checkbox"
                   class="form-check-input"
@@ -50,45 +71,78 @@
                   [disabled]="!canManage"
                   [attr.aria-label]="'Erp::Enabled' | abpLocalization"
                   (change)="setEnabled(w, $any($event.target).checked)"
-                  />
+                />
               </div>
             </td>
             <td class="text-end">
-              <ng-container *abpPermission="'Erp.Workflows.Manage'">
-                <!-- As in Business Central, an enabled workflow is read-only. -->
-                <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="w.enabled" [title]="'Erp::Edit' | abpLocalization" (click)="openEdit(w)">
-                  <i class="fas fa-pen"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="w.enabled" [title]="'Erp::Delete' | abpLocalization" (click)="remove(w)">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </ng-container>
+              <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+                <ng-container *abpPermission="'Erp.Workflows.Manage'">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary erp-action-btn"
+                    [disabled]="w.enabled"
+                    [title]="'Erp::Edit' | abpLocalization"
+                    (click)="openEdit(w)"
+                  >
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger erp-action-btn"
+                    [disabled]="w.enabled"
+                    [title]="'Erp::Delete' | abpLocalization"
+                    (click)="remove(w)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </ng-container>
+              </div>
             </td>
           </tr>
           @if (expandedId === w.id) {
             <tr class="table-light">
               <td></td>
-              <td colspan="8">
-                <table class="table table-sm mb-0 bg-white">
-                  <thead>
-                    <tr>
-                      <th style="width: 40px">#</th>
-                      <th>{{ 'Erp::WhenEvent' | abpLocalization }}</th>
-                      <th>{{ 'Erp::OnCondition' | abpLocalization }}</th>
-                      <th>{{ 'Erp::ThenResponse' | abpLocalization }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (step of w.steps; track step) {
-                      <tr>
-                        <td>{{ step.sequenceNo }}</td>
-                        <td>{{ step.eventName }}</td>
-                        <td>{{ step.conditionRule }}</td>
-                        <td>{{ step.responseAction }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+              <td colspan="8" class="p-3">
+                <div class="card border shadow-none">
+                  <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small text-uppercase text-secondary">
+                      <i class="fas fa-sitemap me-1 text-primary"></i> Business Central Workflow Sequence: {{ w.code }}
+                    </span>
+                    <span class="badge bg-primary-subtle text-primary">{{ (w.steps?.length || 0) }} Steps</span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm mb-0 align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th style="width: 50px" class="text-center">#</th>
+                          <th style="width: 30%">{{ 'Erp::WhenEvent' | abpLocalization }}</th>
+                          <th style="width: 30%">{{ 'Erp::OnCondition' | abpLocalization }}</th>
+                          <th>{{ 'Erp::ThenResponse' | abpLocalization }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (step of w.steps; track step.sequenceNo) {
+                          <tr>
+                            <td class="text-center fw-semibold text-secondary">{{ step.sequenceNo }}</td>
+                            <td>
+                              <i class="fas fa-bolt text-warning me-1"></i>
+                              <span>{{ step.eventName }}</span>
+                            </td>
+                            <td>
+                              <span class="badge bg-light text-dark border font-monospace">
+                                {{ step.conditionRule || 'Always' }}
+                              </span>
+                            </td>
+                            <td>
+                              <i class="fas fa-arrow-right text-success me-1"></i>
+                              <span>{{ step.responseAction }}</span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </td>
             </tr>
           }
@@ -103,57 +157,463 @@
   </div>
 </div>
 
-<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+<!-- Workflow Modal (BC Workflow Card) -->
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
   <ng-template #abpHeader>
-    <h5 class="modal-title">{{ (selected ? 'Erp::EditWorkflow' : 'Erp::NewWorkflow') | abpLocalization }}</h5>
+    <div class="d-flex align-items-center gap-2">
+      <i class="fas fa-project-diagram text-primary fs-5"></i>
+      <h5 class="modal-title mb-0">
+        {{ (selected ? 'Erp::EditWorkflow' : 'Erp::NewWorkflow') | abpLocalization }}
+      </h5>
+      @if (selected) {
+        <span class="badge bg-secondary-subtle text-secondary ms-2">{{ selected.code }}</span>
+      }
+    </div>
   </ng-template>
 
   <ng-template #abpBody>
     @if (form) {
+      <!-- Modal Navigation Tabs -->
+      <ul class="nav nav-tabs mb-3 border-bottom">
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="activeModalTab === 'general'"
+            (click)="activeModalTab = 'general'"
+          >
+            <i class="fas fa-cog me-1"></i> {{ 'Erp::General' | abpLocalization }}
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="activeModalTab === 'conditions'"
+            (click)="activeModalTab = 'conditions'"
+          >
+            <i class="fas fa-filter me-1"></i> Dynamic Conditions
+            <span class="badge rounded-pill bg-primary ms-1">{{ conditions.length }}</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link"
+            [class.active]="activeModalTab === 'sequence'"
+            (click)="activeModalTab = 'sequence'"
+          >
+            <i class="fas fa-sitemap me-1"></i> Approval Sequence
+            <span class="badge rounded-pill bg-info ms-1">{{ formSteps.length }}</span>
+          </button>
+        </li>
+      </ul>
+
       <form [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
-        <div class="mb-3">
-          <label class="form-label" for="wf-code">{{ 'Erp::Code' | abpLocalization }} *</label>
-          <input id="wf-code" type="text" class="form-control text-uppercase" formControlName="code" autofocus />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="wf-description">{{ 'Erp::Description' | abpLocalization }}</label>
-          <input id="wf-description" type="text" class="form-control" formControlName="description" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="wf-kind">{{ 'Erp::AppliesTo' | abpLocalization }} *</label>
-          <select id="wf-kind" class="form-select" formControlName="documentKind">
-            @for (o of documentKinds; track o) {
-              <option [ngValue]="o.value">{{ 'Erp::Enum:ApprovalDocumentKind.' + o.key | abpLocalization }}</option>
-            }
-          </select>
-        </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label" for="wf-min">{{ 'Erp::MinimumAmount' | abpLocalization }}</label>
-            <input id="wf-min" type="number" min="0" step="0.01" class="form-control" formControlName="minimumAmount" />
-            <div class="form-text">{{ 'Erp::MinimumAmountHelp' | abpLocalization }}</div>
+        <!-- TAB 1: GENERAL SETTINGS -->
+        @if (activeModalTab === 'general') {
+          <div class="p-1">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold" for="wf-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+                <input
+                  id="wf-code"
+                  type="text"
+                  class="form-control text-uppercase"
+                  formControlName="code"
+                  placeholder="e.g. PIAPW"
+                  autofocus
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold" for="wf-kind">{{ 'Erp::AppliesTo' | abpLocalization }} *</label>
+                <select id="wf-kind" class="form-select" formControlName="documentKind">
+                  @for (o of documentKinds; track o.value) {
+                    <option [ngValue]="o.value">{{ 'Erp::Enum:ApprovalDocumentKind.' + o.key | abpLocalization }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="wf-description">{{ 'Erp::Description' | abpLocalization }}</label>
+              <input
+                id="wf-description"
+                type="text"
+                class="form-control"
+                formControlName="description"
+                placeholder="e.g. Purchase Document Approval Workflow"
+              />
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold" for="wf-limit">{{ 'Erp::ApproverLimitType' | abpLocalization }} *</label>
+                <select id="wf-limit" class="form-select" formControlName="approverLimitType">
+                  @for (o of limitTypes; track o.value) {
+                    <option [ngValue]="o.value">{{ 'Erp::Enum:ApproverLimitType.' + o.key | abpLocalization }}</option>
+                  }
+                </select>
+                <div class="form-text small">{{ 'Erp::ApproverLimitTypeHelp' | abpLocalization }}</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold" for="wf-due">{{ 'Erp::DueDays' | abpLocalization }}</label>
+                <div class="input-group">
+                  <input id="wf-due" type="number" min="0" step="1" class="form-control" formControlName="dueDays" />
+                  <span class="input-group-text text-muted">days</span>
+                </div>
+                <div class="form-text small">{{ 'Erp::DueDaysHelp' | abpLocalization }}</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="wf-min">{{ 'Erp::MinimumAmount' | abpLocalization }}</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input id="wf-min" type="number" min="0" step="0.01" class="form-control" formControlName="minimumAmount" />
+              </div>
+              <div class="form-text small">{{ 'Erp::MinimumAmountHelp' | abpLocalization }} (Syncs with dynamic conditions)</div>
+            </div>
+
+            <div class="alert alert-info py-2 d-flex align-items-center mt-3">
+              <i class="fas fa-info-circle me-2 fs-5"></i>
+              <div class="small">
+                Switch to <strong>Dynamic Conditions</strong> to configure column filters (e.g. Vendor, Amount, Currency) or <strong>Approval Sequence</strong> to customize the multi-step BC approval flow.
+              </div>
+            </div>
           </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label" for="wf-due">{{ 'Erp::DueDays' | abpLocalization }}</label>
-            <input id="wf-due" type="number" min="0" step="1" class="form-control" formControlName="dueDays" />
-            <div class="form-text">{{ 'Erp::DueDaysHelp' | abpLocalization }}</div>
-          </div>
-        </div>
-        <div class="mb-2">
-          <label class="form-label" for="wf-limit">{{ 'Erp::ApproverLimitType' | abpLocalization }} *</label>
-          <select id="wf-limit" class="form-select" formControlName="approverLimitType">
-            @for (o of limitTypes; track o) {
-              <option [ngValue]="o.value">{{ 'Erp::Enum:ApproverLimitType.' + o.key | abpLocalization }}</option>
+        }
+
+        <!-- TAB 2: DYNAMIC CONDITIONS (BC APPROACH) -->
+        @if (activeModalTab === 'conditions') {
+          <div class="p-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h6 class="fw-bold mb-0">
+                  <i class="fas fa-filter text-primary me-1"></i> Business Central Filter Conditions
+                </h6>
+                <div class="text-muted small">
+                  Approval requests will only trigger when documents satisfy all conditions below.
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCondition()">
+                <i class="fas fa-plus me-1"></i> Add Condition
+              </button>
+            </div>
+
+            @if (conditions.length === 0) {
+              <div class="border rounded p-4 text-center text-muted bg-light mb-3">
+                <i class="fas fa-sliders-h fa-2x mb-2 text-secondary opacity-50"></i>
+                <p class="mb-2">No filter conditions configured. All documents of this kind will trigger approval.</p>
+                <button type="button" class="btn btn-sm btn-primary" (click)="addCondition()">
+                  <i class="fas fa-plus me-1"></i> Add First Condition
+                </button>
+              </div>
+            } @else {
+              <div class="table-responsive border rounded mb-3">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 35%">Column / Field</th>
+                      <th style="width: 25%">Operator</th>
+                      <th>Value</th>
+                      <th style="width: 50px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (cond of conditions; track $index) {
+                      <tr>
+                        <td>
+                          <select
+                            class="form-select form-select-sm"
+                            [(ngModel)]="cond.field"
+                            [ngModelOptions]="{standalone: true}"
+                            (ngModelChange)="onConditionFieldChange(cond)"
+                          >
+                            @for (col of availableColumns; track col.field) {
+                              <option [value]="col.field">{{ col.label }}</option>
+                            }
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            class="form-select form-select-sm"
+                            [(ngModel)]="cond.operator"
+                            [ngModelOptions]="{standalone: true}"
+                            (ngModelChange)="onConditionValueChange()"
+                          >
+                            @for (op of operators; track op) {
+                              <option [value]="op">
+                                {{ op === '>=' ? '>= (Greater or Equal)' : op === '>' ? '> (Greater Than)' : op === '<=' ? '<= (Less or Equal)' : op === '<' ? '< (Less Than)' : op === '=' ? '= (Equal)' : op === '<>' ? '<> (Not Equal)' : 'contains' }}
+                              </option>
+                            }
+                          </select>
+                        </td>
+                        <td>
+                          @if (getColumnOption(cond.field)?.type === 'select') {
+                            <select
+                              class="form-select form-select-sm"
+                              [(ngModel)]="cond.value"
+                              [ngModelOptions]="{standalone: true}"
+                              (ngModelChange)="onConditionValueChange()"
+                            >
+                              @for (opt of getColumnOption(cond.field)?.options; track opt) {
+                                <option [value]="opt">{{ opt }}</option>
+                              }
+                            </select>
+                          } @else if (getColumnOption(cond.field)?.type === 'number') {
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              class="form-control form-control-sm"
+                              [(ngModel)]="cond.value"
+                              [ngModelOptions]="{standalone: true}"
+                              (ngModelChange)="onConditionValueChange()"
+                              placeholder="0.00"
+                            />
+                          } @else {
+                            <input
+                              type="text"
+                              class="form-control form-control-sm"
+                              [(ngModel)]="cond.value"
+                              [ngModelOptions]="{standalone: true}"
+                              (ngModelChange)="onConditionValueChange()"
+                              placeholder="e.g. V00100"
+                            />
+                          }
+                        </td>
+                        <td class="text-center">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-link text-danger p-0"
+                            title="Remove condition"
+                            (click)="removeCondition($index)"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             }
-          </select>
-          <div class="form-text">{{ 'Erp::ApproverLimitTypeHelp' | abpLocalization }}</div>
-        </div>
+
+            <!-- Expression Preview -->
+            <div class="card bg-light border-0 shadow-none mb-3">
+              <div class="card-body p-3">
+                <div class="small fw-bold text-uppercase text-secondary mb-1">
+                  <i class="fas fa-terminal me-1 text-primary"></i> BC Filter Expression Rule
+                </div>
+                <div class="font-monospace text-primary bg-white p-2 px-3 rounded border">
+                  {{ getConditionRuleSummary() }}
+                </div>
+                <div class="text-muted small mt-1">
+                  This rule automatically synchronizes with the trigger event step in the Approval Sequence.
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 3: APPROVAL SEQUENCE & EVENTS -->
+        @if (activeModalTab === 'sequence') {
+          <div class="p-1">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h6 class="fw-bold mb-0">
+                  <i class="fas fa-sitemap text-primary me-1"></i> Business Central Approval Sequence
+                </h6>
+                <div class="text-muted small">
+                  Configure sequence of events, filter conditions, and responses for this workflow.
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetToBcDefaults()">
+                  <i class="fas fa-undo me-1"></i> Reset BC Defaults
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" (click)="addStep()">
+                  <i class="fas fa-plus me-1"></i> Add Step
+                </button>
+              </div>
+            </div>
+
+            <!-- Step Inline Editor Drawer -->
+            @if (editingStepIndex !== null && stepForm) {
+              <div class="card border-primary shadow-sm mb-3">
+                <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                  <span class="fw-bold small">
+                    <i class="fas fa-edit me-1"></i> Edit Step #{{ formSteps[editingStepIndex]?.sequenceNo }}
+                  </span>
+                  <button type="button" class="btn btn-sm btn-close btn-close-white" (click)="cancelEditingStep()"></button>
+                </div>
+                <div class="card-body p-3" [formGroup]="stepForm">
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold small">When Event Occurs *</label>
+                    <select class="form-select form-select-sm" formControlName="eventName">
+                      @for (ev of bcEvents; track ev) {
+                        <option [value]="ev">{{ ev }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-5">
+                      <label class="form-label fw-semibold small">Condition Preset</label>
+                      <select
+                        class="form-select form-select-sm"
+                        formControlName="conditionPreset"
+                        (change)="onConditionPresetChange($any($event.target).value)"
+                      >
+                        <option value="dynamic">Dynamic Conditions from Tab</option>
+                        <option value="always">Always</option>
+                        <option value="pending_gt_0">Pending approvals: &gt; 0</option>
+                        <option value="pending_eq_0">Pending approvals: 0</option>
+                        <option value="custom">Custom Text Rule</option>
+                      </select>
+                    </div>
+                    <div class="col-md-7">
+                      <label class="form-label fw-semibold small">Condition Rule *</label>
+                      <input type="text" class="form-control form-control-sm font-monospace" formControlName="conditionRule" />
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold small">Then Response Action *</label>
+                    <select class="form-select form-select-sm mb-1" formControlName="responseAction">
+                      @for (resp of bcResponses; track resp) {
+                        <option [value]="resp">{{ resp }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold small">Approver Type</label>
+                      <select class="form-select form-select-sm" formControlName="approverLimitType">
+                        @for (lt of limitTypes; track lt.value) {
+                          <option [ngValue]="lt.value">{{ 'Erp::Enum:ApproverLimitType.' + lt.key | abpLocalization }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold small">Specific Approver</label>
+                      <select class="form-select form-select-sm" formControlName="specificApproverUserName">
+                        <option value="">(Inherit / From Chain)</option>
+                        @for (u of approvalUsers; track u.id) {
+                          <option [value]="u.userName">{{ u.userName }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-semibold small">Days to Respond</label>
+                      <input type="number" min="0" class="form-control form-control-sm" formControlName="dueDays" />
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEditingStep()">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-primary" (click)="saveEditingStep()">
+                      <i class="fas fa-check me-1"></i> Apply Step
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Steps Table -->
+            <div class="table-responsive border rounded mb-2">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 50px" class="text-center">#</th>
+                    <th style="width: 32%">When Event</th>
+                    <th style="width: 28%">On Condition</th>
+                    <th>Then Response</th>
+                    <th style="width: 140px" class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (step of formSteps; track step.sequenceNo; let idx = $index) {
+                    <tr [class.table-primary]="editingStepIndex === idx">
+                      <td class="text-center fw-bold text-secondary">{{ step.sequenceNo }}</td>
+                      <td>
+                        <div class="fw-semibold text-dark">
+                          <i class="fas fa-bolt text-warning me-1"></i> {{ step.eventName }}
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark border font-monospace text-wrap text-start">
+                          {{ step.conditionRule || 'Always' }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="small text-secondary">
+                          <i class="fas fa-arrow-right text-success me-1"></i> {{ step.responseAction }}
+                        </div>
+                      </td>
+                      <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                          <button
+                            type="button"
+                            class="btn btn-outline-secondary p-1 px-2"
+                            [disabled]="idx === 0"
+                            title="Move Up"
+                            (click)="moveStepUp(idx)"
+                          >
+                            <i class="fas fa-arrow-up"></i>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-secondary p-1 px-2"
+                            [disabled]="idx === formSteps.length - 1"
+                            title="Move Down"
+                            (click)="moveStepDown(idx)"
+                          >
+                            <i class="fas fa-arrow-down"></i>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary p-1 px-2"
+                            title="Edit Step"
+                            (click)="startEditingStep(idx)"
+                          >
+                            <i class="fas fa-pen"></i>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-danger p-1 px-2"
+                            title="Delete Step"
+                            (click)="removeStep(idx)"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
       </form>
     }
   </ng-template>
 
   <ng-template #abpFooter>
-    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
-    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+    <div class="d-flex justify-content-between align-items-center w-100">
+      <div class="text-muted small">
+        @if (conditions.length > 0) {
+          <span><i class="fas fa-filter text-primary me-1"></i> {{ conditions.length }} conditions active</span>
+        }
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+        <abp-button iconClass="fa fa-check" [disabled]="form?.invalid || isBusy" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+      </div>
+    </div>
   </ng-template>
 </abp-modal>

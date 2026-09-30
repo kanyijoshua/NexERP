@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Sales;
 using Volo.Abp.DependencyInjection;
@@ -10,7 +12,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Reads back the entries a register wrote, across the three ledgers.
+/// Reads back the entries a register wrote, across the G/L, customer, vendor, bank and employee ledgers.
 /// <para>
 /// The same reader serves the posting preview and the navigate action on a register, so what a
 /// user is shown before posting is exactly what they can look at afterwards.
@@ -21,16 +23,22 @@ public class RegisterEntryReader : ITransientDependency
     private readonly IRepository<GLEntry, Guid> _glEntryRepository;
     private readonly IRepository<CustomerLedgerEntry, Guid> _customerLedgerRepository;
     private readonly IRepository<VendorLedgerEntry, Guid> _vendorLedgerRepository;
+    private readonly IRepository<BankAccountLedgerEntry, Guid> _bankLedgerRepository;
+    private readonly IRepository<EmployeeLedgerEntry, Guid> _employeeLedgerRepository;
 
     public RegisterEntryReader(
         IRepository<GLEntry, Guid> glEntryRepository,
         IRepository<CustomerLedgerEntry, Guid> customerLedgerRepository,
-        IRepository<VendorLedgerEntry, Guid> vendorLedgerRepository
+        IRepository<VendorLedgerEntry, Guid> vendorLedgerRepository,
+        IRepository<BankAccountLedgerEntry, Guid> bankLedgerRepository,
+        IRepository<EmployeeLedgerEntry, Guid> employeeLedgerRepository
     )
     {
         _glEntryRepository = glEntryRepository;
         _customerLedgerRepository = customerLedgerRepository;
         _vendorLedgerRepository = vendorLedgerRepository;
+        _bankLedgerRepository = bankLedgerRepository;
+        _employeeLedgerRepository = employeeLedgerRepository;
     }
 
     public async Task<PostingPreviewDto> ReadAsync(long registerNo)
@@ -38,6 +46,8 @@ public class RegisterEntryReader : ITransientDependency
         var glEntries = await _glEntryRepository.GetListAsync(e => e.RegisterNo == registerNo);
         var customerEntries = await _customerLedgerRepository.GetListAsync(e => e.RegisterNo == registerNo);
         var vendorEntries = await _vendorLedgerRepository.GetListAsync(e => e.RegisterNo == registerNo);
+        var bankEntries = await _bankLedgerRepository.GetListAsync(e => e.RegisterNo == registerNo);
+        var employeeEntries = await _employeeLedgerRepository.GetListAsync(e => e.RegisterNo == registerNo);
 
         var lines = new List<PostingPreviewLineDto>();
 
@@ -59,6 +69,18 @@ public class RegisterEntryReader : ITransientDependency
             vendorEntries
                 .OrderBy(e => e.EntryNo)
                 .Select(e => Line("VendorLedgerEntry", e.PostingDate, e.DocumentNo, e.VendorNo, e.Description, e.Amount))
+        );
+
+        lines.AddRange(
+            bankEntries
+                .OrderBy(e => e.EntryNo)
+                .Select(e => Line("BankAccountLedgerEntry", e.PostingDate, e.DocumentNo, e.BankAccountNo, e.Description, e.Amount))
+        );
+
+        lines.AddRange(
+            employeeEntries
+                .OrderBy(e => e.EntryNo)
+                .Select(e => Line("EmployeeLedgerEntry", e.PostingDate, e.DocumentNo, e.EmployeeNo, e.Description, e.Amount))
         );
 
         return new PostingPreviewDto

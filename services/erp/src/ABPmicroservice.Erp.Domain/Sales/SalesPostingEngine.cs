@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
@@ -14,7 +15,13 @@ namespace ABPmicroservice.Erp.Sales;
 /// <summary>
 /// Sales Document Posting Engine.
 /// Mirrors Business Central Codeunit 80 "Sales-Post".
-/// Atomically posts Sales Headers to Posted Sales Invoices, G/L Entries, Customer Ledger Entries, and Item Ledger Entries.
+/// Atomically posts Sales Headers to Posted Sales Invoices, G/L Entries, Customer Ledger Entries,
+/// VAT Entries and Item Ledger Entries.
+/// <para>
+/// An invoice debits the customer with the amount including VAT, credits revenue and output VAT,
+/// and (with automatic cost posting) moves the cost of the goods from inventory to COGS. A credit
+/// memo posts the same with every sign turned round and brings the stock back.
+/// </para>
 /// </summary>
 public class SalesPostingEngine : DomainService
 {
@@ -23,19 +30,26 @@ public class SalesPostingEngine : DomainService
 
     private readonly IRepository<SalesHeader, Guid> _salesHeaderRepository;
     private readonly IRepository<PostedSalesHeader, Guid> _postedSalesHeaderRepository;
-    private readonly IRepository<CustomerPostingGroup, Guid> _customerPostingGroupRepository;
-    private readonly IRepository<GeneralPostingSetup, Guid> _generalPostingSetupRepository;
+    private readonly IRepository<Customer, Guid> _customerRepository;
+    private readonly IRepository<Item, Guid> _itemRepository;
+    private readonly PostingSetupManager _postingSetupManager;
+    private readonly GeneralLedgerSetupManager _glSetupManager;
     private readonly GenJnlPostLine _genJnlPostLine;
     private readonly ItemJnlPostLine _itemJnlPostLine;
     private readonly SalesReceivablesSetupManager _setupManager;
     private readonly NoSeriesManager _noSeriesManager;
     private readonly GLRegisterManager _registerManager;
 
+    private CurrencyExchangeRateManager CurrencyManager => LazyServiceProvider.LazyGetRequiredService<CurrencyExchangeRateManager>();
+    private InventorySetupManager InventorySetupManager => LazyServiceProvider.LazyGetRequiredService<InventorySetupManager>();
+
     public SalesPostingEngine(
         IRepository<SalesHeader, Guid> salesHeaderRepository,
         IRepository<PostedSalesHeader, Guid> postedSalesHeaderRepository,
-        IRepository<CustomerPostingGroup, Guid> customerPostingGroupRepository,
-        IRepository<GeneralPostingSetup, Guid> generalPostingSetupRepository,
+        IRepository<Customer, Guid> customerRepository,
+        IRepository<Item, Guid> itemRepository,
+        PostingSetupManager postingSetupManager,
+        GeneralLedgerSetupManager glSetupManager,
         GenJnlPostLine genJnlPostLine,
         ItemJnlPostLine itemJnlPostLine,
         SalesReceivablesSetupManager setupManager,
@@ -46,8 +60,10 @@ public class SalesPostingEngine : DomainService
         _registerManager = registerManager;
         _salesHeaderRepository = salesHeaderRepository;
         _postedSalesHeaderRepository = postedSalesHeaderRepository;
-        _customerPostingGroupRepository = customerPostingGroupRepository;
-        _generalPostingSetupRepository = generalPostingSetupRepository;
+        _customerRepository = customerRepository;
+        _itemRepository = itemRepository;
+        _postingSetupManager = postingSetupManager;
+        _glSetupManager = glSetupManager;
         _genJnlPostLine = genJnlPostLine;
         _itemJnlPostLine = itemJnlPostLine;
         _setupManager = setupManager;
@@ -66,11 +82,37 @@ public class SalesPostingEngine : DomainService
             throw new UserFriendlyException($"Sales document '{header.No}' has no lines.");
         }
 
+        await _glSetupManager.CheckPostingDateAsync(header.PostingDate);
+
+        var salesSetup = await _setupManager.GetAsync();
+        if (salesSetup.ExtDocNoMandatory && header.ExternalDocumentNo.IsNullOrWhiteSpace())
+        {
+            throw new BusinessException(ErpErrorCodes.Sales.ExternalDocumentNoRequired).WithData("documentNo", header.No);
+        }
+
+        var creditMemo = header.DocumentType == SalesDocumentType.CreditMemo;
+        // Everything is worked out in invoice terms and turned round once for a credit memo.
+        var sign = creditMemo ? -1m : 1m;
+        var documentType = creditMemo ? GLEntryDocumentType.CreditMemo : GLEntryDocumentType.Invoice;
+        var customer = await _customerRepository.GetAsync(header.CustomerId);
+
+        // Every account is resolved before anything is written, so a missing posting setup
+        // stops the document instead of leaving half of it posted.
+        var plans = await PlanLinesAsync(header, customer, creditMemo);
+
+        // A foreign currency document posts at its posting date's rate: the customer entry keeps
+        // the currency, the G/L gets LCY, and the customer's LCY is the sum of the converted G/L
+        // lines so rounding cannot unbalance the document.
+        var currencyCode = await CurrencyManager.NormalizeAsync(header.CurrencyCode);
+        var factor = await CurrencyManager.GetCurrencyFactorAsync(currencyCode, header.PostingDate);
+        decimal Lcy(decimal amount) => CurrencyExchangeRateManager.ToLcy(amount, factor);
+        var customerLcy = plans.Sum(p => Lcy(Revenue(p.Line)) + (p.VatSetup == null ? 0m : Lcy(OutputVat(p.Line))));
+
         // Posted documents get their own number from the posted series; the derived number is the
         // fallback for a company that has not set one up.
-        var postedNos = (await _setupManager.GetAsync()).GetPostedDocumentNos(header.DocumentType);
+        var postedNos = salesSetup.GetPostedDocumentNos(header.DocumentType);
         string postedDocNo = postedNos.IsNullOrWhiteSpace()
-            ? $"PSI-{header.No}"
+            ? $"{(creditMemo ? "PSCM" : "PSI")}-{header.No}"
             : await _noSeriesManager.GetNextNoAsync(postedNos, header.PostingDate);
 
         // 1. Create Posted Sales Invoice
@@ -82,7 +124,7 @@ public class SalesPostingEngine : DomainService
             header.SellToCustomerNo,
             header.SellToCustomerName,
             header.PostingDate,
-            header.DueDate ?? header.PostingDate.AddDays(30),
+            header.DueDate ?? header.PostingDate.AddDays(ErpDomainConsts.DefaultPaymentDueDays),
             header.TotalAmount,
             header.TotalAmountIncludingVat
         );
@@ -109,48 +151,102 @@ public class SalesPostingEngine : DomainService
         var register = await _registerManager.OpenAsync(header.PostingDate, SourceCode, postedDocNo);
         var context = new GLPostingContext(register, SourceCode);
 
-        // 2. Post Customer Ledger Entry (A/R Debit) and the receivables control account with it
-        await _genJnlPostLine.PostLineAsync(
-            new GenJournalLine(
+        // 2. Post Customer Ledger Entry (A/R) and the receivables control account with it
+        var customerLine = new GenJournalLine(
                 GuidGenerator.Create(),
                 Guid.Empty,
                 1,
                 header.PostingDate,
-                GLEntryDocumentType.Invoice,
+                documentType,
                 postedDocNo,
                 GenJournalAccountType.Customer,
                 header.SellToCustomerNo,
-                $"Sales Invoice {postedDocNo}",
-                header.TotalAmountIncludingVat
-            ),
-            context
-        );
-
-        // 3. Post Revenue & Item Ledger entries per line
-        foreach (var line in header.Lines)
+                $"{(creditMemo ? "Sales Credit Memo" : "Sales Invoice")} {postedDocNo}",
+                sign * header.TotalAmountIncludingVat
+            );
+        if (currencyCode != null)
         {
-            if (line.Type == DocumentLineType.Item)
+            customerLine.SetCurrency(currencyCode, factor);
+            customerLine.SetAmountLcy(sign * customerLcy);
+        }
+
+        await _genJnlPostLine.PostLineAsync(customerLine, context, header.DueDate);
+
+        // 3. Per line: stock, revenue, VAT and cost of goods sold
+        foreach (var plan in plans)
+        {
+            var line = plan.Line;
+
+            if (plan.Item != null)
             {
-                // Post Item Ledger Entry (Inventory Decrease)
                 await _itemJnlPostLine.PostItemEntryAsync(
-                    Guid.Empty,
+                    plan.Item.Id,
                     line.No,
                     header.PostingDate,
                     ItemLedgerEntryType.Sale,
                     postedDocNo,
                     line.Description,
                     line.Quantity,
-                    line.UnitPrice
+                    plan.Item.UnitCost,
+                    locationCode: header.LocationCode,
+                    correction: creditMemo
                 );
+            }
 
-                // Post Revenue G/L Entry (Credit)
+            // Revenue (a credit on an invoice) is the line amount; a Full VAT line is all VAT.
+            var revenue = Lcy(Revenue(line));
+            if (revenue != 0m)
+            {
                 await _genJnlPostLine.PostGLDirectAsync(
-                    "4000", // Standard Sales Revenue Account
+                    plan.RevenueAccountNo,
                     header.PostingDate,
-                    GLEntryDocumentType.Invoice,
+                    documentType,
                     postedDocNo,
                     line.Description,
-                    -line.LineAmount,
+                    -sign * revenue,
+                    header.SellToCustomerNo,
+                    context: context
+                );
+            }
+
+            if (plan.VatSetup != null)
+            {
+                // Output VAT is owed on a sale; under reverse charge the customer accounts for it.
+                await _genJnlPostLine.PostVatAsync(
+                    plan.VatSetup,
+                    VatEntryType.Sale,
+                    -sign * Lcy(line.VatBaseAmount),
+                    -sign * Lcy(OutputVat(line)),
+                    header.PostingDate,
+                    header.PostingDate,
+                    documentType,
+                    postedDocNo,
+                    header.SellToCustomerNo,
+                    line.Description,
+                    context
+                );
+            }
+
+            if (plan.CostAmount != 0m)
+            {
+                // The goods leave inventory at cost and become cost of goods sold.
+                await _genJnlPostLine.PostGLDirectAsync(
+                    plan.CogsAccountNo,
+                    header.PostingDate,
+                    documentType,
+                    postedDocNo,
+                    line.Description,
+                    sign * plan.CostAmount,
+                    header.SellToCustomerNo,
+                    context: context
+                );
+                await _genJnlPostLine.PostGLDirectAsync(
+                    plan.InventoryAccountNo,
+                    header.PostingDate,
+                    documentType,
+                    postedDocNo,
+                    line.Description,
+                    -sign * plan.CostAmount,
                     header.SellToCustomerNo,
                     context: context
                 );
@@ -164,5 +260,77 @@ public class SalesPostingEngine : DomainService
         await _salesHeaderRepository.UpdateAsync(header);
 
         return postedHeader;
+    }
+
+    private static decimal Revenue(SalesLine line) =>
+        line.VatCalculationType == VatCalculationType.FullVat ? 0m : line.LineAmount;
+
+    private static decimal OutputVat(SalesLine line) =>
+        line.VatCalculationType == VatCalculationType.ReverseChargeVat ? 0m : line.VatAmount;
+
+    private sealed class LinePlan
+    {
+        public SalesLine Line { get; init; }
+        public Item Item { get; init; }
+        public string RevenueAccountNo { get; init; }
+        public VatPostingSetup VatSetup { get; init; }
+        public decimal CostAmount { get; init; }
+        public string CogsAccountNo { get; init; }
+        public string InventoryAccountNo { get; init; }
+    }
+
+    /// <summary>The accounts, VAT setup and cost of every item and G/L account line.</summary>
+    private async Task<List<LinePlan>> PlanLinesAsync(SalesHeader header, Customer customer, bool creditMemo)
+    {
+        var plans = new List<LinePlan>();
+        var automaticCostPosting = (await InventorySetupManager.GetAsync()).AutomaticCostPosting;
+
+        foreach (var line in header.Lines)
+        {
+            if (line.Type is not (DocumentLineType.Item or DocumentLineType.GLAccount))
+            {
+                continue;
+            }
+
+            var vatSetup = line.VatBusPostingGroup == null && line.VatProdPostingGroup == null
+                ? null
+                : await _postingSetupManager.GetVatPostingSetupAsync(line.VatBusPostingGroup, line.VatProdPostingGroup);
+
+            if (line.Type == DocumentLineType.GLAccount)
+            {
+                plans.Add(new LinePlan { Line = line, RevenueAccountNo = line.No, VatSetup = vatSetup });
+                continue;
+            }
+
+            var item = await _itemRepository.FirstOrDefaultAsync(i => i.No == line.No)
+                ?? throw new BusinessException(ErpErrorCodes.Items.ItemNotFound).WithData("no", line.No);
+
+            var revenueAccountNo = await _postingSetupManager.GetSalesAccountAsync(customer.GenBusPostingGroup, item.GenProdPostingGroup, creditMemo);
+
+            var costAmount = 0m;
+            string cogsAccountNo = null, inventoryAccountNo = null;
+            if (automaticCostPosting && item.Type == ItemType.Inventory)
+            {
+                costAmount = Math.Round(line.Quantity * item.UnitCost, 2, MidpointRounding.AwayFromZero);
+                if (costAmount != 0m)
+                {
+                    cogsAccountNo = await _postingSetupManager.GetCogsAccountAsync(customer.GenBusPostingGroup, item.GenProdPostingGroup);
+                    inventoryAccountNo = await _postingSetupManager.GetInventoryAccountAsync(item.InventoryPostingGroup, header.LocationCode);
+                }
+            }
+
+            plans.Add(new LinePlan
+            {
+                Line = line,
+                Item = item,
+                RevenueAccountNo = revenueAccountNo,
+                VatSetup = vatSetup,
+                CostAmount = costAmount,
+                CogsAccountNo = cogsAccountNo,
+                InventoryAccountNo = inventoryAccountNo,
+            });
+        }
+
+        return plans;
     }
 }

@@ -1,0 +1,468 @@
+<div class="erp-grid" [ngClass]="wrapInCard ? 'card border-0 shadow-sm erp-table-card' : ''">
+  <!-- Toolbar: search, filter pane, views and columns -->
+  @if (showToolbar) {
+    <div class="erp-grid-toolbar d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-bottom">
+      @if (enableQuickSearch) {
+        <div class="input-group input-group-sm erp-grid-search">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input
+            type="search"
+            class="form-control"
+            [placeholder]="'Erp::Search' | abpLocalization"
+            [attr.aria-label]="'Erp::Search' | abpLocalization"
+            [ngModel]="searchTerm"
+            (ngModelChange)="onSearchInput($event)"
+          />
+        </div>
+      }
+
+      @if (showFilterBar) {
+        <button
+          type="button"
+          class="btn btn-sm"
+          [ngClass]="isFilterPaneOpen || activeCriteriaCount ? 'btn-primary' : 'btn-outline-secondary'"
+          [attr.aria-expanded]="isFilterPaneOpen"
+          (click)="toggleFilterPane()"
+        >
+          <i class="fas fa-filter me-1"></i>{{ 'Erp::Table:Filters' | abpLocalization }}
+          @if (activeCriteriaCount) {
+            <span class="badge rounded-pill bg-white text-primary ms-1">{{ activeCriteriaCount }}</span>
+          }
+        </button>
+
+        <!-- Saved views: BC "views", Odoo "favorites" -->
+        <div ngbDropdown class="d-inline-block" [autoClose]="'outside'" #viewsDropdown="ngbDropdown">
+          <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+            <i class="fas fa-star me-1"></i>{{ 'Erp::Table:Views' | abpLocalization }}
+          </button>
+          <div ngbDropdownMenu class="erp-grid-menu p-0 shadow">
+            @for (view of savedViews; track view.name) {
+              <div class="d-flex align-items-center px-2 py-1 erp-grid-menu-item">
+                <button type="button" class="btn btn-link btn-sm text-start text-decoration-none flex-grow-1 text-truncate" (click)="applyView(view); viewsDropdown.close()">
+                  <i class="fas fa-bookmark text-primary me-2"></i>{{ view.name }}
+                </button>
+                <button type="button" class="btn btn-sm btn-link text-muted" [attr.aria-label]="'Erp::Delete' | abpLocalization" (click)="deleteView(view, $event)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            } @empty {
+              <div class="px-3 py-2 small text-muted">{{ 'Erp::Table:NoSavedViews' | abpLocalization }}</div>
+            }
+            <div class="border-top p-2 d-flex gap-1">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                maxlength="60"
+                [placeholder]="'Erp::Table:ViewName' | abpLocalization"
+                [attr.aria-label]="'Erp::Table:ViewName' | abpLocalization"
+                [(ngModel)]="newViewName"
+                (keydown.enter)="saveCurrentView()"
+              />
+              <button type="button" class="btn btn-sm btn-primary text-nowrap" [disabled]="!newViewName.trim()" (click)="saveCurrentView()">
+                {{ 'Erp::Table:SaveView' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="small text-muted text-nowrap">
+          {{ 'Erp::Table:RowsLoaded' | abpLocalization: rows().length.toString() : totalCount().toString() }}
+        </span>
+
+        @if (showColumnChooser && layout === 'table') {
+          <div ngbDropdown class="d-inline-block" placement="bottom-end" [autoClose]="'outside'">
+            <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle>
+              <i class="fas fa-table-columns me-1"></i>{{ 'Erp::Table:Columns' | abpLocalization }}
+              @if (visibleColumns().length < internalColumns.length) {
+                <span class="badge rounded-pill bg-primary ms-1">{{ visibleColumns().length }}/{{ internalColumns.length }}</span>
+              }
+            </button>
+            <div ngbDropdownMenu class="erp-grid-menu erp-grid-columns p-0 shadow">
+              <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-light">
+                <span class="small fw-semibold text-muted">{{ 'Erp::Table:ColumnsHelp' | abpLocalization }}</span>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" (click)="resetColumnsToDefault()">
+                  <i class="fas fa-undo me-1"></i>{{ 'Erp::Table:Reset' | abpLocalization }}
+                </button>
+              </div>
+              <div class="p-2 border-bottom">
+                <input
+                  type="search"
+                  class="form-control form-control-sm"
+                  [placeholder]="'Erp::Table:FindColumn' | abpLocalization"
+                  [attr.aria-label]="'Erp::Table:FindColumn' | abpLocalization"
+                  [(ngModel)]="columnSearchQuery"
+                />
+              </div>
+              <div
+                class="erp-grid-column-list p-1"
+                cdkDropList
+                [cdkDropListDisabled]="!!columnSearchQuery"
+                (cdkDropListDropped)="dropColumn($event)"
+              >
+                @for (col of filteredColumnsForChooser; track col.field) {
+                  <div class="d-flex align-items-center gap-2 px-2 py-1 rounded erp-grid-menu-item" cdkDrag [cdkDragData]="col">
+                    <i class="fas fa-grip-vertical text-muted erp-drag-handle" cdkDragHandle [class.invisible]="!!columnSearchQuery"></i>
+                    <input
+                      type="checkbox"
+                      class="form-check-input m-0"
+                      [id]="'erp-col-' + col.field"
+                      [checked]="col.visible !== false"
+                      [disabled]="col.hideable === false"
+                      (change)="toggleColumnVisibility(col, $event)"
+                    />
+                    <label class="small flex-grow-1 text-truncate m-0" [for]="'erp-col-' + col.field">{{ getColumnLabel(col) }}</label>
+                    <div class="btn-group btn-group-sm">
+                      <button
+                        type="button"
+                        class="btn erp-pin-btn"
+                        [ngClass]="col.pinned === 'left' ? 'btn-primary' : 'btn-outline-secondary'"
+                        [title]="'Erp::Table:PinLeft' | abpLocalization"
+                        [attr.aria-label]="'Erp::Table:PinLeft' | abpLocalization"
+                        [attr.aria-pressed]="col.pinned === 'left'"
+                        (click)="setColumnPin(col, 'left', $event)"
+                      >
+                        <i class="fas fa-thumbtack fa-rotate-by" style="--fa-rotate-angle: -45deg"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn erp-pin-btn"
+                        [ngClass]="col.pinned === 'right' ? 'btn-primary' : 'btn-outline-secondary'"
+                        [title]="'Erp::Table:PinRight' | abpLocalization"
+                        [attr.aria-label]="'Erp::Table:PinRight' | abpLocalization"
+                        [attr.aria-pressed]="col.pinned === 'right'"
+                        (click)="setColumnPin(col, 'right', $event)"
+                      >
+                        <i class="fas fa-thumbtack fa-rotate-by" style="--fa-rotate-angle: 45deg"></i>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="d-flex align-items-center justify-content-between px-3 py-2 border-top bg-light small text-muted">
+                <span>{{ 'Erp::Table:ColumnsShown' | abpLocalization: visibleColumns().length.toString() : internalColumns.length.toString() }}</span>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0" (click)="showAllColumns()">{{ 'Erp::Table:ShowAll' | abpLocalization }}</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Active filters as facets (Odoo) -->
+  @if (activeFilterPills.length) {
+    <div class="erp-grid-facets d-flex flex-wrap align-items-center gap-1 px-3 py-2 border-bottom">
+      @for (pill of activeFilterPills; track pill.id) {
+        <span class="badge erp-grid-facet d-inline-flex align-items-center gap-1">
+          <i class="fas" [ngClass]="pill.isSearch ? 'fa-search' : 'fa-filter'"></i>
+          <span>{{ pill.label }}</span>
+          <button type="button" class="btn-close" [attr.aria-label]="'Erp::Table:RemoveFilter' | abpLocalization" (click)="removeFilterPill(pill.id)"></button>
+        </span>
+      }
+      @if (filterCriteria.length > 1 && activeCriteriaCount > 1) {
+        <span class="small text-muted ms-1">({{ (filterLogic === 'and' ? 'Erp::Table:MatchAll' : 'Erp::Table:MatchAny') | abpLocalization }})</span>
+      }
+      <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2" (click)="clearAllFilters()">
+        {{ 'Erp::Table:ClearAll' | abpLocalization }}
+      </button>
+    </div>
+  }
+
+  <!-- Filter pane (BC): any number of conditions on any column -->
+  @if (isFilterPaneOpen) {
+    <div class="erp-grid-filter-pane px-3 py-2 border-bottom">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="small fw-semibold text-muted text-uppercase">{{ 'Erp::Table:FilterListBy' | abpLocalization }}</span>
+        <div class="btn-group btn-group-sm" role="group" [attr.aria-label]="'Erp::Table:Match' | abpLocalization">
+          <button type="button" class="btn" [ngClass]="filterLogic === 'and' ? 'btn-primary' : 'btn-outline-secondary'" (click)="setFilterLogic('and')">
+            {{ 'Erp::Table:MatchAll' | abpLocalization }}
+          </button>
+          <button type="button" class="btn" [ngClass]="filterLogic === 'or' ? 'btn-primary' : 'btn-outline-secondary'" (click)="setFilterLogic('or')">
+            {{ 'Erp::Table:MatchAny' | abpLocalization }}
+          </button>
+        </div>
+        <button type="button" class="btn-close ms-auto" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="isFilterPaneOpen = false"></button>
+      </div>
+
+      @for (c of filterCriteria; track c.id) {
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2 erp-grid-condition">
+          <select
+            class="form-select form-select-sm erp-grid-field"
+            [attr.aria-label]="'Erp::Table:Field' | abpLocalization"
+            [ngModel]="c.field"
+            (ngModelChange)="onFieldChange(c, $event)"
+          >
+            @for (col of filterableColumns; track col.field) {
+              <option [value]="col.field">{{ getColumnLabel(col) }}</option>
+            }
+          </select>
+
+          <select
+            class="form-select form-select-sm erp-grid-operator"
+            [attr.aria-label]="'Erp::Table:Operator' | abpLocalization"
+            [ngModel]="c.operator"
+            (ngModelChange)="onOperatorChange(c, $event)"
+          >
+            @for (op of operatorsFor(c.field); track op.value) {
+              <option [value]="op.value">{{ op.label | abpLocalization }}</option>
+            }
+          </select>
+
+          @if (!isNoValueOperator(c.operator)) {
+            @if (c.operator === 'expression') {
+              <input
+                type="text"
+                class="form-control form-control-sm erp-grid-value font-monospace"
+                [placeholder]="'Erp::Table:ExpressionHint' | abpLocalization"
+                [attr.aria-label]="'Erp::Table:Value' | abpLocalization"
+                [(ngModel)]="c.value"
+                (ngModelChange)="onCriteriaChanged()"
+              />
+            } @else {
+              @switch (inputTypeFor(c.field)) {
+                @case ('select') {
+                  <select class="form-select form-select-sm erp-grid-value" [attr.aria-label]="'Erp::Table:Value' | abpLocalization" [(ngModel)]="c.value" (ngModelChange)="onCriteriaChanged()">
+                    <option value=""></option>
+                    @for (option of getColumnByField(c.field)?.options ?? []; track option.value) {
+                      <option [value]="option.value">{{ option.label | abpLocalization }}</option>
+                    }
+                  </select>
+                }
+                @default {
+                  <input
+                    [type]="inputTypeFor(c.field)"
+                    class="form-control form-control-sm erp-grid-value"
+                    [attr.aria-label]="'Erp::Table:Value' | abpLocalization"
+                    [(ngModel)]="c.value"
+                    (ngModelChange)="onCriteriaChanged()"
+                  />
+                  @if (c.operator === 'between') {
+                    <span class="text-muted">..</span>
+                    <input
+                      [type]="inputTypeFor(c.field)"
+                      class="form-control form-control-sm erp-grid-value"
+                      [attr.aria-label]="'Erp::Table:ValueTo' | abpLocalization"
+                      [(ngModel)]="c.valueTo"
+                      (ngModelChange)="onCriteriaChanged()"
+                    />
+                  }
+                }
+              }
+            }
+          }
+
+          <button type="button" class="btn btn-sm btn-outline-danger" [attr.aria-label]="'Erp::Table:RemoveFilter' | abpLocalization" (click)="removeFilterCriterion(c.id)">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      }
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addFilterCriterion()">
+          <i class="fas fa-plus me-1"></i>{{ 'Erp::Table:AddFilter' | abpLocalization }}
+        </button>
+        <span class="small text-muted">{{ 'Erp::Table:ExpressionHelp' | abpLocalization }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Grid: the body scrolls; fixed columns stay in view on horizontal scrolling -->
+  @if (layout === 'table') {
+    <ngx-datatable
+      class="material bordered erp-grid-table"
+      [class.erp-clickable-rows]="clickableRows"
+      [style.height]="height"
+      [rows]="rows()"
+      [columnMode]="'force'"
+      [scrollbarV]="true"
+      [scrollbarH]="true"
+      [rowHeight]="rowHeight"
+      [headerHeight]="headerHeight"
+      [footerHeight]="0"
+      [externalSorting]="isServerMode"
+      [reorderable]="true"
+      [loadingIndicator]="isLoading() || loading"
+      [trackByProp]="'id'"
+      [selected]="selected"
+      [selectionType]="$any(selectable ? selectionType : undefined)"
+      [messages]="{ emptyMessage: (emptyMessageKey | abpLocalization), totalMessage: '', selectedMessage: '' }"
+      (scroll)="onTableScroll($event)"
+      (sort)="onSort($event)"
+      (reorder)="onReorder($event)"
+      (resize)="onResize($event)"
+      (activate)="onActivate($event)"
+      (select)="onSelect($event)"
+    >
+      @for (col of visibleColumns(); track col.field) {
+        <ngx-datatable-column
+          [name]="getColumnLabel(col)"
+          [prop]="col.field"
+          [width]="col.width || 150"
+          [minWidth]="col.minWidth || 70"
+          [maxWidth]="col.maxWidth"
+          [sortable]="col.sortable !== false"
+          [frozenLeft]="isFrozenLeft(col)"
+          [frozenRight]="isFrozenRight(col)"
+          [headerClass]="getHeaderClass(col)"
+          [cellClass]="getCellClass(col)"
+        >
+          <ng-template let-column="column" let-sortFn="sortFn" ngx-datatable-header-template>
+            <span class="erp-grid-th">
+              <span class="datatable-header-cell-label draggable" (click)="sortFn()">{{ column.name }}</span>
+              @if (showFilterBar && col.filterable !== false && col.type !== 'custom') {
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm p-0 erp-grid-th-filter"
+                  [title]="'Erp::Table:FilterColumn' | abpLocalization"
+                  [attr.aria-label]="'Erp::Table:FilterColumn' | abpLocalization"
+                  (click)="addFilterCriterion(col.field); $event.stopPropagation()"
+                >
+                  <i class="fas fa-filter"></i>
+                </button>
+              }
+            </span>
+          </ng-template>
+
+          <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+            @if (getCustomTemplate(col.field); as customTpl) {
+              <ng-container *ngTemplateOutlet="customTpl; context: { $implicit: row, row: row, value: value }"></ng-container>
+            } @else {
+              @switch (col.type) {
+                @case ('code') {
+                  @if (isClickable(col, row)) {
+                    <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
+                      @if (getIcon(col, row)) {
+                        <i [class]="getIcon(col, row) + ' me-1'"></i>
+                      }
+                      {{ value || '—' }}
+                    </a>
+                  } @else {
+                    <span class="fw-semibold">{{ value || '—' }}</span>
+                  }
+                }
+                @case ('link') {
+                  <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
+                    {{ value || '—' }}
+                  </a>
+                }
+                @case ('currency') {
+                  <span class="font-monospace" [class.text-danger]="value < 0">{{ value ?? 0 | erpAmount }}</span>
+                }
+                @case ('number') {
+                  <span class="font-monospace">{{ col.format ? col.format(value, row) : (value ?? 0) }}</span>
+                }
+                @case ('date') {
+                  <span>{{ value | date: 'yyyy-MM-dd' }}</span>
+                }
+                @case ('datetime') {
+                  <span class="small text-muted">{{ value | date: 'short' }}</span>
+                }
+                @case ('boolean') {
+                  <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted opacity-50'" [attr.aria-label]="value ? ('AbpUi::Yes' | abpLocalization) : ('AbpUi::No' | abpLocalization)"></i>
+                }
+                @case ('switch') {
+                  <div class="form-check form-switch d-inline-block m-0">
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      [checked]="value"
+                      [attr.aria-label]="getColumnLabel(col)"
+                      (change)="onSwitchToggle(col, row, $event)"
+                      (click)="$event.stopPropagation()"
+                    />
+                  </div>
+                }
+                @case ('select') {
+                  <span class="badge bg-light text-secondary border fw-normal">{{ optionLabel(col, value) }}</span>
+                }
+                @case ('badge') {
+                  <span class="badge" [ngClass]="getBadgeClass(col, row)">{{ col.format ? col.format(value, row) : (col.options ? optionLabel(col, value) : value) }}</span>
+                }
+                @default {
+                  @if (getIcon(col, row)) {
+                    <i [class]="getIcon(col, row) + ' me-1 text-muted'"></i>
+                  }
+                  {{ col.format ? col.format(value, row) : (value !== null && value !== undefined && value !== '' ? value : '') }}
+                }
+              }
+            }
+          </ng-template>
+        </ngx-datatable-column>
+      }
+
+      @if (showActionsColumn) {
+        <ngx-datatable-column
+          [name]="actionsTitleKey | abpLocalization"
+          [sortable]="false"
+          [draggable]="false"
+          [resizeable]="false"
+          [width]="actionsWidth"
+          [minWidth]="actionsWidth"
+          [maxWidth]="actionsWidth"
+          [frozenRight]="actionsColumnFixed"
+          headerClass="text-end erp-grid-actions"
+          cellClass="text-end erp-grid-actions"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            @if (customActionsDirective) {
+              <ng-container *ngTemplateOutlet="customActionsDirective.templateRef; context: { $implicit: row, row: row }"></ng-container>
+            } @else {
+              <div class="d-inline-flex align-items-center gap-1">
+                @for (act of actions; track act.key || act.icon) {
+                  @if (isActionVisible(act, row)) {
+                    <button
+                      *abpPermission="act.permission ?? ''"
+                      type="button"
+                      class="btn btn-sm erp-action-btn"
+                      [ngClass]="act.btnClass || 'btn-outline-secondary'"
+                      [disabled]="isActionDisabled(act, row)"
+                      [title]="(act.title || act.labelKey || '') | abpLocalization"
+                      [attr.aria-label]="(act.title || act.labelKey || '') | abpLocalization"
+                      (click)="executeAction(act, row, $event)"
+                    >
+                      <i [class]="act.icon"></i>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </ng-template>
+        </ngx-datatable-column>
+      }
+    </ngx-datatable>
+  } @else {
+    <!-- Cards (Odoo kanban / BC tiles), scrolled and filtered like the grid -->
+    <div class="erp-cards-scroller p-3" [style.height]="height" (scroll)="onCardsScroll($event)">
+      @if (cardDirective) {
+        <div class="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4">
+          @for (row of rows(); track trackRow($index, row)) {
+            <div class="col">
+              <ng-container *ngTemplateOutlet="cardDirective.templateRef; context: { $implicit: row, row: row }"></ng-container>
+            </div>
+          }
+        </div>
+      }
+      @if (!rows().length && !isLoading()) {
+        <div class="text-center text-muted py-5">
+          <i class="fas fa-inbox fa-2x mb-2 opacity-50 d-block"></i>{{ emptyMessageKey | abpLocalization }}
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Footer: how much of the list is loaded; more arrives on scrolling -->
+  <div class="erp-grid-footer d-flex align-items-center gap-2 px-3 py-1 border-top small text-muted">
+    @if (isLoading()) {
+      <i class="fas fa-circle-notch fa-spin text-primary"></i>
+      <span>{{ 'Erp::Table:Loading' | abpLocalization }}</span>
+    } @else if (hasMore()) {
+      <span>{{ 'Erp::Table:ScrollForMore' | abpLocalization }}</span>
+      <button type="button" class="btn btn-link btn-sm p-0" (click)="loadMore()">{{ 'Erp::Table:LoadMore' | abpLocalization }}</button>
+    } @else if (rows().length) {
+      <i class="fas fa-check text-success"></i>
+      <span>{{ 'Erp::Table:AllLoaded' | abpLocalization }}</span>
+    }
+  </div>
+</div>

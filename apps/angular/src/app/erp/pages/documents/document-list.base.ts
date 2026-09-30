@@ -1,10 +1,10 @@
-import { ABP, ListService, PagedResultDto, PermissionService } from '@abp/ng.core';
+import { LocalizationService, PagedResultDto, PermissionService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
 import { DestroyRef, Directive, OnInit, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DocumentLineType, DocumentStatus, documentLineTypeOptions } from '@proxy/documents';
+import { DocumentLineType, DocumentStatus, documentLineTypeOptions, documentStatusOptions } from '@proxy/documents';
 import {
   ApprovalEntryDto,
   ApprovalEntryService,
@@ -16,6 +16,13 @@ import { ChatterWidgetComponent } from '../../components/chatter-widget/chatter-
 import {
   DocumentLineChange,
   DocumentLineColumn,
+  ErpExportColumn,
+  ErpExportOptions,
+  ErpExportService,
+  ErpTableColumn,
+  ErpTableComponent,
+  ErpTableQuery,
+  ErpTableSource,
   LookupItem,
   calculateDocumentTotals,
 } from '../../erp-shared';
@@ -37,6 +44,10 @@ export interface NewDocumentInput {
   no: string | null;
   partyId: string;
   postingDate: string;
+  /** Where the stock is shipped from or received at; blank uses the location-less setup. */
+  locationCode: string | null;
+  /** The party's own reference: the customer's order no. or the vendor's invoice no. */
+  externalDocumentNo: string | null;
   lines: {
     type: DocumentLineType;
     no: string;
@@ -61,13 +72,60 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected readonly confirmation = inject(ConfirmationService);
   protected readonly companyService = inject(CompanyService);
   protected readonly approvalEntries = inject(ApprovalEntryService);
+  protected readonly exportService = inject(ErpExportService);
+  protected readonly localization = inject(LocalizationService);
   private readonly permissions = inject(PermissionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  readonly list = inject<ListService<ABP.PageQueryParams>>(ListService);
   readonly DocumentStatus = DocumentStatus;
   readonly ApprovalStatus = ApprovalStatus;
+
+  viewMode: 'table' | 'card' = (localStorage.getItem('nexerp_doc_list_view_mode') as 'table' | 'card') || 'table';
+
+  onViewModeChange(mode: 'table' | 'card'): void {
+    this.viewMode = mode;
+    try {
+      localStorage.setItem('nexerp_doc_list_view_mode', mode);
+    } catch {}
+  }
+
+  onExport(format: 'excel' | 'csv' | 'print' | 'clipboard'): void {
+    if (!this.loadedRows.length) {
+      this.toaster.info('Erp::Table:NothingToExport');
+      return;
+    }
+
+    const exportColumns: ErpExportColumn[] = [
+      { field: 'no', title: this.localization.instant('Erp::No') || 'Document No' },
+      { field: 'party', title: this.localization.instant(this.partyLabelKey) || 'Party', formatter: (_, row) => this.nameOf(row) },
+      { field: 'postingDate', title: this.localization.instant('Erp::PostingDate') || 'Posting Date', type: 'date' },
+      { field: 'totalAmount', title: this.localization.instant('Erp::Amount') || 'Amount', type: 'currency' },
+      { field: 'status', title: this.localization.instant('Erp::Status') || 'Status', formatter: (_, row) => this.statusName(row.status) },
+    ];
+
+    const options: ErpExportOptions = {
+      fileName: `${this.titleKey.replace(/^Erp::/, '')}_${new Date().toISOString().substring(0, 10)}`,
+      title: this.localization.instant(this.titleKey) || this.titleKey.replace(/^Erp::/, ''),
+      sheetName: 'Documents',
+      companyName: this.companyService.getActiveCompanyName(),
+    };
+
+    switch (format) {
+      case 'excel':
+        this.exportService.exportToExcel(exportColumns, this.loadedRows, options);
+        break;
+      case 'csv':
+        this.exportService.exportToCsv(exportColumns, this.loadedRows, options);
+        break;
+      case 'print':
+        this.exportService.print(exportColumns, this.loadedRows, options);
+        break;
+      case 'clipboard':
+        this.exportService.copyToClipboard(exportColumns, this.loadedRows);
+        break;
+    }
+  }
 
   /** Wording and permissions, e.g. 'Erp::SalesInvoices' and 'Erp.SalesDocuments'. */
   abstract readonly titleKey: string;
@@ -77,8 +135,13 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   abstract readonly permissionPrefix: string;
   /** "SalesHeader" / "PurchaseHeader": the key of the record's chatter thread. */
   abstract readonly chatterEntityType: string;
+  /** Header fields holding the party's number and name, e.g. `sellToCustomerNo` / `sellToCustomerName`. */
+  abstract readonly partyNoField: string;
+  abstract readonly partyNameField: string;
   /** Record entity of the party lookup: `customer` / `vendor`. */
   abstract readonly partyEntity: string;
+  /** Label of the party's own reference: External Document No. or Vendor Invoice No. */
+  abstract readonly externalDocumentNoLabelKey: string;
   /** What an item line takes as its unit amount: the item's price on sales, its cost on purchases. */
   abstract readonly itemAmountField: 'unitPrice' | 'unitCost';
 
@@ -89,9 +152,16 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   partyFilter: string | null = null;
 
   @ViewChild(ChatterWidgetComponent) private chatter?: ChatterWidgetComponent;
+  @ViewChild(ErpTableComponent) protected table?: ErpTableComponent<TRow>;
 
-  data: PagedResultDto<TRow> = { items: [], totalCount: 0 };
+  columns: ErpTableColumn<TRow>[] = [];
+  readonly source: ErpTableSource<TRow> = query => this.getList(query);
+
+  /** The rows the grid has loaded so far: what is exported. */
+  loadedRows: TRow[] = [];
   selected: TRow | null = null;
+  /** The grid's highlighted row, kept as one array so the grid is not re-bound on every check. */
+  selection: TRow[] = [];
   history: ApprovalEntryDto[] = [];
   busyId: string | null = null;
 
@@ -101,17 +171,6 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   lineColumns: DocumentLineColumn[] = [];
 
   readonly canSeeApprovals = this.permissions.getGrantedPolicy('Erp.Workflows');
-
-  private _filter = '';
-
-  get filter(): string {
-    return this._filter;
-  }
-
-  set filter(value: string) {
-    this._filter = value ?? '';
-    this.list.filter = this._filter;
-  }
 
   get lines(): FormArray {
     return this.form.get('lines') as FormArray;
@@ -126,7 +185,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     );
   }
 
-  protected abstract getList(query: ABP.PageQueryParams): Observable<PagedResultDto<TRow>>;
+  protected abstract getList(query: ErpTableQuery): Observable<PagedResultDto<TRow>>;
   protected abstract partyName(row: TRow): string;
   protected abstract searchParties(term: string): Observable<LookupItem[]>;
   protected abstract createDocument(input: NewDocumentInput): Observable<TRow>;
@@ -168,28 +227,49 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       },
     ];
 
-    this.list
-      .hookToQuery(query => this.getList(query))
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => {
-        this.data = result;
-        // Keep the selection on the same document, with its fresh status.
-        const current = this.selected?.id;
-        this.select(result.items?.find(r => r.id === current) ?? result.items?.[0] ?? null);
-      });
+    this.columns = [
+      { field: 'no', labelKey: 'Erp::No', type: 'code', width: 150 },
+      { field: this.partyNoField, labelKey: this.partyLabelKey, width: 120 },
+      { field: this.partyNameField, labelKey: 'Erp::Name', width: 200 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'totalAmount', labelKey: 'Erp::Amount', type: 'currency', width: 130 },
+      { field: 'totalAmountIncludingVat', labelKey: 'Erp::AmountIncludingVat', type: 'currency', width: 150 },
+      {
+        field: 'status',
+        labelKey: 'Erp::Status',
+        type: 'badge',
+        width: 140,
+        options: documentStatusOptions.map(o => ({ value: o.value, label: 'Erp::Enum:DocumentStatus.' + o.key })),
+        badgeClass: row => this.statusClass(row.status),
+      },
+    ];
 
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.selected = null;
-      this.list.page = 0;
-      this.list.get();
+      this.select(null);
+      this.table?.reload();
     });
+  }
+
+  /**
+   * Keeps the selection on the same document with its fresh status, or moves it to the first
+   * row when that document is gone. A document whose status is unchanged keeps its history.
+   */
+  onRowsChange(rows: TRow[]): void {
+    this.loadedRows = rows;
+    const current = this.selected;
+    const next = rows.find(r => r.id === current?.id) ?? rows[0] ?? null;
+    if (next && current && next.id === current.id && next.status === current.status) {
+      this.selected = next;
+      this.selection = [next];
+    } else {
+      this.select(next);
+    }
   }
 
   clearPartyFilter(): void {
     this.partyFilter = null;
     this.router.navigate([], { relativeTo: this.route, queryParams: {} });
-    this.list.page = 0;
-    this.list.get();
+    this.table?.reload();
   }
 
   /**
@@ -218,6 +298,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
 
   select(row: TRow | null): void {
     this.selected = row;
+    this.selection = row ? [row] : [];
     this.history = [];
 
     if (row?.id && this.canSeeApprovals) {
@@ -280,6 +361,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       no: ['', Validators.maxLength(20)],
       partyId: [null as string | null, Validators.required],
       postingDate: [new Date().toISOString().substring(0, 10), Validators.required],
+      locationCode: [null as string | null],
+      externalDocumentNo: ['', Validators.maxLength(35)],
       lines: this.fb.array([this.buildLine()]),
     });
     this.isModalOpen = true;
@@ -304,6 +387,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       no: value.no?.trim() || null,
       partyId: value.partyId,
       postingDate: value.postingDate,
+      locationCode: value.locationCode || null,
+      externalDocumentNo: value.externalDocumentNo?.trim() || null,
       lines: value.lines,
     };
 
@@ -318,8 +403,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         this.toaster.success('Erp::DocumentCreated', undefined, {
           messageLocalizationParams: [created.no ?? ''],
         });
-        this.selected = created;
-        this.list.get();
+        this.select(created);
+        this.table?.reload();
       });
   }
 
@@ -339,9 +424,9 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
           ],
         });
         if (action === 'delete' && this.selected?.id === id) {
-          this.selected = null;
+          this.select(null);
         }
-        this.list.get();
+        this.table?.reload();
         this.chatter?.load();
       });
   }

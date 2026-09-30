@@ -19,99 +19,77 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column [name]="'Erp::RegisterNo' | abpLocalization" prop="no" [width]="110"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::PostingDate' | abpLocalization" prop="postingDate" [width]="140">
-        <ng-template let-value="value" ngx-datatable-cell-template>{{ value | date: 'mediumDate' }}</ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Batch' | abpLocalization" prop="journalBatchName" [width]="200"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::SourceCode' | abpLocalization" prop="sourceCode" [width]="120"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::PostedBy' | abpLocalization" prop="userName" [width]="150"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::TransactionNo' | abpLocalization" prop="transactionNo" [width]="130"></ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Reversed' | abpLocalization" [width]="160" [sortable]="false">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          @if (row.reversed) {
-            <span class="badge bg-secondary">
-              {{ 'Erp::Reversed' | abpLocalization }} · {{ row.reversedByRegisterNo }}
-            </span>
-          }
-          @if (row.reversedRegisterNo) {
-            <span class="badge bg-info text-dark">
-              {{ 'Erp::Reverse' | abpLocalization }} · {{ row.reversedRegisterNo }}
-            </span>
-          }
-        </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="180">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary me-1"
-            [title]="'Erp::ViewEntries' | abpLocalization"
-            (click)="showEntries(row)"
-            >
-            <i class="fas fa-list"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.GLRegisters.Reverse'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [disabled]="busy || !row.isReversible"
-            [title]="'Erp::Reverse' | abpLocalization"
-            (click)="reverse(row)"
-            >
-            <i class="fas fa-undo me-1"></i>{{ 'Erp::Reverse' | abpLocalization }}
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+<erp-table
+  tableId="gl-registers"
+  [height]="openRegisterNo !== null ? '45vh' : 'calc(100vh - 290px)'"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  [actionsWidth]="100"
+  [clickableRows]="false"
+  (codeClick)="showEntries($event)"
+>
+  <ng-template erpTableCol="transactionNo" let-value="value">
+    <span class="font-monospace small text-muted">{{ value }}</span>
+  </ng-template>
+  <ng-template erpTableCol="reversed" let-row="row">
+    @if (row.reversed) {
+      <span class="badge bg-secondary-subtle text-secondary border">
+        {{ 'Erp::Reversed' | abpLocalization }} · {{ row.reversedByRegisterNo }}
+      </span>
+    }
+    @if (row.reversedRegisterNo) {
+      <span class="badge bg-info-subtle text-info border">
+        {{ 'Erp::Reverse' | abpLocalization }} · {{ row.reversedRegisterNo }}
+      </span>
+    }
+  </ng-template>
+</erp-table>
 
 @if (openRegisterNo !== null) {
-  <div class="card border-0 shadow-sm mt-3">
-    <div class="card-header bg-white d-flex align-items-center">
+  <div class="card border-0 shadow-sm mt-3 erp-table-card">
+    <div class="card-header bg-white d-flex align-items-center py-2 px-3">
       <span class="fw-bold">
-        {{ 'Erp::RegisterEntries' | abpLocalization: openRegisterNo }}
+        <i class="fas fa-list-check text-primary me-2"></i>{{ 'Erp::RegisterEntries' | abpLocalization: openRegisterNo }}
       </span>
-      <button type="button" class="btn-close ms-auto" (click)="closeEntries()"></button>
+      <button type="button" class="btn-close ms-auto" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="closeEntries()"></button>
     </div>
     <div class="card-body p-0">
-      <table class="table table-sm mb-0">
-        <thead class="table-light">
-          <tr>
-            <th scope="col">{{ 'Erp::Ledger' | abpLocalization }}</th>
-            <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
-            <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
-            <th scope="col">{{ 'Erp::AccountNo' | abpLocalization }}</th>
-            <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
-            <th scope="col" class="text-end">{{ 'Erp::Debit' | abpLocalization }}</th>
-            <th scope="col" class="text-end">{{ 'Erp::Credit' | abpLocalization }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of entries; track entry) {
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light">
             <tr>
-              <td class="small text-muted">{{ entry.ledger }}</td>
-              <td>{{ entry.postingDate | date: 'mediumDate' }}</td>
-              <td>{{ entry.documentNo }}</td>
-              <td>{{ entry.accountNo }}</td>
-              <td>{{ entry.description }}</td>
-              <td class="text-end">{{ entry.debitAmount | erpAmount }}</td>
-              <td class="text-end">{{ entry.creditAmount | erpAmount }}</td>
+              <th scope="col">{{ 'Erp::Ledger' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::AccountNo' | abpLocalization }}</th>
+              <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::Debit' | abpLocalization }}</th>
+              <th scope="col" class="text-end">{{ 'Erp::Credit' | abpLocalization }}</th>
             </tr>
-          }
-          @if (entries.length === 0) {
-            <tr>
-              <td colspan="7" class="text-center text-muted py-3">
-                {{ 'Erp::NoDataAvailable' | abpLocalization }}
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (entry of entries; track entry) {
+              <tr>
+                <td class="small text-muted">{{ entry.ledger }}</td>
+                <td>{{ entry.postingDate | date: 'mediumDate' }}</td>
+                <td class="font-monospace fw-medium">{{ entry.documentNo }}</td>
+                <td class="font-monospace">{{ entry.accountNo }}</td>
+                <td>{{ entry.description }}</td>
+                <td class="text-end font-monospace">{{ entry.debitAmount | erpAmount }}</td>
+                <td class="text-end font-monospace">{{ entry.creditAmount | erpAmount }}</td>
+              </tr>
+            }
+            @if (entries.length === 0) {
+              <tr>
+                <td colspan="7" class="text-center text-muted py-3">
+                  {{ 'Erp::NoDataAvailable' | abpLocalization }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 }

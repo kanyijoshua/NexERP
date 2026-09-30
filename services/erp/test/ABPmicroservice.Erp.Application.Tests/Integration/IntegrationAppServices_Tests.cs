@@ -48,6 +48,22 @@ public class IntegrationAppServices_Tests : ErpApplicationTestBase
         });
     }
 
+    /// <summary>The page shows these so the calling system can be set up by copy and paste.</summary>
+    [Fact]
+    public async Task A_Service_Carries_The_Addresses_To_Call_It_On()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            var service = await _webServices.CreateAsync(
+                new CreateUpdateWebServiceDto { ServiceName = "Vendors", EntityName = "Vendor" }
+            );
+
+            service.Url.ShouldBe("/api/erp/integration-data/query");
+            service.RequestBody.ShouldBe("{\"serviceName\":\"Vendors\"}");
+            service.FieldsUrl.ShouldBe("/api/erp/integration-data/fields?serviceName=Vendors");
+        });
+    }
+
     [Fact]
     public async Task Two_Services_Cannot_Share_A_Name()
     {

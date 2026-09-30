@@ -27,7 +27,10 @@ public static class ErpEntityPermissions
         ["GLAccount"] = ErpPermissions.GLAccounts.Default,
         ["GLEntry"] = ErpPermissions.GLEntries.Default,
         ["GLRegister"] = ErpPermissions.GLRegisters.Default,
-        ["GeneralPostingSetup"] = ErpPermissions.GLAccounts.Default,
+        ["GeneralLedgerSetup"] = ErpPermissions.GeneralLedgerSetup.Default,
+        ["GenBusinessPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["GenProductPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["GeneralPostingSetup"] = ErpPermissions.PostingSetup.Default,
         ["GenJournalTemplate"] = ErpPermissions.Journals.Default,
         ["GenJournalBatch"] = ErpPermissions.Journals.Default,
         ["GenJournalLine"] = ErpPermissions.Journals.Default,
@@ -36,7 +39,7 @@ public static class ErpEntityPermissions
 
         // Sales
         ["Customer"] = ErpPermissions.Customers.Default,
-        ["CustomerPostingGroup"] = ErpPermissions.Customers.Default,
+        ["CustomerPostingGroup"] = ErpPermissions.PostingSetup.Default,
         ["CustomerLedgerEntry"] = ErpPermissions.Customers.Default,
         ["SalesHeader"] = ErpPermissions.SalesDocuments.Default,
         ["SalesLine"] = ErpPermissions.SalesDocuments.Default,
@@ -46,7 +49,7 @@ public static class ErpEntityPermissions
 
         // Purchasing
         ["Vendor"] = ErpPermissions.Vendors.Default,
-        ["VendorPostingGroup"] = ErpPermissions.Vendors.Default,
+        ["VendorPostingGroup"] = ErpPermissions.PostingSetup.Default,
         ["VendorLedgerEntry"] = ErpPermissions.Vendors.Default,
         ["PurchaseHeader"] = ErpPermissions.PurchaseDocuments.Default,
         ["PurchaseLine"] = ErpPermissions.PurchaseDocuments.Default,
@@ -58,6 +61,8 @@ public static class ErpEntityPermissions
         ["Item"] = ErpPermissions.Items.Default,
         ["ItemCategory"] = ErpPermissions.ItemCategories.Default,
         ["UnitOfMeasure"] = ErpPermissions.UnitsOfMeasure.Default,
+        ["InventoryPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["InventoryPostingSetup"] = ErpPermissions.PostingSetup.Default,
         ["ItemLedgerEntry"] = ErpPermissions.Items.Default,
         ["ValueEntry"] = ErpPermissions.Items.Default,
 
@@ -79,6 +84,35 @@ public static class ErpEntityPermissions
         ["ColumnLayout"] = ErpPermissions.AccountSchedules.Default,
         ["ColumnLayoutLine"] = ErpPermissions.AccountSchedules.Default,
 
+        // Tax, cash management, finance and human resources setup
+        ["PaymentTerms"] = ErpPermissions.FinanceSetup.Default,
+        ["Currency"] = ErpPermissions.FinanceSetup.Default,
+        ["CurrencyExchangeRate"] = ErpPermissions.FinanceSetup.Default,
+        ["AccountingPeriod"] = ErpPermissions.FinanceSetup.Default,
+        ["VatBusinessPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["VatProductPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["VatPostingSetup"] = ErpPermissions.PostingSetup.Default,
+        ["VatEntry"] = ErpPermissions.VatEntries.Default,
+        ["Location"] = ErpPermissions.Locations.Default,
+        ["InventorySetup"] = ErpPermissions.InventorySetup.Default,
+        ["SalespersonPurchaser"] = ErpPermissions.SalespeoplePurchasers.Default,
+        ["BankAccountPostingGroup"] = ErpPermissions.PostingSetup.Default,
+        ["BankAccount"] = ErpPermissions.BankAccounts.Default,
+        ["BankAccountLedgerEntry"] = ErpPermissions.BankAccounts.Default,
+        ["EmployeeLedgerEntry"] = ErpPermissions.Employees.Default,
+        ["ExchRateAdjmtRegister"] = ErpPermissions.PeriodicActivities.Default,
+        ["PaymentMethod"] = ErpPermissions.FinanceSetup.Default,
+        ["HumanResourcesSetup"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["HumanResourceUnitOfMeasure"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["EmployeePostingGroup"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["CauseOfAbsence"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["Qualification"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["Union"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["EmploymentContract"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["GroundsForTermination"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["Employee"] = ErpPermissions.Employees.Default,
+        ["EmployeeAbsence"] = ErpPermissions.Employees.Default,
+
         // Collaboration
         ["KanbanStage"] = ErpPermissions.Kanban.Default,
         ["DocumentNote"] = ErpPermissions.Chatter.Default,
@@ -97,21 +131,26 @@ public static class ErpEntityPermissions
     private static readonly Dictionary<string, string[]> WriteMap = new(StringComparer.OrdinalIgnoreCase)
     {
         ["GLAccount"] = [ErpPermissions.GLAccounts.Create, ErpPermissions.GLAccounts.Update],
-        ["GeneralPostingSetup"] = [ErpPermissions.GLAccounts.Update],
+        ["GeneralLedgerSetup"] = [ErpPermissions.GeneralLedgerSetup.Update],
+        ["GenBusinessPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["GenProductPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["GeneralPostingSetup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
         ["GenJournalTemplate"] = [ErpPermissions.Journals.Manage],
         ["GenJournalBatch"] = [ErpPermissions.Journals.Manage],
 
         ["Customer"] = [ErpPermissions.Customers.Create, ErpPermissions.Customers.Update],
-        ["CustomerPostingGroup"] = [ErpPermissions.Customers.Create, ErpPermissions.Customers.Update],
+        ["CustomerPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
         ["SalesReceivablesSetup"] = [ErpPermissions.SalesSetup.Update],
 
         ["Vendor"] = [ErpPermissions.Vendors.Create, ErpPermissions.Vendors.Update],
-        ["VendorPostingGroup"] = [ErpPermissions.Vendors.Create, ErpPermissions.Vendors.Update],
+        ["VendorPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
         ["PurchasesPayablesSetup"] = [ErpPermissions.PurchaseSetup.Update],
 
         ["Item"] = [ErpPermissions.Items.Create, ErpPermissions.Items.Update],
         ["ItemCategory"] = [ErpPermissions.ItemCategories.Create, ErpPermissions.ItemCategories.Update],
         ["UnitOfMeasure"] = [ErpPermissions.UnitsOfMeasure.Create, ErpPermissions.UnitsOfMeasure.Update],
+        ["InventoryPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["InventoryPostingSetup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
 
         ["Dimension"] = [ErpPermissions.Dimensions.Create, ErpPermissions.Dimensions.Update],
         ["DimensionValue"] = [ErpPermissions.Dimensions.Create, ErpPermissions.Dimensions.Update],
@@ -125,6 +164,30 @@ public static class ErpEntityPermissions
         ["ColumnLayoutLine"] = [ErpPermissions.AccountSchedules.Manage],
 
         ["KanbanStage"] = [ErpPermissions.Kanban.Manage],
+
+        ["PaymentTerms"] = [ErpPermissions.FinanceSetup.Create, ErpPermissions.FinanceSetup.Update],
+        ["Currency"] = [ErpPermissions.FinanceSetup.Create, ErpPermissions.FinanceSetup.Update],
+        ["CurrencyExchangeRate"] = [ErpPermissions.FinanceSetup.Create, ErpPermissions.FinanceSetup.Update],
+        ["AccountingPeriod"] = [ErpPermissions.FinanceSetup.Create, ErpPermissions.FinanceSetup.Update],
+        ["VatBusinessPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["VatProductPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["VatPostingSetup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["Location"] = [ErpPermissions.Locations.Create, ErpPermissions.Locations.Update],
+        ["InventorySetup"] = [ErpPermissions.InventorySetup.Update],
+        ["SalespersonPurchaser"] = [ErpPermissions.SalespeoplePurchasers.Create, ErpPermissions.SalespeoplePurchasers.Update],
+        ["BankAccountPostingGroup"] = [ErpPermissions.PostingSetup.Create, ErpPermissions.PostingSetup.Update],
+        ["BankAccount"] = [ErpPermissions.BankAccounts.Create, ErpPermissions.BankAccounts.Update],
+        ["PaymentMethod"] = [ErpPermissions.FinanceSetup.Create, ErpPermissions.FinanceSetup.Update],
+        ["HumanResourcesSetup"] = [ErpPermissions.HumanResourcesSetup.Update],
+        ["HumanResourceUnitOfMeasure"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["EmployeePostingGroup"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["CauseOfAbsence"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["Qualification"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["Union"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["EmploymentContract"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["GroundsForTermination"] = [ErpPermissions.HumanResourcesSetup.Create, ErpPermissions.HumanResourcesSetup.Update],
+        ["Employee"] = [ErpPermissions.Employees.Create, ErpPermissions.Employees.Update],
+        ["EmployeeAbsence"] = [ErpPermissions.Employees.Create, ErpPermissions.Employees.Update],
     };
 
     /// <summary>The permission guarding a table, or null when the table may not be exported.</summary>

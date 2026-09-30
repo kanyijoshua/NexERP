@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Permissions;
@@ -19,6 +20,10 @@ namespace ABPmicroservice.Erp.Integration;
 [Authorize(ErpPermissions.WebServices.Default)]
 public class WebServiceAppService : ErpAppService, IWebServiceAppService
 {
+    // The routes ABP gives IntegrationDataAppService's QueryAsync and GetFieldsAsync.
+    private const string QueryPath = "/api/erp/integration-data/query";
+    private const string FieldsPath = "/api/erp/integration-data/fields";
+
     private readonly IRepository<PublishedWebService, Guid> _webServiceRepository;
     private readonly ErpEntityRegistry _registry;
 
@@ -114,8 +119,10 @@ public class WebServiceAppService : ErpAppService, IWebServiceAppService
     {
         var dto = ObjectMapper.Map<PublishedWebService, PublishedWebServiceDto>(service);
 
-        // Shown so the address can be copied straight into the calling system.
-        dto.Url = $"/api/erp/integration-data/query (serviceName: {service.ServiceName})";
+        // Shown so the addresses can be copied straight into the calling system.
+        dto.Url = QueryPath;
+        dto.RequestBody = JsonSerializer.Serialize(new { serviceName = service.ServiceName });
+        dto.FieldsUrl = $"{FieldsPath}?serviceName={Uri.EscapeDataString(service.ServiceName)}";
         return dto;
     }
 }

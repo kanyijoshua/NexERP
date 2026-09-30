@@ -7,6 +7,9 @@ import { ErpSharedModule } from '../erp-shared/erp-shared.module';
 import { ApprovalUserSetupComponent } from './approval-user-setup/approval-user-setup.component';
 import { DataExportComponent } from './data-export/data-export.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
+import { GeneralLedgerSetupComponent } from './general-ledger-setup/general-ledger-setup.component';
+import { HumanResourcesSetupComponent } from './human-resources-setup/human-resources-setup.component';
+import { InventorySetupComponent } from './inventory-setup/inventory-setup.component';
 import { ModulesComponent } from './modules/modules.component';
 import { NoSeriesComponent } from './no-series/no-series.component';
 import { ThemeSettingsComponent } from './theme/theme-settings.component';
@@ -21,6 +24,24 @@ const routes: Routes = [
     component: ModulesComponent,
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.Modules' },
+  },
+  {
+    path: 'general-ledger',
+    component: GeneralLedgerSetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.GeneralLedgerSetup' },
+  },
+  {
+    path: 'inventory',
+    component: InventorySetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.InventorySetup' },
+  },
+  {
+    path: 'human-resources',
+    component: HumanResourcesSetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.HumanResourcesSetup' },
   },
   {
     path: 'no-series',
@@ -79,6 +100,9 @@ const routes: Routes = [
     ModulesComponent,
     NoSeriesComponent,
     DocumentSetupComponent,
+    GeneralLedgerSetupComponent,
+    InventorySetupComponent,
+    HumanResourcesSetupComponent,
     WorkflowsComponent,
     ApprovalUserSetupComponent,
     WebServicesComponent,

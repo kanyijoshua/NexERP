@@ -7,7 +7,7 @@ import {
   NoSeriesLineDto,
   NoSeriesService,
 } from '@proxy/numbering';
-import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
+import { DocumentLineColumn, ErpTableColumn, ErpTableCrudBase } from '../../erp-shared';
 
 /** No. Series list and card. Mirrors Business Central pages 456 "No. Series" and 457 "No. Series Lines". */
 @Component({
@@ -16,7 +16,34 @@ import { CrudListBase, DocumentLineColumn } from '../../erp-shared';
   providers: [ListService],
   standalone: false,
 })
-export class NoSeriesComponent extends CrudListBase<NoSeriesDto, CreateUpdateNoSeriesDto> {
+export class NoSeriesComponent extends ErpTableCrudBase<NoSeriesDto, CreateUpdateNoSeriesDto> {
+  protected override permissionPrefix = 'Erp.NoSeries';
+
+  override readonly columns: ErpTableColumn<NoSeriesDto>[] = [
+    { field: 'code', labelKey: 'Erp::Code', type: 'code', width: 130 },
+    { field: 'description', labelKey: 'Erp::Description', width: 240 },
+    {
+      field: 'startingNo',
+      labelKey: 'Erp::StartingNo',
+      type: 'text',
+      sortable: false,
+      width: 130,
+      cellClass: 'font-monospace text-secondary',
+    },
+    {
+      field: 'lastNoUsed',
+      labelKey: 'Erp::LastNoUsed',
+      type: 'text',
+      sortable: false,
+      width: 130,
+      cellClass: 'font-monospace text-secondary',
+    },
+    { field: 'nextNo', labelKey: 'Erp::NextNo', type: 'custom', sortable: false, width: 150 },
+    { field: 'defaultNos', labelKey: 'Erp::DefaultNos', type: 'boolean', width: 110 },
+    { field: 'manualNos', labelKey: 'Erp::ManualNos', type: 'boolean', width: 110 },
+    { field: 'dateOrder', labelKey: 'Erp::DateOrder', type: 'boolean', width: 110 },
+  ];
+
   readonly lineColumns: DocumentLineColumn[] = [
     { field: 'startingDate', labelKey: 'Erp::StartingDate', type: 'date', width: '150px' },
     { field: 'startingNo', labelKey: 'Erp::StartingNo', type: 'text' },

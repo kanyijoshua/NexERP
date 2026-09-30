@@ -101,6 +101,329 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpAutomatedActionRules", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.CashManagement.BankAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Balance")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("BalanceLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("BankAccPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankBranchNo")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<string>("Contact")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("Iban")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("No")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SwiftCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "No")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "No"), false);
+
+                    b.ToTable("ErpBankAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.CashManagement.BankAccountLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("AmountLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid>("BankAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BankAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DimensionSetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("EntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Open")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PostingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RegisterNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("RemainingAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<bool>("Reversed")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("ReversedByEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ReversedEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<long>("TransactionNo")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("RegisterNo");
+
+                    b.HasIndex("CompanyId", "EntryNo");
+
+                    b.ToTable("ErpBankAccountLedgerEntries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.CashManagement.BankAccountPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GLAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpBankAccountPostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.CashManagement.PaymentMethod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BalAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("BalAccountType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpPaymentMethods", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Chatter.ActivityStreamEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -727,6 +1050,302 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpExportTemplates", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.AccountingPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Closed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<bool>("DateLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("NewFiscalYear")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("StartingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "StartingDate")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "StartingDate"), false);
+
+                    b.ToTable("ErpAccountingPeriods", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.Currency", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AmountRoundingPrecision")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("RealizedGainsAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RealizedLossesAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Symbol")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<string>("UnrealizedGainsAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UnrealizedLossesAccountNo")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpCurrencies", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.CurrencyExchangeRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<decimal>("ExchangeRateAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("RelationalExchangeRateAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<DateTime>("StartingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "CurrencyCode", "StartingDate")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "CurrencyCode", "StartingDate"), false);
+
+                    b.ToTable("ErpCurrencyExchangeRates", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.ExchRateAdjmtRegister", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("AdjustedAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("AdjustedBase")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("AdjustedBaseLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("CurrencyFactor")
+                        .HasPrecision(28, 15)
+                        .HasColumnType("numeric(28,15)");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("text");
+
+                    b.Property<long>("GLRegisterNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<DateTime>("PostingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GLRegisterNo");
+
+                    b.ToTable("ErpExchRateAdjmtRegisters", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Finance.GLAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -779,6 +1398,9 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
+                    b.Property<int>("GenPostingType")
+                        .HasColumnType("integer");
+
                     b.Property<int>("IncomeBalance")
                         .HasColumnType("integer");
 
@@ -812,6 +1434,12 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -915,10 +1543,19 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CreationTime");
 
+                    b.Property<long>("FromBankEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("FromCustomerEntryNo")
                         .HasColumnType("bigint");
 
+                    b.Property<long>("FromEmployeeEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("FromEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FromVatEntryNo")
                         .HasColumnType("bigint");
 
                     b.Property<long>("FromVendorEntryNo")
@@ -951,10 +1588,19 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
 
+                    b.Property<long>("ToBankEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("ToCustomerEntryNo")
                         .HasColumnType("bigint");
 
+                    b.Property<long>("ToEmployeeEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("ToEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ToVatEntryNo")
                         .HasColumnType("bigint");
 
                     b.Property<long>("ToVendorEntryNo")
@@ -978,6 +1624,65 @@ namespace ABPmicroservice.Erp.Migrations
                     NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "No"), false);
 
                     b.ToTable("ErpGLRegisters", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.GenBusinessPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpGenBusinessPostingGroups", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Finance.GenJournalBatch", b =>
@@ -1075,6 +1780,10 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
+                    b.Property<decimal>("AmountLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
                     b.Property<string>("AppliesToDocNo")
                         .HasColumnType("text");
 
@@ -1083,6 +1792,23 @@ namespace ABPmicroservice.Erp.Migrations
 
                     b.Property<int?>("BalAccountType")
                         .HasColumnType("integer");
+
+                    b.Property<int>("BalGenPostingType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("BalVatAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("BalVatBaseAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("BalVatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BalVatProdPostingGroup")
+                        .HasColumnType("text");
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
@@ -1097,6 +1823,13 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
                         .HasColumnName("CreatorId");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("CurrencyFactor")
+                        .HasPrecision(28, 15)
+                        .HasColumnType("numeric(28,15)");
 
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("uuid")
@@ -1130,6 +1863,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid>("GenJournalBatchId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("GenPostingType")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1159,6 +1895,20 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("VatBaseAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1252,6 +2002,148 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpGenJournalTemplates", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.GenProductPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpGenProductPostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.GeneralLedgerSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AllowPostingFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("AllowPostingTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("AmountRoundingPrecision")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("BankAccountNos")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("GlobalDimension1Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GlobalDimension2Code")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("InvRoundingPrecisionLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("LcyCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<decimal>("UnitAmountRoundingPrecision")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
+
+                    b.ToTable("ErpGeneralLedgerSetups", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Finance.GeneralPostingSetup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1326,7 +2218,82 @@ namespace ABPmicroservice.Erp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TenantId", "CompanyId", "GenBusPostingGroup", "GenProdPostingGroup")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "GenBusPostingGroup", "GenProdPostingGroup"), false);
+
                     b.ToTable("ErpGeneralPostingSetups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.PaymentTerms", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DiscountDateCalculation")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("DueDateCalculation")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpPaymentTerms", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Finance.StandardGeneralJournal", b =>
@@ -1477,6 +2444,1088 @@ namespace ABPmicroservice.Erp.Migrations
                     b.HasIndex("StandardGeneralJournalId");
 
                     b.ToTable("ErpStandardGeneralJournalLines", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.VatBusinessPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpVatBusinessPostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.VatEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("Base")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("BillToPayToNo")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Closed")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("ClosedByEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<DateTime>("DocumentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("EntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("PostingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RegisterNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Reversed")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("ReversedByEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ReversedEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<long>("TransactionNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<int>("VatCalculationType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VatIdentifier")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RegisterNo");
+
+                    b.HasIndex("CompanyId", "EntryNo");
+
+                    b.ToTable("ErpVatEntries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.VatPostingSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("PurchaseVatAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReverseChrgVatAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SalesVatAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<int>("VatCalculationType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VatIdentifier")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "VatBusPostingGroup", "VatProdPostingGroup")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "VatBusPostingGroup", "VatProdPostingGroup"), false);
+
+                    b.ToTable("ErpVatPostingSetups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Finance.VatProductPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpVatProductPostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.CauseOfAbsence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpCausesOfAbsence", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.Employee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Balance")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("BankAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CompanyEmail")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<string>("CountryRegionCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EmployeePostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmploymentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmplymtContractCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GroundsForTermCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Iban")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("InactiveDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<string>("JobTitle")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MobilePhoneNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("No")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SalespersPurchCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SocialSecurityNo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<DateTime?>("TerminationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UnionCode")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "No")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "No"), false);
+
+                    b.ToTable("ErpEmployees", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.EmployeeAbsence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CauseOfAbsenceCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EmployeeNo")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("FromDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<DateTime?>("ToDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UnitOfMeasureCode")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("ErpEmployeeAbsences", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.EmployeeLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<long>("ClosedByEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DimensionSetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DocumentDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EmployeeNo")
+                        .HasColumnType("text");
+
+                    b.Property<long>("EntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Open")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("PostingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RegisterNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("RemainingAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<bool>("Reversed")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("ReversedByEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ReversedEntryNo")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.Property<long>("TransactionNo")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("RegisterNo");
+
+                    b.HasIndex("CompanyId", "EntryNo");
+
+                    b.ToTable("ErpEmployeeLedgerEntries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.EmployeePostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("PayablesAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpEmployeePostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.EmploymentContract", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpEmploymentContracts", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.GroundsForTermination", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpGroundsForTermination", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.HumanResourceUnitOfMeasure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("QtyPerUnitOfMeasure")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpHumanResourceUnitsOfMeasure", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.HumanResourcesSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BaseUnitOfMeasure")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("EmployeeNos")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
+
+                    b.ToTable("ErpHumanResourcesSetups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.Qualification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpQualifications", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.HumanResources.Union", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpUnions", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Integration.PublishedWebService", b =>
@@ -1747,6 +3796,192 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpWebhookSubscriptions", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Inventory.InventoryPostingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpInventoryPostingGroups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Inventory.InventoryPostingSetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("InventoryAccountNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InventoryPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("LocationCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "LocationCode", "InventoryPostingGroup")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "LocationCode", "InventoryPostingGroup"), false);
+
+                    b.ToTable("ErpInventoryPostingSetups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Inventory.InventorySetup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutomaticCostPosting")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<string>("ItemNos")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<bool>("LocationMandatory")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PreventNegativeInventory")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
+
+                    b.ToTable("ErpInventorySetups", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Inventory.Item", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1845,6 +4080,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -2134,6 +4372,83 @@ namespace ABPmicroservice.Erp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ErpItemLedgerEntries", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Inventory.Location", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Contact")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryRegionCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostCode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpLocations", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Inventory.UnitOfMeasure", b =>
@@ -2783,6 +5098,9 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<string>("LocationCode")
+                        .HasColumnType("text");
+
                     b.Property<string>("No")
                         .HasColumnType("text");
 
@@ -2873,6 +5191,30 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("UnitOfMeasureCode")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("VatBaseAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<int>("VatCalculationType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VatIdentifier")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PurchaseHeaderId");
@@ -2906,6 +5248,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("ExtDocNoMandatory")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("InvoiceNos")
                         .HasColumnType("text");
@@ -3035,6 +5380,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("No")
                         .HasColumnType("text");
 
+                    b.Property<string>("PaymentMethodCode")
+                        .HasColumnType("text");
+
                     b.Property<string>("PaymentTermsCode")
                         .HasColumnType("text");
 
@@ -3044,9 +5392,15 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("PostCode")
                         .HasColumnType("text");
 
+                    b.Property<string>("PurchaserCode")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
 
                     b.Property<string>("VendorPostingGroup")
                         .HasColumnType("text");
@@ -3071,12 +5425,22 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
+                    b.Property<decimal>("AmountLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<long>("ClosedByEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CreationTime");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -3106,6 +5470,10 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("RemainingAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("RemainingAmountLcy")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
@@ -3188,6 +5556,12 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnName("TenantId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
 
                     b.ToTable("ErpVendorPostingGroups", (string)null);
                 });
@@ -4136,6 +6510,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("No")
                         .HasColumnType("text");
 
+                    b.Property<string>("PaymentMethodCode")
+                        .HasColumnType("text");
+
                     b.Property<string>("PaymentTermsCode")
                         .HasColumnType("text");
 
@@ -4145,9 +6522,15 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("PostCode")
                         .HasColumnType("text");
 
+                    b.Property<string>("SalespersonCode")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("TenantId");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -4169,12 +6552,22 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
+                    b.Property<decimal>("AmountLcy")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<long>("ClosedByEntryNo")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CreationTime");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
@@ -4210,6 +6603,10 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("RemainingAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("RemainingAmountLcy")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
@@ -4286,6 +6683,12 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnName("TenantId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
 
                     b.ToTable("ErpCustomerPostingGroups", (string)null);
                 });
@@ -4455,6 +6858,9 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<string>("LocationCode")
+                        .HasColumnType("text");
+
                     b.Property<string>("No")
                         .HasColumnType("text");
 
@@ -4542,6 +6948,30 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("VatBaseAmount")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatBusPostingGroup")
+                        .HasColumnType("text");
+
+                    b.Property<int>("VatCalculationType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VatIdentifier")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("VatProdPostingGroup")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SalesHeaderId");
@@ -4568,6 +6998,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("CreditMemoNos")
                         .HasColumnType("text");
 
+                    b.Property<int>("CreditWarnings")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CustomerNos")
                         .HasColumnType("text");
 
@@ -4578,6 +7011,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("ExtDocNoMandatory")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("InvoiceNos")
                         .HasColumnType("text");
@@ -4621,6 +7057,81 @@ namespace ABPmicroservice.Erp.Migrations
                     NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId"), false);
 
                     b.ToTable("ErpSalesReceivablesSetups", (string)null);
+                });
+
+            modelBuilder.Entity("ABPmicroservice.Erp.Sales.SalespersonPurchaser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("CommissionPercent")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<string>("JobTitle")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("PhoneNo")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "CompanyId", "Code"), false);
+
+                    b.ToTable("ErpSalespeoplePurchasers", (string)null);
                 });
 
             modelBuilder.Entity("ABPmicroservice.Erp.Sequences.ErpNumberSequence", b =>

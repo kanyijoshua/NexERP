@@ -16,13 +16,16 @@ public class ItemJnlPostLine : DomainService
     private readonly IRepository<Item, Guid> _itemRepository;
     private readonly IRepository<ItemLedgerEntry, Guid> _itemLedgerEntryRepository;
     private readonly IRepository<ValueEntry, Guid> _valueEntryRepository;
+    private readonly InventorySetupManager _setupManager;
 
     public ItemJnlPostLine(
         IRepository<Item, Guid> itemRepository,
         IRepository<ItemLedgerEntry, Guid> itemLedgerEntryRepository,
-        IRepository<ValueEntry, Guid> valueEntryRepository
+        IRepository<ValueEntry, Guid> valueEntryRepository,
+        InventorySetupManager setupManager
     )
     {
+        _setupManager = setupManager;
         _itemRepository = itemRepository;
         _itemLedgerEntryRepository = itemLedgerEntryRepository;
         _valueEntryRepository = valueEntryRepository;
@@ -37,7 +40,9 @@ public class ItemJnlPostLine : DomainService
         string description,
         decimal quantity,
         decimal unitCost,
-        Guid dimensionSetId = default
+        Guid dimensionSetId = default,
+        string locationCode = null,
+        bool correction = false
     )
     {
         var item = await _itemRepository.GetAsync(itemId);
@@ -46,10 +51,17 @@ public class ItemJnlPostLine : DomainService
             throw new UserFriendlyException($"Item '{itemNo}' is blocked.");
         }
 
-        // Signed quantity based on entry type
-        decimal signedQty = (entryType == ItemLedgerEntryType.Sale || entryType == ItemLedgerEntryType.NegativeAdjmt)
-            ? -Math.Abs(quantity)
-            : Math.Abs(quantity);
+        // Signed quantity based on entry type. A correction (a credit memo) moves the stock back:
+        // a sales return comes in, a purchase return goes out.
+        var outbound = entryType == ItemLedgerEntryType.Sale || entryType == ItemLedgerEntryType.NegativeAdjmt;
+        if (correction)
+        {
+            outbound = !outbound;
+        }
+
+        decimal signedQty = outbound ? -Math.Abs(quantity) : Math.Abs(quantity);
+
+        await CheckRulesAsync(item, signedQty, locationCode);
 
         var itemLedgerEntry = new ItemLedgerEntry(
             GuidGenerator.Create(),
@@ -61,7 +73,7 @@ public class ItemJnlPostLine : DomainService
             signedQty,
             unitCost,
             0m,
-            null
+            locationCode
         );
 
         await _itemLedgerEntryRepository.InsertAsync(itemLedgerEntry);
@@ -84,5 +96,28 @@ public class ItemJnlPostLine : DomainService
         // Update item stock & cost
         item.AdjustInventory(signedQty);
         await _itemRepository.UpdateAsync(item);
+    }
+
+    /// <summary>The Inventory Setup's rules for stock items: a location if mandatory, and no negative stock if prevented.</summary>
+    private async Task CheckRulesAsync(Item item, decimal signedQty, string locationCode)
+    {
+        if (item.Type != ItemType.Inventory)
+        {
+            return;
+        }
+
+        var setup = await _setupManager.GetAsync();
+        if (setup.LocationMandatory && locationCode.IsNullOrWhiteSpace())
+        {
+            throw new BusinessException(ErpErrorCodes.Inventory.LocationMandatory).WithData("itemNo", item.No);
+        }
+
+        if (setup.PreventNegativeInventory && signedQty < 0 && item.Inventory + signedQty < 0)
+        {
+            throw new BusinessException(ErpErrorCodes.Inventory.InsufficientInventory)
+                .WithData("itemNo", item.No)
+                .WithData("inventory", item.Inventory)
+                .WithData("quantity", -signedQty);
+        }
     }
 }

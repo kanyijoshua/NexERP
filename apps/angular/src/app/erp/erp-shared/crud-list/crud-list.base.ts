@@ -1,6 +1,6 @@
 import { ABP, ListService, PagedResultDto } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { DestroyRef, Directive, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, DestroyRef, Directive, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { Observable, Subject, of } from 'rxjs';
@@ -32,6 +32,7 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
   protected readonly confirmation = inject(ConfirmationService);
   protected readonly companyService = inject(CompanyService);
   protected readonly destroyRef = inject(DestroyRef);
+  protected readonly cdr = inject(ChangeDetectorRef, { optional: true });
 
   data: PagedResultDto<TDto> = { items: [], totalCount: 0 };
 
@@ -59,6 +60,12 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
     this.filter$.next(this._filter);
   }
 
+  /**
+   * False for pages whose table loads its own rows (`erp-table` with a `source`): the page then
+   * neither hooks the ListService nor pages it, and refreshes through `refresh()`.
+   */
+  protected usesListService = true;
+
   protected abstract getList(query: ABP.PageQueryParams): Observable<PagedResultDto<TDto>>;
   protected abstract buildForm(item?: TDto): FormGroup;
   protected abstract create(input: TCreateUpdate): Observable<unknown>;
@@ -66,10 +73,22 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
   protected abstract delete(id: string): Observable<unknown>;
 
   ngOnInit(): void {
+    if (!this.usesListService) {
+      this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.refresh());
+      return;
+    }
+
     this.list
       .hookToQuery(query => this.getList(query))
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(result => (this.data = result));
+      .subscribe(result => {
+        this.data = { ...result, items: [...(result.items ?? [])] };
+        this.cdr?.detectChanges();
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+          this.cdr?.detectChanges();
+        }, 50);
+      });
 
     this.filter$
       .pipe(
@@ -90,6 +109,11 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
       }
       this.list.get();
     });
+  }
+
+  /** Loads the list again, e.g. after a save or a delete. */
+  protected refresh(): void {
+    this.list.get();
   }
 
   /** Loads the full record before editing. Defaults to the row itself. */
@@ -140,7 +164,7 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
       .subscribe(() => {
         this.isModalOpen = false;
         this.toaster.success(this.savedMessageKey);
-        this.list.get();
+        this.refresh();
       });
   }
 
@@ -160,7 +184,7 @@ export abstract class CrudListBase<TDto extends { id?: string }, TCreateUpdate> 
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
             this.toaster.success(this.deletedMessageKey);
-            this.list.get();
+            this.refresh();
           });
       });
   }

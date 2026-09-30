@@ -4,65 +4,61 @@
   title="Erp::Menu:ColumnLayouts"
   breadcrumb="Erp::Menu:Reports"
   icon="fas fa-columns"
-  [(filter)]="filter"
+  [showSearch]="false"
   permission="Erp.AccountSchedules.Manage"
   (create)="openCreate()"
 ></erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default>
-      <ngx-datatable-column
-        [name]="'Erp::Code' | abpLocalization"
-        prop="name"
-        [width]="180"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::Description' | abpLocalization"
-        prop="description"
-        [width]="340"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::LineCount' | abpLocalization"
-        prop="lineCount"
-        [width]="100"
-      ></ngx-datatable-column>
-      <ngx-datatable-column
-        [name]="'Erp::Actions' | abpLocalization"
-        [sortable]="false"
-        [width]="200"
+<erp-table
+  tableId="column-layouts"
+  [items]="data.items"
+  [columns]="columns"
+  [actionsWidth]="140"
+  [clickableRows]="false"
+>
+  <ng-template erpTableCol="name" let-row="row">
+    <a
+      class="fw-bold text-primary font-monospace text-decoration-none erp-record-link"
+      role="button"
+      (click)="openEdit(row)"
+    >
+      {{ row.name }}
+    </a>
+  </ng-template>
+  <ng-template erpTableCol="lineCount" let-value="value">
+    <span class="font-monospace fw-semibold">{{ value || 0 }}</span>
+  </ng-template>
+  <ng-template erpTableActions let-row="row">
+    <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary erp-action-btn"
+        [title]="'Erp::Lines' | abpLocalization"
+        (click)="openLines(row)"
       >
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary me-1"
-            (click)="openLines(row)"
-          >
-            <i class="fas fa-list-ol me-1"></i>{{ 'Erp::Lines' | abpLocalization }}
-          </button>
-          <button
-            *abpPermission="'Erp.AccountSchedules.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-primary me-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            (click)="openEdit(row)"
-          >
-            <i class="fas fa-pen"></i>
-          </button>
-          <button
-            *abpPermission="'Erp.AccountSchedules.Manage'"
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            [title]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row)"
-          >
-            <i class="fas fa-trash"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+        <i class="fas fa-list-ol"></i>
+      </button>
+      <button
+        *abpPermission="'Erp.AccountSchedules.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-primary erp-action-btn"
+        [title]="'Erp::Edit' | abpLocalization"
+        (click)="openEdit(row)"
+      >
+        <i class="fas fa-pen"></i>
+      </button>
+      <button
+        *abpPermission="'Erp.AccountSchedules.Manage'"
+        type="button"
+        class="btn btn-sm btn-outline-danger erp-action-btn"
+        [title]="'Erp::Delete' | abpLocalization"
+        (click)="remove(row)"
+      >
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </ng-template>
+</erp-table>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
   <ng-template #abpHeader>

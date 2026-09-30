@@ -12,7 +12,7 @@ namespace ABPmicroservice.Erp.Inventory;
 
 [Authorize(ErpPermissions.UnitsOfMeasure.Default)]
 public class UnitOfMeasureAppService
-    : CrudAppService<
+    : ErpCrudAppService<
         UnitOfMeasure,
         UnitOfMeasureDto,
         Guid,

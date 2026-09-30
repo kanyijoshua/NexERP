@@ -11,7 +11,7 @@ namespace ABPmicroservice.Erp.Inventory;
 
 [Authorize(ErpPermissions.Items.Default)]
 public class ItemLedgerEntryAppService
-    : ReadOnlyAppService<ItemLedgerEntry, ItemLedgerEntryDto, Guid, GetItemLedgerEntryListInput>,
+    : ErpReadOnlyAppService<ItemLedgerEntry, ItemLedgerEntryDto, Guid, GetItemLedgerEntryListInput>,
         IItemLedgerEntryAppService
 {
     public ItemLedgerEntryAppService(IRepository<ItemLedgerEntry, Guid> repository)

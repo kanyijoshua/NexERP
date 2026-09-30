@@ -5,8 +5,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   CreateUpdateGenJournalLineDto,
+  GLAccountDto,
   GLEntryDocumentType,
   GenJournalAccountType,
+  GeneralPostingType,
   GenJournalBatchDto,
   GenJournalLineDto,
   GenJournalTemplateDto,
@@ -17,6 +19,8 @@ import {
   RecurringMethod,
   StandardJournalService,
 } from '@proxy/finance';
+import { BankAccountService } from '@proxy/cash-management';
+import { EmployeeService } from '@proxy/human-resources';
 import { VendorService } from '@proxy/purchasing';
 import { CustomerService } from '@proxy/sales';
 import { Observable, forkJoin, map } from 'rxjs';
@@ -28,6 +32,8 @@ const ACCOUNT_KIND: Record<string, GenJournalAccountType> = {
   gl: GenJournalAccountType.GLAccount,
   customer: GenJournalAccountType.Customer,
   vendor: GenJournalAccountType.Vendor,
+  bank: GenJournalAccountType.BankAccount,
+  employee: GenJournalAccountType.Employee,
 };
 
 /**
@@ -52,6 +58,8 @@ export class GeneralJournalComponent implements OnInit {
   private readonly glAccounts = inject(GlAccountService);
   private readonly customers = inject(CustomerService);
   private readonly vendors = inject(VendorService);
+  private readonly bankAccounts = inject(BankAccountService);
+  private readonly employees = inject(EmployeeService);
 
   readonly savePermission = 'Erp.Journals.Create';
   readonly postPermission = 'Erp.Journals.Post';
@@ -80,6 +88,15 @@ export class GeneralJournalComponent implements OnInit {
     { value: GenJournalAccountType.GLAccount, label: 'Erp::GLAccount' },
     { value: GenJournalAccountType.Customer, label: 'Erp::Customer' },
     { value: GenJournalAccountType.Vendor, label: 'Erp::Vendor' },
+    { value: GenJournalAccountType.BankAccount, label: 'Erp::BankAccount' },
+    { value: GenJournalAccountType.Employee, label: 'Erp::Employee' },
+  ];
+
+  /** Purchase or sale decides the VAT a G/L account line carries; none carries no VAT. */
+  readonly genPostingTypeOptions = [
+    { value: GeneralPostingType.None, label: 'Erp::Enum:GeneralPostingType.None' },
+    { value: GeneralPostingType.Purchase, label: 'Erp::Enum:GeneralPostingType.Purchase' },
+    { value: GeneralPostingType.Sale, label: 'Erp::Enum:GeneralPostingType.Sale' },
   ];
 
   readonly recurringOptions = [
@@ -130,8 +147,34 @@ export class GeneralJournalComponent implements OnInit {
         lookupAllowFreeText: true,
       },
       { field: 'description', labelKey: 'Erp::Description', type: 'text' },
+      {
+        field: 'genPostingType',
+        labelKey: 'Erp::GenPostingType',
+        type: 'select',
+        width: '120px',
+        options: this.genPostingTypeOptions,
+      },
+      { field: 'vatProdPostingGroup', labelKey: 'Erp::VatProdPostingGroup', type: 'lookup', width: '130px', lookupEntity: 'vatProdPostingGroup' },
+      { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', width: '100px', lookupEntity: 'currency' },
       { field: 'amount', labelKey: 'Erp::Amount', type: 'currency', width: '130px' },
-      { field: 'balAccountNo', labelKey: 'Erp::BalancingAccountNo', type: 'text', width: '150px' },
+      { field: 'vatAmount', labelKey: 'Erp::VatAmount', type: 'readonly', width: '100px' },
+      { field: 'amountLcy', labelKey: 'Erp::AmountLcy', type: 'readonly', width: '120px' },
+      {
+        field: 'balAccountType',
+        labelKey: 'Erp::BalAccountType',
+        type: 'select',
+        width: '130px',
+        options: this.accountTypeOptions,
+      },
+      {
+        field: 'balAccountNo',
+        labelKey: 'Erp::BalancingAccountNo',
+        type: 'lookup',
+        width: '160px',
+        lookupSource: term => this.searchAccounts(term),
+        lookupAllowFreeText: true,
+      },
+      { field: 'appliesToDocNo', labelKey: 'Erp::AppliesToDocNo', type: 'text', width: '130px' },
     ];
 
     if (this.isRecurring) {
@@ -194,16 +237,34 @@ export class GeneralJournalComponent implements OnInit {
     }
   }
 
-  /** A looked-up account carries which list it came from, so the account type follows it. */
+  /**
+   * A looked-up account carries which list it came from, so the account type follows it. A G/L
+   * account also brings its posting type and VAT groups, as validating the account does in BC;
+   * any other account carries no VAT.
+   */
   onLineChange(change: DocumentLineChange): void {
-    if (change.field !== 'accountNo' || !change.item?.id) {
+    const line = this.lines.at(change.index);
+    if (!line || !change.item?.id || (change.field !== 'accountNo' && change.field !== 'balAccountNo')) {
       return;
     }
 
     const accountType = ACCOUNT_KIND[change.item.id];
-    if (accountType !== undefined) {
-      this.lines.at(change.index)?.get('accountType')?.setValue(accountType);
+    if (accountType === undefined) {
+      return;
     }
+
+    if (change.field === 'balAccountNo') {
+      line.get('balAccountType')?.setValue(accountType);
+      return;
+    }
+
+    line.get('accountType')?.setValue(accountType);
+    const account = accountType === GenJournalAccountType.GLAccount ? (change.item.data as GLAccountDto | undefined) : undefined;
+    line.patchValue({
+      genPostingType: account?.genPostingType ?? GeneralPostingType.None,
+      vatBusPostingGroup: account?.vatBusPostingGroup ?? null,
+      vatProdPostingGroup: account?.genPostingType ? (account.vatProdPostingGroup ?? null) : null,
+    });
   }
 
   save(): void {
@@ -370,7 +431,16 @@ export class GeneralJournalComponent implements OnInit {
       accountNo: [line?.accountNo ?? '', [Validators.required, Validators.maxLength(20)]],
       description: [line?.description ?? '', Validators.maxLength(250)],
       amount: [line?.amount ?? 0, Validators.required],
+      balAccountType: [line?.balAccountType ?? GenJournalAccountType.GLAccount],
       balAccountNo: [line?.balAccountNo ?? '', Validators.maxLength(20)],
+      genPostingType: [line?.genPostingType ?? GeneralPostingType.None],
+      vatBusPostingGroup: [line?.vatBusPostingGroup ?? null],
+      vatProdPostingGroup: [line?.vatProdPostingGroup ?? null],
+      currencyCode: [line?.currencyCode ?? null],
+      appliesToDocNo: [line?.appliesToDocNo ?? '', Validators.maxLength(20)],
+      // Shown only: the server works both out when the line is saved.
+      vatAmount: [{ value: line?.vatAmount ?? 0, disabled: true }],
+      amountLcy: [{ value: line?.amountLcy ?? 0, disabled: true }],
       recurringMethod: [line?.recurringMethod ?? RecurringMethod.None],
       recurringFrequency: [line?.recurringFrequency ?? ''],
       expirationDate: [line?.expirationDate?.substring(0, 10) ?? null],
@@ -391,7 +461,12 @@ export class GeneralJournalComponent implements OnInit {
       amount: value.amount,
       // A blank balancing account means the line balances against the other lines instead.
       balAccountNo: value.balAccountNo || undefined,
-      balAccountType: value.balAccountNo ? GenJournalAccountType.GLAccount : undefined,
+      balAccountType: value.balAccountNo ? value.balAccountType : undefined,
+      genPostingType: value.genPostingType,
+      vatBusPostingGroup: value.genPostingType ? value.vatBusPostingGroup || undefined : undefined,
+      vatProdPostingGroup: value.genPostingType ? value.vatProdPostingGroup || undefined : undefined,
+      currencyCode: value.currencyCode || undefined,
+      appliesToDocNo: value.appliesToDocNo?.trim() || undefined,
       recurringMethod: this.isRecurring ? value.recurringMethod : RecurringMethod.None,
       recurringFrequency: value.recurringFrequency || undefined,
       expirationDate: value.expirationDate || undefined,
@@ -399,8 +474,9 @@ export class GeneralJournalComponent implements OnInit {
   }
 
   /**
-   * Searches G/L accounts, customers and vendors together: a journal line can point at any of
-   * them, and the account type is set from whichever list the choice came out of.
+   * Searches G/L accounts, customers, vendors, bank accounts and employees together: a journal
+   * line can point at any of them, and the account type is set from whichever list the choice
+   * came out of.
    */
   private searchAccounts(term: string): Observable<LookupItem[]> {
     const query = { filter: term, maxResultCount: 10, skipCount: 0 } as never;
@@ -409,9 +485,11 @@ export class GeneralJournalComponent implements OnInit {
       gl: this.glAccounts.getList(query),
       customers: this.customers.getList(query),
       vendors: this.vendors.getList(query),
+      banks: this.bankAccounts.getList(query),
+      employees: this.employees.getList(query),
     }).pipe(
-      map(({ gl, customers, vendors }) => [
-        ...(gl.items ?? []).map(a => ({ id: 'gl', code: a.no ?? '', name: a.name ?? undefined })),
+      map(({ gl, customers, vendors, banks, employees }) => [
+        ...(gl.items ?? []).map(a => ({ id: 'gl', code: a.no ?? '', name: a.name ?? undefined, data: a })),
         ...(customers.items ?? []).map(c => ({
           id: 'customer',
           code: c.no ?? '',
@@ -421,6 +499,12 @@ export class GeneralJournalComponent implements OnInit {
           id: 'vendor',
           code: v.no ?? '',
           name: v.name ?? undefined,
+        })),
+        ...(banks.items ?? []).map(b => ({ id: 'bank', code: b.no ?? '', name: b.name ?? undefined })),
+        ...(employees.items ?? []).map(e => ({
+          id: 'employee',
+          code: e.no ?? '',
+          name: [e.firstName, e.lastName].filter(Boolean).join(' ') || undefined,
         })),
       ]),
     );

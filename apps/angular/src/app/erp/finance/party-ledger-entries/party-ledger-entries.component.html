@@ -1,0 +1,47 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="text-primary me-2" [class]="labels.icon"></i>{{ labels.title | abpLocalization }}
+    @if (partyNo) {
+      <span class="badge bg-light text-secondary border fw-normal ms-2">
+        {{ partyNo }}
+        <button type="button" class="btn-close btn-close-sm ms-1 align-middle" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="showAll()"></button>
+      </span>
+    }
+  </h4>
+  <div class="form-check form-switch mb-1">
+    <input id="ledger-open" class="form-check-input" type="checkbox" [ngModel]="onlyOpen()" (ngModelChange)="toggleOpen($event)" />
+    <label class="form-check-label small" for="ledger-open">{{ 'Erp::OnlyOpenEntries' | abpLocalization }}</label>
+  </div>
+</div>
+
+<erp-table [tableId]="'ledger-entries-' + kind" [source]="source" [columns]="columns" [clickableRows]="false">
+  <ng-template erpTableCol="entryNo" let-value="value">
+    <span class="font-monospace small">{{ value }}</span>
+  </ng-template>
+  <ng-template erpTableCol="amountLcy" let-value="value">
+    <span class="font-monospace text-secondary">{{ value | erpAmount }}</span>
+  </ng-template>
+  <ng-template erpTableCol="remainingAmount" let-value="value">
+    <span class="font-monospace fw-semibold">{{ value | erpAmount }}</span>
+  </ng-template>
+  <ng-template erpTableCol="remainingAmountLcy" let-value="value">
+    <span class="font-monospace text-secondary">{{ value | erpAmount }}</span>
+  </ng-template>
+  <ng-template erpTableCol="open" let-value="value">
+    @if (value) {
+      <i class="fas fa-circle text-success small" [attr.aria-label]="'Erp::Open' | abpLocalization"></i>
+    }
+  </ng-template>
+  <ng-template erpTableCol="closedByEntryNo" let-value="value">
+    @if (value) {
+      <span class="font-monospace small">{{ value }}</span>
+    }
+  </ng-template>
+  <ng-template erpTableCol="reversed" let-value="value">
+    @if (value) {
+      <i class="fas fa-undo text-muted" [attr.aria-label]="'Erp::Reversed' | abpLocalization"></i>
+    }
+  </ng-template>
+</erp-table>

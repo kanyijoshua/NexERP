@@ -17,7 +17,7 @@ public class GLEntryDto : EntityDto<Guid>
     public string GenBusPostingGroup { get; set; }
 }
 
-public class GetGLEntryListInput : PagedAndSortedResultRequestDto
+public class GetGLEntryListInput : ErpPagedListInput
 {
     public Guid? GLAccountId { get; set; }
     public string DocumentNo { get; set; }

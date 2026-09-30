@@ -1,10 +1,12 @@
 using ABPmicroservice.Erp.Automations;
 using ABPmicroservice.Erp.Chatter;
+using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Exporting;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
+using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Modules;
@@ -45,6 +47,29 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "GeneralPostingSetups", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(GeneralPostingSetup.GenBusPostingGroup), nameof(GeneralPostingSetup.GenProdPostingGroup));
+        });
+
+        builder.Entity<GeneralLedgerSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GeneralLedgerSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            // One setup row per company.
+            b.HasCompanyUniqueIndex();
+        });
+
+        builder.Entity<GenBusinessPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GenBusinessPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<GenProductPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GenProductPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
         });
 
         builder.Entity<GenJournalBatch>(b =>
@@ -57,6 +82,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "GenJournalLines", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.CurrencyFactor).HasPrecision(28, 15);
         });
 
         builder.Entity<Customer>(b =>
@@ -70,6 +96,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "CustomerPostingGroups", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
         });
 
         builder.Entity<CustomerLedgerEntry>(b =>
@@ -115,6 +142,7 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "VendorPostingGroups", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
         });
 
         builder.Entity<VendorLedgerEntry>(b =>
@@ -166,6 +194,218 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "UnitsOfMeasure", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+        });
+
+        builder.Entity<InventoryPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "InventoryPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<InventoryPostingSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "InventoryPostingSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(InventoryPostingSetup.LocationCode), nameof(InventoryPostingSetup.InventoryPostingGroup));
+        });
+
+        builder.Entity<PaymentTerms>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PaymentTerms", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<Currency>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "Currencies", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<CurrencyExchangeRate>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "CurrencyExchangeRates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(CurrencyExchangeRate.CurrencyCode), nameof(CurrencyExchangeRate.StartingDate));
+        });
+
+        builder.Entity<AccountingPeriod>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "AccountingPeriods", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(AccountingPeriod.StartingDate));
+        });
+
+        builder.Entity<VatBusinessPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "VatBusinessPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<VatProductPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "VatProductPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<VatPostingSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "VatPostingSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(VatPostingSetup.VatBusPostingGroup), nameof(VatPostingSetup.VatProdPostingGroup));
+        });
+
+        builder.Entity<VatEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "VatEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.EntryNo });
+            b.HasIndex(x => x.RegisterNo);
+        });
+
+        builder.Entity<Location>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "Locations", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<InventorySetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "InventorySetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            // One setup row per company.
+            b.HasCompanyUniqueIndex();
+        });
+
+        builder.Entity<SalespersonPurchaser>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "SalespeoplePurchasers", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<BankAccountPostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "BankAccountPostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<BankAccount>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "BankAccounts", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("No");
+        });
+
+        builder.Entity<BankAccountLedgerEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "BankAccountLedgerEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.EntryNo });
+            b.HasIndex(x => x.BankAccountId);
+            b.HasIndex(x => x.RegisterNo);
+        });
+
+        builder.Entity<PaymentMethod>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PaymentMethods", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<HumanResourcesSetup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "HumanResourcesSetups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            // One setup row per company.
+            b.HasCompanyUniqueIndex();
+        });
+
+        builder.Entity<HumanResourceUnitOfMeasure>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "HumanResourceUnitsOfMeasure", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<EmployeePostingGroup>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "EmployeePostingGroups", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<CauseOfAbsence>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "CausesOfAbsence", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<Qualification>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "Qualifications", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<Union>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "Unions", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<EmploymentContract>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "EmploymentContracts", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<GroundsForTermination>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "GroundsForTermination", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<Employee>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "Employees", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("No");
+        });
+
+        builder.Entity<EmployeeAbsence>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "EmployeeAbsences", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => x.EmployeeId);
+        });
+
+        builder.Entity<EmployeeLedgerEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "EmployeeLedgerEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.EntryNo });
+            b.HasIndex(x => x.EmployeeId);
+            b.HasIndex(x => x.RegisterNo);
+        });
+
+        builder.Entity<ExchRateAdjmtRegister>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ExchRateAdjmtRegisters", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            // A currency factor such as 1/130 needs far more places than an amount.
+            b.Property(x => x.CurrencyFactor).HasPrecision(28, 15);
+            b.HasIndex(x => x.GLRegisterNo);
         });
 
         builder.Entity<ItemLedgerEntry>(b =>

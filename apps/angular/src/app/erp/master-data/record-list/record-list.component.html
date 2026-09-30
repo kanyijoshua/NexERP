@@ -3,66 +3,102 @@
 <erp-page-toolbar
   [title]="entity.pluralKey"
   [icon]="entity.icon"
-  [filter]="filter"
-  (filterChange)="onFilterChange($event)"
+  [showSearch]="false"
   [permission]="entity.permission + '.Create'"
   (create)="openNew()"
+  [showViewSwitcher]="true"
+  [(viewMode)]="viewMode"
+  (viewModeChange)="onViewModeChange($event)"
+  [showExport]="true"
+  [exportDisabled]="!loadedRows.length"
+  (export)="onExport($event)"
 ></erp-page-toolbar>
 
-<div class="card border-0 shadow-sm">
-  <div class="card-body p-0">
-    <ngx-datatable [rows]="data.items" [count]="data.totalCount" [list]="list" default (activate)="onActivate($event)" class="erp-clickable-rows">
-      @for (column of entity.columns; track column) {
-        <ngx-datatable-column
-          [name]="column.labelKey | abpLocalization"
-          [prop]="column.field"
-          [sortable]="column.sortable !== false"
-          [width]="column.width || 150"
-          [headerClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-          [cellClass]="column.type === 'currency' || column.type === 'number' ? 'text-end' : ''"
-          >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            @switch (column.type) {
-              @case ('currency') {
-                <span>{{ $any(row[column.field]) ?? 0 | erpAmount }}</span>
+<erp-table
+  [tableId]="'record-list-' + entity.key"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  [initialSearch]="initialSearch"
+  [layout]="viewMode === 'card' ? 'cards' : 'table'"
+  (rowClick)="openCard($event)"
+  (codeClick)="openCard($event)"
+  (rowsChange)="loadedRows = $event.rows"
+>
+  <!-- Card format (Odoo kanban / BC tiles) -->
+  <ng-template erpTableCard let-row>
+    <div class="card h-100 border erp-record-card shadow-sm" role="button" tabindex="0" (click)="openCard(row)" (keydown.enter)="openCard(row)">
+      <div class="card-body p-3 d-flex flex-column">
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <div class="erp-record-avatar flex-shrink-0" [ngClass]="getAvatarColorClass(row)">
+            {{ getInitials(row) }}
+          </div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-center justify-content-between gap-1">
+              <span class="badge text-bg-light border small text-truncate fw-normal">{{ getCode(row) }}</span>
+              @if (hasBlockedOrStatus(row)) {
+                <span class="badge text-bg-danger-subtle text-danger small">{{ 'Erp::Blocked' | abpLocalization }}</span>
               }
-              @case ('boolean') {
-                <i class="fas" [ngClass]="row[column.field] ? 'fa-check' : 'fa-minus text-muted opacity-25'"></i>
-              }
-              @case ('select') {
-                <span>{{ optionLabel(row, column) | abpLocalization }}</span>
-              }
-              @default {
-                <a [class.fw-bold]="column === entity.columns[0]" [routerLink]="cardLink(row)" (click)="$event.stopPropagation()">{{ row[column.field] }}</a>
-              }
-            }
-          </ng-template>
-        </ngx-datatable-column>
-      }
+            </div>
+            <h6 class="card-title fw-bold text-truncate mb-0 mt-1 text-dark" [title]="getTitle(row)">{{ getTitle(row) }}</h6>
+          </div>
+        </div>
 
-      <ngx-datatable-column [name]="'Erp::Actions' | abpLocalization" [sortable]="false" [width]="100" cellClass="text-end" headerClass="text-end">
-        <ng-template let-row="row" ngx-datatable-cell-template>
-          <button
-            type="button"
-            class="btn btn-sm btn-link px-1"
-            [title]="'Erp::Edit' | abpLocalization"
-            [attr.aria-label]="'Erp::Edit' | abpLocalization"
-            (click)="quickEdit(row, $event)"
+        <div class="erp-record-card__details flex-grow-1 small text-muted my-2">
+          @for (col of getCardColumns(); track col.field) {
+            @if (row[col.field] !== null && row[col.field] !== undefined && row[col.field] !== '') {
+              <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light-subtle">
+                <span class="text-secondary text-truncate me-2">{{ col.labelKey | abpLocalization }}:</span>
+                @switch (col.type) {
+                  @case ('currency') {
+                    <span class="fw-semibold text-dark">{{ $any(row[col.field]) | erpAmount }}</span>
+                  }
+                  @case ('boolean') {
+                    <i class="fas" [ngClass]="row[col.field] ? 'fa-check text-success' : 'fa-times text-muted opacity-50'"></i>
+                  }
+                  @case ('select') {
+                    <span class="fw-semibold text-dark">{{ optionLabel(row, col) | abpLocalization }}</span>
+                  }
+                  @case ('date') {
+                    <span class="fw-semibold text-dark">{{ row[col.field] | date: 'yyyy-MM-dd' }}</span>
+                  }
+                  @default {
+                    <span class="text-dark text-truncate text-end" [title]="row[col.field]">{{ row[col.field] }}</span>
+                  }
+                }
+              </div>
+            }
+          }
+        </div>
+
+        <div class="erp-record-card__footer d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
+          <div class="btn-group btn-group-sm">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm erp-card-btn"
+              [title]="'Erp::Edit' | abpLocalization"
+              [attr.aria-label]="'Erp::Edit' | abpLocalization"
+              (click)="quickEdit(row, $event)"
             >
-            <i class="fas fa-pen-to-square"></i>
-          </button>
-          <button
-            *abpPermission="entity.permission + '.Delete'"
-            type="button"
-            class="btn btn-sm btn-link text-danger px-1"
-            [title]="'Erp::Delete' | abpLocalization"
-            [attr.aria-label]="'Erp::Delete' | abpLocalization"
-            (click)="remove(row, $event)"
+              <i class="fas fa-pen-to-square"></i>
+            </button>
+            <button
+              *abpPermission="entity.permission + '.Delete'"
+              type="button"
+              class="btn btn-outline-danger btn-sm erp-card-btn"
+              [title]="'Erp::Delete' | abpLocalization"
+              [attr.aria-label]="'Erp::Delete' | abpLocalization"
+              (click)="remove(row, $event)"
             >
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </ng-template>
-      </ngx-datatable-column>
-    </ngx-datatable>
-  </div>
-</div>
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+          <a class="btn btn-link btn-sm text-decoration-none p-0 d-flex align-items-center gap-1 text-primary fw-medium" [routerLink]="cardLink(row)" (click)="$event.stopPropagation()">
+            <span>{{ 'Erp::OpenCard' | abpLocalization }}</span>
+            <i class="fas fa-arrow-right small"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</erp-table>

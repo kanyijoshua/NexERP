@@ -38,6 +38,12 @@ public class Customer : CompanyAggregateRoot
 
     public string GenBusPostingGroup { get; private set; }
 
+    public string VatBusPostingGroup { get; private set; }
+
+    public string SalespersonCode { get; private set; }
+
+    public string PaymentMethodCode { get; private set; }
+
     public string CurrencyCode { get; private set; }
 
     public bool Blocked { get; private set; }
@@ -111,4 +117,13 @@ public class Customer : CompanyAggregateRoot
     public void Unblock() => Blocked = false;
 
     internal void ApplyBalance(decimal amount) => Balance += amount;
+
+    public void SetVatBusPostingGroup(string vatBusPostingGroup) =>
+        VatBusPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatBusPostingGroup, nameof(vatBusPostingGroup), ErpDomainConsts.MaxVatBusPostingGroupLength));
+
+    public void SetSalespersonCode(string salespersonCode) =>
+        SalespersonCode = CodeTableEntity.NormalizeCode(Check.Length(salespersonCode, nameof(salespersonCode), ErpDomainConsts.MaxCodeLength));
+
+    public void SetPaymentMethodCode(string paymentMethodCode) =>
+        PaymentMethodCode = CodeTableEntity.NormalizeCode(Check.Length(paymentMethodCode, nameof(paymentMethodCode), ErpDomainConsts.MaxCodeLength));
 }

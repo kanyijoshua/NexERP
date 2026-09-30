@@ -42,6 +42,8 @@ public class GenJnlPostBatch : DomainService
     private readonly GenJnlCheckLine _checkLine;
     private readonly GenJnlPostLine _postLine;
 
+    private CurrencyExchangeRateManager CurrencyManager => LazyServiceProvider.LazyGetRequiredService<CurrencyExchangeRateManager>();
+
     public GenJnlPostBatch(
         IRepository<GenJournalLine, Guid> lineRepository,
         IRepository<GenJournalBatch, Guid> batchRepository,
@@ -120,6 +122,7 @@ public class GenJnlPostBatch : DomainService
 
         foreach (var line in lines)
         {
+            await RefreshCurrencyFactorAsync(line);
             await _checkLine.CheckAsync(line);
         }
 
@@ -185,6 +188,7 @@ public class GenJnlPostBatch : DomainService
             line.BalAccountNo,
             line.DimensionSetId
         );
+        reversal.CopyPostingSetupFrom(line);
 
         await _postLine.PostLineAsync(reversal, context);
     }
@@ -212,6 +216,18 @@ public class GenJnlPostBatch : DomainService
         }
     }
 
+    /// <summary>
+    /// A foreign currency line posts at the rate of its posting date, which a recurring line moves
+    /// on every period. Mirrors BC re-reading the rate when the posting date changes.
+    /// </summary>
+    private async Task RefreshCurrencyFactorAsync(GenJournalLine line)
+    {
+        if (line.CurrencyCode != null)
+        {
+            line.SetCurrency(line.CurrencyCode, await CurrencyManager.GetCurrencyFactorAsync(line.CurrencyCode, line.PostingDate));
+        }
+    }
+
     private async Task<List<GenJournalLine>> GetLinesAsync(Guid batchId)
     {
         var lines = await _lineRepository.GetListAsync(l => l.GenJournalBatchId == batchId);
@@ -227,7 +243,7 @@ public class GenJnlPostBatch : DomainService
         return lines
             .Where(l => l.BalAccountNo == null)
             .GroupBy(l => l.DocumentNo)
-            .Select(g => new DocumentBalance(g.Key, g.Sum(l => l.Amount)))
+            .Select(g => new DocumentBalance(g.Key, g.Sum(l => l.AmountLcy)))
             .FirstOrDefault(d => d.Balance != 0m);
     }
 

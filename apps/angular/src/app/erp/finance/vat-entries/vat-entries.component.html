@@ -1,0 +1,57 @@
+<app-company-switcher></app-company-switcher>
+
+<div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+  <h4 class="mb-0 fw-bold me-auto">
+    <i class="fas fa-receipt text-primary me-2"></i>{{ 'Erp::VatEntries' | abpLocalization }}
+  </h4>
+
+  <div>
+    <label class="form-label small mb-1" for="vat-type">{{ 'Erp::Type' | abpLocalization }}</label>
+    <select id="vat-type" class="form-select form-select-sm" [(ngModel)]="type" (ngModelChange)="refresh()">
+      <option [ngValue]="null"></option>
+      @for (option of typeOptions; track option.value) {
+        <option [ngValue]="option.value">{{ 'Erp::Enum:VatEntryType.' + option.key | abpLocalization }}</option>
+      }
+    </select>
+  </div>
+  <div>
+    <label class="form-label small mb-1" for="vat-from">{{ 'Erp::FromDate' | abpLocalization }}</label>
+    <input id="vat-from" type="date" class="form-control form-control-sm" [(ngModel)]="fromDate" (ngModelChange)="refresh()" />
+  </div>
+  <div>
+    <label class="form-label small mb-1" for="vat-to">{{ 'Erp::ToDate' | abpLocalization }}</label>
+    <input id="vat-to" type="date" class="form-control form-control-sm" [(ngModel)]="toDate" (ngModelChange)="refresh()" />
+  </div>
+</div>
+
+<erp-table
+  tableId="vat-entries"
+  height="calc(100vh - 340px)"
+  [source]="source"
+  [columns]="columns"
+  [clickableRows]="false"
+  (rowsChange)="loadedRows.set($event.rows)"
+>
+  <ng-template erpTableCol="entryNo" let-value="value">
+    <span class="font-monospace small">{{ value }}</span>
+  </ng-template>
+  <ng-template erpTableCol="type" let-value="value">
+    <span class="badge border fw-normal" [ngClass]="value === VatEntryType.Sale ? 'bg-primary-subtle text-primary' : 'bg-light text-secondary'">
+      {{ 'Erp::Enum:VatEntryType.' + (value === VatEntryType.Sale ? 'Sale' : 'Purchase') | abpLocalization }}
+    </span>
+  </ng-template>
+  <ng-template erpTableCol="amount" let-value="value">
+    <span class="font-monospace fw-semibold">{{ value | erpAmount }}</span>
+  </ng-template>
+  <ng-template erpTableCol="reversed" let-value="value">
+    @if (value) {
+      <i class="fas fa-undo text-muted" [attr.aria-label]="'Erp::Reversed' | abpLocalization"></i>
+    }
+  </ng-template>
+</erp-table>
+
+<!-- Totals of the rows loaded so far; scrolling to the end totals the whole filtered list. -->
+<div class="d-flex justify-content-end gap-4 small mt-2 px-1">
+  <span>{{ 'Erp::Enum:VatEntryType.Sale' | abpLocalization }}: <b class="font-monospace">{{ totalOf(VatEntryType.Sale) | erpAmount }}</b></span>
+  <span>{{ 'Erp::Enum:VatEntryType.Purchase' | abpLocalization }}: <b class="font-monospace">{{ totalOf(VatEntryType.Purchase) | erpAmount }}</b></span>
+</div>

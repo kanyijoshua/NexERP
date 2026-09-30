@@ -56,7 +56,7 @@ export class CustomerService {
     this.restService.request<any, PagedResultDto<CustomerDto>>({
       method: 'GET',
       url: '/api/erp/customer',
-      params: { filter: input.filter, blocked: input.blocked, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { dynamicFilter: input.dynamicFilter, filter: input.filter, blocked: input.blocked, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

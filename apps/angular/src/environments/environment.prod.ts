@@ -6,7 +6,7 @@ export const environment = {
   production: true,
   application: {
     baseUrl,
-    name: 'ABPmicroservice',
+    name: 'NexERP',
     logoUrl: '',
   },
   oAuthConfig: {

@@ -20,6 +20,9 @@ public class CustomerDto : FullAuditedEntityDto<Guid>
     public string PaymentTermsCode { get; set; }
     public string CustomerPostingGroup { get; set; }
     public string GenBusPostingGroup { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string SalespersonCode { get; set; }
+    public string PaymentMethodCode { get; set; }
     public string CurrencyCode { get; set; }
     public bool Blocked { get; set; }
 }
@@ -38,10 +41,13 @@ public class CreateUpdateCustomerDto
     public string PaymentTermsCode { get; set; }
     public string CustomerPostingGroup { get; set; }
     public string GenBusPostingGroup { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string SalespersonCode { get; set; }
+    public string PaymentMethodCode { get; set; }
     public string CurrencyCode { get; set; }
 }
 
-public class GetCustomerListInput : PagedAndSortedResultRequestDto
+public class GetCustomerListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public bool? Blocked { get; set; }
@@ -61,6 +67,7 @@ public class SalesHeaderDto : FullAuditedEntityDto<Guid>
     public DocumentStatus Status { get; set; }
     public string CurrencyCode { get; set; }
     public string PaymentTermsCode { get; set; }
+    public string LocationCode { get; set; }
     public string ExternalDocumentNo { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal TotalAmountIncludingVat { get; set; }
@@ -81,6 +88,13 @@ public class SalesLineDto : EntityDto<Guid>
     public decimal LineDiscountPercent { get; set; }
     public decimal LineAmount { get; set; }
     public decimal LineAmountIncludingVat { get; set; }
+    public string VatBusPostingGroup { get; set; }
+    public string VatProdPostingGroup { get; set; }
+    public ABPmicroservice.Erp.Finance.VatCalculationType VatCalculationType { get; set; }
+    public string VatIdentifier { get; set; }
+    public decimal VatPercent { get; set; }
+    public decimal VatBaseAmount { get; set; }
+    public decimal VatAmount { get; set; }
     public string UnitOfMeasureCode { get; set; }
 }
 
@@ -93,6 +107,7 @@ public class CreateUpdateSalesHeaderDto
     public DateTime? DueDate { get; set; }
     public string CurrencyCode { get; set; }
     public string PaymentTermsCode { get; set; }
+    public string LocationCode { get; set; }
     public string ExternalDocumentNo { get; set; }
     public List<SalesLineInputDto> Lines { get; set; } = new();
 }
@@ -109,7 +124,7 @@ public class SalesLineInputDto
     public string UnitOfMeasureCode { get; set; }
 }
 
-public class GetSalesDocumentListInput : PagedAndSortedResultRequestDto
+public class GetSalesDocumentListInput : ErpPagedListInput
 {
     public string Filter { get; set; }
     public SalesDocumentType? DocumentType { get; set; }

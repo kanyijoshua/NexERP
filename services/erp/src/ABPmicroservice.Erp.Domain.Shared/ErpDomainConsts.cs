@@ -39,6 +39,14 @@ public static class ErpDomainConsts
     public const int MaxTotalingLength = 250;
     public const int MaxDateFormulaLength = 32;
     public const int MaxColumnHeaderLength = 50;
+    public const int MaxLocationCodeLength = 10;
+    public const int MaxVatIdentifierLength = 20;
+    public const int MaxBankAccountNoLength = 30;
+    public const int MaxIbanLength = 50;
+    public const int MaxSwiftCodeLength = 20;
+    public const int MaxCurrencySymbolLength = 10;
+    public const int MaxAccountingPeriodNameLength = 30;
+    public const int MaxJobTitleLength = 50;
 
     /// <summary>
     /// Body of a report layout. Generous enough for a styled page with an inline logo, small
