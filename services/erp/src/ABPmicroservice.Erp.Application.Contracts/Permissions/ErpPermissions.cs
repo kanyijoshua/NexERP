@@ -262,6 +262,12 @@ public class ErpPermissions
         public const string Default = GroupName + ".Theme";
     }
 
+    /// <summary>Which profile (role center) each role works as. Choosing one's own needs no permission.</summary>
+    public static class Profiles
+    {
+        public const string Default = GroupName + ".Profiles";
+    }
+
     public static class Companies
     {
         public const string Default = GroupName + ".Companies";

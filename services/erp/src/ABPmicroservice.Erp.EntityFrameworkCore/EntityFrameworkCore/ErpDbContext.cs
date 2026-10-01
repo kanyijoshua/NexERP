@@ -133,6 +133,7 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<PurchasesPayablesSetup> PurchasesPayablesSetups { get; set; }
 
     public DbSet<UserProfile> UserProfiles { get; set; }
+    public DbSet<ProfileRoleAssignment> ProfileRoleAssignments { get; set; }
     public DbSet<UserRoleCenter> UserRoleCenters { get; set; }
 
     public DbSet<AccountSchedule> AccountSchedules { get; set; }

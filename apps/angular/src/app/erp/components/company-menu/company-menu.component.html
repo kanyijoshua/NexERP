@@ -4,6 +4,8 @@
     class="company-menu__trigger"
     [class.company-menu__trigger--nav]="variant === 'nav'"
     [class.company-menu__trigger--title]="variant === 'title'"
+    [class.company-menu__trigger--bar]="variant === 'bar'"
+    [attr.title]="variant === 'bar' ? current.displayName : null"
     [matMenuTriggerFor]="menu"
     [attr.aria-label]="'Erp::SwitchCompany' | abpLocalization"
   >

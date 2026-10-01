@@ -4824,6 +4824,49 @@ namespace ABPmicroservice.Erp.Migrations
                     b.ToTable("ErpNoSeriesLines", (string)null);
                 });
 
+            modelBuilder.Entity("ABPmicroservice.Erp.Profiles.ProfileRoleAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("ProfileId")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "RoleName")
+                        .IsUnique();
+
+                    b.ToTable("ErpProfileRoleAssignments", (string)null);
+                });
+
             modelBuilder.Entity("ABPmicroservice.Erp.Profiles.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4866,7 +4909,9 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnName("LastModifierId");
 
                     b.Property<string>("ProfileId")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid")
@@ -4876,6 +4921,8 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "UserId");
 
                     b.ToTable("ErpUserProfiles", (string)null);
                 });

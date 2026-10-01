@@ -8,7 +8,6 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { SharedModule } from '../../shared/shared.module';
 
 import { ChatterWidgetComponent } from '../components/chatter-widget/chatter-widget.component';
-import { CompanySwitcherComponent } from '../components/company-switcher/company-switcher.component';
 import { DocumentPageComponent } from './document-page/document-page.component';
 import { JournalPageComponent } from './journal-page/journal-page.component';
 import { KanbanBoardComponent } from './kanban-board/kanban-board.component';
@@ -30,7 +29,6 @@ import { ErpTableComponent } from './table/erp-table.component';
 
 const DECLARATIONS = [
   // On every ERP page, so every lazy ERP module needs it.
-  CompanySwitcherComponent,
   ChatterWidgetComponent,
   PageToolbarComponent,
   LookupComponent,

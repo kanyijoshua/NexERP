@@ -1,0 +1,208 @@
+:host {
+  display: block;
+  /* The top bar leaves a gap under itself; the role bar sits close under it, as in BC. */
+  margin: -0.75rem 0 1rem;
+}
+
+.role-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 3rem;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid var(--erp-rule, #dee2e6);
+  background: var(--erp-surface, #fff);
+}
+
+.role-bar__company {
+  /* The company and the role keep their width; the links give way and scroll instead. */
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 22rem;
+}
+
+.role-bar__rule {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 1.5rem;
+  margin: 0 0.5rem;
+  background: var(--erp-rule, #dee2e6);
+}
+
+/* The links scroll sideways when they do not fit; the arrows do it a screenful at a time. */
+.role-bar__items {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.role-bar__item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--erp-ink, #1f2328);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--erp-hover, rgba(0, 0, 0, 0.04));
+    color: var(--erp-ink, #1f2328);
+  }
+}
+
+.role-bar__item--active {
+  border-bottom-color: var(--erp-primary);
+  font-weight: 600;
+}
+
+.role-bar__caret {
+  font-size: 0.65em;
+  opacity: 0.7;
+}
+
+.role-bar__arrow,
+.role-bar__icon {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--erp-radius-sm, 4px);
+  background: none;
+  color: var(--erp-ink-muted, #6c757d);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--erp-hover, rgba(0, 0, 0, 0.04));
+    color: var(--erp-ink, #1f2328);
+  }
+}
+
+/* Hidden arrows keep their place, so the links do not jump when one appears. */
+.role-bar__arrow--hidden {
+  visibility: hidden;
+}
+
+.role-bar__role {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 14rem;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: var(--erp-radius-sm, 4px);
+  background: none;
+  color: var(--erp-ink-muted, #6c757d);
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--erp-hover, rgba(0, 0, 0, 0.04));
+    color: var(--erp-ink, #1f2328);
+  }
+}
+
+.role-bar__role-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Menus are drawn in an overlay outside this component. */
+::ng-deep .role-bar__panel {
+  .role-bar__link--active {
+    font-weight: 600;
+    color: var(--erp-primary);
+  }
+}
+
+::ng-deep .role-bar__panel--roles {
+  max-width: 22rem !important;
+
+  .role-bar__label {
+    padding: 0.5rem 1rem 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--erp-ink-muted, #6c757d);
+  }
+
+  .role-bar__source {
+    font-weight: 400;
+  }
+
+  .role-bar__role-option {
+    height: auto;
+    min-height: 3.25rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    line-height: 1.3;
+  }
+
+  .role-bar__role-option--active {
+    font-weight: 600;
+  }
+
+  /* The tick and the text side by side, so every option lines up whatever its length. */
+  .role-bar__option {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .role-bar__option .role-bar__check {
+    flex: 0 0 auto;
+    margin-top: 0.2rem;
+  }
+
+  .role-bar__role-text {
+    display: flex;
+    flex-direction: column;
+    white-space: normal;
+
+    small {
+      font-weight: 400;
+      color: var(--erp-ink-muted, #6c757d);
+    }
+  }
+
+  .role-bar__check {
+    width: 1rem;
+    margin-right: 0.75rem;
+    color: var(--erp-accent);
+  }
+}
+
+/* On smaller screens the role shows as its icon (its name is in the tooltip and the menu). */
+@media (max-width: 991.98px) {
+  .role-bar__company {
+    max-width: 10rem;
+  }
+
+  .role-bar__role-name {
+    display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .role-bar__company {
+    max-width: 7rem;
+  }
+}

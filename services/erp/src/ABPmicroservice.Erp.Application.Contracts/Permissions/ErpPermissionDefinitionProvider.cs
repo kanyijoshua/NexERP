@@ -147,6 +147,7 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
         modules.AddChild(ErpPermissions.Modules.Manage, L("Permission:Erp:Modules:Manage"));
 
         erpGroup.AddPermission(ErpPermissions.Theme.Default, L("Permission:Erp:Theme"));
+        erpGroup.AddPermission(ErpPermissions.Profiles.Default, L("Permission:Erp:Profiles"));
 
         var companies = erpGroup.AddPermission(ErpPermissions.Companies.Default, L("Permission:Erp:Companies"));
         companies.AddChild(ErpPermissions.Companies.Create, L("Permission:Erp:Companies:Create"));

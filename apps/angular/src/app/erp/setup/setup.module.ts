@@ -12,6 +12,7 @@ import { HumanResourcesSetupComponent } from './human-resources-setup/human-reso
 import { InventorySetupComponent } from './inventory-setup/inventory-setup.component';
 import { ModulesComponent } from './modules/modules.component';
 import { NoSeriesComponent } from './no-series/no-series.component';
+import { ProfilesComponent } from './profiles/profiles.component';
 import { ThemeSettingsComponent } from './theme/theme-settings.component';
 import { WebServicesComponent } from './web-services/web-services.component';
 import { WebhooksComponent } from './webhooks/webhooks.component';
@@ -82,6 +83,12 @@ const routes: Routes = [
     data: { requiredPolicy: 'Erp.Webhooks && Erp.DataExport' },
   },
   {
+    path: 'profiles',
+    component: ProfilesComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Profiles' },
+  },
+  {
     path: 'theme',
     component: ThemeSettingsComponent,
     canActivate: [permissionGuard],
@@ -109,6 +116,7 @@ const routes: Routes = [
     WebhooksComponent,
     DataExportComponent,
     ThemeSettingsComponent,
+    ProfilesComponent,
   ],
   imports: [ErpSharedModule, MatButtonModule, MatButtonToggleModule, RouterModule.forChild(routes)],
 })

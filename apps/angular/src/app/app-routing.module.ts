@@ -1,11 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+// Loaded with the first page that needs it, so the bar stays out of the initial bundle.
+const roleShell = () =>
+  import('./erp/components/role-nav-bar/role-shell.component').then(m => m.RoleShellComponent);
+
 const routes: Routes = [
+  // The home page and the ERP pages share the role navigation bar.
   {
     path: '',
     pathMatch: 'full',
-    loadChildren: () => import('./home/home.module').then(m => m.HomeModule),
+    loadComponent: roleShell,
+    children: [{ path: '', loadChildren: () => import('./home/home.module').then(m => m.HomeModule) }],
   },
   {
     path: 'account',
@@ -27,7 +33,8 @@ const routes: Routes = [
   },
   {
     path: 'erp',
-    loadChildren: () => import('./erp/erp.module').then(m => m.ErpModule),
+    loadComponent: roleShell,
+    children: [{ path: '', loadChildren: () => import('./erp/erp.module').then(m => m.ErpModule) }],
   },
 ];
 

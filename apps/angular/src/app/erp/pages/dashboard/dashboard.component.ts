@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-erp-dashboard',
   template: `
     <div class="container-fluid py-3">
-      <app-company-switcher></app-company-switcher>
-
       <div class="row g-3 mb-4">
         <div class="col-md-3">
           <div class="card border-0 shadow-sm bg-gradient text-white bg-primary p-3 rounded-3">

@@ -274,4 +274,9 @@ public static class ErpErrorCodes
         public const string InvalidValue = Prefix + ":Querying:00003";
         public const string OperatorNotSupported = Prefix + ":Querying:00004";
     }
+
+    public static class Profiles
+    {
+        public const string UnknownProfile = Prefix + ":Profiles:00001";
+    }
 }

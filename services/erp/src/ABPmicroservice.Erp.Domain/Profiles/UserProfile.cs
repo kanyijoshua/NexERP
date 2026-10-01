@@ -6,7 +6,8 @@ using Volo.Abp.MultiTenancy;
 namespace ABPmicroservice.Erp.Profiles;
 
 /// <summary>
-/// User Personalization Profile. Mirrors Business Central Table 2000000073 "User Personalization".
+/// User Personalization Profile. Mirrors Business Central Table 2000000073 "User Personalization":
+/// the profile (role) a user chose to work as, which decides their role center navigation.
 /// </summary>
 public class UserProfile : FullAuditedEntity<Guid>, IMultiTenant
 {
@@ -18,9 +19,17 @@ public class UserProfile : FullAuditedEntity<Guid>, IMultiTenant
 
     protected UserProfile() { }
 
-    public UserProfile(Guid id, Guid userId, string profileId, string languageCode = "en-US", string companyName = "CRONUS International Ltd.")
+    public UserProfile(
+        Guid id,
+        Guid? tenantId,
+        Guid userId,
+        string profileId,
+        string languageCode = "en-US",
+        string companyName = "CRONUS International Ltd."
+    )
         : base(id)
     {
+        TenantId = tenantId;
         UserId = userId;
         SetProfileId(profileId);
         LanguageCode = languageCode;

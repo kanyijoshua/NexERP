@@ -12,7 +12,8 @@ import { CopyCompanyDialogComponent } from './copy-company-dialog.component';
  * The company you are working in, and a menu to switch to another one.
  * <p>
  * Business Central shows the company as the Role Center's title; here it sits in the top bar
- * (variant "nav") and as the home page title (variant "title"), both opening the same menu.
+ * (variant "nav"), as the home page title (variant "title") and at the start of the role
+ * navigation bar (variant "bar"), all opening the same menu.
  * Switching does not reload the browser: pages listen to CompanyService.companyChanged$.
  * </p>
  */
@@ -28,14 +29,14 @@ export class CompanyMenuComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   readonly service = inject(CompanyService);
 
-  @Input() variant: 'nav' | 'title' = 'nav';
+  @Input() variant: 'nav' | 'title' | 'bar' = 'nav';
 
   readonly companies$ = this.service.companies$;
   readonly current$ = this.service.currentCompany$;
 
   ngOnInit(): void {
     // The top bar is there before sign-in; the list can only be read once someone is signed in.
-    // Only the top bar reads it: the home page title shares what the top bar loaded.
+    // Only the top bar reads it: the other variants share what the top bar loaded.
     if (this.variant !== 'nav') {
       return;
     }

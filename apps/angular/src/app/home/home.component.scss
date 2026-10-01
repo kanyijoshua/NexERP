@@ -24,12 +24,6 @@
   min-width: 0;
 }
 
-.role-center__company {
-  margin: 0;
-  // Keeps the line height while the company list is still loading.
-  min-height: 2.25rem;
-}
-
 .role-center__tools {
   display: flex;
   flex-wrap: wrap;
@@ -37,8 +31,10 @@
 }
 
 .role-center__greeting {
-  margin-top: 0.25rem;
-  color: var(--erp-ink-muted);
+  margin: 0;
+  color: var(--erp-ink);
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .role-center__section {

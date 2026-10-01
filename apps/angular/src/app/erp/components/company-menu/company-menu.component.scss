@@ -54,6 +54,28 @@
   }
 }
 
+/* At the start of the role navigation bar: the company names the role center, as in BC. */
+.company-menu__trigger--bar {
+  padding: 0.25rem 0;
+  color: var(--erp-ink);
+  font-size: 1.2rem;
+  font-weight: 400;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+
+  .company-menu__icon {
+    display: none;
+  }
+
+  &:hover .company-menu__name,
+  &:focus-visible .company-menu__name {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+}
+
 .company-menu__label {
   padding: 0.5rem 1rem 0.25rem;
   font-size: 0.8rem;

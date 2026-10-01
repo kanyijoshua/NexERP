@@ -1,0 +1,61 @@
+<erp-page-toolbar
+  title="Erp::Menu:Profiles"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-users-gear"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted small">{{ 'Erp::ProfilesHelp' | abpLocalization }}</p>
+
+<div class="row g-3 mb-3">
+  @for (profile of profiles(); track profile.id) {
+    <div class="col-sm-6 col-xl-4">
+      <div class="card h-100 border shadow-sm">
+        <div class="card-body py-2 px-3">
+          <div class="fw-semibold">{{ profile.displayName }}</div>
+          <div class="small text-muted">{{ profile.description }}</div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<erp-table
+  tableId="profile-role-assignments"
+  height="calc(100vh - 480px)"
+  [items]="rows()"
+  [columns]="columns"
+  [clickableRows]="false"
+  [showActions]="false"
+>
+  <ng-template erpTableCol="profileId" let-row="row">
+    <select
+      class="form-select form-select-sm"
+      [attr.aria-label]="('Erp::AssignedProfile' | abpLocalization) + ': ' + row.roleName"
+      [disabled]="savingRole() === row.roleName"
+      [ngModel]="row.profileId"
+      (ngModelChange)="assign(row, $event)"
+    >
+      <option [ngValue]="null">{{ 'Erp::NoProfileAssigned' | abpLocalization }}</option>
+      @for (profile of profiles(); track profile.id) {
+        <option [ngValue]="profile.id">{{ profile.displayName }}</option>
+      }
+    </select>
+  </ng-template>
+</erp-table>
+
+<!-- Roles the user may not list can still be typed in. -->
+<form class="d-flex gap-2 mt-3" (ngSubmit)="addRole()">
+  <input
+    class="form-control form-control-sm w-auto"
+    name="newRoleName"
+    maxlength="256"
+    [placeholder]="'Erp::RoleName' | abpLocalization"
+    [attr.aria-label]="'Erp::RoleName' | abpLocalization"
+    [(ngModel)]="newRoleName"
+  />
+  <button type="submit" class="btn btn-sm btn-outline-primary" [disabled]="!newRoleName.trim()">
+    <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
+  </button>
+</form>

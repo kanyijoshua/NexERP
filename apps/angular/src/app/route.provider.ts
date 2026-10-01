@@ -640,7 +640,7 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 90,
     layout: eLayoutType.application,
     requiredPolicy:
-      'Erp.Modules || Erp.Theme || Erp.GeneralLedgerSetup || Erp.InventorySetup || Erp.HumanResourcesSetup || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport || Erp.RapidStart',
+      'Erp.Modules || Erp.Theme || Erp.Profiles || Erp.GeneralLedgerSetup || Erp.InventorySetup || Erp.HumanResourcesSetup || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport || Erp.RapidStart',
   },
   {
     path: '/erp/setup/modules',
@@ -659,6 +659,15 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 1,
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.Theme',
+  },
+  {
+    path: '/erp/setup/profiles',
+    name: 'Erp::Menu:Profiles',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-users-gear',
+    order: 1,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Profiles',
   },
   {
     path: '/erp/setup/general-ledger',

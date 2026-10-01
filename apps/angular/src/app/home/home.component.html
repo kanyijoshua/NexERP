@@ -6,14 +6,12 @@
 
     <header class="role-center__header">
       <div class="role-center__title">
-        <h1 class="role-center__company">
-          <app-company-menu variant="title" />
-        </h1>
-        <div class="role-center__greeting">
+        <!-- The company heads the role navigation bar above, so the page opens on the greeting. -->
+        <h1 class="role-center__greeting">
           {{ greetingKey | abpLocalization }}@if (summary()?.userName) {
             <span>, {{ summary()?.userName }}</span>
           }
-        </div>
+        </h1>
       </div>
       <div class="role-center__tools">
         <button mat-flat-button type="button" (click)="openMenuSuite()">

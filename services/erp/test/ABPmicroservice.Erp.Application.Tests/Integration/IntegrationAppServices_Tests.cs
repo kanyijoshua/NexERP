@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp;
@@ -54,12 +55,21 @@ public class IntegrationAppServices_Tests : ErpApplicationTestBase
     {
         await InCompanyAsync(DefaultCompanyName, async () =>
         {
-            var service = await _webServices.CreateAsync(
-                new CreateUpdateWebServiceDto { ServiceName = "Vendors", EntityName = "Vendor" }
+            var created = await _webServices.CreateAsync(
+                new CreateUpdateWebServiceDto { ServiceName = "Vendors", EntityName = "Vendor", ExcludedFields = "Name" }
             );
+            var service = await _webServices.SetPublishedAsync(new SetWebServicePublishedInput { Id = created.Id, Published = true });
 
             service.Url.ShouldBe("/api/erp/integration-data/query");
-            service.RequestBody.ShouldBe("{\"serviceName\":\"Vendors\"}");
+
+            // The body lists exactly the columns the service returns, withheld ones left out.
+            var fields = (await _integrationData.GetFieldsAsync("Vendors")).Items.Select(f => f.Name).ToList();
+            var body = JsonDocument.Parse(service.RequestBody).RootElement;
+            body.GetProperty("serviceName").GetString().ShouldBe("Vendors");
+            body.GetProperty("fields").EnumerateArray().Select(f => f.GetString()).ToList().ShouldBe(fields);
+            fields.ShouldNotBeEmpty();
+            fields.ShouldNotContain("Name");
+            body.GetProperty("maxResultCount").GetInt32().ShouldBe(100);
             service.FieldsUrl.ShouldBe("/api/erp/integration-data/fields?serviceName=Vendors");
         });
     }

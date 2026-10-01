@@ -123,9 +123,17 @@ export class WebServicesComponent
     });
   }
 
-  /** The body that names the service; built here too, so it never depends on the server's copy. */
+  /**
+   * The query body the server builds for the service: its fields, ordering and paging. A server
+   * that does not send one yet still gets a body that names the service.
+   */
   requestBodyOf(service: PublishedWebServiceDto): string {
     return service.requestBody || JSON.stringify({ serviceName: service.serviceName });
+  }
+
+  /** The body indented, as it is pasted into Postman or code. */
+  requestBodyToCopy(service: PublishedWebServiceDto): string {
+    return JSON.stringify(JSON.parse(this.requestBodyOf(service)), null, 2);
   }
 
   /** Copies an address or body without opening the row. */

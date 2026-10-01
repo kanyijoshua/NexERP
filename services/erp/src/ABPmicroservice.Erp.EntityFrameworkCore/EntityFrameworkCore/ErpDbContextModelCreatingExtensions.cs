@@ -609,6 +609,17 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "UserProfiles", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.ProfileId).IsRequired().HasMaxLength(ErpDomainConsts.MaxProfileIdLength);
+            b.HasIndex(x => new { x.TenantId, x.UserId });
+        });
+
+        builder.Entity<ProfileRoleAssignment>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "ProfileRoleAssignments", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.RoleName).IsRequired().HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.ProfileId).IsRequired().HasMaxLength(ErpDomainConsts.MaxProfileIdLength);
+            b.HasIndex(x => new { x.TenantId, x.RoleName }).IsUnique();
         });
 
         builder.Entity<UserRoleCenter>(b =>

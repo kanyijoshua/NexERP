@@ -115,13 +115,38 @@ public class WebServiceAppService : ErpAppService, IWebServiceAppService
         return services.Select(ToDto).ToList();
     }
 
+    /// <summary>
+    /// A complete query body for the service: every field it returns (the excluded ones left out),
+    /// ordered by the first, with no filters and the first page. Callers trim it to what they need.
+    /// </summary>
+    private string RequestBodyOf(PublishedWebService service)
+    {
+        var definition = _registry.Find(service.EntityName);
+        var fields = definition == null
+            ? new List<string>()
+            : ExportFieldMapper.ToDtos(definition).Where(f => !service.IsFieldExcluded(f.Name)).Select(f => f.Name).ToList();
+
+        return JsonSerializer.Serialize(
+            new
+            {
+                serviceName = service.ServiceName,
+                fields,
+                filters = Array.Empty<object>(),
+                orderBy = fields.FirstOrDefault(),
+                descending = false,
+                skipCount = 0,
+                maxResultCount = 100,
+            }
+        );
+    }
+
     private PublishedWebServiceDto ToDto(PublishedWebService service)
     {
         var dto = ObjectMapper.Map<PublishedWebService, PublishedWebServiceDto>(service);
 
         // Shown so the addresses can be copied straight into the calling system.
         dto.Url = QueryPath;
-        dto.RequestBody = JsonSerializer.Serialize(new { serviceName = service.ServiceName });
+        dto.RequestBody = RequestBodyOf(service);
         dto.FieldsUrl = $"{FieldsPath}?serviceName={Uri.EscapeDataString(service.ServiceName)}";
         return dto;
     }
