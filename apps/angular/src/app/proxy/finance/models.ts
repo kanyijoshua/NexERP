@@ -10,6 +10,10 @@ import type { CodeTableDto, CreateUpdateCodeTableDto } from '../companies/models
 import type { VatCalculationType } from './vat-calculation-type.enum';
 import type { VatEntryType } from './vat-entry-type.enum';
 import type { GeneralPostingType } from './general-posting-type.enum';
+import type { GLAccountDebitCredit } from './glaccount-debit-credit.enum';
+import type { RoundingType } from './rounding-type.enum';
+import type { ConsolidationTranslationMethod } from './consolidation-translation-method.enum';
+import type { GLEntrySourceType } from './glentry-source-type.enum';
 
 export interface ApplyStandardJournalInput {
   standardJournalId?: string;
@@ -39,6 +43,21 @@ export interface CreateUpdateGLAccountDto {
   subcategory?: string;
   incomeBalance: IncomeBalanceType;
   directPosting: boolean;
+  searchName?: string;
+  debitCredit?: GLAccountDebitCredit;
+  reconciliationAccount?: boolean;
+  totaling?: string;
+  genBusPostingGroup?: string;
+  automaticExtTexts?: boolean;
+  taxAreaCode?: string;
+  taxLiable?: boolean;
+  taxGroupCode?: string;
+  consolTranslationMethod?: ConsolidationTranslationMethod;
+  consolDebitAcc?: string;
+  consolCreditAcc?: string;
+  costTypeNo?: string;
+  defaultDeferralTemplateCode?: string;
+  omitDefaultDescrInJnl?: boolean;
 }
 
 export interface CreateUpdateGenJournalLineDto {
@@ -91,6 +110,21 @@ export interface GLAccountDto extends FullAuditedEntityDto<string> {
   blocked: boolean;
   netChange: number;
   balance: number;
+  searchName?: string;
+  debitCredit?: GLAccountDebitCredit;
+  reconciliationAccount?: boolean;
+  totaling?: string;
+  genBusPostingGroup?: string;
+  automaticExtTexts?: boolean;
+  taxAreaCode?: string;
+  taxLiable?: boolean;
+  taxGroupCode?: string;
+  consolTranslationMethod?: ConsolidationTranslationMethod;
+  consolDebitAcc?: string;
+  consolCreditAcc?: string;
+  costTypeNo?: string;
+  defaultDeferralTemplateCode?: string;
+  omitDefaultDescrInJnl?: boolean;
 }
 
 export interface GLEntryDto extends EntityDto<string> {
@@ -104,6 +138,22 @@ export interface GLEntryDto extends EntityDto<string> {
   amount: number;
   sourceNo?: string;
   genBusPostingGroup?: string;
+  glAccountName?: string;
+  genPostingType?: GeneralPostingType;
+  genProdPostingGroup?: string;
+  balAccountType?: GenJournalAccountType;
+  balAccountNo?: string;
+  vatAmount?: number;
+  vatBusPostingGroup?: string;
+  vatProdPostingGroup?: string;
+  externalDocumentNo?: string;
+  sourceType?: GLEntrySourceType;
+  userId?: string;
+  journalBatchName?: string;
+  quantity?: number;
+  additionalCurrencyAmount?: number;
+  jobNo?: string;
+  businessUnitCode?: string;
 }
 
 export interface GLRegisterDto extends EntityDto<string> {
@@ -351,6 +401,23 @@ export interface GeneralLedgerSetupDto {
   globalDimension1Code?: string;
   globalDimension2Code?: string;
   bankAccountNos?: string;
+  localCurrencySymbol?: string;
+  localCurrencyDescription?: string;
+  invRoundingType?: RoundingType;
+  vatRoundingType?: RoundingType;
+  pmtDiscExclVAT?: boolean;
+  unrealizedVAT?: boolean;
+  adjustForPaymentDisc?: boolean;
+  markCrMemosAsCorrections?: boolean;
+  additionalReportingCurrency?: string;
+  maxVATDifferenceAllowed?: number;
+  paymentTolerancePct?: number;
+  maxPaymentToleranceAmount?: number;
+  blockDeletionOfGLAccounts?: boolean;
+  postWithJobQueue?: boolean;
+  jobQueueCategoryCode?: string;
+  notifyOnSuccess?: boolean;
+  registerTime?: boolean;
 }
 
 export interface VatPostingSetupDto extends FullAuditedEntityDto<string> {

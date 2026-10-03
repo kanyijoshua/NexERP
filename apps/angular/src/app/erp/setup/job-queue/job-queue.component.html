@@ -1,0 +1,880 @@
+<div class="job-queue-container">
+  <erp-page-toolbar
+    title="Erp::Menu:JobQueue"
+    breadcrumb="Erp::Menu:Setup"
+    icon="fas fa-tasks"
+    [showSearch]="false"
+    permission="Erp.JobQueue.Manage"
+    (create)="activeTab === 'categories' ? openCreateCategory() : openCreateEntry()"
+  ></erp-page-toolbar>
+
+  <!-- Navigation Tabs -->
+  <ul class="nav nav-tabs job-queue-nav">
+    <li class="nav-item">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'entries'"
+        (click)="setTab('entries')"
+      >
+        <i class="fas fa-list-check me-2"></i>{{ 'Erp::JobQueueEntries' | abpLocalization }}
+        <span class="badge bg-light text-dark border ms-1">{{ entriesData.totalCount }}</span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'categories'"
+        (click)="setTab('categories')"
+      >
+        <i class="fas fa-tags me-2"></i>{{ 'Erp::JobQueueCategories' | abpLocalization }}
+        <span class="badge bg-light text-dark border ms-1">{{ categories.length }}</span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        type="button"
+        class="nav-link"
+        [class.active]="activeTab === 'logs'"
+        (click)="setTab('logs')"
+      >
+        <i class="fas fa-history me-2"></i>{{ 'Erp::JobQueueLogEntries' | abpLocalization }}
+        <span class="badge bg-light text-dark border ms-1">{{ logsData.totalCount }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- TAB 1: JOB QUEUE ENTRIES -->
+  <div *ngIf="activeTab === 'entries'">
+    <div class="action-bar-strip">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button
+          *abpPermission="'Erp.JobQueue.Manage'"
+          type="button"
+          class="btn btn-primary"
+          (click)="openCreateEntry()"
+        >
+          <i class="fas fa-plus me-1"></i>{{ 'Erp::NewJobQueueEntry' | abpLocalization }}
+        </button>
+
+        <!-- Status Filter -->
+        <select
+          class="form-select form-select-sm"
+          style="width: 160px;"
+          [ngModel]="selectedStatusFilter"
+          (ngModelChange)="selectedStatusFilter = $event; loadEntries()"
+        >
+          <option [ngValue]="null">{{ 'Erp::AllStatuses' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueStatus.Ready">{{ 'Erp::JobQueueStatus:Ready' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueStatus.InProcess">{{ 'Erp::JobQueueStatus:InProcess' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueStatus.Error">{{ 'Erp::JobQueueStatus:Error' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueStatus.OnHold">{{ 'Erp::JobQueueStatus:OnHold' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueStatus.Finished">{{ 'Erp::JobQueueStatus:Finished' | abpLocalization }}</option>
+        </select>
+
+        <!-- Category Filter -->
+        <select
+          class="form-select form-select-sm"
+          style="width: 170px;"
+          [ngModel]="selectedCategoryFilter"
+          (ngModelChange)="selectedCategoryFilter = $event; loadEntries()"
+        >
+          <option [ngValue]="null">{{ 'Erp::AllCategories' | abpLocalization }}</option>
+          <option *ngFor="let cat of categories" [ngValue]="cat.code">
+            {{ cat.code }} - {{ cat.description }}
+          </option>
+        </select>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm search-box-wrap">
+          <input
+            type="text"
+            class="form-control"
+            [placeholder]="'Erp::Search' | abpLocalization"
+            [(ngModel)]="entrySearchFilter"
+            (keyup.enter)="loadEntries()"
+          />
+          <button class="btn btn-outline-secondary" type="button" (click)="loadEntries()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          [title]="'Erp::Refresh' | abpLocalization"
+          (click)="loadEntries()"
+        >
+          <i class="fas fa-sync" [class.fa-spin]="isBusy"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Entries Table -->
+    <erp-table
+      tableId="job-queue-entries"
+      [items]="entriesData.items"
+      [columns]="entryColumns"
+      [actionsWidth]="220"
+      (rowClick)="openEditEntry($event)"
+    >
+      <!-- Status Badge -->
+      <ng-template erpTableCol="status" let-row="row">
+        <span [class]="getStatusBadgeClass(row.status)">
+          <i [class]="getStatusIcon(row.status) + ' me-1'"></i>
+          {{ ('Erp::JobQueueStatus:' + JobQueueStatus[row.status]) | abpLocalization }}
+        </span>
+      </ng-template>
+
+      <!-- Description Link -->
+      <ng-template erpTableCol="description" let-row="row">
+        <a
+          class="fw-bold text-primary text-decoration-none erp-record-link"
+          role="button"
+          tabindex="0"
+          (click)="openEditEntry(row); $event.stopPropagation()"
+          (keydown.enter)="openEditEntry(row)"
+        >
+          {{ row.description }}
+        </a>
+        <div *ngIf="row.recurringJob" class="text-muted small">
+          <i class="fas fa-redo-alt me-1"></i>{{ formatInterval(row) }}
+        </div>
+      </ng-template>
+
+      <!-- Job Type -->
+      <ng-template erpTableCol="jobType" let-row="row">
+        <span class="badge bg-light text-dark border badge-code">{{ row.jobType }}</span>
+      </ng-template>
+
+      <!-- Category Code -->
+      <ng-template erpTableCol="categoryCode" let-row="row">
+        <span *ngIf="row.categoryCode" class="badge bg-secondary-subtle text-secondary border">
+          {{ row.categoryCode }}
+        </span>
+        <span *ngIf="!row.categoryCode" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- User ID -->
+      <ng-template erpTableCol="userId" let-row="row">
+        <span *ngIf="row.userId" class="small text-muted font-monospace">
+          <i class="fas fa-user me-1 text-secondary"></i>{{ row.userId }}
+        </span>
+        <span *ngIf="!row.userId" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Record ID to Process -->
+      <ng-template erpTableCol="recordIdToProcess" let-row="row">
+        <span *ngIf="row.recordIdToProcess" class="badge bg-light text-dark border font-monospace small">
+          {{ row.recordIdToProcess }}
+        </span>
+        <span *ngIf="!row.recordIdToProcess" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Next Run Date Formula -->
+      <ng-template erpTableCol="nextRunDateFormula" let-row="row">
+        <span *ngIf="row.nextRunDateFormula" class="badge bg-info-subtle text-info-emphasis border">
+          <i class="fas fa-calculator me-1"></i>{{ row.nextRunDateFormula }}
+        </span>
+        <span *ngIf="!row.nextRunDateFormula" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Scheduled -->
+      <ng-template erpTableCol="scheduled" let-row="row">
+        <span *ngIf="row.scheduled" class="badge bg-success-subtle text-success border">
+          <i class="fas fa-check me-1"></i>Yes
+        </span>
+        <span *ngIf="!row.scheduled" class="text-muted small opacity-50">No</span>
+      </ng-template>
+
+      <!-- Notify On Success -->
+      <ng-template erpTableCol="notifyOnSuccess" let-row="row">
+        <span *ngIf="row.notifyOnSuccess" class="badge bg-primary-subtle text-primary border">
+          <i class="fas fa-bell me-1"></i>Yes
+        </span>
+        <span *ngIf="!row.notifyOnSuccess" class="text-muted small opacity-50">No</span>
+      </ng-template>
+
+      <!-- Next Run Time -->
+      <ng-template erpTableCol="nextRunTime" let-row="row">
+        <span *ngIf="row.nextRunTime" class="small">
+          {{ row.nextRunTime | date: 'yyyy-MM-dd HH:mm:ss' }}
+        </span>
+        <span *ngIf="!row.nextRunTime" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Last Run Time -->
+      <ng-template erpTableCol="lastRunTime" let-row="row">
+        <span *ngIf="row.lastRunTime" class="small">
+          {{ row.lastRunTime | date: 'yyyy-MM-dd HH:mm:ss' }}
+        </span>
+        <span *ngIf="!row.lastRunTime" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Attempts Counter -->
+      <ng-template erpTableCol="noOfAttemptsToRun" let-row="row">
+        <span
+          [class]="row.noOfAttemptsToRun >= row.maxNoOfAttemptsToRun && row.status === JobQueueStatus.Error ? 'badge bg-danger' : 'text-secondary small'"
+        >
+          {{ row.noOfAttemptsToRun }} / {{ row.maxNoOfAttemptsToRun }}
+        </span>
+      </ng-template>
+
+      <!-- Actions -->
+      <ng-template erpTableActions let-row="row">
+        <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+          <!-- Run Once (Foreground) -->
+          <button
+            *abpPermission="'Erp.JobQueue.Execute'"
+            type="button"
+            class="btn btn-sm btn-outline-success erp-action-btn"
+            [title]="'Erp::RunOnce' | abpLocalization"
+            [disabled]="isBusy || row.status === JobQueueStatus.InProcess"
+            (click)="runOnce(row)"
+          >
+            <i class="fas fa-play"></i>
+          </button>
+
+          <!-- Status: Ready / On Hold toggles -->
+          <button
+            *ngIf="row.status === JobQueueStatus.Ready && ('Erp.JobQueue.Manage' | abpPermission)"
+            type="button"
+            class="btn btn-sm btn-outline-secondary erp-action-btn"
+            [title]="'Erp::SetStatusToOnHold' | abpLocalization"
+            (click)="setStatusOnHold(row)"
+          >
+            <i class="fas fa-pause"></i>
+          </button>
+
+          <button
+            *ngIf="(row.status === JobQueueStatus.OnHold || row.status === JobQueueStatus.Finished) && ('Erp.JobQueue.Manage' | abpPermission)"
+            type="button"
+            class="btn btn-sm btn-outline-primary erp-action-btn"
+            [title]="'Erp::SetStatusToReady' | abpLocalization"
+            (click)="setStatusReady(row)"
+          >
+            <i class="fas fa-check"></i>
+          </button>
+
+          <!-- Error actions: Show Error & Restart -->
+          <button
+            *ngIf="row.status === JobQueueStatus.Error && row.lastErrorMessage"
+            type="button"
+            class="btn btn-sm btn-outline-danger erp-action-btn"
+            [title]="'Erp::ShowError' | abpLocalization"
+            (click)="showError(row)"
+          >
+            <i class="fas fa-exclamation-triangle"></i>
+          </button>
+
+          <button
+            *ngIf="row.status === JobQueueStatus.Error && ('Erp.JobQueue.Manage' | abpPermission)"
+            type="button"
+            class="btn btn-sm btn-outline-warning text-dark erp-action-btn"
+            [title]="'Erp::Restart' | abpLocalization"
+            (click)="restartEntry(row)"
+          >
+            <i class="fas fa-redo"></i>
+          </button>
+
+          <!-- View Logs -->
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-info text-dark erp-action-btn"
+            [title]="'Erp::JobQueueLogEntries' | abpLocalization"
+            (click)="viewEntryLogs(row)"
+          >
+            <i class="fas fa-history"></i>
+          </button>
+
+          <!-- Edit -->
+          <button
+            *abpPermission="'Erp.JobQueue.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-primary erp-action-btn"
+            [title]="'Erp::Edit' | abpLocalization"
+            (click)="openEditEntry(row)"
+          >
+            <i class="fas fa-pen"></i>
+          </button>
+
+          <!-- Delete -->
+          <button
+            *abpPermission="'Erp.JobQueue.Manage'"
+            type="button"
+            class="btn btn-sm btn-outline-danger erp-action-btn"
+            [title]="'Erp::Delete' | abpLocalization"
+            [disabled]="row.status === JobQueueStatus.InProcess"
+            (click)="deleteEntry(row)"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </ng-template>
+    </erp-table>
+  </div>
+
+  <!-- TAB 2: CATEGORIES -->
+  <div *ngIf="activeTab === 'categories'">
+    <div class="action-bar-strip">
+      <button
+        *abpPermission="'Erp.JobQueue.Manage'"
+        type="button"
+        class="btn btn-primary"
+        (click)="openCreateCategory()"
+      >
+        <i class="fas fa-plus me-1"></i>{{ 'Erp::NewJobQueueCategory' | abpLocalization }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [title]="'Erp::Refresh' | abpLocalization"
+        (click)="loadCategories()"
+      >
+        <i class="fas fa-sync" [class.fa-spin]="isBusy"></i>
+      </button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 180px;">{{ 'Erp::Code' | abpLocalization }}</th>
+              <th>{{ 'Erp::Description' | abpLocalization }}</th>
+              <th style="width: 200px;">{{ 'Erp::Created' | abpLocalization }}</th>
+              <th style="width: 120px;" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cat of categories">
+              <td class="fw-bold font-monospace text-primary">{{ cat.code }}</td>
+              <td>{{ cat.description || '—' }}</td>
+              <td class="small text-muted">{{ cat.creationTime | date: 'yyyy-MM-dd HH:mm' }}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <button
+                    *abpPermission="'Erp.JobQueue.Manage'"
+                    type="button"
+                    class="btn btn-outline-primary erp-action-btn"
+                    [title]="'Erp::Edit' | abpLocalization"
+                    (click)="openEditCategory(cat)"
+                  >
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button
+                    *abpPermission="'Erp.JobQueue.Manage'"
+                    type="button"
+                    class="btn btn-outline-danger erp-action-btn"
+                    [title]="'Erp::Delete' | abpLocalization"
+                    (click)="deleteCategory(cat)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="categories.length === 0">
+              <td colspan="4" class="text-center py-4 text-muted">
+                {{ 'Erp::NoData' | abpLocalization }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: LOGS -->
+  <div *ngIf="activeTab === 'logs'">
+    <div class="action-bar-strip">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Status Filter -->
+        <select
+          class="form-select form-select-sm"
+          style="width: 160px;"
+          [ngModel]="selectedLogStatusFilter"
+          (ngModelChange)="selectedLogStatusFilter = $event; loadLogs()"
+        >
+          <option [ngValue]="null">{{ 'Erp::AllStatuses' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueLogStatus.Success">{{ 'Erp::JobQueueLogStatus:Success' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueLogStatus.Error">{{ 'Erp::JobQueueLogStatus:Error' | abpLocalization }}</option>
+          <option [ngValue]="JobQueueLogStatus.InProcess">{{ 'Erp::JobQueueLogStatus:InProcess' | abpLocalization }}</option>
+        </select>
+
+        <!-- Entry Filter Reset if active -->
+        <span *ngIf="selectedLogEntryFilter" class="badge bg-info text-dark d-flex align-items-center gap-1">
+          Filtered by Entry
+          <button type="button" class="btn-close btn-close-white" style="font-size: 0.6rem;" (click)="selectedLogEntryFilter = null; loadLogs()"></button>
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button
+          *abpPermission="'Erp.JobQueue.Manage'"
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          (click)="clearLogs()"
+        >
+          <i class="fas fa-trash-alt me-1"></i>{{ 'Erp::ClearLogs' | abpLocalization }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          [title]="'Erp::Refresh' | abpLocalization"
+          (click)="loadLogs()"
+        >
+          <i class="fas fa-sync" [class.fa-spin]="isBusy"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Logs Table -->
+    <erp-table
+      tableId="job-queue-logs"
+      [items]="logsData.items"
+      [columns]="logColumns"
+      [actionsWidth]="90"
+      (rowClick)="openLogDetail($event)"
+    >
+      <!-- Status -->
+      <ng-template erpTableCol="status" let-row="row">
+        <span [class]="getLogStatusBadgeClass(row.status)">
+          <i [class]="getLogStatusIcon(row.status) + ' me-1'"></i>
+          {{ ('Erp::JobQueueLogStatus:' + JobQueueLogStatus[row.status]) | abpLocalization }}
+        </span>
+      </ng-template>
+
+      <!-- Job Type -->
+      <ng-template erpTableCol="jobType" let-row="row">
+        <span class="badge bg-light text-dark border badge-code">{{ row.jobType }}</span>
+      </ng-template>
+
+      <!-- Category Code -->
+      <ng-template erpTableCol="categoryCode" let-row="row">
+        <span *ngIf="row.categoryCode" class="badge bg-secondary-subtle text-secondary border">
+          {{ row.categoryCode }}
+        </span>
+        <span *ngIf="!row.categoryCode" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- User ID -->
+      <ng-template erpTableCol="userId" let-row="row">
+        <span *ngIf="row.userId" class="small text-muted font-monospace">
+          <i class="fas fa-user me-1 text-secondary"></i>{{ row.userId }}
+        </span>
+        <span *ngIf="!row.userId" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Description Link -->
+      <ng-template erpTableCol="description" let-row="row">
+        <a
+          class="text-decoration-none erp-record-link"
+          role="button"
+          tabindex="0"
+          (click)="openLogDetail(row); $event.stopPropagation()"
+          (keydown.enter)="openLogDetail(row)"
+        >
+          {{ row.description }}
+        </a>
+      </ng-template>
+
+      <!-- Start Time -->
+      <ng-template erpTableCol="startDateTime" let-row="row">
+        <span class="small">{{ row.startDateTime | date: 'yyyy-MM-dd HH:mm:ss' }}</span>
+      </ng-template>
+
+      <!-- Duration -->
+      <ng-template erpTableCol="durationMs" let-row="row">
+        <span class="small text-secondary">{{ formatDuration(row.durationMs) }}</span>
+      </ng-template>
+
+      <!-- Processed Records -->
+      <ng-template erpTableCol="processedRecords" let-row="row">
+        <span *ngIf="row.processedRecords > 0" class="badge bg-primary-subtle text-primary border">
+          {{ row.processedRecords }}
+        </span>
+        <span *ngIf="!row.processedRecords" class="text-muted opacity-50">—</span>
+      </ng-template>
+
+      <!-- Actions -->
+      <ng-template erpTableActions let-row="row">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary erp-action-btn"
+          [title]="'Erp::View' | abpLocalization"
+          (click)="openLogDetail(row)"
+        >
+          <i class="fas fa-eye"></i>
+        </button>
+      </ng-template>
+    </erp-table>
+  </div>
+</div>
+
+<!-- MODAL 1: CREATE / EDIT JOB QUEUE ENTRY -->
+<abp-modal [(visible)]="isEntryModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h3>
+      <i class="fas fa-tasks me-2"></i>
+      {{ (selectedEntry ? 'Erp::EditJobQueueEntry' : 'Erp::NewJobQueueEntry') | abpLocalization }}
+    </h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="entryForm" [formGroup]="entryForm" (ngSubmit)="saveEntry()">
+      <div class="row g-3">
+        <!-- GENERAL CARD -->
+        <div class="col-12">
+          <h6 class="text-uppercase text-secondary fw-bold small border-bottom pb-1">
+            {{ 'Erp::General' | abpLocalization }}
+          </h6>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label required">{{ 'Erp::Description' | abpLocalization }}</label>
+          <input type="text" class="form-control" formControlName="description" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">{{ 'Erp::Category' | abpLocalization }}</label>
+          <select class="form-select" formControlName="categoryCode">
+            <option value="">{{ 'Erp::None' | abpLocalization }}</option>
+            <option *ngFor="let cat of categories" [value]="cat.code">{{ cat.code }} - {{ cat.description }}</option>
+          </select>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label required">{{ 'Erp::JobType' | abpLocalization }}</label>
+          <select
+            class="form-select"
+            formControlName="jobType"
+            (change)="onJobTypeChanged($any($event.target).value)"
+          >
+            <option *ngFor="let h of availableJobTypes" [value]="h.jobType">
+              {{ h.displayName }} ({{ h.jobType }})
+            </option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">{{ 'Erp::Priority' | abpLocalization }} (1-10)</label>
+          <input type="number" class="form-control" formControlName="priority" min="1" max="10" />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">{{ 'Erp::UserId' | abpLocalization }}</label>
+          <input type="text" class="form-control" formControlName="userId" placeholder="admin" />
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">{{ 'Erp::RecordIdToProcess' | abpLocalization }}</label>
+          <input type="text" class="form-control font-monospace" formControlName="recordIdToProcess" placeholder="SalesHeader: SO-0001" />
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label mb-0">{{ 'Erp::ParameterString' | abpLocalization }}</label>
+            <button
+              type="button"
+              class="btn btn-sm btn-link p-0 text-decoration-none"
+              (click)="fillDefaultParameters()"
+            >
+              <i class="fas fa-magic me-1"></i>{{ 'Erp::LoadDefaultParameters' | abpLocalization }}
+            </button>
+          </div>
+          <textarea
+            class="form-control font-monospace small"
+            rows="2"
+            formControlName="parameterString"
+            placeholder="{}"
+          ></textarea>
+        </div>
+
+        <!-- RECURRENCE CARD (Business Central & Odoo Reference) -->
+        <div class="col-12 mt-4">
+          <h6 class="text-uppercase text-secondary fw-bold small border-bottom pb-1">
+            {{ 'Erp::Recurrence' | abpLocalization }}
+          </h6>
+        </div>
+
+        <div class="col-12">
+          <div class="d-flex align-items-center gap-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="recurringSwitch" formControlName="recurringJob" />
+              <label class="form-check-label fw-bold" for="recurringSwitch">
+                {{ 'Erp::RecurringJob' | abpLocalization }}
+              </label>
+            </div>
+
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="manualRecurrenceSwitch" formControlName="manualRecurrence" />
+              <label class="form-check-label" for="manualRecurrenceSwitch">
+                {{ 'Erp::ManualRecurrence' | abpLocalization }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <ng-container *ngIf="entryForm.get('recurringJob')?.value">
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Erp::NextRunDateFormula' | abpLocalization }}</label>
+            <input type="text" class="form-control font-monospace text-uppercase" formControlName="nextRunDateFormula" placeholder="1D, 1W, 1M+CM" />
+            <div class="form-text small">Business Central Date Formula: e.g. <code>1D</code>, <code>1W</code>, <code>1M+CM</code></div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Erp::ReferenceStartingTime' | abpLocalization }}</label>
+            <input type="datetime-local" class="form-control" formControlName="referenceStartingTime" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label required">{{ 'Erp::IntervalType' | abpLocalization }}</label>
+            <select class="form-select" formControlName="intervalType">
+              <option [ngValue]="JobQueueIntervalType.Minutes">{{ 'Erp::Minutes' | abpLocalization }}</option>
+              <option [ngValue]="JobQueueIntervalType.Hours">{{ 'Erp::Hours' | abpLocalization }}</option>
+              <option [ngValue]="JobQueueIntervalType.Days">{{ 'Erp::Days' | abpLocalization }}</option>
+              <option [ngValue]="JobQueueIntervalType.Weeks">{{ 'Erp::Weeks' | abpLocalization }}</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label required">{{ 'Erp::IntervalValue' | abpLocalization }}</label>
+            <input type="number" class="form-control" formControlName="intervalMinutes" min="1" />
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label mb-0">{{ 'Erp::RunOnDays' | abpLocalization }}</label>
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" (click)="setWeekdaysOnly()">
+                  {{ 'Erp::Weekdays' | abpLocalization }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" (click)="setAllDays()">
+                  {{ 'Erp::AllDays' | abpLocalization }}
+                </button>
+              </div>
+            </div>
+            <div class="days-picker">
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnMondays" /> Mon
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnTuesdays" /> Tue
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnWednesdays" /> Wed
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnThursdays" /> Thu
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnFridays" /> Fri
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnSaturdays" /> Sat
+              </label>
+              <label class="day-check-item">
+                <input type="checkbox" formControlName="runOnSundays" /> Sun
+              </label>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Erp::DailyStartingTime' | abpLocalization }}</label>
+            <input type="time" step="1" class="form-control" formControlName="dailyStartingTime" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ 'Erp::DailyEndingTime' | abpLocalization }}</label>
+            <input type="time" step="1" class="form-control" formControlName="dailyEndingTime" />
+          </div>
+        </ng-container>
+
+        <!-- RESILIENCE & TIMEOUTS -->
+        <div class="col-12 mt-4">
+          <h6 class="text-uppercase text-secondary fw-bold small border-bottom pb-1">
+            {{ 'Erp::Resiliency' | abpLocalization }}
+          </h6>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label required">{{ 'Erp::MaxNoOfAttempts' | abpLocalization }}</label>
+          <input type="number" class="form-control" formControlName="maxNoOfAttemptsToRun" min="0" />
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label required">{{ 'Erp::RerunDelaySeconds' | abpLocalization }}</label>
+          <input type="number" class="form-control" formControlName="rerunDelaySeconds" min="0" />
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label required">{{ 'Erp::TimeoutSeconds' | abpLocalization }}</label>
+          <input type="number" class="form-control" formControlName="timeoutSeconds" min="10" />
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">{{ 'Erp::InactivityTimeoutPeriod' | abpLocalization }}</label>
+          <input type="number" class="form-control" formControlName="inactivityTimeoutPeriod" min="1" placeholder="mins" />
+        </div>
+
+        <div class="col-12">
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" id="notifyOnSuccessSwitch" formControlName="notifyOnSuccess" />
+            <label class="form-check-label" for="notifyOnSuccessSwitch">
+              <i class="fas fa-bell me-1 text-primary"></i>{{ 'Erp::NotifyOnSuccess' | abpLocalization }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'Erp::Cancel' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="saveEntry()" [disabled]="isBusy">
+      <i class="fas fa-check me-1"></i>{{ 'Erp::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<!-- MODAL 2: CATEGORY MODAL -->
+<abp-modal [(visible)]="isCategoryModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h3>
+      <i class="fas fa-tag me-2"></i>
+      {{ (selectedCategory ? 'Erp::EditJobQueueCategory' : 'Erp::NewJobQueueCategory') | abpLocalization }}
+    </h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form *ngIf="categoryForm" [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+      <div class="mb-3">
+        <label class="form-label required">{{ 'Erp::Code' | abpLocalization }}</label>
+        <input
+          type="text"
+          class="form-control text-uppercase font-monospace"
+          formControlName="code"
+          maxlength="20"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">{{ 'Erp::Description' | abpLocalization }}</label>
+        <input type="text" class="form-control" formControlName="description" maxlength="100" />
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'Erp::Cancel' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="saveCategory()" [disabled]="isBusy">
+      <i class="fas fa-check me-1"></i>{{ 'Erp::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<!-- MODAL 3: ERROR DETAILS DIALOG (Business Central Show Error Style) -->
+<abp-modal [(visible)]="isErrorModalOpen">
+  <ng-template #abpHeader>
+    <h4 class="text-danger mb-0">
+      <i class="fas fa-exclamation-triangle me-2"></i>{{ 'Erp::JobQueueErrorDetails' | abpLocalization }}
+    </h4>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div *ngIf="activeErrorEntry">
+      <div class="alert alert-danger mb-3">
+        <div class="fw-bold mb-1">{{ 'Erp::ErrorMessage' | abpLocalization }}:</div>
+        <div>{{ activeErrorEntry.lastErrorMessage }}</div>
+      </div>
+
+      <div *ngIf="activeErrorEntry.lastErrorStackTrace" class="mb-2">
+        <div class="fw-bold text-secondary mb-1 small">{{ 'Erp::CallStack' | abpLocalization }}:</div>
+        <div class="error-callstack-box">{{ activeErrorEntry.lastErrorStackTrace }}</div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'Erp::Close' | abpLocalization }}
+    </button>
+    <button
+      *abpPermission="'Erp.JobQueue.Manage'"
+      type="button"
+      class="btn btn-warning text-dark"
+      (click)="isErrorModalOpen = false; restartEntry(activeErrorEntry!)"
+    >
+      <i class="fas fa-redo me-1"></i>{{ 'Erp::Restart' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<!-- MODAL 4: LOG DETAILS DIALOG -->
+<abp-modal [(visible)]="isLogDetailModalOpen">
+  <ng-template #abpHeader>
+    <h4>
+      <i class="fas fa-info-circle me-2"></i>{{ 'Erp::JobQueueLogDetails' | abpLocalization }}
+    </h4>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div *ngIf="selectedLogDetail">
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <span class="text-muted small">{{ 'Erp::JobType' | abpLocalization }}:</span>
+          <div class="fw-bold">{{ selectedLogDetail.jobType }}</div>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted small">{{ 'Erp::Status' | abpLocalization }}:</span>
+          <div>
+            <span [class]="getLogStatusBadgeClass(selectedLogDetail.status)">
+              {{ ('Erp::JobQueueLogStatus:' + JobQueueLogStatus[selectedLogDetail.status]) | abpLocalization }}
+            </span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted small">{{ 'Erp::StartTime' | abpLocalization }}:</span>
+          <div>{{ selectedLogDetail.startDateTime | date: 'yyyy-MM-dd HH:mm:ss' }}</div>
+        </div>
+        <div class="col-md-6">
+          <span class="text-muted small">{{ 'Erp::Duration' | abpLocalization }}:</span>
+          <div>{{ formatDuration(selectedLogDetail.durationMs) }}</div>
+        </div>
+        <div class="col-12" *ngIf="selectedLogDetail.processedRecords > 0">
+          <span class="text-muted small">{{ 'Erp::ProcessedRecords' | abpLocalization }}:</span>
+          <div>{{ selectedLogDetail.processedRecords }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedLogDetail.outputDetails" class="mb-3">
+        <div class="fw-bold text-secondary small mb-1">{{ 'Erp::Output' | abpLocalization }}:</div>
+        <div class="log-output-box">{{ selectedLogDetail.outputDetails }}</div>
+      </div>
+
+      <div *ngIf="selectedLogDetail.errorMessage" class="alert alert-danger mb-3">
+        <div class="fw-bold mb-1">{{ 'Erp::ErrorMessage' | abpLocalization }}:</div>
+        <div>{{ selectedLogDetail.errorMessage }}</div>
+      </div>
+
+      <div *ngIf="selectedLogDetail.errorStackTrace" class="mb-2">
+        <div class="fw-bold text-secondary mb-1 small">{{ 'Erp::CallStack' | abpLocalization }}:</div>
+        <div class="error-callstack-box">{{ selectedLogDetail.errorStackTrace }}</div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ 'Erp::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

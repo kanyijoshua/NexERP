@@ -117,8 +117,10 @@ public class VendorAppService
 
     private static void ApplyInput(Vendor vendor, CreateUpdateVendorDto input)
     {
-        vendor.SetAddress(input.Address, input.City, input.PostCode, input.CountryRegionCode);
-        vendor.SetContact(input.PhoneNo, input.Email);
+        vendor.SetNames(input.Name, input.Name2);
+        vendor.SetSearchName(input.SearchName);
+        vendor.SetAddress(input.Address, input.Address2, input.City, input.PostCode, input.CountryRegionCode);
+        vendor.SetContact(input.Contact, input.PhoneNo, input.MobilePhoneNo, input.Email, input.HomePage);
         vendor.SetPaymentTerms(CodeTableEntity.NormalizeCode(input.PaymentTermsCode));
         vendor.SetPostingGroups(
             PostingGroupBase.NormalizeCode(input.VendorPostingGroup),
@@ -128,6 +130,10 @@ public class VendorAppService
         vendor.SetVatBusPostingGroup(input.VatBusPostingGroup);
         vendor.SetPurchaserCode(input.PurchaserCode);
         vendor.SetPaymentMethodCode(input.PaymentMethodCode);
+        vendor.SetShipping(input.LocationCode, input.ShipmentMethodCode, input.ShippingAgentCode, input.LeadTimeCalculation);
+        vendor.SetInvoiceDiscCode(input.InvoiceDiscCode);
+        vendor.SetTaxDetails(input.VATRegistrationNo, input.TaxAreaCode, input.TaxLiable, input.PricesIncludingVAT);
+        vendor.SetPaymentPreferences(input.OurAccountNo, input.BlockPaymentTolerance, input.PrepaymentPct, input.AllowMultiplePostingGroups);
     }
 
     protected override async Task<IQueryable<Vendor>> CreateFilteredQueryAsync(

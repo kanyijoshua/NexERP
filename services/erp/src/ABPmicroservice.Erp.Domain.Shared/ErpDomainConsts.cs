@@ -18,6 +18,8 @@ public static class ErpDomainConsts
     public const int MaxCodeLength = 20;
     public const int MaxCurrencyCodeLength = 10;
     public const int MaxPaymentTermsCodeLength = 10;
+    public const int MaxPaymentMethodCodeLength = 10;
+    public const int MaxYourReferenceLength = 35;
     public const int MaxPostingGroupLength = 20;
     public const int MaxUnitOfMeasureCodeLength = 10;
     public const int MaxDocumentNoLength = 20;
@@ -47,6 +49,24 @@ public static class ErpDomainConsts
     public const int MaxCurrencySymbolLength = 10;
     public const int MaxAccountingPeriodNameLength = 30;
     public const int MaxJobTitleLength = 50;
+    public const int MaxJobCategoryCodeLength = 20;
+    public const int MaxJobTypeLength = 100;
+    public const int MaxJobParameterLength = 4000;
+    public const int MaxJobErrorLength = 4000;
+    public const int MaxRecordIdLength = 256;
+    public const int MaxTaxAreaCodeLength = 20;
+    public const int MaxTaxGroupCodeLength = 20;
+    public const int MaxCostTypeLength = 20;
+    public const int MaxDeferralTemplateCodeLength = 10;
+    public const int MaxCurrencyDescriptionLength = 60;
+    public const int MaxContactLength = 100;
+    public const int MaxVatRegistrationNoLength = 20;
+    public const int MaxShippingAgentCodeLength = 10;
+    public const int MaxShipmentMethodCodeLength = 10;
+    public const int MaxOnHoldLength = 3;
+    public const int MaxFileExtensionLength = 30;
+    public const int MaxHomePageLength = 80;
+    public const int MaxCustomLayoutCodeLength = 20;
 
     /// <summary>
     /// Body of a report layout. Generous enough for a styled page with an inline logo, small

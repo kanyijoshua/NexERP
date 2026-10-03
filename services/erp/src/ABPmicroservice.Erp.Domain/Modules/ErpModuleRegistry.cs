@@ -95,7 +95,7 @@ public static class ErpModuleRegistry
             "/erp/setup",
             true,
             [],
-            ["Companies", "Dimensions", "Numbering", "Home", "Modules", "Theming", "Profiles"]
+            ["Companies", "Dimensions", "Numbering", "Home", "Modules", "Theming", "Profiles", "JobQueue"]
         ),
 
         // The general ledger is the backbone every posting module writes to.

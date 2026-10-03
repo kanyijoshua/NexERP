@@ -54,6 +54,17 @@ public class GLAccountAppService
         );
         account.SetVatProdPostingGroup(input.VatProdPostingGroup);
         account.SetJournalVatDefaults(input.GenPostingType, input.VatBusPostingGroup);
+        account.SetSearchName(input.SearchName);
+        account.SetDebitCredit(input.DebitCredit);
+        account.SetReconciliationAccount(input.ReconciliationAccount);
+        account.SetTotaling(input.Totaling);
+        account.SetGeneralPostingGroups(input.GenBusPostingGroup, input.GenProdPostingGroup);
+        account.SetAutomaticExtTexts(input.AutomaticExtTexts);
+        account.SetTax(input.TaxAreaCode, input.TaxLiable, input.TaxGroupCode);
+        account.SetConsolidation(input.ConsolTranslationMethod, input.ConsolDebitAcc, input.ConsolCreditAcc);
+        account.SetCostTypeNo(input.CostTypeNo);
+        account.SetDefaultDeferralTemplateCode(input.DefaultDeferralTemplateCode);
+        account.SetOmitDefaultDescrInJnl(input.OmitDefaultDescrInJnl);
 
         await Repository.InsertAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);
@@ -80,6 +91,17 @@ public class GLAccountAppService
         account.SetDirectPosting(input.DirectPosting);
         account.SetVatProdPostingGroup(input.VatProdPostingGroup);
         account.SetJournalVatDefaults(input.GenPostingType, input.VatBusPostingGroup);
+        account.SetSearchName(input.SearchName);
+        account.SetDebitCredit(input.DebitCredit);
+        account.SetReconciliationAccount(input.ReconciliationAccount);
+        account.SetTotaling(input.Totaling);
+        account.SetGeneralPostingGroups(input.GenBusPostingGroup, input.GenProdPostingGroup);
+        account.SetAutomaticExtTexts(input.AutomaticExtTexts);
+        account.SetTax(input.TaxAreaCode, input.TaxLiable, input.TaxGroupCode);
+        account.SetConsolidation(input.ConsolTranslationMethod, input.ConsolDebitAcc, input.ConsolCreditAcc);
+        account.SetCostTypeNo(input.CostTypeNo);
+        account.SetDefaultDeferralTemplateCode(input.DefaultDeferralTemplateCode);
+        account.SetOmitDefaultDescrInJnl(input.OmitDefaultDescrInJnl);
 
         await Repository.UpdateAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);

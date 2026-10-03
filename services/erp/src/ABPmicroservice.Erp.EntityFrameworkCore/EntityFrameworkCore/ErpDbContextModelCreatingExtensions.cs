@@ -8,6 +8,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.JobQueue;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Modules;
 using ABPmicroservice.Erp.Numbering;
@@ -35,12 +36,44 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "GLAccounts", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex("No");
+            b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.SearchName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.Subcategory).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.Totaling).HasMaxLength(ErpDomainConsts.MaxTotalingLength);
+            b.Property(x => x.GenBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.GenProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.VatBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.VatProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.TaxAreaCode).HasMaxLength(ErpDomainConsts.MaxTaxAreaCodeLength);
+            b.Property(x => x.TaxGroupCode).HasMaxLength(ErpDomainConsts.MaxTaxGroupCodeLength);
+            b.Property(x => x.ConsolDebitAcc).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.ConsolCreditAcc).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.CostTypeNo).HasMaxLength(ErpDomainConsts.MaxCostTypeLength);
+            b.Property(x => x.DefaultDeferralTemplateCode).HasMaxLength(ErpDomainConsts.MaxDeferralTemplateCodeLength);
         });
 
         builder.Entity<GLEntry>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "GLEntries", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.GLAccountNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.GLAccountName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.DocumentNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.SourceNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.GenBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxGeneralBusPostingGroupLength);
+            b.Property(x => x.GenProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.BalAccountNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.VATBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.VATProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.ExternalDocumentNo).HasMaxLength(ErpDomainConsts.MaxExternalDocumentNoLength);
+            b.Property(x => x.UserId).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.JournalBatchName).HasMaxLength(ErpDomainConsts.MaxJournalTemplateNameLength);
+            b.Property(x => x.JobNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.BusinessUnitCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.SourceCode).HasMaxLength(ErpDomainConsts.MaxSourceCodeLength);
+            b.Property(x => x.ReasonCode).HasMaxLength(ErpDomainConsts.MaxReasonCodeLength);
         });
 
         builder.Entity<GeneralPostingSetup>(b =>
@@ -56,6 +89,14 @@ public static class ErpDbContextModelCreatingExtensions
             b.ConfigureByConvention();
             // One setup row per company.
             b.HasCompanyUniqueIndex();
+            b.Property(x => x.LcyCode).HasMaxLength(ErpDomainConsts.MaxCurrencyCodeLength);
+            b.Property(x => x.LocalCurrencySymbol).HasMaxLength(ErpDomainConsts.MaxCurrencySymbolLength);
+            b.Property(x => x.LocalCurrencyDescription).HasMaxLength(ErpDomainConsts.MaxCurrencyDescriptionLength);
+            b.Property(x => x.AdditionalReportingCurrency).HasMaxLength(ErpDomainConsts.MaxCurrencyCodeLength);
+            b.Property(x => x.JobQueueCategoryCode).HasMaxLength(ErpDomainConsts.MaxJobCategoryCodeLength);
+            b.Property(x => x.GlobalDimension1Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.GlobalDimension2Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.BankAccountNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
         });
 
         builder.Entity<GenBusinessPostingGroup>(b =>
@@ -136,6 +177,33 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "Vendors", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex("No");
+            b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.SearchName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.Name2).HasMaxLength(ErpDomainConsts.MaxCityLength);
+            b.Property(x => x.Address).HasMaxLength(ErpDomainConsts.MaxAddressLength);
+            b.Property(x => x.Address2).HasMaxLength(ErpDomainConsts.MaxCityLength);
+            b.Property(x => x.City).HasMaxLength(ErpDomainConsts.MaxCityLength);
+            b.Property(x => x.PostCode).HasMaxLength(ErpDomainConsts.MaxPostCodeLength);
+            b.Property(x => x.CountryRegionCode).HasMaxLength(ErpDomainConsts.MaxCountryRegionCodeLength);
+            b.Property(x => x.PhoneNo).HasMaxLength(ErpDomainConsts.MaxPhoneLength);
+            b.Property(x => x.MobilePhoneNo).HasMaxLength(ErpDomainConsts.MaxPhoneLength);
+            b.Property(x => x.Email).HasMaxLength(ErpDomainConsts.MaxEmailLength);
+            b.Property(x => x.HomePage).HasMaxLength(ErpDomainConsts.MaxHomePageLength);
+            b.Property(x => x.Contact).HasMaxLength(ErpDomainConsts.MaxContactLength);
+            b.Property(x => x.OurAccountNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.VendorPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.GenBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxGeneralBusPostingGroupLength);
+            b.Property(x => x.VatBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxVatBusPostingGroupLength);
+            b.Property(x => x.PaymentTermsCode).HasMaxLength(ErpDomainConsts.MaxPaymentTermsCodeLength);
+            b.Property(x => x.CurrencyCode).HasMaxLength(ErpDomainConsts.MaxCurrencyCodeLength);
+            b.Property(x => x.ShipmentMethodCode).HasMaxLength(ErpDomainConsts.MaxShipmentMethodCodeLength);
+            b.Property(x => x.ShippingAgentCode).HasMaxLength(ErpDomainConsts.MaxShippingAgentCodeLength);
+            b.Property(x => x.InvoiceDiscCode).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.VATRegistrationNo).HasMaxLength(ErpDomainConsts.MaxVatRegistrationNoLength);
+            b.Property(x => x.TaxAreaCode).HasMaxLength(ErpDomainConsts.MaxTaxAreaCodeLength);
+            b.Property(x => x.LocationCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
+            b.Property(x => x.LeadTimeCalculation).HasMaxLength(ErpDomainConsts.MaxDateFormulaLength);
         });
 
         builder.Entity<VendorPostingGroup>(b =>
@@ -149,6 +217,25 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "VendorLedgerEntries", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.VendorNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.VendorName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.DocumentType).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.DocumentNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.CurrencyCode).HasMaxLength(ErpDomainConsts.MaxCurrencyCodeLength);
+            b.Property(x => x.VendorPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.GlobalDimension1Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.GlobalDimension2Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.PurchaserCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.UserId).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.SourceCode).HasMaxLength(ErpDomainConsts.MaxSourceCodeLength);
+            b.Property(x => x.OnHold).HasMaxLength(ErpDomainConsts.MaxOnHoldLength);
+            b.Property(x => x.AppliesToDocType).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.AppliesToDocNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.AppliesToId).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.JournalBatchName).HasMaxLength(ErpDomainConsts.MaxJournalTemplateNameLength);
+            b.Property(x => x.ExternalDocumentNo).HasMaxLength(ErpDomainConsts.MaxExternalDocumentNoLength);
+            b.Property(x => x.PaymentMethodCode).HasMaxLength(ErpDomainConsts.MaxPaymentMethodCodeLength);
         });
 
         builder.Entity<PurchaseHeader>(b =>
@@ -156,12 +243,61 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "PurchaseHeaders", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.PurchaseHeaderId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+            b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.BuyFromVendorNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.BuyFromVendorName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.PayToVendorNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.PayToName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.PayToAddress).HasMaxLength(ErpDomainConsts.MaxAddressLength);
+            b.Property(x => x.PayToCity).HasMaxLength(ErpDomainConsts.MaxCityLength);
+            b.Property(x => x.PayToPostCode).HasMaxLength(ErpDomainConsts.MaxPostCodeLength);
+            b.Property(x => x.PayToCountryRegionCode).HasMaxLength(ErpDomainConsts.MaxCountryRegionCodeLength);
+            b.Property(x => x.PayToContact).HasMaxLength(ErpDomainConsts.MaxContactLength);
+            b.Property(x => x.ShipToCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
+            b.Property(x => x.ShipToName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.ShipToAddress).HasMaxLength(ErpDomainConsts.MaxAddressLength);
+            b.Property(x => x.ShipToCity).HasMaxLength(ErpDomainConsts.MaxCityLength);
+            b.Property(x => x.ShipToPostCode).HasMaxLength(ErpDomainConsts.MaxPostCodeLength);
+            b.Property(x => x.ShipToCountryRegionCode).HasMaxLength(ErpDomainConsts.MaxCountryRegionCodeLength);
+            b.Property(x => x.ShipToContact).HasMaxLength(ErpDomainConsts.MaxContactLength);
+            b.Property(x => x.CurrencyCode).HasMaxLength(ErpDomainConsts.MaxCurrencyCodeLength);
+            b.Property(x => x.PaymentTermsCode).HasMaxLength(ErpDomainConsts.MaxPaymentTermsCodeLength);
+            b.Property(x => x.LocationCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
+            b.Property(x => x.VendorInvoiceNo).HasMaxLength(ErpDomainConsts.MaxExternalDocumentNoLength);
+            b.Property(x => x.PostedDocumentNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.YourReference).HasMaxLength(ErpDomainConsts.MaxYourReferenceLength);
+            b.Property(x => x.ShipmentMethodCode).HasMaxLength(ErpDomainConsts.MaxShipmentMethodCodeLength);
+            b.Property(x => x.PaymentMethodCode).HasMaxLength(ErpDomainConsts.MaxPaymentMethodCodeLength);
+            b.Property(x => x.ShortcutDimension1Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.ShortcutDimension2Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.VendorPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.GenBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxGeneralBusPostingGroupLength);
+            b.Property(x => x.VatBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxVatBusPostingGroupLength);
+            b.Property(x => x.OnHold).HasMaxLength(ErpDomainConsts.MaxOnHoldLength);
+            b.Property(x => x.AppliesToDocNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.AppliesToId).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.TaxAreaCode).HasMaxLength(ErpDomainConsts.MaxTaxAreaCodeLength);
         });
 
         builder.Entity<PurchaseLine>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "PurchaseLines", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.No).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.UnitOfMeasureCode).HasMaxLength(ErpDomainConsts.MaxUnitOfMeasureCodeLength);
+            b.Property(x => x.LocationCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
+            b.Property(x => x.ItemCategoryCode).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.ShortcutDimension1Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.ShortcutDimension2Code).HasMaxLength(ErpDomainConsts.MaxDimensionCodeLength);
+            b.Property(x => x.DeferralCode).HasMaxLength(ErpDomainConsts.MaxDeferralTemplateCodeLength);
+            b.Property(x => x.TaxAreaCode).HasMaxLength(ErpDomainConsts.MaxTaxAreaCodeLength);
+            b.Property(x => x.TaxGroupCode).HasMaxLength(ErpDomainConsts.MaxTaxGroupCodeLength);
+            b.Property(x => x.GenBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxGeneralBusPostingGroupLength);
+            b.Property(x => x.GenProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.VatBusPostingGroup).HasMaxLength(ErpDomainConsts.MaxVatBusPostingGroupLength);
+            b.Property(x => x.VatProdPostingGroup).HasMaxLength(ErpDomainConsts.MaxPostingGroupLength);
+            b.Property(x => x.VatIdentifier).HasMaxLength(ErpDomainConsts.MaxVatIdentifierLength);
         });
 
         builder.Entity<PostedPurchaseHeader>(b =>
@@ -603,6 +739,16 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "PurchasesPayablesSetups", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex();
+            b.Property(x => x.VendorNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.OrderNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.InvoiceNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.CreditMemoNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.QuoteNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.BlanketOrderNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.PostedReceiptNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.PostedReturnShptNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.ReturnOrderNos).HasMaxLength(ErpDomainConsts.MaxNoSeriesCodeLength);
+            b.Property(x => x.JobQueueCategoryCode).HasMaxLength(ErpDomainConsts.MaxJobCategoryCodeLength);
         });
 
         builder.Entity<UserProfile>(b =>
@@ -806,6 +952,9 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "ReportLayoutSelections", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.Property(x => x.ReportName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.CustomReportLayoutCode).HasMaxLength(ErpDomainConsts.MaxCustomLayoutCodeLength);
+            b.Property(x => x.ReportLayoutDescription).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.ReportCaption).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
 
             // One report prints through one layout in a company, which is what the lookup assumes.
             b.HasCompanyUniqueIndex("ReportName");
@@ -815,11 +964,54 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "CustomReportLayouts", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.Code).HasMaxLength(ErpDomainConsts.MaxCustomLayoutCodeLength);
             b.Property(x => x.ReportName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
             b.Property(x => x.LayoutName).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
             b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.FileExtension).HasMaxLength(ErpDomainConsts.MaxFileExtensionLength);
+            b.Property(x => x.LastModifiedByUser).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
             b.Property(x => x.TemplateContent).HasMaxLength(ErpDomainConsts.MaxLayoutTemplateLength);
             b.HasIndex(x => new { x.CompanyId, x.ReportName });
+        });
+
+        builder.Entity<JobQueueCategory>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "JobQueueCategories", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Code).IsRequired().HasMaxLength(ErpDomainConsts.MaxJobCategoryCodeLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.HasCompanyUniqueIndex(nameof(JobQueueCategory.Code));
+        });
+
+        builder.Entity<JobQueueEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "JobQueueEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Description).IsRequired().HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.CategoryCode).HasMaxLength(ErpDomainConsts.MaxJobCategoryCodeLength);
+            b.Property(x => x.JobType).IsRequired().HasMaxLength(ErpDomainConsts.MaxJobTypeLength);
+            b.Property(x => x.ParameterString).HasMaxLength(ErpDomainConsts.MaxJobParameterLength);
+            b.Property(x => x.LastErrorMessage).HasMaxLength(ErpDomainConsts.MaxJobErrorLength);
+            b.Property(x => x.LastErrorStackTrace).HasMaxLength(ErpDomainConsts.MaxJobErrorLength);
+            b.Property(x => x.UserId).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.RecordIdToProcess).HasMaxLength(ErpDomainConsts.MaxRecordIdLength);
+            b.Property(x => x.NextRunDateFormula).HasMaxLength(ErpDomainConsts.MaxDateFormulaLength);
+            b.HasIndex(x => new { x.CompanyId, x.Status, x.NextRunTime });
+        });
+
+        builder.Entity<JobQueueLogEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "JobQueueLogEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.JobDescription).IsRequired().HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.Property(x => x.JobType).IsRequired().HasMaxLength(ErpDomainConsts.MaxJobTypeLength);
+            b.Property(x => x.ErrorMessage).HasMaxLength(ErpDomainConsts.MaxJobErrorLength);
+            b.Property(x => x.ErrorStackTrace).HasMaxLength(ErpDomainConsts.MaxJobErrorLength);
+            b.Property(x => x.OutputDetails).HasMaxLength(ErpDomainConsts.MaxJobParameterLength);
+            b.Property(x => x.UserId).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
+            b.Property(x => x.CategoryCode).HasMaxLength(ErpDomainConsts.MaxJobCategoryCodeLength);
+            b.Property(x => x.ParameterString).HasMaxLength(ErpDomainConsts.MaxJobParameterLength);
+            b.HasIndex(x => new { x.CompanyId, x.JobQueueEntryId, x.StartDateTime });
         });
     }
 }

@@ -1,0 +1,317 @@
+<div class="erp-dynamic-table-container">
+  <!-- Optional Header & Toolbar -->
+  <div class="table-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-1">
+    <div class="toolbar-title-wrap">
+      <h6 *ngIf="tableTitle" class="mb-0 fw-bold text-dark">{{ tableTitle }}</h6>
+      <small *ngIf="subtitle" class="text-muted">{{ subtitle }}</small>
+    </div>
+
+    <div class="toolbar-controls d-flex align-items-center gap-2 flex-wrap">
+      <!-- Selected Count Pill -->
+      <span *ngIf="selectable && selectedRows.size > 0" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+        <i class="fas fa-check-double me-1"></i>{{ selectedRows.size }} selected
+      </span>
+
+      <!-- Quick Search Input -->
+      <div *ngIf="searchable" class="search-input-wrap">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-end-0 text-muted">
+            <i class="fas fa-search"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control form-control-sm border-start-0 shadow-none ps-0"
+            placeholder="Search in table..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onFilterChange($event)"
+          />
+          <button
+            *ngIf="searchTerm"
+            type="button"
+            class="btn btn-sm btn-outline-secondary border-start-0"
+            (click)="onFilterChange('')"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Columns Visibility Dropdown -->
+      <div ngbDropdown class="d-inline-block" placement="bottom-end">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none"
+          ngbDropdownToggle
+          title="Toggle visible columns"
+        >
+          <i class="fas fa-columns"></i>
+          <span class="d-none d-sm-inline">Columns</span>
+        </button>
+        <div ngbDropdownMenu class="dropdown-menu dropdown-menu-end shadow-sm p-2 border" style="min-width: 180px;">
+          <h6 class="dropdown-header small text-uppercase text-muted px-2 mb-1">Visible Columns</h6>
+          <div *ngFor="let col of columns" class="form-check px-4 py-1 mb-0">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [id]="'col-' + col.field"
+              [checked]="col.visible !== false"
+              (change)="toggleColumnVisibility(col)"
+            />
+            <label class="form-check-label small cursor-pointer" [for]="'col-' + col.field">
+              {{ col.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export CSV Button -->
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none"
+        title="Export to CSV"
+        (click)="exportToCsv()"
+      >
+        <i class="fas fa-file-csv"></i>
+        <span class="d-none d-sm-inline">Export</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State Indicator -->
+  <div *ngIf="loading" class="progress mb-1" style="height: 3px;">
+    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary w-100"></div>
+  </div>
+
+  <!-- Table Body -->
+  <div class="table-responsive border rounded bg-white shadow-xs">
+    <table
+      class="table table-hover align-middle mb-0"
+      [class.table-striped]="striped"
+      [class.table-bordered]="bordered"
+      [class.table-sm]="dense"
+    >
+      <thead class="table-light">
+        <tr>
+          <!-- Multi-Select Checkbox Column -->
+          <th *ngIf="selectable" style="width: 40px;" class="text-center">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [checked]="isAllSelected()"
+              [indeterminate]="isIndeterminate()"
+              (change)="toggleSelectAll()"
+            />
+          </th>
+
+          <!-- Dynamic Columns -->
+          <th
+            *ngFor="let col of visibleColumns"
+            [style.width]="col.width ? col.width + 'px' : 'auto'"
+            [class.text-end]="col.align === 'right' || col.type === 'number' || col.type === 'currency'"
+            [class.text-center]="col.align === 'center' || col.type === 'boolean'"
+            [class.cursor-pointer]="col.sortable !== false"
+            (click)="toggleSort(col)"
+          >
+            <div
+              class="d-inline-flex align-items-center gap-1 user-select-none"
+              [class.justify-content-end]="col.align === 'right' || col.type === 'number' || col.type === 'currency'"
+            >
+              <span>{{ col.label }}</span>
+              <span *ngIf="col.sortable !== false" class="sort-icon text-muted small">
+                <i
+                  *ngIf="sortField === col.field"
+                  [class]="sortOrder === 'asc' ? 'fas fa-sort-up text-primary' : 'fas fa-sort-down text-primary'"
+                ></i>
+                <i *ngIf="sortField !== col.field" class="fas fa-sort opacity-25"></i>
+              </span>
+            </div>
+          </th>
+
+          <!-- Actions Column Header -->
+          <th *ngIf="actions.length > 0" class="text-end" style="width: 110px;">
+            Actions
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <!-- Data Rows -->
+        <tr
+          *ngFor="let row of paginatedItems"
+          [class.table-primary]="isRowSelected(row)"
+          (click)="handleRowClick(row)"
+          class="cursor-pointer"
+        >
+          <!-- Row Select Checkbox -->
+          <td *ngIf="selectable" class="text-center" (click)="$event.stopPropagation()">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [checked]="isRowSelected(row)"
+              (change)="toggleSelectRow(row, $event)"
+            />
+          </td>
+
+          <!-- Dynamic Cells -->
+          <td
+            *ngFor="let col of visibleColumns"
+            [class.text-end]="col.align === 'right' || col.type === 'number' || col.type === 'currency'"
+            [class.text-center]="col.align === 'center' || col.type === 'boolean'"
+          >
+            <!-- Formatter function takes precedence -->
+            <ng-container *ngIf="col.formatter">
+              {{ col.formatter(getCellValue(row, col.field), row) }}
+            </ng-container>
+
+            <!-- Default types when no formatter -->
+            <ng-container *ngIf="!col.formatter">
+              <!-- Text -->
+              <span *ngIf="!col.type || col.type === 'text'">
+                {{ getCellValue(row, col.field) ?? '—' }}
+              </span>
+
+              <!-- Code -->
+              <span *ngIf="col.type === 'code'" class="badge bg-light text-primary font-monospace border px-2 py-1">
+                {{ getCellValue(row, col.field) ?? '—' }}
+              </span>
+
+              <!-- Number -->
+              <span *ngIf="col.type === 'number'" class="font-monospace">
+                {{ getCellValue(row, col.field) ?? '—' }}
+              </span>
+
+              <!-- Currency -->
+              <span *ngIf="col.type === 'currency'" class="font-monospace fw-semibold">
+                {{ formatCurrency(getCellValue(row, col.field), col.currencyCode) }}
+              </span>
+
+              <!-- Date -->
+              <span *ngIf="col.type === 'date'" class="text-secondary small">
+                {{ formatDate(getCellValue(row, col.field)) }}
+              </span>
+
+              <!-- Badge -->
+              <span
+                *ngIf="col.type === 'badge'"
+                class="badge rounded-pill px-2 py-1"
+                [ngClass]="getBadgeClass(col, getCellValue(row, col.field), row)"
+              >
+                {{ getCellValue(row, col.field) }}
+              </span>
+
+              <!-- Boolean -->
+              <span *ngIf="col.type === 'boolean'">
+                <i
+                  *ngIf="getCellValue(row, col.field)"
+                  class="fas fa-check-circle text-success"
+                ></i>
+                <i
+                  *ngIf="!getCellValue(row, col.field)"
+                  class="fas fa-times-circle text-muted opacity-50"
+                ></i>
+              </span>
+            </ng-container>
+          </td>
+
+          <!-- Actions Column -->
+          <td *ngIf="actions.length > 0" class="text-end text-nowrap" (click)="$event.stopPropagation()">
+            <div class="d-inline-flex align-items-center gap-1 justify-content-end">
+              <button
+                *ngFor="let act of actions"
+                type="button"
+                class="btn btn-sm btn-icon"
+                [ngClass]="act.class || 'btn-outline-secondary'"
+                [title]="act.tooltip || act.label"
+                [disabled]="act.disabled ? act.disabled(row) : false"
+                (click)="handleAction(act, row, $event)"
+              >
+                <i *ngIf="act.icon" [class]="act.icon"></i>
+                <span *ngIf="!act.icon">{{ act.label }}</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="filteredAndSortedItems.length === 0">
+          <td
+            [attr.colspan]="visibleColumns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)"
+            class="text-center py-4 text-muted"
+          >
+            <i [class]="emptyIcon + ' fa-2x mb-2 text-secondary opacity-50 d-block'"></i>
+            <span>{{ emptyMessage }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Footer -->
+  <div
+    *ngIf="paginated && filteredAndSortedItems.length > 0"
+    class="table-pagination d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 mt-1 small text-muted"
+  >
+    <div class="d-flex align-items-center gap-2">
+      <span>
+        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ filteredAndSortedItems.length }}</strong> entries
+      </span>
+
+      <!-- Page Size Selector -->
+      <div class="d-inline-flex align-items-center gap-1 ms-3">
+        <label for="dt-page-size" class="mb-0">Per page:</label>
+        <select
+          id="dt-page-size"
+          class="form-select form-select-sm shadow-none"
+          style="width: 70px;"
+          [ngModel]="pageSize"
+          (ngModelChange)="setPageSize($event)"
+        >
+          <option *ngFor="let sz of pageSizeOptions" [value]="sz">{{ sz }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Page Navigation Buttons -->
+    <div class="d-flex align-items-center gap-1">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="currentPage === 1"
+        (click)="setPage(1)"
+        title="First Page"
+      >
+        <i class="fas fa-angles-left"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="currentPage === 1"
+        (click)="setPage(currentPage - 1)"
+        title="Previous Page"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <span class="px-2">Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="currentPage === totalPages"
+        (click)="setPage(currentPage + 1)"
+        title="Next Page"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="currentPage === totalPages"
+        (click)="setPage(totalPages)"
+        title="Last Page"
+      >
+        <i class="fas fa-angles-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,143 @@
+<div
+  class="erp-dropdown-container position-relative"
+  [class.is-open]="isOpen"
+  [class.is-disabled]="disabled"
+  [class.is-loading]="loading"
+  [class.size-sm]="size === 'sm'"
+  [class.size-lg]="size === 'lg'"
+  [ngClass]="dropdownClass"
+  (keydown)="onKeyDown($event)"
+>
+  <!-- Dropdown Trigger Bar -->
+  <div
+    class="erp-dropdown-trigger d-flex align-items-center justify-content-between"
+    [tabindex]="disabled ? -1 : 0"
+    (click)="toggleDropdown()"
+  >
+    <div class="trigger-content d-flex align-items-center flex-grow-1 text-truncate">
+      <!-- Icon prefix if defined -->
+      <i *ngIf="icon" [class]="icon + ' me-2 text-muted trigger-icon'"></i>
+
+      <!-- Multi-select chips -->
+      <ng-container *ngIf="isMulti; else singleSelectTpl">
+        <div *ngIf="selectedOptions.length > 0" class="chips-wrapper d-flex flex-wrap gap-1 align-items-center">
+          <span
+            *ngFor="let opt of selectedOptions"
+            class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 px-2 py-1 option-chip"
+          >
+            <i *ngIf="opt.icon" [class]="opt.icon"></i>
+            <span>{{ opt.label }}</span>
+            <i
+              *ngIf="!disabled"
+              class="fas fa-times chip-remove cursor-pointer ms-1 text-muted"
+              (click)="removeOption(opt, $event)"
+            ></i>
+          </span>
+        </div>
+        <span *ngIf="selectedOptions.length === 0" class="placeholder-text text-muted">
+          {{ placeholder }}
+        </span>
+      </ng-container>
+
+      <!-- Single select display -->
+      <ng-template #singleSelectTpl>
+        <ng-container *ngIf="selectedOption; else placeholderTpl">
+          <ng-container *ngIf="customSelectedTemplate; else defaultSelectedTpl">
+            <ng-container *ngTemplateOutlet="customSelectedTemplate; context: { $implicit: selectedOption }"></ng-container>
+          </ng-container>
+          <ng-template #defaultSelectedTpl>
+            <span class="selected-text d-flex align-items-center gap-2 text-truncate">
+              <i *ngIf="selectedOption.icon" [class]="selectedOption.icon + ' text-secondary'"></i>
+              <span class="fw-medium text-dark">{{ selectedOption.label }}</span>
+              <span *ngIf="selectedOption.badge" class="badge rounded-pill" [ngClass]="selectedOption.badgeClass || 'bg-secondary'">
+                {{ selectedOption.badge }}
+              </span>
+            </span>
+          </ng-template>
+        </ng-container>
+        <ng-template #placeholderTpl>
+          <span class="placeholder-text text-muted">{{ placeholder }}</span>
+        </ng-template>
+      </ng-template>
+    </div>
+
+    <!-- Trigger Actions (Clear & Chevron) -->
+    <div class="trigger-actions d-flex align-items-center gap-1 ms-2">
+      <i
+        *ngIf="clearable && !disabled && (selectedOption || selectedOptions.length > 0)"
+        class="fas fa-circle-xmark clear-icon text-muted cursor-pointer"
+        title="Clear selection"
+        (click)="clearSelection($event)"
+      ></i>
+
+      <div *ngIf="loading" class="spinner-border spinner-border-sm text-secondary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+
+      <i *ngIf="!loading" class="fas fa-chevron-down arrow-icon text-muted"></i>
+    </div>
+  </div>
+
+  <!-- Floating Dropdown Menu -->
+  <div *ngIf="isOpen" class="erp-dropdown-menu shadow border rounded-3">
+    <!-- Search Input -->
+    <div *ngIf="searchable" class="search-box p-2 border-bottom">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-transparent border-end-0 text-muted">
+          <i class="fas fa-search"></i>
+        </span>
+        <input
+          #searchInput
+          type="text"
+          class="form-control border-start-0 shadow-none ps-0"
+          [placeholder]="'Search...'"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchInput($event)"
+          (click)="$event.stopPropagation()"
+          autofocus
+        />
+      </div>
+    </div>
+
+    <!-- Options List -->
+    <div class="options-list" role="listbox">
+      <div
+        *ngFor="let opt of filteredOptions; let i = index"
+        class="dropdown-option d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer"
+        [class.selected]="isSelected(opt)"
+        [class.highlighted]="activeHighlightIndex === i"
+        [class.disabled]="opt.disabled"
+        (click)="selectOption(opt)"
+      >
+        <div class="option-content d-flex align-items-center gap-2 text-truncate">
+          <!-- Multi-select checkbox -->
+          <div *ngIf="isMulti" class="form-check mb-0 pointer-events-none">
+            <input class="form-check-input" type="checkbox" [checked]="isSelected(opt)" />
+          </div>
+
+          <!-- Icon if available -->
+          <i *ngIf="opt.icon" [class]="opt.icon + ' text-secondary'"></i>
+
+          <div class="d-flex flex-column text-truncate">
+            <span class="option-label text-truncate">{{ opt.label }}</span>
+            <span *ngIf="opt.sublabel" class="option-sublabel text-muted small text-truncate">
+              {{ opt.sublabel }}
+            </span>
+          </div>
+
+          <span *ngIf="opt.badge" class="badge ms-auto" [ngClass]="opt.badgeClass || 'bg-light text-dark border'">
+            {{ opt.badge }}
+          </span>
+        </div>
+
+        <!-- Single-select checkmark -->
+        <i *ngIf="!isMulti && isSelected(opt)" class="fas fa-check text-primary ms-2 checkmark-icon"></i>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredOptions.length === 0" class="empty-state p-3 text-center text-muted small">
+        <i class="fas fa-inbox me-1"></i>{{ emptyText }}
+      </div>
+    </div>
+  </div>
+</div>

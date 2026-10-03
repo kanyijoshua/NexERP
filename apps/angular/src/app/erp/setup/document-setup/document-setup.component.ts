@@ -3,7 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
-import { PurchaseSetupService } from '@proxy/purchasing';
+import { PurchaseSetupService, purchasingDiscountPostingOptions } from '@proxy/purchasing';
 import { CreditWarnings, SalesSetupService, creditWarningsOptions } from '@proxy/sales';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
@@ -37,17 +37,34 @@ export class DocumentSetupComponent implements OnInit {
 
   readonly purchaseFields: SeriesField[] = [
     { control: 'vendorNos', labelKey: 'Erp::VendorNos' },
-    ...this.salesFields.slice(1),
+    { control: 'quoteNos', labelKey: 'Erp::QuoteNos' },
+    { control: 'orderNos', labelKey: 'Erp::OrderNos' },
+    { control: 'blanketOrderNos', labelKey: 'Erp::BlanketOrderNos' },
+    { control: 'invoiceNos', labelKey: 'Erp::InvoiceNos' },
+    { control: 'returnOrderNos', labelKey: 'Erp::ReturnOrderNos' },
+    { control: 'creditMemoNos', labelKey: 'Erp::CreditMemoNos' },
+    { control: 'postedReceiptNos', labelKey: 'Erp::PostedReceiptNos' },
+    { control: 'postedInvoiceNos', labelKey: 'Erp::PostedInvoiceNos' },
+    { control: 'postedCreditMemoNos', labelKey: 'Erp::PostedCreditMemoNos' },
+    { control: 'postedReturnShptNos', labelKey: 'Erp::PostedReturnShptNos' },
   ];
 
   readonly creditWarningsOptions = creditWarningsOptions;
+  readonly discountPostingOptions = purchasingDiscountPostingOptions;
 
   series: NoSeriesDto[] = [];
   salesForm: FormGroup = this.withControls(this.buildForm(this.salesFields), {
     creditWarnings: CreditWarnings.BothWarnings,
     extDocNoMandatory: false,
   });
-  purchaseForm: FormGroup = this.withControls(this.buildForm(this.purchaseFields), { extDocNoMandatory: false });
+  purchaseForm: FormGroup = this.withControls(this.buildForm(this.purchaseFields), {
+    extDocNoMandatory: false,
+    discountPosting: 0,
+    receiptOnInvoice: true,
+    invoiceRounding: false,
+    calcInvDiscount: false,
+    allowVATDifference: false,
+  });
   loading = false;
   savingSales = false;
   savingPurchase = false;

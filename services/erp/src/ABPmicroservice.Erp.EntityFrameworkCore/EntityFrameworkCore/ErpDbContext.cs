@@ -14,6 +14,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.JobQueue;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Modules;
 using ABPmicroservice.Erp.Numbering;
@@ -157,6 +158,10 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
 
     public DbSet<ReportLayoutSelection> ReportLayoutSelections { get; set; }
     public DbSet<CustomReportLayout> CustomReportLayouts { get; set; }
+
+    public DbSet<JobQueueCategory> JobQueueCategories { get; set; }
+    public DbSet<JobQueueEntry> JobQueueEntries { get; set; }
+    public DbSet<JobQueueLogEntry> JobQueueLogEntries { get; set; }
 
     /// <summary>
     /// Ledger columns that may still change after posting (application and closing bookkeeping).

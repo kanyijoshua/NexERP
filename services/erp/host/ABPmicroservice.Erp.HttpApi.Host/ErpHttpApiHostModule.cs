@@ -35,6 +35,9 @@ public class ErpHttpApiHostModule : AbpModule
         // Queued webhook calls are sent from here, outside the request that queued them.
         context.Services.AddErpWebhookDelivery();
 
+        // Background worker executing scheduled and recurring Job Queue entries across companies.
+        context.Services.AddErpJobQueueWorker();
+
         // A module switched off in a company has to be off to the API too, not just hidden on screen.
         Configure<MvcOptions>(options =>
         {

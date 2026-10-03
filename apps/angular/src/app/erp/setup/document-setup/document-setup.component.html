@@ -48,9 +48,47 @@
         <i class="fas fa-shopping-cart text-primary me-2"></i>{{ 'Erp::Menu:PurchaseSetup' | abpLocalization }}
       </div>
       <form class="card-body" [formGroup]="purchaseForm" (ngSubmit)="savePurchase()">
-        <div class="form-check form-switch mb-3">
-          <input id="purchase-ext-doc" class="form-check-input" type="checkbox" role="switch" formControlName="extDocNoMandatory" />
-          <label class="form-check-label" for="purchase-ext-doc">{{ 'Erp::ExtDocNoMandatory' | abpLocalization }}</label>
+        <div class="row align-items-center mb-2">
+          <label class="col-sm-5 col-form-label" for="purchase-discount-posting">{{ 'Erp::DiscountPosting' | abpLocalization }}</label>
+          <div class="col-sm-7">
+            <select id="purchase-discount-posting" class="form-select form-select-sm" formControlName="discountPosting">
+              @for (option of discountPostingOptions; track option.value) {
+                <option [ngValue]="option.value">{{ 'Erp::PurchasingDiscountPosting:' + option.key | abpLocalization }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-sm-6">
+            <div class="form-check form-switch">
+              <input id="purchase-ext-doc" class="form-check-input" type="checkbox" role="switch" formControlName="extDocNoMandatory" />
+              <label class="form-check-label" for="purchase-ext-doc">{{ 'Erp::ExtDocNoMandatory' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-check form-switch">
+              <input id="purchase-receipt-inv" class="form-check-input" type="checkbox" role="switch" formControlName="receiptOnInvoice" />
+              <label class="form-check-label" for="purchase-receipt-inv">{{ 'Erp::ReceiptOnInvoice' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-check form-switch">
+              <input id="purchase-inv-round" class="form-check-input" type="checkbox" role="switch" formControlName="invoiceRounding" />
+              <label class="form-check-label" for="purchase-inv-round">{{ 'Erp::InvoiceRounding' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-check form-switch">
+              <input id="purchase-calc-disc" class="form-check-input" type="checkbox" role="switch" formControlName="calcInvDiscount" />
+              <label class="form-check-label" for="purchase-calc-disc">{{ 'Erp::CalcInvDiscount' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-check form-switch">
+              <input id="purchase-vat-diff" class="form-check-input" type="checkbox" role="switch" formControlName="allowVATDifference" />
+              <label class="form-check-label" for="purchase-vat-diff">{{ 'Erp::AllowVATDifference' | abpLocalization }}</label>
+            </div>
+          </div>
         </div>
         <hr class="my-2" />
         <ng-container

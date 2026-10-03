@@ -46,6 +46,24 @@
             </div>
           </div>
           <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-lcy-symbol">{{ 'Erp::LocalCurrencySymbol' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-lcy-symbol" type="text" class="form-control form-control-sm" maxlength="10" formControlName="localCurrencySymbol" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-lcy-desc">{{ 'Erp::LocalCurrencyDescription' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-lcy-desc" type="text" class="form-control form-control-sm" maxlength="60" formControlName="localCurrencyDescription" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-add-rep-currency">{{ 'Erp::AdditionalReportingCurrency' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-add-rep-currency" type="text" class="form-control form-control-sm text-uppercase" maxlength="10" formControlName="additionalReportingCurrency" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
             <label class="col-sm-5 col-form-label" for="gl-bank-nos">{{ 'Erp::BankAccountNos' | abpLocalization }}</label>
             <div class="col-sm-7">
               <select id="gl-bank-nos" class="form-select form-select-sm" formControlName="bankAccountNos">
@@ -54,6 +72,22 @@
                   <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
                 }
               </select>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-7 offset-sm-5">
+              <div class="form-check">
+                <input id="gl-block-delete" type="checkbox" class="form-check-input" formControlName="blockDeletionOfGLAccounts" />
+                <label class="form-check-label" for="gl-block-delete">{{ 'Erp::BlockDeletionOfGLAccounts' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-7 offset-sm-5">
+              <div class="form-check">
+                <input id="gl-register-time" type="checkbox" class="form-check-input" formControlName="registerTime" />
+                <label class="form-check-label" for="gl-register-time">{{ 'Erp::RegisterTime' | abpLocalization }}</label>
+              </div>
             </div>
           </div>
         </div>
@@ -82,6 +116,128 @@
             <label class="col-sm-7 col-form-label" for="gl-inv-rounding">{{ 'Erp::InvRoundingPrecisionLcy' | abpLocalization }}</label>
             <div class="col-sm-5">
               <input id="gl-inv-rounding" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="invRoundingPrecisionLcy" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-inv-rounding-type">{{ 'Erp::InvRoundingType' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <select id="gl-inv-rounding-type" class="form-select form-select-sm" formControlName="invRoundingType">
+                @for (opt of roundingTypeOptions; track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.key }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-vat-rounding-type">{{ 'Erp::VATRoundingType' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <select id="gl-vat-rounding-type" class="form-select form-select-sm" formControlName="vatRoundingType">
+                @for (opt of roundingTypeOptions; track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.key }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-percentage text-primary me-2"></i>{{ 'Erp::VAT' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-max-vat-diff">{{ 'Erp::MaxVATDifferenceAllowed' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-max-vat-diff" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="maxVATDifferenceAllowed" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-pmt-disc-excl-vat" type="checkbox" class="form-check-input" formControlName="pmtDiscExclVAT" />
+                <label class="form-check-label" for="gl-pmt-disc-excl-vat">{{ 'Erp::PmtDiscExclVAT' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-unrealized-vat" type="checkbox" class="form-check-input" formControlName="unrealizedVAT" />
+                <label class="form-check-label" for="gl-unrealized-vat">{{ 'Erp::UnrealizedVAT' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-adj-pmt-disc" type="checkbox" class="form-check-input" formControlName="adjustForPaymentDisc" />
+                <label class="form-check-label" for="gl-adj-pmt-disc">{{ 'Erp::AdjustForPaymentDisc' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-mark-crmemos" type="checkbox" class="form-check-input" formControlName="markCrMemosAsCorrections" />
+                <label class="form-check-label" for="gl-mark-crmemos">{{ 'Erp::MarkCrMemosAsCorrections' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-hand-holding-usd text-primary me-2"></i>{{ 'Erp::PaymentTolerance' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-pmt-tol-pct">{{ 'Erp::PaymentTolerancePct' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-pmt-tol-pct" type="number" step="any" min="0" max="100" class="form-control form-control-sm text-end" formControlName="paymentTolerancePct" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-7 col-form-label" for="gl-max-pmt-tol-amt">{{ 'Erp::MaxPaymentToleranceAmount' | abpLocalization }}</label>
+            <div class="col-sm-5">
+              <input id="gl-max-pmt-tol-amt" type="number" step="any" min="0" class="form-control form-control-sm text-end" formControlName="maxPaymentToleranceAmount" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-tasks text-primary me-2"></i>{{ 'Erp::JobQueue' | abpLocalization }}
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-post-job-queue" type="checkbox" class="form-check-input" formControlName="postWithJobQueue" />
+                <label class="form-check-label" for="gl-post-job-queue">{{ 'Erp::PostWithJobQueue' | abpLocalization }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <label class="col-sm-5 col-form-label" for="gl-jq-cat">{{ 'Erp::JobQueueCategoryCode' | abpLocalization }}</label>
+            <div class="col-sm-7">
+              <input id="gl-jq-cat" type="text" class="form-control form-control-sm text-uppercase" maxlength="10" formControlName="jobQueueCategoryCode" />
+            </div>
+          </div>
+          <div class="row align-items-center mb-2">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input id="gl-notify-success" type="checkbox" class="form-check-input" formControlName="notifyOnSuccess" />
+                <label class="form-check-label" for="gl-notify-success">{{ 'Erp::NotifyOnSuccess' | abpLocalization }}</label>
+              </div>
             </div>
           </div>
         </div>

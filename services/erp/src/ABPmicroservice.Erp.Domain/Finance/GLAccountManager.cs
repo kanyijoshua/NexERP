@@ -25,7 +25,23 @@ public class GLAccountManager : DomainService
         GLAccountCategory accountCategory,
         IncomeBalanceType incomeBalance,
         string subcategory = null,
-        bool directPosting = true
+        bool directPosting = true,
+        string searchName = null,
+        GLAccountDebitCredit debitCredit = GLAccountDebitCredit.Both,
+        bool reconciliationAccount = false,
+        string totaling = null,
+        string genBusPostingGroup = null,
+        string genProdPostingGroup = null,
+        bool automaticExtTexts = false,
+        string taxAreaCode = null,
+        bool taxLiable = false,
+        string taxGroupCode = null,
+        ConsolidationTranslationMethod consolTranslationMethod = ConsolidationTranslationMethod.Average,
+        string consolDebitAcc = null,
+        string consolCreditAcc = null,
+        string costTypeNo = null,
+        string defaultDeferralTemplateCode = null,
+        bool omitDefaultDescrInJnl = false
     )
     {
         await EnsureNoIsUniqueAsync(no);
@@ -38,7 +54,23 @@ public class GLAccountManager : DomainService
             accountCategory,
             incomeBalance,
             subcategory,
-            directPosting
+            directPosting,
+            searchName,
+            debitCredit,
+            reconciliationAccount,
+            totaling,
+            genBusPostingGroup,
+            genProdPostingGroup,
+            automaticExtTexts,
+            taxAreaCode,
+            taxLiable,
+            taxGroupCode,
+            consolTranslationMethod,
+            consolDebitAcc,
+            consolCreditAcc,
+            costTypeNo,
+            defaultDeferralTemplateCode,
+            omitDefaultDescrInJnl
         );
     }
 

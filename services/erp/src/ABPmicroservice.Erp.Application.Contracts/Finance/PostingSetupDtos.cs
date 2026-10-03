@@ -132,6 +132,47 @@ public class GeneralLedgerSetupDto
 
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
     public string BankAccountNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCurrencySymbolLength)]
+    public string LocalCurrencySymbol { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCurrencyDescriptionLength)]
+    public string LocalCurrencyDescription { get; set; }
+
+    public RoundingType InvRoundingType { get; set; }
+
+    public RoundingType VATRoundingType { get; set; }
+
+    public bool PmtDiscExclVAT { get; set; }
+
+    public bool UnrealizedVAT { get; set; }
+
+    public bool AdjustForPaymentDisc { get; set; }
+
+    public bool MarkCrMemosAsCorrections { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCurrencyCodeLength)]
+    public string AdditionalReportingCurrency { get; set; }
+
+    [Range(typeof(decimal), "0", "1000000")]
+    public decimal MaxVATDifferenceAllowed { get; set; }
+
+    [Range(typeof(decimal), "0", "100")]
+    public decimal PaymentTolerancePct { get; set; }
+
+    [Range(typeof(decimal), "0", "1000000")]
+    public decimal MaxPaymentToleranceAmount { get; set; }
+
+    public bool BlockDeletionOfGLAccounts { get; set; }
+
+    public bool PostWithJobQueue { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxJobCategoryCodeLength)]
+    public string JobQueueCategoryCode { get; set; }
+
+    public bool NotifyOnSuccess { get; set; }
+
+    public bool RegisterTime { get; set; }
 }
 
 public class VatPostingSetupDto : FullAuditedEntityDto<Guid>

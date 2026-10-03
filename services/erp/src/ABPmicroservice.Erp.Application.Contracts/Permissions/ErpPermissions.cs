@@ -323,6 +323,13 @@ public class ErpPermissions
         public const string Delete = Default + ".Delete";
     }
 
+    public static class JobQueue
+    {
+        public const string Default = GroupName + ".JobQueue";
+        public const string Manage = Default + ".Manage";
+        public const string Execute = Default + ".Execute";
+    }
+
     public static string[] GetAll()
     {
         return ReflectionHelper.GetPublicConstantsRecursively(typeof(ErpPermissions));

@@ -35,13 +35,34 @@ public class PurchaseSetupAppService : ErpAppService, IPurchaseSetupAppService
     {
         await _codeValidator.EnsureExistAsync(
             input.VendorNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
-            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
+            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos,
+            input.BlanketOrderNos, input.PostedReceiptNos, input.PostedReturnShptNos, input.ReturnOrderNos);
 
         var setup = await _setupManager.GetAsync();
         setup.SetNumberSeries(
             input.VendorNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
-            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
-        setup.SetGeneral(input.ExtDocNoMandatory);
+            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos,
+            input.BlanketOrderNos, input.PostedReceiptNos, input.PostedReturnShptNos, input.ReturnOrderNos);
+        setup.SetGeneral(
+            input.ExtDocNoMandatory,
+            input.DiscountPosting,
+            input.ReceiptOnInvoice,
+            input.InvoiceRounding,
+            input.CalcInvDiscount,
+            input.AllowVATDifference,
+            input.CalcInvDiscPerVATID,
+            input.ExactCostReversingMandatory,
+            input.AllowMultiplePostingGroups);
+        setup.SetJobQueuePosting(input.PostWithJobQueue, input.JobQueueCategoryCode, input.NotifyOnSuccess);
+        setup.SetPostingOptions(
+            input.CopyCommentsBlanketToOrder,
+            input.CopyCommentsOrderToInvoice,
+            input.CopyCommentsOrderToReceipt,
+            input.CopyCommentsRetOrderToRetShpt,
+            input.CopyCommentsRetOrderToCrMemo,
+            input.ReturnShipmentOnCreditMemo,
+            input.CopyVendorNameToEntries,
+            input.CopyLineDescrToGLEntry);
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<PurchasesPayablesSetup, PurchasesPayablesSetupDto>(setup);

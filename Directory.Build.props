@@ -33,8 +33,15 @@
         </PackageReference>
         <PackageReference Include="Nerdbank.GitVersioning" Condition="!Exists('packages.config') and (Exists('$(MSBuildThisFileDirectory).git') or Exists('$(MSBuildThisFileDirectory)version.json'))">
             <PrivateAssets>all</PrivateAssets>
-            <Version>3.*</Version>
+            <Version>3.0.4-beta</Version>
         </PackageReference>
+        <PackageReference Include="Microsoft.Build.Tasks.Git" Version="10.0.111">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.11" />
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
         <PackageReference Include="NodaTime" Version="$(NodaTimePackageVersion)" />
     </ItemGroup>
 

@@ -26,6 +26,13 @@ import { ErpFactBoxComponent } from './card/erp-factbox.component';
 import { ErpFastTabComponent } from './card/erp-fasttab.component';
 import { ErpTableActionsDirective, ErpTableCardDirective, ErpTableColDirective } from './table/erp-table-col.directive';
 import { ErpTableComponent } from './table/erp-table.component';
+import { ErpDropdownComponent } from './dropdown/erp-dropdown.component';
+import { ErpActionDropdownComponent } from './dropdown/erp-action-dropdown.component';
+import { ErpButtonComponent } from './button/erp-button.component';
+import { ErpSplitButtonComponent } from './button/erp-split-button.component';
+import { ErpButtonGroupComponent } from './button/erp-button-group.component';
+import { ErpDynamicTableComponent } from './dynamic-table/erp-dynamic-table.component';
+import { ErpBadgeComponent } from './badge/erp-badge.component';
 
 const DECLARATIONS = [
   // On every ERP page, so every lazy ERP module needs it.
@@ -49,6 +56,14 @@ const DECLARATIONS = [
   ErpFastTabComponent,
   ErpFactBoxComponent,
   ErpAmountPipe,
+  // Dynamic Reusable Components
+  ErpDropdownComponent,
+  ErpActionDropdownComponent,
+  ErpButtonComponent,
+  ErpSplitButtonComponent,
+  ErpButtonGroupComponent,
+  ErpDynamicTableComponent,
+  ErpBadgeComponent,
 ];
 
 const MODULES = [

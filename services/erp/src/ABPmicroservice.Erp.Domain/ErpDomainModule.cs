@@ -21,5 +21,11 @@ public class ErpDomainModule : AbpModule
 
         // The same holds for the writer a configuration package or a data import applies records with.
         context.Services.AddTransient(typeof(ConfigEntityStore<>));
+
+        // Job Queue Handlers
+        context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.CleanupJobQueueLogsHandler>();
+        context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.SalesPostBatchJobHandler>();
+        context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.PurchasingPostBatchJobHandler>();
+        context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.WebhookRetrySweepJobHandler>();
     }
 }

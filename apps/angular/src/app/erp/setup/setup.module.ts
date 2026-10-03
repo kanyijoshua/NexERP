@@ -17,6 +17,7 @@ import { ThemeSettingsComponent } from './theme/theme-settings.component';
 import { WebServicesComponent } from './web-services/web-services.component';
 import { WebhooksComponent } from './webhooks/webhooks.component';
 import { WorkflowsComponent } from './workflows/workflows.component';
+import { JobQueueComponent } from './job-queue/job-queue.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'modules', pathMatch: 'full' },
@@ -83,6 +84,12 @@ const routes: Routes = [
     data: { requiredPolicy: 'Erp.Webhooks && Erp.DataExport' },
   },
   {
+    path: 'job-queue',
+    component: JobQueueComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.JobQueue' },
+  },
+  {
     path: 'profiles',
     component: ProfilesComponent,
     canActivate: [permissionGuard],
@@ -114,6 +121,7 @@ const routes: Routes = [
     ApprovalUserSetupComponent,
     WebServicesComponent,
     WebhooksComponent,
+    JobQueueComponent,
     DataExportComponent,
     ThemeSettingsComponent,
     ProfilesComponent,

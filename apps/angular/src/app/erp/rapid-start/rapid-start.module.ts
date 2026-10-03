@@ -1,4 +1,5 @@
-import { permissionGuard } from '@abp/ng.core';
+import { CoreModule, permissionGuard } from '@abp/ng.core';
+import { ThemeSharedModule } from '@abp/ng.theme.shared';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ErpSharedModule } from '../erp-shared/erp-shared.module';
@@ -62,6 +63,6 @@ const routes: Routes = [
     ConfigTemplatesComponent,
     DataImportComponent,
   ],
-  imports: [ErpSharedModule, RouterModule.forChild(routes)],
+  imports: [CoreModule, ThemeSharedModule, ErpSharedModule, RouterModule.forChild(routes)],
 })
 export class RapidStartModule {}

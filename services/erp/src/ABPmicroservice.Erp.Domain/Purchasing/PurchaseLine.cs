@@ -1,4 +1,5 @@
 using System;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Documents;
 using ABPmicroservice.Erp.Finance;
 using Volo.Abp;
@@ -52,6 +53,36 @@ public class PurchaseLine : Entity<Guid>
     /// <summary>The VAT of the line, also for reverse charge where the party does not pay it.</summary>
     public decimal VatAmount { get; private set; }
 
+    public string LocationCode { get; private set; }
+
+    public DateTime? ExpectedReceiptDate { get; private set; }
+
+    public string ItemCategoryCode { get; private set; }
+
+    public string ShortcutDimension1Code { get; private set; }
+
+    public string ShortcutDimension2Code { get; private set; }
+
+    public decimal QtyToReceive { get; private set; }
+
+    public decimal QuantityReceived { get; private set; }
+
+    public decimal QtyToInvoice { get; private set; }
+
+    public decimal QuantityInvoiced { get; private set; }
+
+    public string DeferralCode { get; private set; }
+
+    public string TaxAreaCode { get; private set; }
+
+    public bool TaxLiable { get; private set; }
+
+    public string TaxGroupCode { get; private set; }
+
+    public string GenBusPostingGroup { get; private set; }
+
+    public string GenProdPostingGroup { get; private set; }
+
     protected PurchaseLine() { }
 
     public PurchaseLine(
@@ -90,7 +121,62 @@ public class PurchaseLine : Entity<Guid>
         Quantity = quantity;
         DirectUnitCost = directUnitCost;
         LineDiscountPercent = lineDiscountPercent;
+        if (QuantityReceived == 0m)
+        {
+            QtyToReceive = quantity;
+        }
+        if (QuantityInvoiced == 0m)
+        {
+            QtyToInvoice = quantity;
+        }
         RecalculateAmounts();
+    }
+
+    public void SetLocation(string locationCode)
+    {
+        LocationCode = CodeTableEntity.NormalizeCode(Check.Length(locationCode, nameof(locationCode), ErpDomainConsts.MaxLocationCodeLength));
+    }
+
+    public void SetExpectedReceiptDate(DateTime? expectedReceiptDate)
+    {
+        ExpectedReceiptDate = expectedReceiptDate;
+    }
+
+    public void SetItemCategory(string itemCategoryCode)
+    {
+        ItemCategoryCode = CodeTableEntity.NormalizeCode(Check.Length(itemCategoryCode, nameof(itemCategoryCode), ErpDomainConsts.MaxPostingGroupLength));
+    }
+
+    public void SetDimensions(string shortcutDimension1Code, string shortcutDimension2Code)
+    {
+        ShortcutDimension1Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension1Code, nameof(shortcutDimension1Code), ErpDomainConsts.MaxDimensionCodeLength));
+        ShortcutDimension2Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension2Code, nameof(shortcutDimension2Code), ErpDomainConsts.MaxDimensionCodeLength));
+    }
+
+    public void SetPostingGroups(string genBusPostingGroup, string genProdPostingGroup)
+    {
+        GenBusPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(genBusPostingGroup, nameof(genBusPostingGroup), ErpDomainConsts.MaxGeneralBusPostingGroupLength));
+        GenProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(genProdPostingGroup, nameof(genProdPostingGroup), ErpDomainConsts.MaxGeneralBusPostingGroupLength));
+    }
+
+    public void SetTax(string taxAreaCode, bool taxLiable, string taxGroupCode)
+    {
+        TaxAreaCode = CodeTableEntity.NormalizeCode(Check.Length(taxAreaCode, nameof(taxAreaCode), ErpDomainConsts.MaxTaxAreaCodeLength));
+        TaxLiable = taxLiable;
+        TaxGroupCode = CodeTableEntity.NormalizeCode(Check.Length(taxGroupCode, nameof(taxGroupCode), ErpDomainConsts.MaxTaxGroupCodeLength));
+    }
+
+    public void SetDeferralCode(string deferralCode)
+    {
+        DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxDeferralTemplateCodeLength));
+    }
+
+    public void SetQuantities(decimal qtyToReceive, decimal quantityReceived, decimal qtyToInvoice, decimal quantityInvoiced)
+    {
+        QtyToReceive = qtyToReceive;
+        QuantityReceived = quantityReceived;
+        QtyToInvoice = qtyToInvoice;
+        QuantityInvoiced = quantityInvoiced;
     }
 
     /// <summary>Takes the rate and groups of a VAT Posting Setup, or none with a null setup.</summary>

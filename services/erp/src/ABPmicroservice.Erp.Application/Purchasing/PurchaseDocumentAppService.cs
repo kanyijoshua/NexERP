@@ -249,8 +249,40 @@ public class PurchaseDocumentAppService
         header.SetDates(input.PostingDate, dueDate, input.ExpectedReceiptDate);
         header.SetCurrency(CodeTableEntity.NormalizeCode(input.CurrencyCode) ?? vendor.CurrencyCode);
         header.SetPaymentTerms(paymentTermsCode);
-        header.SetLocation(input.LocationCode);
+        header.SetLocation(input.LocationCode ?? vendor.LocationCode);
         header.SetVendorInvoiceNo(input.VendorInvoiceNo);
+        header.SetYourReference(input.YourReference);
+        header.SetPayTo(
+            input.PayToVendorNo ?? vendor.No,
+            input.PayToName ?? vendor.Name,
+            input.PayToAddress ?? vendor.Address,
+            input.PayToCity ?? vendor.City,
+            input.PayToPostCode ?? vendor.PostCode,
+            input.PayToCountryRegionCode ?? vendor.CountryRegionCode,
+            input.PayToContact ?? vendor.Contact
+        );
+        header.SetShipTo(
+            input.ShipToCode,
+            input.ShipToName,
+            input.ShipToAddress,
+            input.ShipToCity,
+            input.ShipToPostCode,
+            input.ShipToCountryRegionCode,
+            input.ShipToContact
+        );
+        header.SetShipmentMethod(input.ShipmentMethodCode ?? vendor.ShipmentMethodCode);
+        header.SetPaymentMethod(input.PaymentMethodCode ?? vendor.PaymentMethodCode);
+        header.SetDimensions(input.ShortcutDimension1Code, input.ShortcutDimension2Code);
+        header.SetPostingGroups(
+            input.VendorPostingGroup ?? vendor.VendorPostingGroup,
+            input.GenBusPostingGroup ?? vendor.GenBusPostingGroup,
+            input.VatBusPostingGroup ?? vendor.VatBusPostingGroup
+        );
+        header.SetPricesIncludingVat(input.PricesIncludingVat || vendor.PricesIncludingVAT);
+        header.SetOnHold(input.OnHold);
+        header.SetAppliesTo(input.AppliesToDocType, input.AppliesToDocNo, input.AppliesToId);
+        header.SetTax(input.TaxAreaCode ?? vendor.TaxAreaCode, input.TaxLiable || vendor.TaxLiable);
+        header.SetPrepayment(input.PrepaymentPct != 0 ? input.PrepaymentPct : vendor.PrepaymentPct);
     }
 
     // The client always sends the whole document, so the line set is replaced wholesale.
@@ -258,18 +290,51 @@ public class PurchaseDocumentAppService
     {
         header.ClearLines();
 
-        foreach (var line in input.Lines)
+        foreach (var lineInput in input.Lines)
         {
-            header.AddLine(
-                GuidGenerator.Create(),
-                line.Type,
-                line.No,
-                line.Description,
-                line.Quantity,
-                line.DirectUnitCost,
-                line.LineDiscountPercent,
-                line.UnitOfMeasureCode
+            var line = header.AddLine(
+                lineInput.Id ?? GuidGenerator.Create(),
+                lineInput.Type,
+                lineInput.No,
+                lineInput.Description,
+                lineInput.Quantity,
+                lineInput.DirectUnitCost,
+                lineInput.LineDiscountPercent,
+                lineInput.UnitOfMeasureCode
             );
+
+            if (!string.IsNullOrWhiteSpace(lineInput.LocationCode))
+            {
+                line.SetLocation(lineInput.LocationCode);
+            }
+            if (lineInput.ExpectedReceiptDate.HasValue)
+            {
+                line.SetExpectedReceiptDate(lineInput.ExpectedReceiptDate);
+            }
+            if (!string.IsNullOrWhiteSpace(lineInput.ItemCategoryCode))
+            {
+                line.SetItemCategory(lineInput.ItemCategoryCode);
+            }
+            if (!string.IsNullOrWhiteSpace(lineInput.ShortcutDimension1Code) || !string.IsNullOrWhiteSpace(lineInput.ShortcutDimension2Code))
+            {
+                line.SetDimensions(lineInput.ShortcutDimension1Code, lineInput.ShortcutDimension2Code);
+            }
+            if (!string.IsNullOrWhiteSpace(lineInput.GenBusPostingGroup) || !string.IsNullOrWhiteSpace(lineInput.GenProdPostingGroup))
+            {
+                line.SetPostingGroups(lineInput.GenBusPostingGroup, lineInput.GenProdPostingGroup);
+            }
+            if (!string.IsNullOrWhiteSpace(lineInput.TaxAreaCode) || !string.IsNullOrWhiteSpace(lineInput.TaxGroupCode) || lineInput.TaxLiable)
+            {
+                line.SetTax(lineInput.TaxAreaCode, lineInput.TaxLiable, lineInput.TaxGroupCode);
+            }
+            if (!string.IsNullOrWhiteSpace(lineInput.DeferralCode))
+            {
+                line.SetDeferralCode(lineInput.DeferralCode);
+            }
+            if (lineInput.QtyToReceive != 0 || lineInput.QuantityReceived != 0 || lineInput.QtyToInvoice != 0 || lineInput.QuantityInvoiced != 0)
+            {
+                line.SetQuantities(lineInput.QtyToReceive, lineInput.QuantityReceived, lineInput.QtyToInvoice, lineInput.QuantityInvoiced);
+            }
         }
     }
 }

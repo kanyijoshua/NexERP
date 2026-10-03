@@ -279,7 +279,8 @@ public class GenJnlPostLine : DomainService
             amount,
             sourceNo,
             dimensionSetId: dimensionSetId,
-            documentDate: documentDate
+            documentDate: documentDate,
+            glAccountName: account.Name
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.GLEntry),
@@ -469,7 +470,10 @@ public class GenJnlPostLine : DomainService
             line.DueDate ?? await DueDateAsync(vendor.PaymentTermsCode, line.DocumentDate, line.PostingDate),
             line.DimensionSetId,
             line.CurrencyCode,
-            side.AmountLcy
+            side.AmountLcy,
+            vendorName: vendor.Name,
+            vendorPostingGroup: vendor.VendorPostingGroup,
+            sourceCode: line.Context?.SourceCode
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.VendorLedgerEntry),

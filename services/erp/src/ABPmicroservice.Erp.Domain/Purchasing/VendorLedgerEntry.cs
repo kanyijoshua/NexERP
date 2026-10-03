@@ -48,6 +48,21 @@ public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
 
     public long ReversedEntryNo { get; internal set; }
 
+    public string VendorName { get; internal set; }
+    public string VendorPostingGroup { get; internal set; }
+    public string GlobalDimension1Code { get; internal set; }
+    public string GlobalDimension2Code { get; internal set; }
+    public string PurchaserCode { get; internal set; }
+    public string UserId { get; internal set; }
+    public string SourceCode { get; internal set; }
+    public string OnHold { get; internal set; }
+    public string AppliesToDocType { get; internal set; }
+    public string AppliesToDocNo { get; internal set; }
+    public string AppliesToId { get; internal set; }
+    public string JournalBatchName { get; internal set; }
+    public string ExternalDocumentNo { get; internal set; }
+    public string PaymentMethodCode { get; internal set; }
+
     protected VendorLedgerEntry() { }
 
     public VendorLedgerEntry(
@@ -62,7 +77,21 @@ public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
         DateTime dueDate,
         Guid dimensionSetId = default,
         string currencyCode = null,
-        decimal? amountLcy = null
+        decimal? amountLcy = null,
+        string vendorName = null,
+        string vendorPostingGroup = null,
+        string globalDimension1Code = null,
+        string globalDimension2Code = null,
+        string purchaserCode = null,
+        string userId = null,
+        string sourceCode = null,
+        string onHold = null,
+        string appliesToDocType = null,
+        string appliesToDocNo = null,
+        string appliesToId = null,
+        string journalBatchName = null,
+        string externalDocumentNo = null,
+        string paymentMethodCode = null
     )
         : base(id)
     {
@@ -80,6 +109,20 @@ public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
         DueDate = dueDate;
         Open = true;
         DimensionSetId = dimensionSetId;
+        VendorName = Check.Length(vendorName, nameof(vendorName), ErpDomainConsts.MaxNameLength);
+        VendorPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vendorPostingGroup, nameof(vendorPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
+        GlobalDimension1Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension1Code, nameof(globalDimension1Code), ErpDomainConsts.MaxDimensionCodeLength));
+        GlobalDimension2Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension2Code, nameof(globalDimension2Code), ErpDomainConsts.MaxDimensionCodeLength));
+        PurchaserCode = CodeTableEntity.NormalizeCode(Check.Length(purchaserCode, nameof(purchaserCode), ErpDomainConsts.MaxCodeLength));
+        UserId = Check.Length(userId, nameof(userId), ErpDomainConsts.MaxUserNameLength);
+        SourceCode = CodeTableEntity.NormalizeCode(Check.Length(sourceCode, nameof(sourceCode), ErpDomainConsts.MaxSourceCodeLength));
+        OnHold = Check.Length(onHold, nameof(onHold), ErpDomainConsts.MaxOnHoldLength);
+        AppliesToDocType = Check.Length(appliesToDocType, nameof(appliesToDocType), ErpDomainConsts.MaxCodeLength);
+        AppliesToDocNo = Check.Length(appliesToDocNo, nameof(appliesToDocNo), ErpDomainConsts.MaxDocumentNoLength);
+        AppliesToId = Check.Length(appliesToId, nameof(appliesToId), ErpDomainConsts.MaxNoLength);
+        JournalBatchName = CodeTableEntity.NormalizeCode(Check.Length(journalBatchName, nameof(journalBatchName), ErpDomainConsts.MaxJournalTemplateNameLength));
+        ExternalDocumentNo = Check.Length(externalDocumentNo, nameof(externalDocumentNo), ErpDomainConsts.MaxExternalDocumentNoLength);
+        PaymentMethodCode = CodeTableEntity.NormalizeCode(Check.Length(paymentMethodCode, nameof(paymentMethodCode), ErpDomainConsts.MaxPaymentMethodCodeLength));
     }
 
     void IApplicableLedgerEntry.ReduceRemaining(decimal amount, decimal amountLcy, long closedByEntryNo)

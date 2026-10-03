@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.erp-dynamic-table-container {
+  width: 100%;
+
+  .table-toolbar {
+    .search-input-wrap {
+      min-width: 200px;
+    }
+  }
+
+  .table {
+    font-size: 0.875rem;
+
+    th {
+      font-weight: 600;
+      color: #334155;
+      background-color: #f8fafc;
+      white-space: nowrap;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 2px solid #e2e8f0;
+
+      .sort-icon {
+        width: 12px;
+        display: inline-block;
+      }
+    }
+
+    td {
+      padding: 0.55rem 0.75rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    tbody tr {
+      transition: background-color 0.1s ease;
+
+      &:hover {
+        background-color: rgba(1, 126, 132, 0.03);
+      }
+
+      &.table-primary {
+        background-color: rgba(1, 126, 132, 0.08) !important;
+      }
+    }
+  }
+
+  .table-pagination {
+    border-top: 1px solid #e2e8f0;
+  }
+}

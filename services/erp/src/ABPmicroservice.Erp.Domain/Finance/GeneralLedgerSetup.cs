@@ -36,10 +36,114 @@ public class GeneralLedgerSetup : CompanyEntity
     /// <summary>The series a new bank account's number is drawn from when it is left blank.</summary>
     public string BankAccountNos { get; private set; }
 
+    /// <summary>Local currency symbol. Mirrors BC field 162 "Local Currency Symbol".</summary>
+    public string LocalCurrencySymbol { get; private set; }
+
+    /// <summary>Local currency description. Mirrors BC field 163 "Local Currency Description".</summary>
+    public string LocalCurrencyDescription { get; private set; }
+
+    /// <summary>Invoice rounding type. Mirrors BC field 59 "Inv. Rounding Type (LCY)".</summary>
+    public RoundingType InvRoundingType { get; private set; } = RoundingType.Nearest;
+
+    /// <summary>VAT rounding type. Mirrors BC field 90 "VAT Rounding Type".</summary>
+    public RoundingType VATRoundingType { get; private set; } = RoundingType.Nearest;
+
+    /// <summary>Payment discount excludes VAT. Mirrors BC field 28 "Pmt. Disc. Excl. VAT".</summary>
+    public bool PmtDiscExclVAT { get; private set; }
+
+    /// <summary>Unrealized VAT handling. Mirrors BC field 48 "Unrealized VAT".</summary>
+    public bool UnrealizedVAT { get; private set; }
+
+    /// <summary>Adjust for payment discount. Mirrors BC field 49 "Adjust for Payment Disc.".</summary>
+    public bool AdjustForPaymentDisc { get; private set; }
+
+    /// <summary>Mark credit memos as corrections. Mirrors BC field 56 "Mark Cr. Memos as Corrections".</summary>
+    public bool MarkCrMemosAsCorrections { get; private set; }
+
+    /// <summary>Additional reporting currency. Mirrors BC field 68 "Additional Reporting Currency".</summary>
+    public string AdditionalReportingCurrency { get; private set; }
+
+    /// <summary>Maximum VAT difference allowed. Mirrors BC field 89 "Max. VAT Difference Allowed".</summary>
+    public decimal MaxVATDifferenceAllowed { get; private set; }
+
+    /// <summary>Payment tolerance percent. Mirrors BC field 94 "Payment Tolerance %".</summary>
+    public decimal PaymentTolerancePct { get; private set; }
+
+    /// <summary>Maximum payment tolerance amount. Mirrors BC field 95 "Max. Payment Tolerance Amount".</summary>
+    public decimal MaxPaymentToleranceAmount { get; private set; }
+
+    /// <summary>Block deletion of G/L accounts. Mirrors BC field 104 "Block Deletion of G/L Accounts".</summary>
+    public bool BlockDeletionOfGLAccounts { get; private set; }
+
+    /// <summary>Post with job queue. Mirrors BC field 50 "Post with Job Queue".</summary>
+    public bool PostWithJobQueue { get; private set; }
+
+    /// <summary>Job queue category code for posting. Mirrors BC field 51 "Job Queue Category Code".</summary>
+    public string JobQueueCategoryCode { get; private set; }
+
+    /// <summary>Notify on job queue success. Mirrors BC field 55 "Notify On Success".</summary>
+    public bool NotifyOnSuccess { get; private set; }
+
+    /// <summary>Register user time. Mirrors BC field 4 "Register Time".</summary>
+    public bool RegisterTime { get; private set; }
+
     protected GeneralLedgerSetup() { }
 
     public GeneralLedgerSetup(Guid id)
         : base(id) { }
+
+    public void SetLocalCurrencyDetails(string symbol, string description)
+    {
+        LocalCurrencySymbol = symbol.IsNullOrWhiteSpace()
+            ? null
+            : Check.Length(symbol.Trim(), nameof(symbol), ErpDomainConsts.MaxCurrencySymbolLength);
+        LocalCurrencyDescription = description.IsNullOrWhiteSpace()
+            ? null
+            : Check.Length(description.Trim(), nameof(description), ErpDomainConsts.MaxCurrencyDescriptionLength);
+    }
+
+    public void SetRoundingTypes(RoundingType invRoundingType, RoundingType vatRoundingType)
+    {
+        InvRoundingType = invRoundingType;
+        VATRoundingType = vatRoundingType;
+    }
+
+    public void SetVatSetup(bool pmtDiscExclVat, bool unrealizedVat, bool adjustForPaymentDisc, bool markCrMemosAsCorrections, decimal maxVatDifferenceAllowed)
+    {
+        PmtDiscExclVAT = pmtDiscExclVat;
+        UnrealizedVAT = unrealizedVat;
+        AdjustForPaymentDisc = adjustForPaymentDisc;
+        MarkCrMemosAsCorrections = markCrMemosAsCorrections;
+        MaxVATDifferenceAllowed = maxVatDifferenceAllowed >= 0 ? maxVatDifferenceAllowed : 0;
+    }
+
+    public void SetAdditionalReportingCurrency(string currencyCode)
+    {
+        AdditionalReportingCurrency = currencyCode.IsNullOrWhiteSpace()
+            ? null
+            : Check.Length(currencyCode.Trim().ToUpperInvariant(), nameof(currencyCode), ErpDomainConsts.MaxCurrencyCodeLength);
+    }
+
+    public void SetPaymentTolerance(decimal tolerancePct, decimal maxToleranceAmount)
+    {
+        PaymentTolerancePct = tolerancePct >= 0 ? tolerancePct : 0;
+        MaxPaymentToleranceAmount = maxToleranceAmount >= 0 ? maxToleranceAmount : 0;
+    }
+
+    public void SetJobQueuePost(bool postWithJobQueue, string categoryCode, bool notifyOnSuccess)
+    {
+        PostWithJobQueue = postWithJobQueue;
+        JobQueueCategoryCode = categoryCode.IsNullOrWhiteSpace()
+            ? null
+            : Check.Length(categoryCode.Trim().ToUpperInvariant(), nameof(categoryCode), ErpDomainConsts.MaxJobCategoryCodeLength);
+        NotifyOnSuccess = notifyOnSuccess;
+    }
+
+    public void SetFlags(bool blockDeletionOfGLAccounts, bool registerTime)
+    {
+        BlockDeletionOfGLAccounts = blockDeletionOfGLAccounts;
+        RegisterTime = registerTime;
+    }
 
     public void SetAllowedPostingDates(DateTime? allowPostingFrom, DateTime? allowPostingTo)
     {

@@ -1,0 +1,94 @@
+.job-queue-container {
+  padding-bottom: 2rem;
+}
+
+.job-queue-nav {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.25rem;
+
+  .nav-link {
+    cursor: pointer;
+    font-weight: 500;
+    color: #495057;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      color: #0d6efd;
+    }
+
+    &.active {
+      color: #0d6efd;
+      border-bottom-color: #0d6efd;
+      background: transparent;
+    }
+  }
+}
+
+.action-bar-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.search-box-wrap {
+  min-width: 250px;
+}
+
+.days-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  .day-check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+}
+
+.badge-code {
+  font-family: monospace;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.error-callstack-box {
+  background-color: #212529;
+  color: #f8f9fa;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.82rem;
+  padding: 1rem;
+  border-radius: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-output-box {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.erp-action-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}

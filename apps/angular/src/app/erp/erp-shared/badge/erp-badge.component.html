@@ -1,0 +1,10 @@
+<span [ngClass]="containerClasses">
+  <!-- Status dot indicator -->
+  <span *ngIf="dot" class="status-dot"></span>
+
+  <!-- Optional icon -->
+  <i *ngIf="icon" [class]="icon + ' badge-icon'"></i>
+
+  <!-- Badge text -->
+  <span class="badge-label">{{ displayLabel }}</span>
+</span>

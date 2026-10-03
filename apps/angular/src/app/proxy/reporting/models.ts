@@ -54,10 +54,13 @@ export interface ColumnLayoutLineDto extends EntityDto<string> {
 }
 
 export interface CreateUpdateReportLayoutDto {
+  code?: string;
+  reportID?: number;
   reportName: string;
   layoutName: string;
   layoutType: ReportLayoutType;
   description?: string;
+  fileExtension?: string;
   templateContent: string;
 }
 
@@ -134,10 +137,17 @@ export interface ReportExportInput {
 }
 
 export interface ReportLayoutDto extends EntityDto<string> {
+  code?: string;
+  reportID?: number;
   reportName?: string;
+  reportCaption?: string;
   layoutName?: string;
   layoutType: ReportLayoutType;
   description?: string;
+  fileExtension?: string;
+  builtIn: boolean;
+  lastModifiedByUser?: string;
+  layoutLastUpdated?: string;
   isDefault: boolean;
 }
 

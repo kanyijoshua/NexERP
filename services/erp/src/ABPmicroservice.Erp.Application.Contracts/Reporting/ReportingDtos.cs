@@ -254,13 +254,27 @@ public class CreateUpdateColumnLayoutLineDto
 
 public class ReportLayoutDto : EntityDto<Guid>
 {
+    public string Code { get; set; }
+
+    public int? ReportID { get; set; }
+
     public string ReportName { get; set; }
+
+    public string ReportCaption { get; set; }
 
     public string LayoutName { get; set; }
 
     public ReportLayoutType LayoutType { get; set; }
 
     public string Description { get; set; }
+
+    public string FileExtension { get; set; }
+
+    public bool BuiltIn { get; set; }
+
+    public string LastModifiedByUser { get; set; }
+
+    public DateTime? LayoutLastUpdated { get; set; }
 
     public bool IsDefault { get; set; }
 }
@@ -289,6 +303,11 @@ public class GetReportLayoutsInput
 
 public class CreateUpdateReportLayoutDto
 {
+    [StringLength(ErpDomainConsts.MaxCustomLayoutCodeLength)]
+    public string Code { get; set; }
+
+    public int? ReportID { get; set; }
+
     [Required]
     [StringLength(ErpDomainConsts.MaxNameLength)]
     public string ReportName { get; set; }
@@ -302,6 +321,9 @@ public class CreateUpdateReportLayoutDto
 
     [StringLength(ErpDomainConsts.MaxDescriptionLength)]
     public string Description { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxFileExtensionLength)]
+    public string FileExtension { get; set; }
 
     [Required]
     [StringLength(ErpDomainConsts.MaxLayoutTemplateLength)]

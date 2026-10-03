@@ -21,18 +21,90 @@ public class PurchasesPayablesSetup : CompanyEntity
     public string CreditMemoNos { get; private set; }
     public string PostedInvoiceNos { get; private set; }
     public string PostedCreditMemoNos { get; private set; }
+    public string BlanketOrderNos { get; private set; }
+    public string PostedReceiptNos { get; private set; }
+    public string PostedReturnShptNos { get; private set; }
+    public string ReturnOrderNos { get; private set; }
 
     /// <summary>An invoice cannot be posted without the vendor's invoice number (BC "Ext. Doc. No. Mandatory").</summary>
     public bool ExtDocNoMandatory { get; private set; }
+
+    public PurchasingDiscountPosting DiscountPosting { get; private set; }
+    public bool ReceiptOnInvoice { get; private set; }
+    public bool InvoiceRounding { get; private set; }
+    public bool CalcInvDiscount { get; private set; }
+    public bool AllowVATDifference { get; private set; }
+    public bool CalcInvDiscPerVATID { get; private set; }
+    public bool ExactCostReversingMandatory { get; private set; }
+
+    public bool PostWithJobQueue { get; private set; }
+    public string JobQueueCategoryCode { get; private set; }
+    public bool NotifyOnSuccess { get; private set; }
+
+    public bool CopyCommentsBlanketToOrder { get; private set; }
+    public bool CopyCommentsOrderToInvoice { get; private set; }
+    public bool CopyCommentsOrderToReceipt { get; private set; }
+    public bool CopyCommentsRetOrdToRetShpt { get; private set; }
+    public bool CopyCommentsRetOrdToCrMemo { get; private set; }
+    public bool ReturnShipmentOnCreditMemo { get; private set; }
+    public bool CopyVendorNameToEntries { get; private set; }
+    public bool CopyLineDescrToGLEntry { get; private set; }
+    public bool AllowMultiplePostingGroups { get; private set; }
 
     protected PurchasesPayablesSetup() { }
 
     public PurchasesPayablesSetup(Guid id)
         : base(id) { }
 
-    public void SetGeneral(bool extDocNoMandatory)
+    public void SetGeneral(
+        bool extDocNoMandatory,
+        PurchasingDiscountPosting discountPosting = PurchasingDiscountPosting.AllDiscounts,
+        bool receiptOnInvoice = false,
+        bool invoiceRounding = false,
+        bool calcInvDiscount = false,
+        bool allowVATDifference = false,
+        bool calcInvDiscPerVATID = false,
+        bool exactCostReversingMandatory = false,
+        bool allowMultiplePostingGroups = false
+    )
     {
         ExtDocNoMandatory = extDocNoMandatory;
+        DiscountPosting = discountPosting;
+        ReceiptOnInvoice = receiptOnInvoice;
+        InvoiceRounding = invoiceRounding;
+        CalcInvDiscount = calcInvDiscount;
+        AllowVATDifference = allowVATDifference;
+        CalcInvDiscPerVATID = calcInvDiscPerVATID;
+        ExactCostReversingMandatory = exactCostReversingMandatory;
+        AllowMultiplePostingGroups = allowMultiplePostingGroups;
+    }
+
+    public void SetJobQueuePosting(bool postWithJobQueue, string categoryCode, bool notifyOnSuccess)
+    {
+        PostWithJobQueue = postWithJobQueue;
+        JobQueueCategoryCode = CodeTableEntity.NormalizeCode(Check.Length(categoryCode, nameof(categoryCode), ErpDomainConsts.MaxJobCategoryCodeLength));
+        NotifyOnSuccess = notifyOnSuccess;
+    }
+
+    public void SetPostingOptions(
+        bool copyCommentsBlanketToOrder,
+        bool copyCommentsOrderToInvoice,
+        bool copyCommentsOrderToReceipt,
+        bool copyCommentsRetOrdToRetShpt,
+        bool copyCommentsRetOrdToCrMemo,
+        bool returnShipmentOnCreditMemo,
+        bool copyVendorNameToEntries,
+        bool copyLineDescrToGLEntry
+    )
+    {
+        CopyCommentsBlanketToOrder = copyCommentsBlanketToOrder;
+        CopyCommentsOrderToInvoice = copyCommentsOrderToInvoice;
+        CopyCommentsOrderToReceipt = copyCommentsOrderToReceipt;
+        CopyCommentsRetOrdToRetShpt = copyCommentsRetOrdToRetShpt;
+        CopyCommentsRetOrdToCrMemo = copyCommentsRetOrdToCrMemo;
+        ReturnShipmentOnCreditMemo = returnShipmentOnCreditMemo;
+        CopyVendorNameToEntries = copyVendorNameToEntries;
+        CopyLineDescrToGLEntry = copyLineDescrToGLEntry;
     }
 
     public void SetNumberSeries(
@@ -42,7 +114,11 @@ public class PurchasesPayablesSetup : CompanyEntity
         string invoiceNos,
         string creditMemoNos,
         string postedInvoiceNos,
-        string postedCreditMemoNos
+        string postedCreditMemoNos,
+        string blanketOrderNos = null,
+        string postedReceiptNos = null,
+        string postedReturnShptNos = null,
+        string returnOrderNos = null
     )
     {
         VendorNos = Code(vendorNos, nameof(vendorNos));
@@ -52,6 +128,10 @@ public class PurchasesPayablesSetup : CompanyEntity
         CreditMemoNos = Code(creditMemoNos, nameof(creditMemoNos));
         PostedInvoiceNos = Code(postedInvoiceNos, nameof(postedInvoiceNos));
         PostedCreditMemoNos = Code(postedCreditMemoNos, nameof(postedCreditMemoNos));
+        BlanketOrderNos = Code(blanketOrderNos, nameof(blanketOrderNos));
+        PostedReceiptNos = Code(postedReceiptNos, nameof(postedReceiptNos));
+        PostedReturnShptNos = Code(postedReturnShptNos, nameof(postedReturnShptNos));
+        ReturnOrderNos = Code(returnOrderNos, nameof(returnOrderNos));
     }
 
     /// <summary>The series that numbers a new, unposted document of this type.</summary>
@@ -63,6 +143,8 @@ public class PurchasesPayablesSetup : CompanyEntity
             PurchaseDocumentType.Order => OrderNos,
             PurchaseDocumentType.Invoice => InvoiceNos,
             PurchaseDocumentType.CreditMemo => CreditMemoNos,
+            PurchaseDocumentType.BlanketOrder => BlanketOrderNos,
+            PurchaseDocumentType.ReturnOrder => ReturnOrderNos,
             _ => null,
         };
     }

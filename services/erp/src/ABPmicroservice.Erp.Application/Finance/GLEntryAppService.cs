@@ -43,6 +43,10 @@ public class GLEntryAppService
                 !input.DocumentNo.IsNullOrWhiteSpace(),
                 x => x.DocumentNo == input.DocumentNo
             )
+            .WhereIf(
+                !input.ExternalDocumentNo.IsNullOrWhiteSpace(),
+                x => x.ExternalDocumentNo == input.ExternalDocumentNo
+            )
             .WhereIf(input.FromDate.HasValue, x => x.PostingDate >= input.FromDate.Value)
             .WhereIf(input.ToDate.HasValue, x => x.PostingDate <= input.ToDate.Value);
     }

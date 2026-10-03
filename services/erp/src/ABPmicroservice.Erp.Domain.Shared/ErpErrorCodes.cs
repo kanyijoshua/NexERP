@@ -279,4 +279,14 @@ public static class ErpErrorCodes
     {
         public const string UnknownProfile = Prefix + ":Profiles:00001";
     }
+
+    public static class JobQueue
+    {
+        public const string JobQueueEntryNotFound = Prefix + ":JobQueue:00001";
+        public const string JobQueueCategoryNotFound = Prefix + ":JobQueue:00002";
+        public const string JobQueueCategoryCodeAlreadyExists = Prefix + ":JobQueue:00003";
+        public const string JobQueueCannotRunInProcessJob = Prefix + ":JobQueue:00004";
+        public const string JobQueueHandlerNotFound = Prefix + ":JobQueue:00005";
+        public const string JobQueueCannotDeleteInProcessJob = Prefix + ":JobQueue:00006";
+    }
 }

@@ -232,7 +232,14 @@ public class GeneralLedgerSetupAppService : ErpAppService, IGeneralLedgerSetupAp
         var setup = await _setupManager.GetAsync();
         setup.SetAllowedPostingDates(input.AllowPostingFrom, input.AllowPostingTo);
         setup.SetLocalCurrency(input.LcyCode);
+        setup.SetLocalCurrencyDetails(input.LocalCurrencySymbol, input.LocalCurrencyDescription);
         setup.SetRoundingPrecisions(input.AmountRoundingPrecision, input.UnitAmountRoundingPrecision, input.InvRoundingPrecisionLcy);
+        setup.SetRoundingTypes(input.InvRoundingType, input.VATRoundingType);
+        setup.SetVatSetup(input.PmtDiscExclVAT, input.UnrealizedVAT, input.AdjustForPaymentDisc, input.MarkCrMemosAsCorrections, input.MaxVATDifferenceAllowed);
+        setup.SetAdditionalReportingCurrency(input.AdditionalReportingCurrency);
+        setup.SetPaymentTolerance(input.PaymentTolerancePct, input.MaxPaymentToleranceAmount);
+        setup.SetJobQueuePost(input.PostWithJobQueue, input.JobQueueCategoryCode, input.NotifyOnSuccess);
+        setup.SetFlags(input.BlockDeletionOfGLAccounts, input.RegisterTime);
         setup.SetGlobalDimensions(input.GlobalDimension1Code, input.GlobalDimension2Code);
         setup.SetNumbering(input.BankAccountNos);
 

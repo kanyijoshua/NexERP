@@ -7,6 +7,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
+using ABPmicroservice.Erp.JobQueue;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Purchasing;
@@ -157,5 +158,10 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ActivityStreamEntry, ActivityStreamEntryDto>();
         CreateMap<DocumentActivityTask, DocumentActivityTaskDto>();
         CreateMap<KanbanStage, KanbanStageDto>();
+
+        // Job Queue
+        CreateMap<JobQueueCategory, JobQueueCategoryDto>();
+        CreateMap<JobQueueEntry, JobQueueEntryDto>();
+        CreateMap<JobQueueLogEntry, JobQueueLogEntryDto>();
     }
 }

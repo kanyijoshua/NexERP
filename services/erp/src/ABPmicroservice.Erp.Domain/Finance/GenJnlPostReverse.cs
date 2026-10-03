@@ -222,7 +222,23 @@ public class GenJnlPostReverse : DomainService
             description,
             -entry.Amount,
             entry.SourceNo,
-            documentDate: entry.DocumentDate
+            documentDate: entry.DocumentDate,
+            glAccountName: entry.GLAccountName,
+            genPostingType: entry.GenPostingType,
+            genProdPostingGroup: entry.GenProdPostingGroup,
+            balAccountType: entry.BalAccountType,
+            balAccountNo: entry.BalAccountNo,
+            vatAmount: -entry.VATAmount,
+            vatBusPostingGroup: entry.VATBusPostingGroup,
+            vatProdPostingGroup: entry.VATProdPostingGroup,
+            externalDocumentNo: entry.ExternalDocumentNo,
+            sourceType: entry.SourceType,
+            userId: entry.UserId,
+            journalBatchName: entry.JournalBatchName,
+            quantity: -entry.Quantity,
+            additionalCurrencyAmount: -entry.AdditionalCurrencyAmount,
+            jobNo: entry.JobNo,
+            businessUnitCode: entry.BusinessUnitCode
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.GLEntry),
@@ -328,7 +344,21 @@ public class GenJnlPostReverse : DomainService
             entry.DueDate,
             entry.DimensionSetId,
             entry.CurrencyCode,
-            -entry.AmountLcy
+            -entry.AmountLcy,
+            vendorName: entry.VendorName,
+            vendorPostingGroup: entry.VendorPostingGroup,
+            globalDimension1Code: entry.GlobalDimension1Code,
+            globalDimension2Code: entry.GlobalDimension2Code,
+            purchaserCode: entry.PurchaserCode,
+            userId: entry.UserId,
+            sourceCode: reversalRegister.SourceCode,
+            onHold: entry.OnHold,
+            appliesToDocType: entry.AppliesToDocType,
+            appliesToDocNo: entry.AppliesToDocNo,
+            appliesToId: entry.AppliesToId,
+            journalBatchName: entry.JournalBatchName,
+            externalDocumentNo: entry.ExternalDocumentNo,
+            paymentMethodCode: entry.PaymentMethodCode
         )
         {
             EntryNo = await _entryNoGenerator.NextAsync(ErpSequenceNames.VendorLedgerEntry),

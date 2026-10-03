@@ -21,6 +21,7 @@ export const ERP_ROUTE_MODULE: Record<string, string> = {
   'Erp::Menu:ApprovalUserSetup': 'Approvals',
   'Erp::Menu:WebServices': 'Integration',
   'Erp::Menu:Webhooks': 'Integration',
+  'Erp::Menu:JobQueue': 'Core',
   'Erp::Menu:DataExport': 'DataExport',
   'Erp::Menu:Customers': 'Sales',
   'Erp::Menu:Vendors': 'Purchasing',
@@ -758,6 +759,15 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 8,
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.DataExport',
+  },
+  {
+    path: '/erp/setup/job-queue',
+    name: 'Erp::Menu:JobQueue',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-tasks',
+    order: 8.5,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.JobQueue',
   },
   {
     path: '/erp/rapid-start/worksheet',

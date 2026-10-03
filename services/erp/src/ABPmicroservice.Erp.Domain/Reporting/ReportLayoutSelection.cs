@@ -18,19 +18,49 @@ public class ReportLayoutSelection : CompanyEntity
 
     public ReportLayoutType LayoutType { get; private set; }
 
+    /// <summary>Report ID. Mirrors BC field 1 "Report ID".</summary>
+    public int ReportID { get; private set; }
+
+    /// <summary>Custom Report Layout Code. Mirrors BC field 6 "Custom Report Layout Code".</summary>
+    public string CustomReportLayoutCode { get; private set; }
+
+    /// <summary>Report Layout Description. Mirrors BC field 7 "Report Layout Description".</summary>
+    public string ReportLayoutDescription { get; private set; }
+
+    /// <summary>Report Caption. Mirrors BC field 8 "Report Caption".</summary>
+    public string ReportCaption { get; private set; }
+
     protected ReportLayoutSelection() { }
 
-    public ReportLayoutSelection(Guid id, string reportName, Guid selectedLayoutId, ReportLayoutType layoutType)
+    public ReportLayoutSelection(
+        Guid id,
+        string reportName,
+        Guid selectedLayoutId,
+        ReportLayoutType layoutType,
+        int reportId = 0,
+        string customReportLayoutCode = null,
+        string reportLayoutDescription = null,
+        string reportCaption = null
+    )
         : base(id)
     {
         ReportName = Check.NotNullOrWhiteSpace(reportName, nameof(reportName), ErpDomainConsts.MaxNameLength);
         SetSelectedLayout(selectedLayoutId, layoutType);
+        SetReportMetadata(reportId, customReportLayoutCode, reportLayoutDescription, reportCaption);
     }
 
     public void SetSelectedLayout(Guid layoutId, ReportLayoutType layoutType)
     {
         SelectedLayoutId = layoutId;
         LayoutType = layoutType;
+    }
+
+    public void SetReportMetadata(int reportId, string customLayoutCode, string layoutDescription, string reportCaption)
+    {
+        ReportID = reportId;
+        CustomReportLayoutCode = CodeTableEntity.NormalizeCode(Check.Length(customLayoutCode, nameof(customLayoutCode), ErpDomainConsts.MaxCustomLayoutCodeLength));
+        ReportLayoutDescription = Check.Length(layoutDescription, nameof(layoutDescription), ErpDomainConsts.MaxDescriptionLength);
+        ReportCaption = Check.Length(reportCaption, nameof(reportCaption), ErpDomainConsts.MaxNameLength);
     }
 }
 
@@ -56,6 +86,24 @@ public class CustomReportLayout : CompanyEntity
     /// <summary>The layout itself. See <see cref="ReportTemplate"/> for what it may contain.</summary>
     public string TemplateContent { get; private set; }
 
+    /// <summary>Layout code. Mirrors BC field 1 "Code".</summary>
+    public string Code { get; private set; }
+
+    /// <summary>Report ID. Mirrors BC field 2 "Report ID".</summary>
+    public int ReportID { get; private set; }
+
+    /// <summary>File extension. Mirrors BC field 10 "File Extension".</summary>
+    public string FileExtension { get; private set; }
+
+    /// <summary>Built-in layout flag. Mirrors BC field 14 "Built-In".</summary>
+    public bool BuiltIn { get; private set; }
+
+    /// <summary>User who last modified the layout. Mirrors BC field 9 "Last Modified by User".</summary>
+    public string LastModifiedByUser { get; private set; }
+
+    /// <summary>Timestamp of last layout update. Mirrors BC field 15 "Layout Last Updated".</summary>
+    public DateTime? LayoutLastUpdated { get; private set; }
+
     protected CustomReportLayout() { }
 
     public CustomReportLayout(
@@ -64,19 +112,47 @@ public class CustomReportLayout : CompanyEntity
         string layoutName,
         ReportLayoutType layoutType,
         string templateContent,
-        string description = null
+        string description = null,
+        string code = null,
+        int reportId = 0,
+        string fileExtension = "html",
+        bool builtIn = false,
+        string lastModifiedByUser = null,
+        DateTime? layoutLastUpdated = null
     )
         : base(id)
     {
         ReportName = Check.NotNullOrWhiteSpace(reportName, nameof(reportName), ErpDomainConsts.MaxNameLength);
         LayoutName = Check.NotNullOrWhiteSpace(layoutName, nameof(layoutName), ErpDomainConsts.MaxNameLength);
         LayoutType = layoutType;
+        SetCode(code ?? layoutName);
+        ReportID = reportId;
+        FileExtension = Check.Length(fileExtension, nameof(fileExtension), ErpDomainConsts.MaxFileExtensionLength);
+        BuiltIn = builtIn;
+        LastModifiedByUser = Check.Length(lastModifiedByUser, nameof(lastModifiedByUser), ErpDomainConsts.MaxUserNameLength);
+        LayoutLastUpdated = layoutLastUpdated ?? DateTime.UtcNow;
         Update(templateContent, description);
+    }
+
+    public void SetCode(string code) =>
+        Code = CodeTableEntity.NormalizeCode(Check.Length(code, nameof(code), ErpDomainConsts.MaxCustomLayoutCodeLength));
+
+    public void SetReportID(int reportId) => ReportID = reportId;
+
+    public void SetFileExtension(string ext) =>
+        FileExtension = Check.Length(ext, nameof(ext), ErpDomainConsts.MaxFileExtensionLength);
+
+    public void SetAuditDetails(string user, DateTime? updated, bool builtIn)
+    {
+        LastModifiedByUser = Check.Length(user, nameof(user), ErpDomainConsts.MaxUserNameLength);
+        LayoutLastUpdated = updated ?? DateTime.UtcNow;
+        BuiltIn = builtIn;
     }
 
     public void Update(string templateContent, string description)
     {
         Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
+        LayoutLastUpdated = DateTime.UtcNow;
         SetTemplate(templateContent);
     }
 
@@ -103,6 +179,7 @@ public class CustomReportLayout : CompanyEntity
 
         ReportTemplate.Validate(templateContent);
         TemplateContent = templateContent;
+        LayoutLastUpdated = DateTime.UtcNow;
     }
 
     public void SetDefault(bool isDefault)

@@ -261,6 +261,10 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
 
         var purchaseSetup = erpGroup.AddPermission(ErpPermissions.PurchaseSetup.Default, L("Permission:Erp:PurchaseSetup"));
         purchaseSetup.AddChild(ErpPermissions.PurchaseSetup.Update, L("Permission:Erp:PurchaseSetup:Update"));
+
+        var jobQueue = erpGroup.AddPermission(ErpPermissions.JobQueue.Default, L("Permission:Erp:JobQueue"));
+        jobQueue.AddChild(ErpPermissions.JobQueue.Manage, L("Permission:Erp:JobQueue:Manage"));
+        jobQueue.AddChild(ErpPermissions.JobQueue.Execute, L("Permission:Erp:JobQueue:Execute"));
     }
 
     private static void AddCrud(

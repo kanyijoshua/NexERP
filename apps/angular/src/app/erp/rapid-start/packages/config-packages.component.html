@@ -1,0 +1,196 @@
+<erp-page-toolbar
+  title="Erp::Menu:ConfigPackages"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-box-open"
+  permission="Erp.RapidStart.Manage"
+  createLabelKey="Erp::NewPackage"
+  (create)="openCreate()"
+  [showSearch]="true"
+  [(filter)]="searchFilter"
+  (filterChange)="load()"
+>
+  <label
+    *abpPermission="'Erp.RapidStart.Import'"
+    class="btn btn-sm btn-outline-primary mb-0"
+    [class.disabled]="busy"
+    [title]="'Erp::ImportPackageHelp' | abpLocalization"
+  >
+    <i class="fas fa-upload me-1"></i>{{ 'Erp::ImportPackage' | abpLocalization }}
+    <input
+      type="file"
+      accept=".rapidstart.json,.json,.xlsx"
+      class="d-none"
+      [disabled]="busy"
+      (change)="onImportFileSelected($event)"
+    />
+  </label>
+</erp-page-toolbar>
+
+<div class="card border-0 shadow-sm erp-table-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::Code' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::PackageName' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::ProductVersion' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::NoOfTables' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::NoOfRecords' | abpLocalization }}</th>
+            <th scope="col" class="text-center">{{ 'Erp::NoOfErrors' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::LastImported' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::LastApplied' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pkg of packages; track pkg.id) {
+            <tr>
+              <td>
+                <a
+                  [routerLink]="['/erp/rapid-start/packages', pkg.id]"
+                  class="fw-bold text-primary font-monospace text-decoration-none erp-record-link"
+                >
+                  {{ pkg.code }}
+                </a>
+              </td>
+              <td class="fw-semibold">{{ pkg.packageName }}</td>
+              <td class="font-monospace small text-muted">{{ pkg.productVersion || '—' }}</td>
+              <td class="text-end font-monospace">{{ pkg.noOfTables }}</td>
+              <td class="text-end font-monospace">{{ pkg.noOfRecords }}</td>
+              <td class="text-center">
+                @if (pkg.noOfErrors > 0) {
+                  <span class="badge bg-danger">{{ pkg.noOfErrors }}</span>
+                } @else {
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">0</span>
+                }
+              </td>
+              <td class="small text-muted">
+                {{ pkg.lastImportedTime ? (pkg.lastImportedTime | date:'short') : '—' }}
+              </td>
+              <td class="small text-muted">
+                {{ pkg.lastAppliedTime ? (pkg.lastAppliedTime | date:'short') : '—' }}
+              </td>
+              <td class="text-end text-nowrap">
+                <div class="d-inline-flex align-items-center gap-1">
+                  <a
+                    [routerLink]="['/erp/rapid-start/packages', pkg.id]"
+                    class="btn btn-sm btn-outline-primary erp-action-btn"
+                    [title]="'Erp::Edit' | abpLocalization"
+                    [attr.aria-label]="'Erp::Edit' | abpLocalization"
+                  >
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                  </a>
+
+                  <div class="dropdown d-inline-block" ngbDropdown>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary erp-action-btn"
+                      ngbDropdownToggle
+                      [disabled]="busy"
+                      [title]="'Erp::Actions' | abpLocalization"
+                      [attr.aria-label]="'Erp::Actions' | abpLocalization"
+                    >
+                      <i class="fas fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm" ngbDropdownMenu>
+                      <button
+                        *abpPermission="'Erp.RapidStart.Export'"
+                        type="button"
+                        class="dropdown-item"
+                        (click)="exportPackage(pkg, ConfigPackageFileFormat.Json)"
+                      >
+                        <i class="fas fa-download me-2 text-primary"></i>{{ 'Erp::ExportPackageFile' | abpLocalization }}
+                      </button>
+                      <button
+                        *abpPermission="'Erp.RapidStart.Export'"
+                        type="button"
+                        class="dropdown-item"
+                        (click)="exportPackage(pkg, ConfigPackageFileFormat.Xlsx)"
+                      >
+                        <i class="fas fa-file-excel me-2 text-success"></i>Excel (.xlsx)
+                      </button>
+                      <div class="dropdown-divider"></div>
+                      <button
+                        *abpPermission="'Erp.RapidStart.Apply'"
+                        type="button"
+                        class="dropdown-item"
+                        (click)="applyPackage(pkg)"
+                      >
+                        <i class="fas fa-play me-2 text-success"></i>{{ 'Erp::ApplyPackage' | abpLocalization }}
+                      </button>
+                      <div class="dropdown-divider"></div>
+                      <button
+                        *abpPermission="'Erp.RapidStart.Manage'"
+                        type="button"
+                        class="dropdown-item text-danger"
+                        (click)="deletePackage(pkg)"
+                      >
+                        <i class="fas fa-trash me-2"></i>{{ 'Erp::Delete' | abpLocalization }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+          @if (!packages.length) {
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">
+                {{ (loading ? 'Erp::Loading' : 'Erp::NoPackagesYet') | abpLocalization }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isCreateOpen" [busy]="isCreateBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ 'Erp::NewPackage' | abpLocalization }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="cp-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+        <input
+          id="cp-code"
+          type="text"
+          class="form-control font-monospace text-uppercase"
+          maxlength="20"
+          placeholder="e.g. SETUP"
+          [(ngModel)]="newCode"
+        />
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="cp-name">{{ 'Erp::PackageName' | abpLocalization }} *</label>
+        <input
+          id="cp-name"
+          type="text"
+          class="form-control"
+          maxlength="100"
+          [(ngModel)]="newPackageName"
+        />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="cp-version">{{ 'Erp::ProductVersion' | abpLocalization }}</label>
+        <input
+          id="cp-version"
+          type="text"
+          class="form-control"
+          maxlength="30"
+          placeholder="1.0"
+          [(ngModel)]="newProductVersion"
+        />
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="!canCreate" (click)="create()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>

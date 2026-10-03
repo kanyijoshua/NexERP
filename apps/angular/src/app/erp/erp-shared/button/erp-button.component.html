@@ -1,0 +1,37 @@
+<button
+  *ngIf="isGranted"
+  [type]="type"
+  class="erp-btn d-inline-flex align-items-center justify-content-center gap-2"
+  [ngClass]="buttonCssClass"
+  [disabled]="disabled || loading"
+  (click)="handleClick($event)"
+>
+  <!-- Loading spinner -->
+  <span
+    *ngIf="loading"
+    class="spinner-border spinner-border-sm"
+    role="status"
+    aria-hidden="true"
+  ></span>
+
+  <!-- Left Icon -->
+  <i *ngIf="!loading && icon && iconPosition === 'left'" [class]="icon"></i>
+
+  <!-- Button Content / Text -->
+  <span class="btn-content d-inline-flex align-items-center gap-1">
+    <ng-container *ngIf="loading && loadingText; else defaultContent">
+      {{ loadingText }}
+    </ng-container>
+    <ng-template #defaultContent>
+      <ng-content></ng-content>
+    </ng-template>
+  </span>
+
+  <!-- Right Icon -->
+  <i *ngIf="!loading && icon && iconPosition === 'right'" [class]="icon"></i>
+
+  <!-- Optional Badge -->
+  <span *ngIf="badge && !loading" class="badge rounded-pill ms-1" [ngClass]="badgeClass">
+    {{ badge }}
+  </span>
+</button>

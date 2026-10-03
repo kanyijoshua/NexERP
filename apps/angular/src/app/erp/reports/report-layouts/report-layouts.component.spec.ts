@@ -1,11 +1,13 @@
 import { ListService } from '@abp/ng.core';
 import { ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
+import { ReportLayoutBlock, ReportLayoutsComponent } from './report-layouts.component';
 import { ReportLayoutService, ReportLayoutType } from '@proxy/reporting';
 import { of } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
-import { ReportLayoutsComponent } from './report-layouts.component';
 
 describe('ReportLayoutsComponent', () => {
   const builtIn = '<!DOCTYPE html><html><body>{{Title}}</body></html>';
@@ -156,5 +158,176 @@ describe('ReportLayoutsComponent', () => {
     runQuery();
 
     expect(service.getList).toHaveBeenCalledWith({ reportName: undefined });
+  });
+
+  // --- Drag and Drop Blocks & Studio Tests ---
+
+  it('reorders blocks upon onDropBlock', () => {
+    component.openCreate();
+    const originalFirstId = component.blocks[0].id;
+    const originalSecondId = component.blocks[1].id;
+
+    const event = {
+      previousIndex: 0,
+      currentIndex: 1,
+    } as CdkDragDrop<ReportLayoutBlock[]>;
+
+    component.onDropBlock(event);
+
+    expect(component.blocks[0].id).toBe(originalSecondId);
+    expect(component.blocks[1].id).toBe(originalFirstId);
+  });
+
+  it('ignores onDropBlock if previousIndex equals currentIndex', () => {
+    component.openCreate();
+    const originalFirstId = component.blocks[0].id;
+
+    const event = {
+      previousIndex: 0,
+      currentIndex: 0,
+    } as CdkDragDrop<ReportLayoutBlock[]>;
+
+    component.onDropBlock(event);
+
+    expect(component.blocks[0].id).toBe(originalFirstId);
+  });
+
+  it('adds and removes blocks dynamically', () => {
+    component.openCreate();
+    const initialCount = component.blocks.length;
+
+    component.addBlock('notes');
+    expect(component.blocks.length).toBe(initialCount + 1);
+
+    const added = component.blocks[component.blocks.length - 1];
+    expect(added.type).toBe('notes');
+
+    component.removeBlock(added.id);
+    expect(component.blocks.length).toBe(initialCount);
+  });
+
+  it('toggles block enabled state', () => {
+    component.openCreate();
+    const block = component.blocks[0];
+    const initialStatus = block.enabled;
+
+    component.toggleBlock(block);
+    expect(block.enabled).toBe(!initialStatus);
+
+    component.toggleBlock(block);
+    expect(block.enabled).toBe(initialStatus);
+  });
+
+  it('moves blocks with moveBlock helper', () => {
+    component.openCreate();
+    const firstId = component.blocks[0].id;
+    const secondId = component.blocks[1].id;
+
+    // Move first block down
+    component.moveBlock(0, 1);
+    expect(component.blocks[1].id).toBe(firstId);
+    expect(component.blocks[0].id).toBe(secondId);
+
+    // Out of bounds move is ignored
+    component.moveBlock(0, -1);
+    expect(component.blocks[0].id).toBe(secondId);
+  });
+
+  it('toggles block expanded state', () => {
+    component.openCreate();
+    const block = component.blocks[0];
+    expect(block.expanded).toBeFalse();
+
+    component.toggleBlockExpand(block);
+    expect(block.expanded).toBeTrue();
+
+    component.toggleBlockExpand(block);
+    expect(block.expanded).toBeFalse();
+  });
+
+  it('applies theme primary color to blocks and regenerates html', () => {
+    component.openCreate();
+    component.applyThemeColor('#0284c7');
+
+    expect(component.themePrimaryColor).toBe('#0284c7');
+    const tableBlock = component.blocks.find(b => b.type === 'table');
+    expect(tableBlock?.config.headerBgColor).toBe('#0284c7');
+    expect(component.template).toContain('#0284c7');
+  });
+
+  it('switches view mode and updates preview', () => {
+    component.openCreate();
+
+    component.setViewMode('code');
+    expect(component.activeViewMode).toBe('code');
+
+    component.setViewMode('preview');
+    expect(component.activeViewMode).toBe('preview');
+    expect(component.livePreviewDoc).not.toBeNull();
+  });
+
+  it('changes paper format and clamps zoom scale', () => {
+    component.setPaperFormat('a4-landscape');
+    expect(component.paperFormat).toBe('a4-landscape');
+
+    component.setZoom(120);
+    expect(component.previewZoom).toBe(120);
+
+    // Clamped between 40 and 150
+    component.setZoom(200);
+    expect(component.previewZoom).toBe(150);
+
+    component.setZoom(10);
+    expect(component.previewZoom).toBe(40);
+  });
+
+  it('switches sample dataset and regenerates live preview with financial figures', () => {
+    component.openCreate();
+
+    component.setSampleDataset('balanceSheet');
+    expect(component.sampleDataset).toBe('balanceSheet');
+    expect(component.livePreviewDoc).not.toBeNull();
+
+    component.setSampleDataset('agedReceivables');
+    expect(component.sampleDataset).toBe('agedReceivables');
+    expect(component.livePreviewDoc).not.toBeNull();
+
+    component.setSampleDataset('incomeStatement');
+    expect(component.sampleDataset).toBe('incomeStatement');
+    expect(component.livePreviewDoc).not.toBeNull();
+  });
+
+  it('inserts placeholder tags into code textarea or appends to template', () => {
+    component.openCreate();
+
+    // Without textarea element
+    component.insertPlaceholder('{{CustomTag}}');
+    expect(component.template).toContain('{{CustomTag}}');
+
+    // With mock textarea element
+    const textareaEl = document.createElement('textarea');
+    textareaEl.value = 'Before After';
+    textareaEl.selectionStart = 7;
+    textareaEl.selectionEnd = 7;
+    component.codeTextarea = new ElementRef(textareaEl);
+
+    component.insertPlaceholder('[INSERTED]');
+    expect(component.template).toContain('Before [INSERTED]After');
+  });
+
+  it('triggers print on preview iframe when nativeElement exists', () => {
+    const mockWindow = {
+      focus: jasmine.createSpy('focus'),
+      print: jasmine.createSpy('print'),
+    };
+    const mockIframe = {
+      contentWindow: mockWindow,
+    } as unknown as HTMLIFrameElement;
+
+    component.previewIframe = new ElementRef(mockIframe);
+    component.printPreview();
+
+    expect(mockWindow.focus).toHaveBeenCalled();
+    expect(mockWindow.print).toHaveBeenCalled();
   });
 });
