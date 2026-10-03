@@ -15,68 +15,68 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Code",
                 table: "ErpCustomReportLayouts",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ReportID",
                 table: "ErpCustomReportLayouts",
-                type: "int",
+                type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "FileExtension",
                 table: "ErpCustomReportLayouts",
-                type: "nvarchar(30)",
+                type: "character varying(30)",
                 maxLength: 30,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "BuiltIn",
                 table: "ErpCustomReportLayouts",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "LastModifiedByUser",
                 table: "ErpCustomReportLayouts",
-                type: "nvarchar(256)",
+                type: "character varying(256)",
                 maxLength: 256,
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "LayoutLastUpdated",
                 table: "ErpCustomReportLayouts",
-                type: "datetime2",
+                type: "timestamp with time zone",
                 nullable: true);
 
             // --- ErpReportLayoutSelections ---
             migrationBuilder.AddColumn<int>(
                 name: "ReportID",
                 table: "ErpReportLayoutSelections",
-                type: "int",
+                type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "CustomReportLayoutCode",
                 table: "ErpReportLayoutSelections",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ReportLayoutDescription",
                 table: "ErpReportLayoutSelections",
-                type: "nvarchar(250)",
+                type: "character varying(250)",
                 maxLength: 250,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ReportCaption",
                 table: "ErpReportLayoutSelections",
-                type: "nvarchar(250)",
+                type: "character varying(250)",
                 maxLength: 250,
                 nullable: true);
 
@@ -84,161 +84,161 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "BlanketOrderNos",
                 table: "ErpPurchasesPayablesSetups",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PostedReceiptNos",
                 table: "ErpPurchasesPayablesSetups",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PostedReturnShptNos",
                 table: "ErpPurchasesPayablesSetups",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ReturnOrderNos",
                 table: "ErpPurchasesPayablesSetups",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "DiscountPosting",
                 table: "ErpPurchasesPayablesSetups",
-                type: "int",
+                type: "integer",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<bool>(
                 name: "ReceiptOnInvoice",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "InvoiceRounding",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CalcInvDiscount",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "AllowVATDifference",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CalcInvDiscPerVATID",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "ExactCostReversingMandatory",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "PostWithJobQueue",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "JobQueueCategoryCode",
                 table: "ErpPurchasesPayablesSetups",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "NotifyOnSuccess",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyCommentsBlanketToOrder",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyCommentsOrderToInvoice",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyCommentsOrderToReceipt",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyCommentsRetOrderToCrMemo",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyCommentsRetOrderToRetShpt",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "ReturnShipmentOnCreditMemo",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyVendorNameToEntries",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "CopyLineDescrToGLEntry",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "AllowMultiplePostingGroups",
                 table: "ErpPurchasesPayablesSetups",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
@@ -246,133 +246,133 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "SearchName",
                 table: "ErpVendors",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Name2",
                 table: "ErpVendors",
-                type: "nvarchar(50)",
+                type: "character varying(50)",
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Address2",
                 table: "ErpVendors",
-                type: "nvarchar(50)",
+                type: "character varying(50)",
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Contact",
                 table: "ErpVendors",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "OurAccountNo",
                 table: "ErpVendors",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipmentMethodCode",
                 table: "ErpVendors",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShippingAgentCode",
                 table: "ErpVendors",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "InvoiceDiscCode",
                 table: "ErpVendors",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "PricesIncludingVAT",
                 table: "ErpVendors",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "VATRegistrationNo",
                 table: "ErpVendors",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "HomePage",
                 table: "ErpVendors",
-                type: "nvarchar(80)",
+                type: "character varying(80)",
                 maxLength: 80,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxAreaCode",
                 table: "ErpVendors",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "TaxLiable",
                 table: "ErpVendors",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<bool>(
                 name: "BlockPaymentTolerance",
                 table: "ErpVendors",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "PrepaymentPct",
                 table: "ErpVendors",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<bool>(
                 name: "AllowMultiplePostingGroups",
                 table: "ErpVendors",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "MobilePhoneNo",
                 table: "ErpVendors",
-                type: "nvarchar(30)",
+                type: "character varying(30)",
                 maxLength: 30,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "LocationCode",
                 table: "ErpVendors",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "LeadTimeCalculation",
                 table: "ErpVendors",
-                type: "nvarchar(32)",
+                type: "character varying(32)",
                 maxLength: 32,
                 nullable: true);
 
@@ -380,202 +380,202 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "YourReference",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(35)",
+                type: "character varying(35)",
                 maxLength: 35,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToName",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToAddress",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToCity",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(50)",
+                type: "character varying(50)",
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToPostCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToCountryRegionCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PayToContact",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToName",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToAddress",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToCity",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(50)",
+                type: "character varying(50)",
                 maxLength: 50,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToPostCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToCountryRegionCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipToContact",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShipmentMethodCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PaymentMethodCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShortcutDimension1Code",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShortcutDimension2Code",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "VendorPostingGroup",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "GenBusPostingGroup",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "VatBusPostingGroup",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "PricesIncludingVat",
                 table: "ErpPurchaseHeaders",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "OnHold",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(3)",
+                type: "character varying(3)",
                 maxLength: 3,
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "AppliesToDocType",
                 table: "ErpPurchaseHeaders",
-                type: "int",
+                type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "AppliesToDocNo",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "AppliesToId",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxAreaCode",
                 table: "ErpPurchaseHeaders",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "TaxLiable",
                 table: "ErpPurchaseHeaders",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "PrepaymentPct",
                 table: "ErpPurchaseHeaders",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
@@ -583,104 +583,104 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "LocationCode",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "ExpectedReceiptDate",
                 table: "ErpPurchaseLines",
-                type: "datetime2",
+                type: "timestamp with time zone",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ItemCategoryCode",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShortcutDimension1Code",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ShortcutDimension2Code",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "QtyToReceive",
                 table: "ErpPurchaseLines",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "QuantityReceived",
                 table: "ErpPurchaseLines",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "QtyToInvoice",
                 table: "ErpPurchaseLines",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "QuantityInvoiced",
                 table: "ErpPurchaseLines",
-                type: "decimal(18,2)",
+                type: "numeric(18,2)",
                 nullable: false,
                 defaultValue: 0m);
 
             migrationBuilder.AddColumn<string>(
                 name: "DeferralCode",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxAreaCode",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "TaxLiable",
                 table: "ErpPurchaseLines",
-                type: "bit",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
                 name: "TaxGroupCode",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "GenBusPostingGroup",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "GenProdPostingGroup",
                 table: "ErpPurchaseLines",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
@@ -688,98 +688,98 @@ namespace ABPmicroservice.Erp.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "VendorName",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(100)",
+                type: "character varying(100)",
                 maxLength: 100,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "VendorPostingGroup",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "GlobalDimension1Code",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "GlobalDimension2Code",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PurchaserCode",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "UserId",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(256)",
+                type: "character varying(256)",
                 maxLength: 256,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "SourceCode",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "OnHold",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(3)",
+                type: "character varying(3)",
                 maxLength: 3,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "AppliesToDocType",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "AppliesToDocNo",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "AppliesToId",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(20)",
+                type: "character varying(20)",
                 maxLength: 20,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "JournalBatchName",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ExternalDocumentNo",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(35)",
+                type: "character varying(35)",
                 maxLength: 35,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PaymentMethodCode",
                 table: "ErpVendorLedgerEntries",
-                type: "nvarchar(10)",
+                type: "character varying(10)",
                 maxLength: 10,
                 nullable: true);
         }

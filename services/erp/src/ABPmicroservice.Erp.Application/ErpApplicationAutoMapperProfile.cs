@@ -65,7 +65,9 @@ public class ErpApplicationAutoMapperProfile : Profile
             .ForMember(d => d.Warning, o => o.Ignore());
         CreateMap<NoSeriesLine, NoSeriesLineDto>();
         CreateMap<SalesReceivablesSetup, SalesReceivablesSetupDto>();
-        CreateMap<PurchasesPayablesSetup, PurchasesPayablesSetupDto>();
+        CreateMap<PurchasesPayablesSetup, PurchasesPayablesSetupDto>()
+            .ForMember(d => d.CopyCommentsRetOrderToCrMemo, o => o.MapFrom(s => s.CopyCommentsRetOrdToCrMemo))
+            .ForMember(d => d.CopyCommentsRetOrderToRetShpt, o => o.MapFrom(s => s.CopyCommentsRetOrdToRetShpt));
 
         // Posting groups and setups
         CreateMap<GenBusinessPostingGroup, PostingGroupDto>();
@@ -136,8 +138,10 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ReportResult, ReportResultDto>();
         CreateMap<ReportColumnDefinition, ReportColumnDto>();
         CreateMap<ReportRow, ReportRowDto>();
-        CreateMap<CustomReportLayout, ReportLayoutDto>();
-        CreateMap<CustomReportLayout, ReportLayoutDetailDto>();
+        CreateMap<CustomReportLayout, ReportLayoutDto>()
+            .ForMember(d => d.ReportCaption, o => o.Ignore());
+        CreateMap<CustomReportLayout, ReportLayoutDetailDto>()
+            .ForMember(d => d.ReportCaption, o => o.Ignore());
         CreateMap<AccountSchedule, AccountScheduleDto>().ForMember(d => d.LineCount, o => o.Ignore());
         CreateMap<AccountScheduleLine, AccountScheduleLineDto>();
         CreateMap<ColumnLayout, ColumnLayoutDto>().ForMember(d => d.LineCount, o => o.Ignore());
