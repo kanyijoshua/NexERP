@@ -15,11 +15,11 @@ public enum ProfileSource
     /// <summary>One of the user's roles is assigned a profile.</summary>
     Role = 1,
 
-    /// <summary>The user picked it (Business Central "My Settings" → Role).</summary>
+    /// <summary>The user picked it.</summary>
     User = 2,
 }
 
-/// <summary>A profile a user can work as. Mirrors a Business Central "Profile (Role)".</summary>
+/// <summary>A profile a user can work as.</summary>
 public class ProfileDto
 {
     public string Id { get; set; }
@@ -33,7 +33,6 @@ public class ProfileDto
 
 /// <summary>
 /// One entry of a role center's navigation bar: a link, or a menu of links when it has children.
-/// Mirrors the navigation menus at the top of a Business Central role center.
 /// </summary>
 public class RoleCenterNavItemDto
 {
@@ -96,8 +95,8 @@ public class SetProfileRoleAssignmentInput
 }
 
 /// <summary>
-/// Profiles (roles) and the role center navigation they give. Business Central gives each user a
-/// profile that decides their role center; here it can also come from the user's roles.
+/// Profiles (roles) and the role center navigation they give. Each user has a
+/// profile that decides their role center; it can also come from the user's roles.
 /// </summary>
 public interface IProfileAppService : IApplicationService
 {

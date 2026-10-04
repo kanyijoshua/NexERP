@@ -11,8 +11,8 @@ namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
 /// The posting groups and setups as the rest of the ledger sees them: checks that a code a record
-/// points at exists (BC's TableRelation), and turns a pair of posting groups into the G/L account
-/// a posting needs, refusing a missing setup or a blank account the way BC's TestField does.
+/// points at exists, and turns a pair of posting groups into the G/L account
+/// a posting needs, refusing a missing setup or a blank account.
 /// </summary>
 public class PostingSetupManager : DomainService
 {
@@ -71,7 +71,7 @@ public class PostingSetupManager : DomainService
         return setup;
     }
 
-    /// <summary>The revenue account of a sales line (BC "Sales Account" / "Sales Credit Memo Account").</summary>
+    /// <summary>The revenue account of a sales line.</summary>
     public async Task<string> GetSalesAccountAsync(string genBusPostingGroup, string genProdPostingGroup, bool creditMemo = false)
     {
         var setup = await GetGeneralPostingSetupAsync(genBusPostingGroup, genProdPostingGroup);
@@ -80,7 +80,7 @@ public class PostingSetupManager : DomainService
             : Required(setup, setup.SalesAccountNo, "Sales Account");
     }
 
-    /// <summary>The expense account of a purchase line (BC "Purch. Account" / "Purch. Credit Memo Account").</summary>
+    /// <summary>The expense account of a purchase line.</summary>
     public async Task<string> GetPurchaseAccountAsync(string genBusPostingGroup, string genProdPostingGroup, bool creditMemo = false)
     {
         var setup = await GetGeneralPostingSetupAsync(genBusPostingGroup, genProdPostingGroup);
@@ -164,7 +164,7 @@ public class PostingSetupManager : DomainService
         return setup.InventoryAccountNo;
     }
 
-    /// <summary>The COGS account of an item sold to a party of this business group (BC "COGS Account").</summary>
+    /// <summary>The COGS account of an item sold to a party of this business group.</summary>
     public async Task<string> GetCogsAccountAsync(string genBusPostingGroup, string genProdPostingGroup)
     {
         var setup = await GetGeneralPostingSetupAsync(genBusPostingGroup, genProdPostingGroup);

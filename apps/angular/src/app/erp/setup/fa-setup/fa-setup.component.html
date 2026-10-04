@@ -1,0 +1,55 @@
+<erp-page-toolbar
+  title="Erp::FASetups"
+  breadcrumb="Erp::Menu:FixedAssets"
+  icon="fas fa-gears"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card border-0 shadow-sm" style="max-width: 720px">
+    <div class="card-body">
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="fa-nos">{{ 'Erp::FixedAssetNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="fa-nos" class="form-select form-select-sm" formControlName="fixedAssetNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="fa-book">{{ 'Erp::DefaultDeprBook' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="fa-book" formControlName="defaultDeprBook" entity="depreciationBook"></erp-lookup>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="fa-from">{{ 'Erp::AllowFAPostingFrom' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="fa-from" type="date" class="form-control form-control-sm" formControlName="allowFAPostingFrom" />
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="fa-to">{{ 'Erp::AllowFAPostingTo' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="fa-to" type="date" class="form-control form-control-sm" formControlName="allowFAPostingTo" />
+        </div>
+      </div>
+      <div class="form-check form-switch">
+        <input id="fa-main" type="checkbox" class="form-check-input" formControlName="allowPostingToMainAssets" />
+        <label class="form-check-label" for="fa-main">{{ 'Erp::AllowPostingToMainAssets' | abpLocalization }}</label>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.FixedAssetSetup.Update'" class="mt-3" style="max-width: 720px">
+    <div class="text-end">
+      <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+        {{ 'Erp::Save' | abpLocalization }}
+      </abp-button>
+    </div>
+  </div>
+</form>

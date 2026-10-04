@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Attachments;
 using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
@@ -8,8 +9,11 @@ using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Integration;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.JobQueue;
+using ABPmicroservice.Erp.Academics;
+using ABPmicroservice.Erp.Payroll;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
+using ABPmicroservice.Erp.Pensions;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
@@ -159,6 +163,86 @@ public class ErpApplicationAutoMapperProfile : Profile
 
         // Chatter and Kanban
         CreateMap<DocumentNote, DocumentNoteDto>();
+        CreateMap<DocumentAttachment, DocumentAttachmentDto>();
+
+        // Pensions
+        CreateMap<PensionSetup, PensionSetupDto>();
+        CreateMap<PensionScheme, PensionSchemeDto>();
+        CreateMap<PensionSponsor, PensionSponsorDto>();
+        CreateMap<PensionMember, PensionMemberDto>();
+        CreateMap<MemberLedgerEntry, MemberLedgerEntryDto>();
+        CreateMap<PensionContributionHeader, PensionContributionHeaderDto>();
+        CreateMap<PensionContributionLine, PensionContributionLineDto>();
+        CreateMap<PensionInterestRate, PensionInterestRateDto>();
+        CreateMap<ExitReason, ExitReasonDto>();
+        CreateMap<LumpsumTaxTable, LumpsumTaxTableDto>();
+        CreateMap<LumpsumTaxBand, LumpsumTaxBandDto>();
+        CreateMap<MemberExit, MemberExitDto>();
+
+        // Academics
+        CreateMap<AcademicSetup, AcademicSetupDto>();
+        CreateMap<AcademicYear, AcademicYearDto>();
+        CreateMap<Semester, SemesterDto>();
+        CreateMap<Intake, IntakeDto>();
+        CreateMap<ExamCategory, ExamCategoryDto>();
+        CreateMap<GradingBand, GradingBandDto>();
+        CreateMap<ExamComponent, ExamComponentDto>();
+        CreateMap<Programme, ProgrammeDto>();
+        CreateMap<ProgrammeStage, ProgrammeStageDto>();
+        CreateMap<CourseUnit, CourseUnitDto>();
+        CreateMap<FeeItem, FeeItemDto>();
+        CreateMap<FeeStructureLine, FeeStructureLineDto>();
+        CreateMap<StudentApplication, StudentApplicationDto>();
+        CreateMap<Student, StudentDto>();
+        CreateMap<SemesterRegistration, SemesterRegistrationDto>();
+        CreateMap<StudentUnit, StudentUnitDto>();
+        CreateMap<StudentBillHeader, StudentBillHeaderDto>();
+        CreateMap<StudentBillLine, StudentBillLineDto>();
+        CreateMap<ExamResultHeader, ExamResultHeaderDto>();
+        CreateMap<ExamResultLine, ExamResultLineDto>();
+        CreateMap<StudentReceipt, StudentReceiptDto>();
+        CreateMap<StudentRefund, StudentRefundDto>();
+        CreateMap<StudentStatusChange, StudentStatusChangeDto>();
+
+        // Pensioners and pension payroll
+        CreateMap<Pensioner, PensionerDto>();
+        CreateMap<PensionPayrollHeader, PensionPayrollHeaderDto>();
+        CreateMap<PensionPayrollLine, PensionPayrollLineDto>();
+        CreateMap<PensionBenefitCalculation, PensionBenefitCalculationDto>();
+
+        // Payroll
+        CreateMap<PayrollSetup, PayrollSetupDto>();
+        CreateMap<PayrollEarning, PayrollEarningDto>();
+        CreateMap<PayrollDeduction, PayrollDeductionDto>();
+        CreateMap<PayrollTaxBand, PayrollTaxBandDto>();
+        CreateMap<EmployeePayItem, EmployeePayItemDto>();
+        CreateMap<PayrollRun, PayrollRunDto>();
+        CreateMap<Payslip, PayslipDto>();
+        CreateMap<PayslipLine, PayslipLineDto>();
+
+        // Campus: timetable, attendance, hostels, infirmary, laundry, short courses
+        CreateMap<LectureRoom, LectureRoomDto>();
+        CreateMap<TimetableEntry, TimetableEntryDto>();
+        CreateMap<AttendanceRegister, AttendanceRegisterDto>();
+        CreateMap<AttendanceLine, AttendanceLineDto>();
+        CreateMap<Hostel, HostelDto>();
+        CreateMap<HostelRoom, HostelRoomDto>();
+        CreateMap<HostelAllocation, HostelAllocationDto>();
+        CreateMap<ClinicVisit, ClinicVisitDto>();
+        CreateMap<ClinicPrescription, ClinicPrescriptionDto>();
+        CreateMap<LaundryItem, LaundryItemDto>();
+        CreateMap<LaundryOrder, LaundryOrderDto>();
+        CreateMap<LaundryOrderLine, LaundryOrderLineDto>();
+        CreateMap<ShortCourse, ShortCourseDto>();
+        CreateMap<ShortCourseApplication, ShortCourseApplicationDto>();
+        CreateMap<ShortCourseParticipant, ShortCourseParticipantDto>();
+
+        // Payment vouchers
+        CreateMap<CashManagementSetup, CashManagementSetupDto>();
+        CreateMap<PaymentDeductionCode, PaymentDeductionCodeDto>();
+        CreateMap<PaymentType, PaymentTypeDto>();
+        CreateMap<PaymentVoucherHeader, PaymentVoucherHeaderDto>();
+        CreateMap<PaymentVoucherLine, PaymentVoucherLineDto>();
         CreateMap<ActivityStreamEntry, ActivityStreamEntryDto>();
         CreateMap<DocumentActivityTask, DocumentActivityTaskDto>();
         CreateMap<KanbanStage, KanbanStageDto>();

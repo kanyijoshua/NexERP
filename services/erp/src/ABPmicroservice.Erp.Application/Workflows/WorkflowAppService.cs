@@ -61,7 +61,7 @@ public class WorkflowAppService : ErpAppService, IWorkflowAppService
     {
         var workflow = await _workflowRepository.GetAsync(id);
 
-        // As in Business Central, an enabled workflow is read-only: requests may be in flight under its rules.
+        // An enabled workflow is read-only: requests may be in flight under its rules.
         if (workflow.Enabled)
         {
             throw new UserFriendlyException(L["Workflow:DisableBeforeEditing"]);

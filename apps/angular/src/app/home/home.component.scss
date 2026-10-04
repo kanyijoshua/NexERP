@@ -1,4 +1,4 @@
-// A Business Central Role Center: company and actions on top, then the cues as solid tiles,
+// A Role Center: company and actions on top, then the cues as solid tiles,
 // grouped under headings. Colours come from the --erp-* tokens in styles.scss.
 
 .role-center {
@@ -49,7 +49,7 @@
   color: var(--erp-ink-muted);
 }
 
-/* Section headings carry a rule under it, like BC's "… Activities" band. */
+/* Section headings carry a rule under it, as an "… Activities" band. */
 .role-center__heading {
   margin: 0 0 1.25rem;
   padding-bottom: 0.5rem;
@@ -64,7 +64,7 @@
   font-size: 0.9rem;
 }
 
-/* ---- Apps: Odoo's home screen, a coloured rounded icon over the name ---- */
+/* ---- Apps: a coloured rounded icon over the name ---- */
 
 .apps {
   display: grid;

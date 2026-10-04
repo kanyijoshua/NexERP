@@ -1,0 +1,36 @@
+<erp-page-toolbar
+  title="Erp::CashManagementSetup"
+  breadcrumb="Erp::Menu:CashManagement"
+  icon="fas fa-building-columns"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::CashManagementSetupHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card border-0 shadow-sm" style="max-width: 760px">
+    <div class="card-header bg-light fw-semibold">{{ 'Erp::Numbering' | abpLocalization }}</div>
+    <div class="card-body">
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="cm-voucher-nos">{{ 'Erp::PaymentVoucherNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="cm-voucher-nos" class="form-select form-select-sm" formControlName="paymentVoucherNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.PaymentVoucherSetup.Update'" class="mt-3" style="max-width: 760px">
+    <div class="text-end">
+      <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+        {{ 'Erp::Save' | abpLocalization }}
+      </abp-button>
+    </div>
+  </div>
+</form>

@@ -1,3 +1,4 @@
+import type { ApplicationMethod } from '../finance/application-method.enum';
 import type { SalesDocumentType } from './sales-document-type.enum';
 import type { CreditWarnings } from './credit-warnings.enum';
 import type { VatCalculationType } from '../finance/vat-calculation-type.enum';
@@ -23,6 +24,38 @@ export interface CreateUpdateCustomerDto {
   salespersonCode?: string;
   paymentMethodCode?: string;
   currencyCode?: string;
+  searchName?: string;
+  name2?: string;
+  address2?: string;
+  county?: string;
+  contact?: string;
+  mobilePhoneNo?: string;
+  homePage?: string;
+  vatRegistrationNo?: string;
+  registrationNumber?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  languageCode?: string;
+  locationCode?: string;
+  shipmentMethodCode?: string;
+  responsibilityCenter?: string;
+  customerPriceGroup?: string;
+  customerDiscGroup?: string;
+  invoiceDiscCode?: string;
+  finChargeTermsCode?: string;
+  reminderTermsCode?: string;
+  applicationMethod?: ApplicationMethod;
+  pricesIncludingVat?: boolean;
+  taxAreaCode?: string;
+  taxLiable?: boolean;
+  blockPaymentTolerance?: boolean;
+  prepaymentPct?: number;
+  printStatements?: boolean;
+  lastStatementNo?: number;
+  combineShipments?: boolean;
+  preferredBankAccountCode?: string;
+  primaryContactNo?: string;
+  privacyBlocked?: boolean;
 }
 
 export interface CreateUpdateSalesHeaderDto {
@@ -57,6 +90,38 @@ export interface CustomerDto extends FullAuditedEntityDto<string> {
   paymentMethodCode?: string;
   currencyCode?: string;
   blocked: boolean;
+  searchName?: string;
+  name2?: string;
+  address2?: string;
+  county?: string;
+  contact?: string;
+  mobilePhoneNo?: string;
+  homePage?: string;
+  vatRegistrationNo?: string;
+  registrationNumber?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  languageCode?: string;
+  locationCode?: string;
+  shipmentMethodCode?: string;
+  responsibilityCenter?: string;
+  customerPriceGroup?: string;
+  customerDiscGroup?: string;
+  invoiceDiscCode?: string;
+  finChargeTermsCode?: string;
+  reminderTermsCode?: string;
+  applicationMethod: ApplicationMethod;
+  pricesIncludingVat: boolean;
+  taxAreaCode?: string;
+  taxLiable: boolean;
+  blockPaymentTolerance: boolean;
+  prepaymentPct: number;
+  printStatements: boolean;
+  lastStatementNo: number;
+  combineShipments: boolean;
+  preferredBankAccountCode?: string;
+  primaryContactNo?: string;
+  privacyBlocked: boolean;
 }
 
 export interface GetCustomerListInput extends PagedAndSortedResultRequestDto {

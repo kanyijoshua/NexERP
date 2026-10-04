@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Purchasing;
 
-/// <summary>
-/// Mirrors Business Central "Discount Posting" option in Purchases &amp; Payables Setup.
-/// </summary>
 public enum PurchasingDiscountPosting
 {
     AllDiscounts = 0,

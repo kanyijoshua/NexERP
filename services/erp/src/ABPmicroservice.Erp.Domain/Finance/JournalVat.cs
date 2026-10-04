@@ -6,7 +6,7 @@ namespace ABPmicroservice.Erp.Finance;
 public readonly record struct JournalVatAmounts(decimal Base, decimal Vat);
 
 /// <summary>
-/// VAT on a general journal line. Mirrors the VAT fields Business Central table 81 calculates:
+/// VAT on a general journal line. Calculates the line's VAT fields:
 /// a journal amount includes VAT (the amount paid or received), unlike a document line.
 /// </summary>
 public static class JournalVat

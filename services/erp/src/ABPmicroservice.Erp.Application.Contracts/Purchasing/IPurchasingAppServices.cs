@@ -36,7 +36,7 @@ public interface IPurchaseDocumentAppService
 
     /// <summary>
     /// Posts the document: creates G/L entries, item ledger entries and
-    /// updates the vendor balance. Mirrors BC "Post" codeunit behaviour.
+    /// updates the vendor balance.
     /// Routed as POST /api/erp/purchase-document/{id}/run-posting.
     /// </summary>
     Task<PurchaseHeaderDto> RunPostingAsync(Guid id);

@@ -98,7 +98,7 @@ public class ConfigPackageAppService_Tests : ErpApplicationTestBase
         customers.ShouldContain(c => c.No == "C00010" && c.Name == "Adatum Corporation");
     }
 
-    /// <summary>BC's round trip: export to Excel, change it there, import it back into the package.</summary>
+    /// <summary>The round trip: export to Excel, change it there, import it back into the package.</summary>
     [Fact]
     public async Task An_Excel_Export_Can_Be_Imported_Back()
     {
@@ -161,7 +161,7 @@ public class ConfigPackageAppService_Tests : ErpApplicationTestBase
         detail.Tables.Single().NoOfErrors.ShouldBe(0);
     }
 
-    /// <summary>A field mapping turns an old system's code into this one's (BC's "Config. Field Mapping").</summary>
+    /// <summary>A field mapping turns an old system's code into this one's.</summary>
     [Fact]
     public async Task Field_Mappings_And_Excluded_Fields_Are_Honoured()
     {

@@ -1,0 +1,19 @@
+.erp-formula-bar {
+  border-bottom: 1px solid var(--bs-border-color);
+
+  .input-group-text,
+  .form-control {
+    border-radius: 0;
+    border-top: 0;
+  }
+}
+
+.erp-cell-address {
+  min-width: 4.5rem;
+  justify-content: center;
+}
+
+.erp-spreadsheet-host {
+  overflow: hidden;
+  min-height: 0;
+}

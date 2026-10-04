@@ -8,8 +8,7 @@ namespace ABPmicroservice.Erp.Modules;
 /// <summary>
 /// One installable area of the system.
 /// <para>
-/// Odoo calls these apps and lets you install and uninstall them; Business Central calls the
-/// equivalent extensions and features, and turns them on per company. This follows both: a module
+/// A module can be installed and uninstalled like an app, and that is done per company: a module
 /// is switched on or off for one company, and switching it off hides its screens and closes its
 /// endpoints without touching a row of its data.
 /// </para>
@@ -81,6 +80,10 @@ public static class ErpModuleRegistry
     public const string Kanban = "Kanban";
     public const string CashManagement = "CashManagement";
     public const string HumanResources = "HumanResources";
+    public const string FixedAssets = "FixedAssets";
+    public const string Pensions = "Pensions";
+    public const string Academics = "Academics";
+    public const string Payroll = "Payroll";
 
     private static readonly List<ErpModuleDefinition> Definitions =
     [
@@ -95,7 +98,7 @@ public static class ErpModuleRegistry
             "/erp/setup",
             true,
             [],
-            ["Companies", "Dimensions", "Numbering", "Home", "Modules", "Theming", "Profiles", "JobQueue"]
+            ["Companies", "Dimensions", "Numbering", "Home", "Modules", "Theming", "Profiles", "JobQueue", "Attachments"]
         ),
 
         // The general ledger is the backbone every posting module writes to.
@@ -106,6 +109,10 @@ public static class ErpModuleRegistry
         new(Inventory, GroupOperations, "fas fa-boxes-stacked", null, false, [Finance], ["Inventory"]),
         new(CashManagement, GroupFinance, "fas fa-building-columns", "/erp/bank-accounts", false, [Finance], ["CashManagement"]),
         new(HumanResources, GroupOperations, "fas fa-id-badge", "/erp/employees", false, [], ["HumanResources"]),
+        new(FixedAssets, GroupFinance, "fas fa-building", "/erp/fixed-assets", false, [Finance], ["FixedAssets"]),
+        new(Pensions, GroupOperations, "fas fa-piggy-bank", "/erp/pension-members", false, [Finance], ["Pensions"]),
+        new(Academics, GroupOperations, "fas fa-graduation-cap", "/erp/students", false, [Finance], ["Academics"]),
+        new(Payroll, GroupOperations, "fas fa-money-check-dollar", "/erp/payroll-runs", false, [Finance, HumanResources], ["Payroll"]),
         new(Reporting, GroupFinance, "fas fa-chart-line", "/erp/reports/financial", false, [Finance], ["Reporting"]),
         new(Approvals, GroupCollaboration, "fas fa-user-check", "/erp/approvals", false, [], ["Workflows"]),
         new(Chatter, GroupCollaboration, "fas fa-comments", null, false, [], ["Chatter"]),

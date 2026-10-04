@@ -12,6 +12,8 @@ public class PaymentTermsDto : CodeTableDto
     public string DueDateCalculation { get; set; }
     public string DiscountDateCalculation { get; set; }
     public decimal DiscountPercent { get; set; }
+
+    public bool CalcPmtDiscOnCrMemos { get; set; }
 }
 
 public class CreateUpdatePaymentTermsDto : CreateUpdateCodeTableDto
@@ -25,6 +27,8 @@ public class CreateUpdatePaymentTermsDto : CreateUpdateCodeTableDto
 
     [Range(0, 100)]
     public decimal DiscountPercent { get; set; }
+
+    public bool CalcPmtDiscOnCrMemos { get; set; }
 }
 
 public class CurrencyDto : CodeTableDto
@@ -35,6 +39,18 @@ public class CurrencyDto : CodeTableDto
     public string RealizedLossesAccountNo { get; set; }
     public string UnrealizedGainsAccountNo { get; set; }
     public string UnrealizedLossesAccountNo { get; set; }
+
+    public string IsoCode { get; set; }
+    public string IsoNumericCode { get; set; }
+    public decimal UnitAmountRoundingPrecision { get; set; }
+    public decimal InvoiceRoundingPrecision { get; set; }
+    public CurrencyInvoiceRoundingType InvoiceRoundingType { get; set; }
+    public decimal ApplnRoundingPrecision { get; set; }
+    public string AmountDecimalPlaces { get; set; }
+    public string UnitAmountDecimalPlaces { get; set; }
+    public bool EmuCurrency { get; set; }
+    public decimal PaymentTolerancePct { get; set; }
+    public decimal MaxPaymentToleranceAmount { get; set; }
 }
 
 public class CreateUpdateCurrencyDto : CreateUpdateCodeTableDto
@@ -55,6 +71,32 @@ public class CreateUpdateCurrencyDto : CreateUpdateCodeTableDto
 
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string UnrealizedLossesAccountNo { get; set; }
+
+    [StringLength(3)]
+    public string IsoCode { get; set; }
+
+    [StringLength(3)]
+    public string IsoNumericCode { get; set; }
+
+    public decimal UnitAmountRoundingPrecision { get; set; }
+
+    public decimal InvoiceRoundingPrecision { get; set; }
+
+    public CurrencyInvoiceRoundingType InvoiceRoundingType { get; set; }
+
+    public decimal ApplnRoundingPrecision { get; set; }
+
+    [StringLength(5)]
+    public string AmountDecimalPlaces { get; set; }
+
+    [StringLength(5)]
+    public string UnitAmountDecimalPlaces { get; set; }
+
+    public bool EmuCurrency { get; set; }
+
+    public decimal PaymentTolerancePct { get; set; }
+
+    public decimal MaxPaymentToleranceAmount { get; set; }
 }
 
 public class CurrencyExchangeRateDto : FullAuditedEntityDto<Guid>
@@ -123,10 +165,10 @@ public interface IAccountingPeriodAppService : IApplicationService
 {
     Task<PagedResultDto<AccountingPeriodDto>> GetListAsync(GetAccountingPeriodListInput input);
 
-    /// <summary>BC "Create Year". Routed as POST /api/erp/accounting-period/new-fiscal-year.</summary>
+    /// <summary>Create Year. Routed as POST /api/erp/accounting-period/new-fiscal-year.</summary>
     Task<ListResultDto<AccountingPeriodDto>> NewFiscalYearAsync(NewFiscalYearDto input);
 
-    /// <summary>BC "Close Year": closes the oldest open fiscal year.</summary>
+    /// <summary>Close Year: closes the oldest open fiscal year.</summary>
     Task<FiscalYearClosedDto> CloseFiscalYearAsync();
 
     Task DeleteAsync(Guid id);

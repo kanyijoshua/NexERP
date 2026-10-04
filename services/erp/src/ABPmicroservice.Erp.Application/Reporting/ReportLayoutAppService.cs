@@ -13,9 +13,9 @@ namespace ABPmicroservice.Erp.Reporting;
 /// <summary>
 /// Report layouts: what a report looks like when it is printed.
 /// <para>
-/// Mirrors Business Central's Report Layouts page — list the layouts of a report, add your own,
+///Layouts page — list the layouts of a report, add your own,
 /// and pick which one this company prints through. A layout is held as text, so the client can
-/// download one, edit it and upload it again exactly as BC does with Word and Excel layouts.
+/// download one, edit it and upload it again exactly with Word and Excel layouts.
 /// </para>
 /// </summary>
 [Authorize(ErpPermissions.ReportLayouts.Default)]
@@ -85,6 +85,14 @@ public class ReportLayoutAppService : ErpAppService, IReportLayoutAppService
                     Name = ReportLayoutNames.For(ReportKind.AccountSchedule, schedule.Name),
                     DisplayName = schedule.Description.IsNullOrWhiteSpace() ? schedule.Name : schedule.Description,
                 })
+        );
+
+        // The reports of the standard catalog print through layouts too.
+        names.AddRange(
+            LazyServiceProvider
+                .LazyGetRequiredService<StandardReportCatalog>()
+                .GetAll()
+                .Select(report => new ReportNameDto { Name = ReportLayoutNames.ForStandardReport(report.Code), DisplayName = report.Name })
         );
 
         return new ListResultDto<ReportNameDto>(names);
@@ -206,6 +214,59 @@ public class ReportLayoutAppService : ErpAppService, IReportLayoutAppService
                 new ReportRenderContext { CompanyName = CurrentCompany.Name, PrintedOn = Clock.Now }
             )
         );
+    }
+
+    [Authorize(ErpPermissions.ReportLayouts.Manage)]
+    public async Task<RdlcImportResultDto> ImportRdlcAsync(ImportRdlcLayoutInput input)
+    {
+        // Refused on the encoded length, before the file is decoded into memory.
+        if ((input.ContentBase64?.Length ?? 0) / 4L * 3 > RdlcLayoutConverter.MaxRdlcBytes)
+        {
+            throw new BusinessException(ErpErrorCodes.Reports.RdlcTooLarge)
+                .WithData("maxSize", RdlcLayoutConverter.MaxRdlcBytes / (1024 * 1024) + " MB");
+        }
+
+        string rdlc;
+        try
+        {
+            rdlc = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(input.ContentBase64 ?? string.Empty));
+        }
+        catch (FormatException)
+        {
+            throw new BusinessException(ErpErrorCodes.Reports.RdlcNotValid);
+        }
+
+        await EnsureNameIsFreeAsync(input.ReportName, input.LayoutName);
+
+        var columns = await LazyServiceProvider.LazyGetRequiredService<ReportColumnsResolver>().GetAsync(input.ReportName);
+        var conversion = RdlcLayoutConverter.Convert(rdlc, columns);
+
+        var layout = new CustomReportLayout(
+            GuidGenerator.Create(),
+            input.ReportName,
+            input.LayoutName,
+            ReportLayoutType.Html,
+            conversion.Template,
+            input.Description.IsNullOrWhiteSpace() ? "Converted from an RDLC layout" : input.Description,
+            lastModifiedByUser: CurrentUser.UserName
+        );
+
+        await _layoutRepository.InsertAsync(layout, autoSave: true);
+
+        if (input.SetAsDefault)
+        {
+            await SetDefaultAsync(new SetDefaultReportLayoutInput { ReportName = input.ReportName, LayoutId = layout.Id });
+        }
+
+        return new RdlcImportResultDto
+        {
+            Layout = ObjectMapper.Map<CustomReportLayout, ReportLayoutDto>(layout),
+            MatchedColumns = conversion.MatchedColumns,
+            Columns = conversion.Columns
+                .Select(c => new RdlcColumnMatchDto { Caption = c.Caption, RdlcField = c.RdlcField, ReportColumnKey = c.ReportColumnKey })
+                .ToList(),
+            Notes = conversion.Notes.ToList(),
+        };
     }
 
     private static ReportResult SampleResult()

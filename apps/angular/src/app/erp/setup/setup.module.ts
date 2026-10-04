@@ -1,4 +1,5 @@
 import { permissionGuard } from '@abp/ng.core';
+import { moduleGuard } from '../services/module.guard';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -8,6 +9,11 @@ import { ApprovalUserSetupComponent } from './approval-user-setup/approval-user-
 import { DataExportComponent } from './data-export/data-export.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
 import { GeneralLedgerSetupComponent } from './general-ledger-setup/general-ledger-setup.component';
+import { FaSetupComponent } from './fa-setup/fa-setup.component';
+import { PensionSetupComponent } from './pension-setup/pension-setup.component';
+import { AcademicSetupComponent } from './academic-setup/academic-setup.component';
+import { CashManagementSetupComponent } from './cash-management-setup/cash-management-setup.component';
+import { PayrollSetupComponent } from './payroll-setup/payroll-setup.component';
 import { HumanResourcesSetupComponent } from './human-resources-setup/human-resources-setup.component';
 import { InventorySetupComponent } from './inventory-setup/inventory-setup.component';
 import { ModulesComponent } from './modules/modules.component';
@@ -44,6 +50,36 @@ const routes: Routes = [
     component: HumanResourcesSetupComponent,
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.HumanResourcesSetup' },
+  },
+  {
+    path: 'fa-setup',
+    component: FaSetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.FixedAssetSetup' },
+  },
+  {
+    path: 'pension-setup',
+    component: PensionSetupComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { requiredPolicy: 'Erp.PensionSetup', module: 'Pensions' },
+  },
+  {
+    path: 'academic-setup',
+    component: AcademicSetupComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { requiredPolicy: 'Erp.AcademicSetup', module: 'Academics' },
+  },
+  {
+    path: 'cash-management',
+    component: CashManagementSetupComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { requiredPolicy: 'Erp.PaymentVoucherSetup', module: 'CashManagement' },
+  },
+  {
+    path: 'payroll',
+    component: PayrollSetupComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { requiredPolicy: 'Erp.PayrollSetup', module: 'Payroll' },
   },
   {
     path: 'no-series',
@@ -117,6 +153,11 @@ const routes: Routes = [
     GeneralLedgerSetupComponent,
     InventorySetupComponent,
     HumanResourcesSetupComponent,
+    FaSetupComponent,
+    PensionSetupComponent,
+    AcademicSetupComponent,
+    CashManagementSetupComponent,
+    PayrollSetupComponent,
     WorkflowsComponent,
     ApprovalUserSetupComponent,
     WebServicesComponent,

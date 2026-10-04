@@ -168,7 +168,7 @@ public class JobQueueEntry_Tests
         var entryId = Guid.NewGuid();
         var entry = new JobQueueEntry(
             entryId,
-            "BC Base Object Job",
+            "Base Object Job",
             "SalesPostBatch",
             categoryCode: "SALES",
             userId: "admin@domain.com",

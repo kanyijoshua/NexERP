@@ -5,16 +5,16 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// General Journal Template. Mirrors Business Central table 80 "Gen. Journal Template".
+/// General Journal Template.
 /// <para>
 /// A template is the kind of journal (general, cash receipts, payments, …). Its batches are the
 /// individual worksheets people post from. Recurring templates get the extra recurring columns
-/// on their lines, exactly as the BC recurring general journal does.
+/// on their lines.
 /// </para>
 /// </summary>
 public class GenJournalTemplate : CompanyAggregateRoot
 {
-    /// <summary>Business key, e.g. "GENERAL" or "CASHRECPT". Mirrors BC field "Name".</summary>
+    /// <summary>Business key, e.g. "GENERAL" or "CASHRECPT".</summary>
     public string Name { get; private set; }
 
     public string Description { get; private set; }
@@ -24,7 +24,7 @@ public class GenJournalTemplate : CompanyAggregateRoot
     /// <summary>Lines of batches under a recurring template carry a method and a frequency.</summary>
     public bool Recurring { get; private set; }
 
-    /// <summary>Stamped on every entry posted from this template. Mirrors BC "Source Code".</summary>
+    /// <summary>Stamped on every entry posted from this template.</summary>
     public string SourceCode { get; private set; }
 
     /// <summary>Default number series for the document numbers of new lines.</summary>
@@ -62,7 +62,7 @@ public class GenJournalTemplate : CompanyAggregateRoot
         NoSeriesCode = Check.Length(noSeriesCode, nameof(noSeriesCode), ErpDomainConsts.MaxNoSeriesCodeLength)?.ToUpperInvariant();
     }
 
-    /// <summary>Template and batch names are codes in Business Central, so they are upper-cased.</summary>
+    /// <summary>Template and batch names are codes, so they are upper-cased.</summary>
     internal static string NormalizeName(string name)
     {
         return Check

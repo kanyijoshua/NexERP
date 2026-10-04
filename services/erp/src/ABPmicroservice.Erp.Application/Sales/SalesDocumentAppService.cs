@@ -63,7 +63,7 @@ public class SalesDocumentAppService
 
         var customer = await GetSellableCustomerAsync(input.CustomerId);
 
-        // Blank takes the next number of the series set up for this document type (BC: InitSeries).
+        // Blank takes the next number of the series set up for this document type.
         var setup = await _setupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.GetDocumentNos(input.DocumentType), input.No, input.PostingDate);
 
@@ -96,7 +96,7 @@ public class SalesDocumentAppService
 
         var header = await GetEntityByIdAsync(id);
 
-        // A released document is frozen until it is reopened, as in Business Central.
+        // A released document is frozen until it is reopened.
         if (header.Status != DocumentStatus.Open)
         {
             throw new DocumentNotOpenException(header.No);
@@ -239,7 +239,7 @@ public class SalesDocumentAppService
 
     /// <summary>
     /// The header fields; payment terms and currency default to the customer's, and a blank due
-    /// date follows from the payment terms, as BC fills them in from the customer.
+    /// date follows from the payment terms.
     /// </summary>
     private async Task ApplyHeaderAsync(SalesHeader header, CreateUpdateSalesHeaderDto input, Customer customer)
     {
@@ -260,7 +260,7 @@ public class SalesDocumentAppService
     }
 
     /// <summary>
-    /// BC's credit limit check on release: a customer with a credit limit may not be sold more than
+    /// The credit limit check on release: a customer with a credit limit may not be sold more than
     /// the limit allows. A credit limit of zero means no limit.
     /// </summary>
     private async Task EnsureWithinCreditLimitAsync(SalesHeader header)

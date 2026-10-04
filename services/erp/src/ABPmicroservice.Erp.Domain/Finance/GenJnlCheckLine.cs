@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
 /// Checks a general journal line before it is posted.
-/// Mirrors Business Central codeunit 11 "Gen. Jnl.-Check Line".
 /// <para>
 /// Everything here is refused up front rather than part way through a posting run, so a batch
 /// either posts whole or not at all.
@@ -79,7 +78,7 @@ public class GenJnlCheckLine : DomainService
         }
     }
 
-    /// <summary>VAT belongs on G/L account lines only, and its posting setup must exist (BC checks the same).</summary>
+    /// <summary>VAT belongs on G/L account lines only, and its posting setup must exist.</summary>
     private async Task CheckVatAsync(GenJournalLine line, GenJournalAccountType accountType, bool hasVat, string bus, string prod)
     {
         if (!hasVat)
@@ -199,7 +198,7 @@ public class GenJnlCheckLine : DomainService
                         .WithData("postingGroup", "");
                 }
 
-                // Employees are paid back, not invoiced: BC allows only blank, payment and refund.
+                // Employees are paid back, not invoiced: only blank, payment and refund are allowed.
                 if (line.DocumentType is not (GLEntryDocumentType.None or GLEntryDocumentType.Payment or GLEntryDocumentType.Refund))
                 {
                     throw Failed(line, ErpErrorCodes.Journals.EmployeeDocumentTypeNotAllowed).WithData("no", accountNo);

@@ -6,8 +6,8 @@ using Volo.Abp.MultiTenancy;
 namespace ABPmicroservice.Erp.Profiles;
 
 /// <summary>
-/// The profile everyone in a role works as, unless they picked one themselves. Business Central
-/// sets a profile per user; this lets an administrator set it once per role instead.
+/// The profile everyone in a role works as, unless they picked one themselves. Rather than
+/// setting a profile per user, an administrator sets it once per role.
 /// </summary>
 public class ProfileRoleAssignment : AuditedEntity<Guid>, IMultiTenant
 {

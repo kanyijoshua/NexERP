@@ -64,12 +64,26 @@ import {
 } from '@proxy/sales';
 import { Observable, forkJoin, map } from 'rxjs';
 import { accountField, blockActions, codeField, codeOf, enumOptions, postingGroupEntity } from './entity-helpers';
+import { BaseTableEntities } from './base-entities';
+import { PensionEntities } from './pension-entities';
+import { AcademicEntities } from './academic-entities';
+import { PaymentVoucherEntities } from './payment-voucher-entities';
+import { PensionPayrollEntities } from './pension-payroll-entities';
+import { StudentAccountEntities } from './student-account-entities';
+import { CampusEntities } from './campus-entities';
+import { PayrollEntities } from './payroll-entities';
+import {
+  ADDITIONAL_SECTION,
+  CUSTOMER_ADDITIONAL_FIELDS,
+  GL_ACCOUNT_ADDITIONAL_FIELDS,
+  VENDOR_ADDITIONAL_FIELDS,
+} from './additional-fields';
 import { SetupEntities } from './setup-entities';
 
 export { codeOf } from './entity-helpers';
 import { RecordEntity, RecordField, SmartButton } from '../erp-shared';
 
-/** The address and contact FastTab shared by customers and vendors (BC "Address & Contact"). */
+/** The address and contact FastTab shared by customers and vendors. */
 const ADDRESS_FIELDS: RecordField[] = [
   { field: 'address', labelKey: 'Erp::Address', type: 'text', section: 'contact', maxLength: 100, wide: true, cardOnly: true },
   { field: 'city', labelKey: 'Erp::City', type: 'text', section: 'contact', maxLength: 50 },
@@ -79,7 +93,7 @@ const ADDRESS_FIELDS: RecordField[] = [
   { field: 'email', labelKey: 'Erp::Email', type: 'email', section: 'contact', maxLength: 80 },
 ];
 
-/** A number series fills a blank number (BC InitSeries), so the number is optional there. */
+/** A number series fills a blank number, so the number is optional there. */
 const SERIES_NO_FIELD: RecordField = {
   field: 'no',
   labelKey: 'Erp::No',
@@ -88,7 +102,7 @@ const SERIES_NO_FIELD: RecordField = {
   placeholderKey: 'Erp::NextFromSeries',
 };
 
-/** How many documents of a party there are, as an Odoo smart button linking to them. */
+/** How many documents of a party there are, as a smart button linking to them. */
 function documentCount(
   count$: Observable<{ totalCount?: number }>,
   labelKey: string,
@@ -157,6 +171,14 @@ export class MasterDataEntities {
   private readonly generalPostingSetups = inject(GeneralPostingSetupService);
   private readonly inventoryPostingSetups = inject(InventoryPostingSetupService);
   private readonly setup = inject(SetupEntities);
+  private readonly baseTables = inject(BaseTableEntities);
+  private readonly pensions = inject(PensionEntities);
+  private readonly academics = inject(AcademicEntities);
+  private readonly studentAccounts = inject(StudentAccountEntities);
+  private readonly pensionPayroll = inject(PensionPayrollEntities);
+  private readonly campus = inject(CampusEntities);
+  private readonly payroll = inject(PayrollEntities);
+  private readonly paymentVouchers = inject(PaymentVoucherEntities);
   private readonly customerLedgerEntries = inject(CustomerLedgerEntryService);
   private readonly vendorLedgerEntries = inject(VendorLedgerEntryService);
 
@@ -182,6 +204,7 @@ export class MasterDataEntities {
       { key: 'contact', labelKey: 'Erp::AddressAndContact' },
       { key: 'invoicing', labelKey: 'Erp::Invoicing', collapsed: true },
       { key: 'payments', labelKey: 'Erp::Payments', collapsed: true },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -196,6 +219,7 @@ export class MasterDataEntities {
       codeField('salespersonCode', 'Erp::SalespersonCode', 'salespersonPurchaser', 'general', { cardOnly: true }),
       codeField('paymentTermsCode', 'Erp::PaymentTermsCode', 'paymentTerms', 'payments', { cardOnly: true }),
       codeField('paymentMethodCode', 'Erp::PaymentMethodCode', 'paymentMethod', 'payments', { cardOnly: true }),
+      ...CUSTOMER_ADDITIONAL_FIELDS,
     ],
     getList: query => this.customers.getList(query),
     get: id => this.customers.get(id),
@@ -255,6 +279,7 @@ export class MasterDataEntities {
       { key: 'invoicing', labelKey: 'Erp::Invoicing', collapsed: true },
       { key: 'payments', labelKey: 'Erp::Payments', collapsed: true },
       { key: 'shipping', labelKey: 'Erp::Shipping', collapsed: true },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -296,6 +321,7 @@ export class MasterDataEntities {
       { field: 'shipmentMethodCode', labelKey: 'Erp::ShipmentMethodCode', type: 'text', section: 'shipping', maxLength: 10, cardOnly: true },
       { field: 'shippingAgentCode', labelKey: 'Erp::ShippingAgentCode', type: 'text', section: 'shipping', maxLength: 10, cardOnly: true },
       { field: 'leadTimeCalculation', labelKey: 'Erp::LeadTimeCalculation', type: 'text', section: 'shipping', maxLength: 32, cardOnly: true },
+      ...VENDOR_ADDITIONAL_FIELDS,
     ],
     getList: query => this.vendors.getList(query),
     get: id => this.vendors.get(id),
@@ -421,6 +447,7 @@ export class MasterDataEntities {
       { key: 'general', labelKey: 'Erp::General' },
       { key: 'posting', labelKey: 'Erp::Posting' },
       { key: 'consolidation', labelKey: 'Erp::Consolidation', collapsed: true },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       { field: 'no', labelKey: 'Erp::No', type: 'text', required: true, maxLength: 20 },
@@ -439,7 +466,7 @@ export class MasterDataEntities {
       codeField('genBusPostingGroup', 'Erp::GenBusPostingGroup', 'genBusPostingGroup', 'posting', { cardOnly: true }),
       codeField('genProdPostingGroup', 'Erp::GenProdPostingGroup', 'genProdPostingGroup', 'posting', { cardOnly: true }),
       codeField('vatProdPostingGroup', 'Erp::VatProdPostingGroup', 'vatProdPostingGroup', 'posting'),
-      // What a general journal line on this account defaults to (BC's Gen. Posting Type and VAT Bus. Posting Group).
+      // What a general journal line on this account defaults to.
       {
         field: 'genPostingType',
         labelKey: 'Erp::GenPostingType',
@@ -466,6 +493,7 @@ export class MasterDataEntities {
       },
       { field: 'consolDebitAcc', labelKey: 'Erp::ConsolDebitAcc', type: 'text', maxLength: 20, section: 'consolidation', cardOnly: true },
       { field: 'consolCreditAcc', labelKey: 'Erp::ConsolCreditAcc', type: 'text', maxLength: 20, section: 'consolidation', cardOnly: true },
+      ...GL_ACCOUNT_ADDITIONAL_FIELDS,
     ],
     getList: query => this.glAccounts.getList(query),
     get: id => this.glAccounts.get(id),
@@ -603,7 +631,7 @@ export class MasterDataEntities {
     this.inventoryGroups,
   );
 
-  /** BC General Posting Setup: the accounts per business and product group pair. */
+  /** General Posting Setup: the accounts per business and product group pair. */
   readonly generalPostingSetup: RecordEntity<GeneralPostingSetupDto, CreateUpdateGeneralPostingSetupDto> = {
     key: 'generalPostingSetup',
     titleKey: 'Erp::GeneralPostingSetup',
@@ -661,7 +689,7 @@ export class MasterDataEntities {
     newRecord: () => ({}),
   };
 
-  /** BC Inventory Posting Setup: the inventory account per inventory posting group. */
+  /** Inventory Posting Setup: the inventory account per inventory posting group. */
   readonly inventoryPostingSetup: RecordEntity<InventoryPostingSetupDto, CreateUpdateInventoryPostingSetupDto> = {
     key: 'inventoryPostingSetup',
     titleKey: 'Erp::InventoryPostingSetup',
@@ -711,6 +739,14 @@ export class MasterDataEntities {
       this.generalPostingSetup,
       this.inventoryPostingSetup,
       ...this.setup.all,
+      ...this.baseTables.all,
+      ...this.pensions.all,
+      ...this.academics.all,
+      ...this.studentAccounts.all,
+      ...this.pensionPayroll.all,
+      ...this.campus.all,
+      ...this.payroll.all,
+      ...this.paymentVouchers.all,
     ];
   }
 }

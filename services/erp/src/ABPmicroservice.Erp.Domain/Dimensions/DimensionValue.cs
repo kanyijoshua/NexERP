@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Dimensions;
 
 /// <summary>
-/// Dimension Value. Mirrors Business Central table 349 "Dimension Value".
+/// Dimension Value.
 /// </summary>
 public class DimensionValue : CompanyEntity
 {

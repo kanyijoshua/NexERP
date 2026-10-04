@@ -32,7 +32,7 @@ export class ErpCardComponent {
   @Output() readonly actionClick = new EventEmitter<ErpCardAction>();
 
   /**
-   * Universal Business Central FactBox toggle shortcut: Alt + F2
+   * Universal FactBox toggle shortcut: Alt + F2
    */
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {

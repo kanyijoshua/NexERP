@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Vendor Ledger Entry. Mirrors Business Central table 25 "Vendor Ledger Entry".
+/// Vendor Ledger Entry.
 /// Immutable subledger entry tracking accounts payable balances per vendor.
 /// </summary>
 public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
@@ -36,7 +36,7 @@ public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
     public bool Open { get; internal set; }
     public Guid DimensionSetId { get; private set; }
 
-    /// <summary>Groups the entries of one posting run. Mirrors BC "Transaction No.".</summary>
+    /// <summary>Groups the entries of one posting run.</summary>
     public long TransactionNo { get; internal set; }
 
     public long RegisterNo { get; internal set; }

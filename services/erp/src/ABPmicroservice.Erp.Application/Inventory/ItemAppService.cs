@@ -34,7 +34,7 @@ public class ItemAppService
     {
         await EnsurePostingGroupsExistAsync(input);
 
-        // Blank takes the next number of the Inventory Setup's Item Nos. series (BC: InitSeries).
+        // Blank takes the next number of the Inventory Setup's Item Nos. series.
         var setup = await LazyServiceProvider.LazyGetRequiredService<InventorySetupManager>().GetAsync();
         var no = await LazyServiceProvider.LazyGetRequiredService<NoSeriesManager>().ResolveNoAsync(setup.ItemNos, input.No, Clock.Now);
 
@@ -86,7 +86,7 @@ public class ItemAppService
         return await MapToGetOutputDtoAsync(item);
     }
 
-    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    /// <summary>A posting group on the card must exist; blank means none.</summary>
     private async Task EnsurePostingGroupsExistAsync(CreateUpdateItemDto input)
     {
         var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
@@ -128,7 +128,7 @@ public class ItemAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
-        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        // Lower-cased on both sides: lookups search case-insensitively, on any provider.
         var filter = input.Filter?.Trim().ToLower();
 
         return query

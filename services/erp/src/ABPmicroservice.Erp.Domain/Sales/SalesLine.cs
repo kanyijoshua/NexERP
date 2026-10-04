@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Sales document line. Mirrors Business Central table 37 "Sales Line".
+/// Sales document line.
 /// Child entity of <see cref="SalesHeader"/>.
 /// </summary>
 public class SalesLine : Entity<Guid>

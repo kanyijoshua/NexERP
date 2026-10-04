@@ -11,7 +11,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Journal templates. Mirrors Business Central page 100 "Gen. Journal Templates".
+/// Journal templates.
 /// </summary>
 [Authorize(ErpPermissions.Journals.Default)]
 public class JournalTemplateAppService : ErpAppService, IJournalTemplateAppService

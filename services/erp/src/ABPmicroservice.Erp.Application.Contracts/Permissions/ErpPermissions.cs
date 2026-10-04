@@ -2,7 +2,7 @@ using Volo.Abp.Reflection;
 
 namespace ABPmicroservice.Erp.Permissions;
 
-public class ErpPermissions
+public partial class ErpPermissions
 {
     public const string GroupName = "Erp";
 

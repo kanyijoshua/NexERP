@@ -12,7 +12,7 @@ interface SavedModalState {
   maxHeight: string;
 }
 
-// Business Central style diagonal outward expand arrows
+// Diagonal outward expand arrows
 const MAXIMIZE_SVG = `
   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="erp-modal-icon">
     <polyline points="10 2 14 2 14 6"></polyline>
@@ -22,7 +22,7 @@ const MAXIMIZE_SVG = `
   </svg>
 `;
 
-// Business Central style diagonal inward compress arrows ("Minimize to normal size")
+// Diagonal inward compress arrows ("Minimize to normal size")
 const RESTORE_SVG = `
   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="erp-modal-icon">
     <polyline points="13.5 6.5 9.5 6.5 9.5 2.5"></polyline>
@@ -57,7 +57,7 @@ export class ModalResizeService {
   private readonly minHeight = 220;
 
   /**
-   * Keyboard handler for Business Central shortcut Alt+F11 to toggle maximize / minimize.
+   * Keyboard handler for the Alt+F11 shortcut to toggle maximize / minimize.
    */
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.altKey && (e.key === 'F11' || e.code === 'F11')) {
@@ -101,7 +101,7 @@ export class ModalResizeService {
       });
     }
 
-    // Add Alt+F11 shortcut similar to Business Central
+    // Add Alt+F11 shortcut
     this.document.addEventListener('keydown', this.onKeyDown);
   }
 
@@ -253,7 +253,7 @@ export class ModalResizeService {
       header.appendChild(maxBtn);
     }
 
-    // Double-click header to toggle maximize / minimize to normal size (similar to Windows & Business Central)
+    // Double-click header to toggle maximize / minimize to normal size (similar to Windows)
     header.addEventListener('dblclick', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (
@@ -271,7 +271,7 @@ export class ModalResizeService {
   }
 
   /**
-   * Toggles modal between Maximized (full screen) and Normal size (Business Central behavior).
+   * Toggles modal between Maximized (full screen) and Normal size.
    */
   public toggleMaximize(
     dialog: HTMLElement,

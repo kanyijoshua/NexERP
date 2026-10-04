@@ -54,8 +54,6 @@ public class JobExecutionResult
 
 /// <summary>
 /// Interface implemented by any background job execution handler.
-/// Mirrors Business Central Codeunits invoked by Table 472 "Object ID to Run"
-/// and Odoo scheduled action target methods.
 /// </summary>
 public interface IJobHandler
 {

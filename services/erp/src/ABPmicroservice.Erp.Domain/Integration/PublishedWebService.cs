@@ -5,15 +5,15 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
-/// Published Web Service. Mirrors Business Central table 7700 "Web Service".
+/// Published Web Service.
 /// <para>
-/// Nothing is reachable through the integration API until it is published here, exactly as in BC,
-/// where a page is invisible to OData until someone publishes it. Publishing is per company, so
+/// Nothing is reachable through the integration API until it is published here.
+/// Publishing is per company, so
 /// one company can expose its customers without exposing another's.
 /// </para>
 /// <para>
 /// Callers authenticate with the same OAuth tokens as the rest of the API — there is no separate
-/// web service access key, which is also the direction Business Central has taken.
+/// web service access key.
 /// </para>
 /// </summary>
 public class PublishedWebService : CompanyAggregateRoot

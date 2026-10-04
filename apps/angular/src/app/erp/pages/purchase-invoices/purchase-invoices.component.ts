@@ -13,7 +13,7 @@ import {
   NewDocumentInput,
 } from '../documents/document-list.base';
 
-/** Purchase invoices (Business Central table 38, document type Invoice). */
+/** Purchase invoices. */
 @Component({
   selector: 'app-purchase-invoices',
   templateUrl: '../documents/document-list.component.html',

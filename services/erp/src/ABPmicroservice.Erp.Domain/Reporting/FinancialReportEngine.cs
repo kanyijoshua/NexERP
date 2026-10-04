@@ -26,7 +26,7 @@ public class FinancialReportRequest
 /// <summary>
 /// The standard financial statements, calculated straight from the G/L entries.
 /// <para>
-/// Business Central builds these from account schedules; the same is possible here through
+/// These can also be built from account schedules, through
 /// <see cref="AccountScheduleEngine"/>. These fixed reports use the account categories on the
 /// chart of accounts instead, so a new company gets a balance sheet and an income statement
 /// before anyone has defined a schedule.
@@ -48,7 +48,7 @@ public class FinancialReportEngine : DomainService
 
     /// <summary>
     /// Trial balance: opening balance, the period's debits and credits, and the closing balance,
-    /// per account. Mirrors BC report 6 "Trial Balance".
+    /// per account.
     /// </summary>
     public async Task<ReportResult> GenerateTrialBalanceAsync(FinancialReportRequest request)
     {

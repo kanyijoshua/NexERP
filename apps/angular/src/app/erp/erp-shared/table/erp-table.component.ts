@@ -50,13 +50,13 @@ import {
 const SEARCH_DEBOUNCE_MS = 300;
 
 /**
- * The ERP data grid (Business Central list page, Odoo list view).
+ * The ERP data grid.
  *
  * - **Data**: give it a `source` and it loads one page at a time from the server as the user
  *   scrolls (infinite scrolling, no pager), sending the search, the sort and the filter pane's
  *   conditions with every request. Give it `items` instead and it does all of that in memory.
  * - **Filtering**: a quick search, and a filter pane of conditions on any column (typed
- *   operators, Business Central filter expressions such as `1000..2000|3000`), matched all or any,
+ *   operators, filter expressions such as `1000..2000|3000`), matched all or any,
  *   shown as removable facets and savable as named views.
  * - **Columns**: users choose which columns show, their order and width, and which are fixed
  *   on horizontal scrolling. The first column is fixed left and the actions column fixed right
@@ -476,7 +476,7 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
   }
 
   // ---------------------------------------------------------------------------------------
-  // Filtering (BC filter pane, Odoo facets)
+  // Filtering
   // ---------------------------------------------------------------------------------------
 
   get filterState(): ErpFilterState {
@@ -578,7 +578,7 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
     }
   }
 
-  /** The Odoo-style facets above the grid: one per active condition, plus the search. */
+  /** The facets above the grid: one per active condition, plus the search. */
   get activeFilterPills(): { id: string; label: string; isSearch?: boolean }[] {
     const pills: { id: string; label: string; isSearch?: boolean }[] = [];
     if (this.searchTerm.trim()) {
@@ -615,7 +615,7 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
     return option ? this.l(option.label) : String(value);
   }
 
-  // --- Saved views (BC views, Odoo favorites) ---
+  // --- Saved views ---
 
   saveCurrentView(): void {
     const name = this.newViewName.trim();

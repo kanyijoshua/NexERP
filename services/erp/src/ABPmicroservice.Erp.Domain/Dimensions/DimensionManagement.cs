@@ -9,7 +9,6 @@ namespace ABPmicroservice.Erp.Dimensions;
 
 /// <summary>
 /// Domain service for Dimension Set ID computation & resolution.
-/// Mirrors Business Central Codeunit 408 "DimensionManagement".
 /// </summary>
 public class DimensionManagement : DomainService
 {

@@ -9,8 +9,8 @@ namespace ABPmicroservice.Erp.Sequences;
 /// Counter behind the "Entry No." of a ledger and behind register numbers.
 /// One row per company and sequence name.
 /// <para>
-/// Business Central gets these numbers from the platform's AutoIncrement fields. There is no
-/// portable equivalent here, so the counter is a row and is advanced by a single atomic
+/// There is no portable auto-increment for these numbers,
+/// so the counter is a row and is advanced by a single atomic
 /// UPDATE ... RETURNING statement (see <c>EntryNoGenerator</c>).
 /// </para>
 /// </summary>
@@ -31,7 +31,7 @@ public class ErpNumberSequence : CompanyEntity
     }
 }
 
-/// <summary>Names of the counters. One per ledger, as each has its own numbering in BC.</summary>
+/// <summary>Names of the counters. One per ledger, as each has its own numbering.</summary>
 public static class ErpSequenceNames
 {
     public const string GLEntry = "GLENTRY";
@@ -45,7 +45,7 @@ public static class ErpSequenceNames
     public const string EmployeeLedgerEntry = "EMPLLEDG";
 
     /// <summary>
-    /// Groups the entries written by one posting run. Mirrors BC's "Transaction No.",
+    /// Groups the entries written by one posting run,
     /// which is what a reversal reverses.
     /// </summary>
     public const string TransactionNo = "TRANSACTION";

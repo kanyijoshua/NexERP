@@ -16,7 +16,7 @@ namespace ABPmicroservice.Erp.Companies;
 
 /// <summary>
 /// Company Copying Engine.
-/// Mirrors Business Central Codeunit 357 "Copy Company".
+///
 /// Duplicates the setup tables (chart of accounts, posting groups, posting setups and the
 /// General Ledger Setup) into a newly created company.
 /// </summary>

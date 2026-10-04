@@ -85,7 +85,7 @@
         }
       </ng-template>
 
-      <!-- Card format (Odoo kanban / BC tiles) -->
+      <!-- Card format -->
       <ng-template erpTableCard let-row>
         <div
           class="card h-100 border erp-record-card shadow-sm cursor-pointer"
@@ -201,6 +201,12 @@
           </ul>
         </div>
       }
+      <app-attachments-widget
+        *abpPermission="'Erp.Attachments'"
+        [entityType]="chatterEntityType"
+        [entityId]="selected.id!"
+        [documentFlow]="chatterEntityType === 'PurchaseHeader' ? 'purchase' : 'sales'"
+      ></app-attachments-widget>
       <app-chatter-widget
         *abpPermission="'Erp.Chatter'"
         [entityType]="chatterEntityType"

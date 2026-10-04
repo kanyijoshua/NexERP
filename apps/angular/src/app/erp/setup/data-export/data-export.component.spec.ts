@@ -75,7 +75,7 @@ describe('DataExportComponent', () => {
     component.ngOnInit();
   });
 
-  /** Picking a table offers its standard columns, the way Odoo's export dialog opens. */
+  /** Picking a table offers its standard columns. */
   it('selects the standard columns when a table is chosen', () => {
     component.onEntityChange('Item');
 

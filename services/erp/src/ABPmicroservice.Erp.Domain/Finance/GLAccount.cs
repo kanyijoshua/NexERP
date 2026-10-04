@@ -6,11 +6,11 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// G/L Account (Chart of Accounts). Mirrors Business Central table 15 "G/L Account".
+/// G/L Account (Chart of Accounts).
 /// </summary>
-public class GLAccount : CompanyAggregateRoot
+public class GLAccount : CompanyAggregateRoot, IHasNo
 {
-    /// <summary>Business key. Mirrors BC field "No.".</summary>
+    /// <summary>Business key.</summary>
     public string No { get; private set; }
 
     public string Name { get; private set; }
@@ -37,52 +37,52 @@ public class GLAccount : CompanyAggregateRoot
 
     public bool Blocked { get; private set; }
 
-    /// <summary>Search Name. Mirrors BC field 3 "Search Name".</summary>
+    /// <summary>Search Name.</summary>
     public string SearchName { get; private set; }
 
-    /// <summary>Debit or credit constraint. Mirrors BC field 10 "Debit/Credit".</summary>
+    /// <summary>Debit or credit constraint.</summary>
     public GLAccountDebitCredit DebitCredit { get; private set; }
 
-    /// <summary>Reconciliation account indicator. Mirrors BC field 16 "Reconciliation Account".</summary>
+    /// <summary>Reconciliation account indicator.</summary>
     public bool ReconciliationAccount { get; private set; }
 
-    /// <summary>Account range or formula for Total accounts. Mirrors BC field 34 "Totaling".</summary>
+    /// <summary>Account range or formula for Total accounts.</summary>
     public string Totaling { get; private set; }
 
-    /// <summary>Default Gen. Business Posting Group. Mirrors BC field 44 "Gen. Bus. Posting Group".</summary>
+    /// <summary>Default Gen. Business Posting Group.</summary>
     public string GenBusPostingGroup { get; private set; }
 
-    /// <summary>Default Gen. Product Posting Group. Mirrors BC field 45 "Gen. Prod. Posting Group".</summary>
+    /// <summary>Default Gen. Product Posting Group.</summary>
     public string GenProdPostingGroup { get; private set; }
 
-    /// <summary>Automatic extended text. Mirrors BC field 49 "Automatic Ext. Texts".</summary>
+    /// <summary>Automatic extended text.</summary>
     public bool AutomaticExtTexts { get; private set; }
 
-    /// <summary>Tax Area Code. Mirrors BC field 54 "Tax Area Code".</summary>
+    /// <summary>Tax Area Code.</summary>
     public string TaxAreaCode { get; private set; }
 
-    /// <summary>Tax Liable. Mirrors BC field 55 "Tax Liable".</summary>
+    /// <summary>Tax Liable.</summary>
     public bool TaxLiable { get; private set; }
 
-    /// <summary>Tax Group Code. Mirrors BC field 56 "Tax Group Code".</summary>
+    /// <summary>Tax Group Code.</summary>
     public string TaxGroupCode { get; private set; }
 
-    /// <summary>Consolidation translation method. Mirrors BC field 39 "Consol. Translation Method".</summary>
+    /// <summary>Consolidation translation method.</summary>
     public ConsolidationTranslationMethod ConsolTranslationMethod { get; private set; }
 
-    /// <summary>Consolidation debit account. Mirrors BC field 40 "Consol. Debit Acc.".</summary>
+    /// <summary>Consolidation debit account.</summary>
     public string ConsolDebitAcc { get; private set; }
 
-    /// <summary>Consolidation credit account. Mirrors BC field 41 "Consol. Credit Acc.".</summary>
+    /// <summary>Consolidation credit account.</summary>
     public string ConsolCreditAcc { get; private set; }
 
-    /// <summary>Cost Type No. Mirrors BC field 1100 "Cost Type No.".</summary>
+    /// <summary>Cost Type No.</summary>
     public string CostTypeNo { get; private set; }
 
-    /// <summary>Default Deferral Template Code. Mirrors BC field 1700 "Default Deferral Template Code".</summary>
+    /// <summary>Default Deferral Template Code.</summary>
     public string DefaultDeferralTemplateCode { get; private set; }
 
-    /// <summary>Omit default description in journal. Mirrors BC field 70 "Omit Default Descr. in Jnl.".</summary>
+    /// <summary>Omit default description in journal.</summary>
     public bool OmitDefaultDescrInJnl { get; private set; }
 
     /// <summary>Running net change (denormalized, updated by posting).</summary>
@@ -90,6 +90,21 @@ public class GLAccount : CompanyAggregateRoot
 
     /// <summary>Running balance (denormalized, updated by posting).</summary>
     public decimal Balance { get; internal set; }
+
+    /// <summary>Global Dimension 1 Code.</summary>
+    public string GlobalDimension1Code { get; private set; }
+
+    /// <summary>Global Dimension 2 Code.</summary>
+    public string GlobalDimension2Code { get; private set; }
+
+    /// <summary>Indentation.</summary>
+    public int Indentation { get; private set; }
+
+    /// <summary>No. of Blank Lines.</summary>
+    public int NoOfBlankLines { get; private set; }
+
+    /// <summary>New Page.</summary>
+    public bool NewPage { get; private set; }
 
     protected GLAccount() { }
 
@@ -228,10 +243,26 @@ public class GLAccount : CompanyAggregateRoot
     public void SetVatProdPostingGroup(string vatProdPostingGroup) =>
         VatProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatProdPostingGroup, nameof(vatProdPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
 
-    /// <summary>The VAT defaults a journal line takes when this account is chosen (BC's posting tab).</summary>
+    /// <summary>The VAT defaults a journal line takes when this account is chosen.</summary>
     public void SetJournalVatDefaults(GeneralPostingType genPostingType, string vatBusPostingGroup)
     {
         GenPostingType = genPostingType;
         VatBusPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatBusPostingGroup, nameof(vatBusPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
+    }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string globalDimension1Code,
+        string globalDimension2Code,
+        int indentation,
+        int noOfBlankLines,
+        bool newPage
+    )
+    {
+        GlobalDimension1Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension1Code, nameof(globalDimension1Code), 20));
+        GlobalDimension2Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension2Code, nameof(globalDimension2Code), 20));
+        Indentation = indentation;
+        NoOfBlankLines = noOfBlankLines;
+        NewPage = newPage;
     }
 }

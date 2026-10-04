@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ABPmicroservice.Erp.Exporting;
 
-/// <summary>One condition on a field. Several are combined with AND, as in BC's field filters.</summary>
+/// <summary>One condition on a field. Several are combined with AND.</summary>
 public class EntityFilter
 {
     public string Field { get; set; }

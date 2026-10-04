@@ -9,12 +9,12 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Companies;
 
 /// <summary>
-/// Business Central's TableRelation on a code field: a code a record points at must exist in its
+/// The table relation on a code field: a code a record points at must exist in its
 /// code table. Blank always passes, since blank means "none".
 /// </summary>
 public class CodeTableChecker : DomainService
 {
-    /// <summary>The BC captions that are not simply the class name split into words.</summary>
+    /// <summary>The captions that are not simply the class name split into words.</summary>
     private static readonly Dictionary<string, string> Captions = new()
     {
         ["GenBusinessPostingGroup"] = "Gen. Bus. Posting Group",

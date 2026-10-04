@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using ABPmicroservice.Erp.Finance;
 using System;
 using System.Collections.Generic;
 using ABPmicroservice.Erp.Documents;
@@ -43,6 +45,20 @@ public class VendorDto : FullAuditedEntityDto<Guid>
     public string PurchaserCode { get; set; }
     public string CurrencyCode { get; set; }
     public bool Blocked { get; set; }
+
+    public string County { get; set; }
+    public string FaxNo { get; set; }
+    public string RegistrationNumber { get; set; }
+    public string GlobalDimension1Code { get; set; }
+    public string GlobalDimension2Code { get; set; }
+    public string LanguageCode { get; set; }
+    public string PayToVendorNo { get; set; }
+    public int Priority { get; set; }
+    public ApplicationMethod ApplicationMethod { get; set; }
+    public string ResponsibilityCenter { get; set; }
+    public string PreferredBankAccountCode { get; set; }
+    public string PrimaryContactNo { get; set; }
+    public bool PrivacyBlocked { get; set; }
 }
 
 public class CreateUpdateVendorDto
@@ -81,6 +97,42 @@ public class CreateUpdateVendorDto
     public string LeadTimeCalculation { get; set; }
     public string PurchaserCode { get; set; }
     public string CurrencyCode { get; set; }
+
+    [StringLength(30)]
+    public string County { get; set; }
+
+    [StringLength(30)]
+    public string FaxNo { get; set; }
+
+    [StringLength(50)]
+    public string RegistrationNumber { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension1Code { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension2Code { get; set; }
+
+    [StringLength(10)]
+    public string LanguageCode { get; set; }
+
+    [StringLength(20)]
+    public string PayToVendorNo { get; set; }
+
+    public int Priority { get; set; }
+
+    public ApplicationMethod ApplicationMethod { get; set; }
+
+    [StringLength(10)]
+    public string ResponsibilityCenter { get; set; }
+
+    [StringLength(20)]
+    public string PreferredBankAccountCode { get; set; }
+
+    [StringLength(20)]
+    public string PrimaryContactNo { get; set; }
+
+    public bool PrivacyBlocked { get; set; }
 }
 
 public class GetVendorListInput : ErpPagedListInput
@@ -140,6 +192,42 @@ public class PurchaseHeaderDto : FullAuditedEntityDto<Guid>
     public bool Posted { get; set; }
     public string PostedDocumentNo { get; set; }
     public List<PurchaseLineDto> Lines { get; set; } = new();
+
+    public string PostingDescription { get; set; }
+    public DateTime? DocumentDate { get; set; }
+    public string PurchaserCode { get; set; }
+    public string VendorOrderNo { get; set; }
+    public string VendorShipmentNo { get; set; }
+    public string VendorCrMemoNo { get; set; }
+    public string BuyFromVendorName2 { get; set; }
+    public string BuyFromAddress { get; set; }
+    public string BuyFromAddress2 { get; set; }
+    public string BuyFromCity { get; set; }
+    public string BuyFromPostCode { get; set; }
+    public string BuyFromCounty { get; set; }
+    public string BuyFromCountryRegionCode { get; set; }
+    public string BuyFromContact { get; set; }
+    public string PayToName2 { get; set; }
+    public string PayToAddress2 { get; set; }
+    public string PayToCounty { get; set; }
+    public string ShipToName2 { get; set; }
+    public string ShipToAddress2 { get; set; }
+    public string ShipToCounty { get; set; }
+    public string OrderAddressCode { get; set; }
+    public string VatRegistrationNo { get; set; }
+    public decimal PaymentDiscountPct { get; set; }
+    public DateTime? PmtDiscountDate { get; set; }
+    public decimal VatBaseDiscountPct { get; set; }
+    public string LanguageCode { get; set; }
+    public string QuoteNo { get; set; }
+    public string ResponsibilityCenter { get; set; }
+    public DateTime? RequestedReceiptDate { get; set; }
+    public DateTime? PromisedReceiptDate { get; set; }
+    public string AssignedUserId { get; set; }
+    public string PaymentReference { get; set; }
+    public DateTime? InvoiceReceivedDate { get; set; }
+    public string CreditorNo { get; set; }
+    public string ReasonCode { get; set; }
 }
 
 public class PurchaseLineDto : EntityDto<Guid>
@@ -222,6 +310,104 @@ public class CreateUpdatePurchaseHeaderDto
     public string ShipToCountryRegionCode { get; set; }
     public string ShipToContact { get; set; }
     public List<PurchaseLineInputDto> Lines { get; set; } = new();
+
+    [StringLength(100)]
+    public string PostingDescription { get; set; }
+
+    public DateTime? DocumentDate { get; set; }
+
+    [StringLength(20)]
+    public string PurchaserCode { get; set; }
+
+    [StringLength(35)]
+    public string VendorOrderNo { get; set; }
+
+    [StringLength(35)]
+    public string VendorShipmentNo { get; set; }
+
+    [StringLength(35)]
+    public string VendorCrMemoNo { get; set; }
+
+    [StringLength(50)]
+    public string BuyFromVendorName2 { get; set; }
+
+    [StringLength(100)]
+    public string BuyFromAddress { get; set; }
+
+    [StringLength(50)]
+    public string BuyFromAddress2 { get; set; }
+
+    [StringLength(30)]
+    public string BuyFromCity { get; set; }
+
+    [StringLength(20)]
+    public string BuyFromPostCode { get; set; }
+
+    [StringLength(30)]
+    public string BuyFromCounty { get; set; }
+
+    [StringLength(10)]
+    public string BuyFromCountryRegionCode { get; set; }
+
+    [StringLength(100)]
+    public string BuyFromContact { get; set; }
+
+    [StringLength(50)]
+    public string PayToName2 { get; set; }
+
+    [StringLength(50)]
+    public string PayToAddress2 { get; set; }
+
+    [StringLength(30)]
+    public string PayToCounty { get; set; }
+
+    [StringLength(50)]
+    public string ShipToName2 { get; set; }
+
+    [StringLength(50)]
+    public string ShipToAddress2 { get; set; }
+
+    [StringLength(30)]
+    public string ShipToCounty { get; set; }
+
+    [StringLength(10)]
+    public string OrderAddressCode { get; set; }
+
+    [StringLength(20)]
+    public string VatRegistrationNo { get; set; }
+
+    public decimal PaymentDiscountPct { get; set; }
+
+    public DateTime? PmtDiscountDate { get; set; }
+
+    public decimal VatBaseDiscountPct { get; set; }
+
+    [StringLength(10)]
+    public string LanguageCode { get; set; }
+
+    [StringLength(20)]
+    public string QuoteNo { get; set; }
+
+    [StringLength(10)]
+    public string ResponsibilityCenter { get; set; }
+
+    public DateTime? RequestedReceiptDate { get; set; }
+
+    public DateTime? PromisedReceiptDate { get; set; }
+
+    [StringLength(50)]
+    public string AssignedUserId { get; set; }
+
+    [StringLength(50)]
+    public string PaymentReference { get; set; }
+
+    public DateTime? InvoiceReceivedDate { get; set; }
+
+    [StringLength(20)]
+    public string CreditorNo { get; set; }
+
+    [StringLength(10)]
+    public string ReasonCode { get; set; }
 }
 
 public class PurchaseLineInputDto

@@ -15,7 +15,7 @@ import { CrudListBase, DocumentLineColumn, ErpTableColumn } from '../../erp-shar
 
 /**
  * Column layouts: the periods a financial report is shown across.
- * Mirrors Business Central pages 331 and 332.
+ *
  */
 @Component({
   selector: 'app-column-layouts',

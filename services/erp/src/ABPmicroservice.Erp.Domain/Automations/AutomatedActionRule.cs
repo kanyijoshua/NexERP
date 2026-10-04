@@ -10,7 +10,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Automations;
 
 /// <summary>
-/// Odoo Automated Trigger Action Rule Definition.
+/// Automated Trigger Action Rule Definition.
 /// </summary>
 public class AutomatedActionRule : CompanyAggregateRoot
 {
@@ -37,7 +37,7 @@ public class AutomatedActionRule : CompanyAggregateRoot
 
 /// <summary>
 /// Automated Action Evaluation Engine.
-/// Executes dynamic Odoo trigger action rules on document updates.
+/// Executes dynamic trigger action rules on document updates.
 /// </summary>
 public class AutomatedActionEngine : DomainService
 {

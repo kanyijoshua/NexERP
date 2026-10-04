@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Vendor Posting Group. Mirrors Business Central table 93 "Vendor Posting Group".
+/// Vendor Posting Group.
 /// Maps Vendor Posting Group Code -> Payables G/L Account.
 /// </summary>
 public class VendorPostingGroup : PostingGroupBase

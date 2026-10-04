@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Item Ledger Entry. Mirrors Business Central table 32 "Item Ledger Entry".
+/// Item Ledger Entry.
 /// Immutable once created (posted).
 /// </summary>
 public class ItemLedgerEntry : LedgerEntryBase

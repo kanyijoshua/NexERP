@@ -44,6 +44,14 @@ import { LocationService } from '@proxy/inventory';
 import { SalespersonPurchaserService } from '@proxy/sales';
 import { forkJoin, map } from 'rxjs';
 import { RecordEntity, RecordField } from '../erp-shared';
+import {
+  ADDITIONAL_SECTION,
+  BANK_ACCOUNT_ADDITIONAL_FIELDS,
+  CURRENCY_ADDITIONAL_FIELDS,
+  EMPLOYEE_ADDITIONAL_FIELDS,
+  PAYMENT_METHOD_ADDITIONAL_FIELDS,
+  PAYMENT_TERMS_ADDITIONAL_FIELDS,
+} from './additional-fields';
 import { accountField, blockActions, codeField, codeTableEntity, enumOptions, postingGroupEntity } from './entity-helpers';
 
 /** Only the two account types a payment method balances against. */
@@ -52,7 +60,7 @@ const BAL_ACCOUNT_TYPE_OPTIONS = [
   { value: GenJournalAccountType.BankAccount, label: 'Erp::Enum:GenJournalAccountType.BankAccount' },
 ];
 
-/** A number series fills a blank number (BC InitSeries), so the number is optional there. */
+/** A number series fills a blank number, so the number is optional there. */
 const SERIES_NO_FIELD: RecordField = {
   field: 'no',
   labelKey: 'Erp::No',
@@ -111,7 +119,7 @@ export class SetupEntities {
     this.vatProdGroups,
   );
 
-  /** BC VAT Posting Setup: the rate and accounts per business and product VAT group. */
+  /** VAT Posting Setup: the rate and accounts per business and product VAT group. */
   readonly vatPostingSetup: RecordEntity<VatPostingSetupDto, CreateUpdateVatPostingSetupDto> = {
     key: 'vatPostingSetup',
     titleKey: 'Erp::VatPostingSetup',
@@ -183,10 +191,12 @@ export class SetupEntities {
       { field: 'discountDateCalculation', labelKey: 'Erp::DiscountDateCalculation', width: 160 },
       { field: 'discountPercent', labelKey: 'Erp::DiscountPercent', type: 'number', width: 110 },
     ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }, ADDITIONAL_SECTION],
     fields: [
       { field: 'dueDateCalculation', labelKey: 'Erp::DueDateCalculation', type: 'text', maxLength: 32, helpKey: 'Erp::DateFormulaHelp' },
       { field: 'discountDateCalculation', labelKey: 'Erp::DiscountDateCalculation', type: 'text', maxLength: 32 },
       { field: 'discountPercent', labelKey: 'Erp::DiscountPercent', type: 'number', min: 0 },
+      ...PAYMENT_TERMS_ADDITIONAL_FIELDS,
     ],
     defaults: { discountPercent: 0 },
   });
@@ -206,6 +216,7 @@ export class SetupEntities {
     sections: [
       { key: 'general', labelKey: 'Erp::General' },
       { key: 'posting', labelKey: 'Erp::Posting', collapsed: true },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       { field: 'symbol', labelKey: 'Erp::Symbol', type: 'text', maxLength: 10 },
@@ -214,11 +225,12 @@ export class SetupEntities {
       accountField('realizedLossesAccountNo', 'Erp::RealizedLossesAccount', 'posting'),
       accountField('unrealizedGainsAccountNo', 'Erp::UnrealizedGainsAccount', 'posting'),
       accountField('unrealizedLossesAccountNo', 'Erp::UnrealizedLossesAccount', 'posting'),
+      ...CURRENCY_ADDITIONAL_FIELDS,
     ],
     defaults: { amountRoundingPrecision: 0.01 },
   });
 
-  /** BC Currency Exchange Rates: from a starting date, what an amount of the currency is in LCY. */
+  /** Currency Exchange Rates: from a starting date, what an amount of the currency is in LCY. */
   readonly currencyExchangeRate: RecordEntity<CurrencyExchangeRateDto, CreateUpdateCurrencyExchangeRateDto> = {
     key: 'currencyExchangeRate',
     titleKey: 'Erp::CurrencyExchangeRate',
@@ -287,6 +299,7 @@ export class SetupEntities {
       { key: 'general', labelKey: 'Erp::General' },
       { key: 'communication', labelKey: 'Erp::Communication', collapsed: true },
       { key: 'posting', labelKey: 'Erp::Posting' },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -303,6 +316,7 @@ export class SetupEntities {
       { field: 'phoneNo', labelKey: 'Erp::PhoneNo', type: 'text', section: 'communication', maxLength: 30, cardOnly: true },
       codeField('bankAccPostingGroup', 'Erp::BankAccPostingGroup', 'bankAccountPostingGroup', 'posting', { required: true }),
       codeField('currencyCode', 'Erp::CurrencyCode', 'currency', 'posting', { cardOnly: true }),
+      ...BANK_ACCOUNT_ADDITIONAL_FIELDS,
     ],
     getList: query => this.bankAccounts.getList(query),
     get: id => this.bankAccounts.get(id),
@@ -343,9 +357,11 @@ export class SetupEntities {
       { field: 'balAccountType', labelKey: 'Erp::BalAccountType', type: 'select', options: BAL_ACCOUNT_TYPE_OPTIONS, width: 140 },
       { field: 'balAccountNo', labelKey: 'Erp::BalAccountNo', width: 160 },
     ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }, ADDITIONAL_SECTION],
     fields: [
       { field: 'balAccountType', labelKey: 'Erp::BalAccountType', type: 'select', options: BAL_ACCOUNT_TYPE_OPTIONS },
       { field: 'balAccountNo', labelKey: 'Erp::BalAccountNo', type: 'text', maxLength: 20 },
+      ...PAYMENT_METHOD_ADDITIONAL_FIELDS,
     ],
   });
 
@@ -504,6 +520,7 @@ export class SetupEntities {
       { key: 'administration', labelKey: 'Erp::Administration', collapsed: true },
       { key: 'personal', labelKey: 'Erp::Personal', collapsed: true },
       { key: 'payments', labelKey: 'Erp::Payments', collapsed: true },
+      ADDITIONAL_SECTION,
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -541,6 +558,7 @@ export class SetupEntities {
       { field: 'bankAccountNo', labelKey: 'Erp::BankAccountNo', type: 'text', section: 'payments', maxLength: 30, cardOnly: true },
       { field: 'iban', labelKey: 'Erp::Iban', type: 'text', section: 'payments', maxLength: 50, cardOnly: true },
       codeField('salespersPurchCode', 'Erp::SalespersPurchCode', 'salespersonPurchaser', 'payments', { cardOnly: true }),
+      ...EMPLOYEE_ADDITIONAL_FIELDS,
     ],
     getList: query => this.employees.getList(query),
     get: id => this.employees.get(id),

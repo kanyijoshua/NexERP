@@ -35,7 +35,7 @@ interface LineDraft {
 }
 
 /**
- * A company's set-up checklist. Mirrors Business Central page 8632 "Configuration Worksheet":
+ * A company's set-up checklist.
  * areas, groups and the tables to set up under them, each with its status and owner.
  */
 @Component({

@@ -1,0 +1,68 @@
+<div class="modal-header flex-wrap gap-2 py-2">
+  <h5 class="modal-title me-auto text-truncate">
+    <i class="fas fa-table-cells text-success me-2"></i>{{ title || fileName }}
+  </h5>
+
+  <div class="btn-group btn-group-sm" role="group" [attr.aria-label]="'Erp::Spreadsheet' | abpLocalization">
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::Undo' | abpLocalization" [attr.aria-label]="'Erp::Undo' | abpLocalization" (click)="undo()">
+      <i class="fas fa-rotate-left"></i>
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::Redo' | abpLocalization" [attr.aria-label]="'Erp::Redo' | abpLocalization" (click)="redo()">
+      <i class="fas fa-rotate-right"></i>
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::Bold' | abpLocalization" [attr.aria-label]="'Erp::Bold' | abpLocalization" (click)="toggleBold()">
+      <i class="fas fa-bold"></i>
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::AutoSum' | abpLocalization" (click)="autoSum()">
+      <span aria-hidden="true">&Sigma;</span> {{ 'Erp::AutoSum' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::InsertRow' | abpLocalization" (click)="insertRow()">
+      <i class="fas fa-plus me-1"></i>{{ 'Erp::Row' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::InsertColumn' | abpLocalization" (click)="insertColumn()">
+      <i class="fas fa-plus me-1"></i>{{ 'Erp::Column' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::DeleteRow' | abpLocalization" (click)="deleteRow()">
+      <i class="fas fa-minus me-1"></i>{{ 'Erp::Row' | abpLocalization }}
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading() || failed()" [title]="'Erp::DeleteColumn' | abpLocalization" (click)="deleteColumn()">
+      <i class="fas fa-minus me-1"></i>{{ 'Erp::Column' | abpLocalization }}
+    </button>
+  </div>
+
+  <button type="button" class="btn btn-sm btn-success" [disabled]="loading() || failed() || saving()" (click)="download()">
+    <i class="fas fa-file-excel me-1"></i>{{ 'Erp::Download' | abpLocalization }}
+  </button>
+  <button type="button" class="btn-close" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body p-0 d-flex flex-column">
+  <div class="input-group input-group-sm erp-formula-bar">
+    <span class="input-group-text font-monospace erp-cell-address">{{ cellAddress() || '—' }}</span>
+    <span class="input-group-text fst-italic">fx</span>
+    <input
+      #content
+      type="text"
+      class="form-control font-monospace"
+      [attr.aria-label]="'Erp::FormulaBar' | abpLocalization"
+      [placeholder]="'Erp::FormulaBarHint' | abpLocalization"
+      [disabled]="!cellAddress()"
+      [value]="cellContent()"
+      (keydown.enter)="applyContent(content.value)"
+      (change)="applyContent(content.value)"
+    />
+  </div>
+
+  @if (loading()) {
+    <div class="text-center text-muted py-5">
+      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{{ 'Erp::Loading' | abpLocalization }}
+    </div>
+  }
+  @if (failed()) {
+    <div class="text-center text-muted py-5">
+      <i class="fas fa-triangle-exclamation fa-2x d-block mb-2"></i>{{ 'Erp::SpreadsheetNotReadable' | abpLocalization }}
+    </div>
+  }
+
+  <div #host class="erp-spreadsheet-host flex-grow-1"></div>
+</div>

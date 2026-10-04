@@ -14,11 +14,11 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// The import wizard, after Odoo's: read a CSV or Excel file, match its columns to fields (by the
-/// field's name or its label, as Odoo does), test, then import.
+/// The import wizard: read a CSV or Excel file, match its columns to fields (by the
+/// field's name or its label), test, then import.
 /// <para>
 /// Unlike a configuration package, which applies the records it can and keeps the rest for
-/// correction as BC does, the wizard is all or nothing, as Odoo's import is: a file with one bad
+/// correction, the wizard is all or nothing: a file with one bad
 /// row writes no rows, so a half-imported file never has to be untangled.
 /// </para>
 /// </summary>

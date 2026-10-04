@@ -19,8 +19,8 @@ public sealed class ReportRenderContext
 /// <summary>
 /// The layout language of a report: literal markup with placeholders and repeated sections.
 /// <para>
-/// Business Central lets a user download a report's layout, edit it and upload it again. This is
-/// the same idea with HTML in place of Word or RDLC. A general-purpose template engine would give
+/// A user can download a report's layout, edit it and upload it again, and the
+/// layout is HTML. A general-purpose template engine would give
 /// more expressive layouts, but layouts are uploaded by users and rendered on the server, so the
 /// vocabulary is deliberately fixed and contains no way to execute anything: a template can place
 /// and repeat the report's own values, and nothing else.

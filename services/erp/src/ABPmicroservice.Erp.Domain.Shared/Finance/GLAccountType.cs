@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Finance;
 
-/// <summary>
-/// Mirrors Business Central "G/L Account Type" option.
-/// </summary>
 public enum GLAccountType
 {
     Posting = 0,

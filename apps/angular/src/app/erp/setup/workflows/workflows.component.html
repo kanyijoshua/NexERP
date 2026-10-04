@@ -104,7 +104,7 @@
                 <div class="card border shadow-none">
                   <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
                     <span class="fw-bold small text-uppercase text-secondary">
-                      <i class="fas fa-sitemap me-1 text-primary"></i> Business Central Workflow Sequence: {{ w.code }}
+                      <i class="fas fa-sitemap me-1 text-primary"></i> Workflow Sequence: {{ w.code }}
                     </span>
                     <span class="badge bg-primary-subtle text-primary">{{ (w.steps?.length || 0) }} Steps</span>
                   </div>
@@ -155,7 +155,7 @@
   </div>
 </div>
 
-<!-- Workflow Modal (BC Workflow Card) -->
+<!-- Workflow Modal -->
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
   <ng-template #abpHeader>
     <div class="d-flex align-items-center gap-2">
@@ -277,19 +277,19 @@
             <div class="alert alert-info py-2 d-flex align-items-center mt-3">
               <i class="fas fa-info-circle me-2 fs-5"></i>
               <div class="small">
-                Switch to <strong>Dynamic Conditions</strong> to configure column filters (e.g. Vendor, Amount, Currency) or <strong>Approval Sequence</strong> to customize the multi-step BC approval flow.
+                Switch to <strong>Dynamic Conditions</strong> to configure column filters (e.g. Vendor, Amount, Currency) or <strong>Approval Sequence</strong> to customize the multi-step approval flow.
               </div>
             </div>
           </div>
         }
 
-        <!-- TAB 2: DYNAMIC CONDITIONS (BC APPROACH) -->
+        <!-- TAB 2: DYNAMIC CONDITIONS -->
         @if (activeModalTab === 'conditions') {
           <div class="p-1">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h6 class="fw-bold mb-0">
-                  <i class="fas fa-filter text-primary me-1"></i> Business Central Filter Conditions
+                  <i class="fas fa-filter text-primary me-1"></i> Filter Conditions
                 </h6>
                 <div class="text-muted small">
                   Approval requests will only trigger when documents satisfy all conditions below.
@@ -403,7 +403,7 @@
             <div class="card bg-light border-0 shadow-none mb-3">
               <div class="card-body p-3">
                 <div class="small fw-bold text-uppercase text-secondary mb-1">
-                  <i class="fas fa-terminal me-1 text-primary"></i> BC Filter Expression Rule
+                  <i class="fas fa-terminal me-1 text-primary"></i> Filter Expression Rule
                 </div>
                 <div class="font-monospace text-primary bg-white p-2 px-3 rounded border">
                   {{ getConditionRuleSummary() }}
@@ -422,15 +422,15 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h6 class="fw-bold mb-0">
-                  <i class="fas fa-sitemap text-primary me-1"></i> Business Central Approval Sequence
+                  <i class="fas fa-sitemap text-primary me-1"></i> Approval Sequence
                 </h6>
                 <div class="text-muted small">
                   Configure sequence of events, filter conditions, and responses for this workflow.
                 </div>
               </div>
               <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetToBcDefaults()">
-                  <i class="fas fa-undo me-1"></i> Reset BC Defaults
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetToDefaults()">
+                  <i class="fas fa-undo me-1"></i> Reset Defaults
                 </button>
                 <button type="button" class="btn btn-sm btn-primary" (click)="addStep()">
                   <i class="fas fa-plus me-1"></i> Add Step
@@ -451,7 +451,7 @@
                   <div class="mb-3">
                     <label class="form-label fw-semibold small">When Event Occurs *</label>
                     <select class="form-select form-select-sm" formControlName="eventName">
-                      @for (ev of bcEvents; track ev) {
+                      @for (ev of workflowEvents; track ev) {
                         <option [value]="ev">{{ ev }}</option>
                       }
                     </select>
@@ -481,7 +481,7 @@
                   <div class="mb-3">
                     <label class="form-label fw-semibold small">Then Response Action *</label>
                     <select class="form-select form-select-sm mb-1" formControlName="responseAction">
-                      @for (resp of bcResponses; track resp) {
+                      @for (resp of workflowResponses; track resp) {
                         <option [value]="resp">{{ resp }}</option>
                       }
                     </select>

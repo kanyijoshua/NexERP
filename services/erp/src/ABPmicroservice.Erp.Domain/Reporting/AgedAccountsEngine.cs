@@ -18,7 +18,7 @@ public class AgedAccountsRequest
 
     public AgingMethod AgingMethod { get; set; } = AgingMethod.DueDate;
 
-    /// <summary>Width of each ageing bucket. BC's request page defaults to one month.</summary>
+    /// <summary>Width of each ageing bucket. The request page defaults to one month.</summary>
     public int PeriodLengthDays { get; set; } = 30;
 
     /// <summary>Leaves out parties whose open entries net to nothing.</summary>
@@ -27,7 +27,6 @@ public class AgedAccountsRequest
 
 /// <summary>
 /// Aged Accounts Receivable and Payable.
-/// Mirrors Business Central reports 120 "Aged Accounts Receivable" and 322 "Aged Accounts Payable".
 /// <para>
 /// Only open entries count, and each is placed in a bucket by how long it has been due (or
 /// posted) as at the report date. The buckets total back to the party's open balance.

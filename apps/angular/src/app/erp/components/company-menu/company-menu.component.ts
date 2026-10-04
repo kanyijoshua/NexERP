@@ -11,7 +11,7 @@ import { CopyCompanyDialogComponent } from './copy-company-dialog.component';
 /**
  * The company you are working in, and a menu to switch to another one.
  * <p>
- * Business Central shows the company as the Role Center's title; here it sits in the top bar
+ * The company names the Role Center; it sits in the top bar
  * (variant "nav"), as the home page title (variant "title") and at the start of the role
  * navigation bar (variant "bar"), all opening the same menu.
  * Switching does not reload the browser: pages listen to CompanyService.companyChanged$.

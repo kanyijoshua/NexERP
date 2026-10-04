@@ -43,7 +43,7 @@ interface RunSummary {
 }
 
 /**
- * One configuration package. Mirrors Business Central page 8614 "Config. Package Card" with its
+ * One configuration package.with its
  * "Config. Package Subform" and the Config. Package Fields page.
  */
 @Component({

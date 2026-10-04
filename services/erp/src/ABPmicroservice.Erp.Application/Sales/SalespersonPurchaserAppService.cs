@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Sales;
 
-/// <summary>Salespeople/Purchasers (BC page 14).</summary>
+/// <summary>Salespeople/Purchasers.</summary>
 [Authorize(ErpPermissions.SalespeoplePurchasers.Default)]
 public class SalespersonPurchaserAppService
     : CodeTableAppServiceBase<SalespersonPurchaser, SalespersonPurchaserDto, CreateUpdateSalespersonPurchaserDto>,

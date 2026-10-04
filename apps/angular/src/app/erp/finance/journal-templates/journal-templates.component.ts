@@ -12,7 +12,7 @@ import { Observable, map } from 'rxjs';
 import { CrudListBase, ErpTableColumn } from '../../erp-shared';
 
 /**
- * Journal templates. Mirrors Business Central page 100 "Gen. Journal Templates": the kinds of
+ * Journal templates. the kinds of
  * journal a company keeps, and whether their lines recur.
  */
 @Component({

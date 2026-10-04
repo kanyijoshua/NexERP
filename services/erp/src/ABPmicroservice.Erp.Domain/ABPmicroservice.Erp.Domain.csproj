@@ -11,4 +11,9 @@
         <ProjectReference Include="..\ABPmicroservice.Erp.Domain.Shared\ABPmicroservice.Erp.Domain.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- RDLC layouts that ship with the system; converted when a company is seeded. -->
+        <EmbeddedResource Include="Reporting\BundledLayouts\*.rdl;Reporting\BundledLayouts\*.rdlc" LogicalName="ABPmicroservice.Erp.Reporting.BundledLayouts.%(Filename)%(Extension)" />
+    </ItemGroup>
+
 </Project>

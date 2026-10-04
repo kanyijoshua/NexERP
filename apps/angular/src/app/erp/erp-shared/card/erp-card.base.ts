@@ -11,7 +11,7 @@ import {
 } from './erp-card.models';
 
 /**
- * Base class for Business Central style Card pages (e.g. Customer Card,
+ * Base class for Card pages (e.g. Customer Card,
  * Vendor Card, Item Card, Config Package Card, Setup Cards).
  *
  * Supports FastTabs (collapsible card sections), FactBoxes (side pane with
@@ -129,7 +129,7 @@ export abstract class ErpCardBase<TRecord = any> {
   }
 
   /**
-   * Builds standard Business Central card actions: Save & Discard.
+   * Builds standard card actions: Save & Discard.
    */
   protected buildDefaultCardActions(): ErpCardAction[] {
     return [

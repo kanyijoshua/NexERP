@@ -6,11 +6,11 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Item card. Mirrors Business Central table 27 "Item".
+/// Item card.
 /// </summary>
-public class Item : CompanyAggregateRoot
+public class Item : CompanyAggregateRoot, IHasNo
 {
-    /// <summary>Business key. Mirrors BC field "No.".</summary>
+    /// <summary>Business key.</summary>
     public string No { get; private set; }
 
     public string Description { get; private set; }

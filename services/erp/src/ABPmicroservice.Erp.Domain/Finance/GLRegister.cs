@@ -6,7 +6,7 @@ using Volo.Abp.Auditing;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// G/L Register. Mirrors Business Central table 45 "G/L Register".
+/// G/L Register.
 /// <para>
 /// One row per posting run, holding the range of entry numbers it wrote. It is what the
 /// navigate and reverse actions work on: reversing a register cancels every entry in it.
@@ -14,13 +14,13 @@ namespace ABPmicroservice.Erp.Finance;
 /// </summary>
 public class GLRegister : CompanyBasicEntity, IHasCreationTime
 {
-    /// <summary>Source code of an exchange rate adjustment run. Mirrors BC "EXCHRATADJ".</summary>
+    /// <summary>Source code of an exchange rate adjustment run.</summary>
     public const string ExchRateAdjustmentSourceCode = "EXCHRATADJ";
 
-    /// <summary>Source code of a VAT settlement. Mirrors BC "VATSTMT".</summary>
+    /// <summary>Source code of a VAT settlement.</summary>
     public const string VatSettlementSourceCode = "VATSTMT";
 
-    /// <summary>Consecutive register number within the company. Mirrors BC "No.".</summary>
+    /// <summary>Consecutive register number within the company.</summary>
     public long No { get; private set; }
 
     public long FromEntryNo { get; internal set; }
@@ -50,7 +50,7 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
 
     public DateTime CreationTime { get; private set; }
 
-    /// <summary>Posting date of the run. Mirrors BC "Posting Date" on the register.</summary>
+    /// <summary>Posting date of the run.</summary>
     public DateTime PostingDate { get; private set; }
 
     public Guid? UserId { get; private set; }
@@ -103,11 +103,10 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
 
     /// <summary>
     /// A register can be reversed once, and only if it was not itself a reversal.
-    /// Mirrors what BC's "Reverse Transaction" refuses.
     /// <para>
     /// Adjustments and settlements are not reversible: they change entries they did not write
     /// (the carried LCY of open entries, the closed flag of VAT entries), which a mirror image
-    /// cannot put back. BC refuses them the same way.
+    /// cannot put back.
     /// </para>
     /// </summary>
     public bool IsReversible =>

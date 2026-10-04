@@ -13,7 +13,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Exch. Rate Adjmt. Register. Mirrors Business Central table 86: one row per customer, vendor or
+/// Exch. Rate Adjmt. Register: one row per customer, vendor or
 /// bank account an adjustment run revalued, with the amounts it was carried at before and after.
 /// </summary>
 public class ExchRateAdjmtRegister : CompanyEntity
@@ -103,8 +103,7 @@ public class ExchRateAdjustmentResult
 }
 
 /// <summary>
-/// Revalues what is open in foreign currencies. Mirrors Business Central report 596 "Exch. Rate
-/// Adjustment": the remaining amount of every open customer and vendor entry, and the balance of
+/// Revalues what is open in foreign currencies: the remaining amount of every open customer and vendor entry, and the balance of
 /// every foreign currency bank account, is converted at the rate on the ending date. The change
 /// against what it is carried at goes to the control account and, opposite, to the currency's
 /// unrealized gain or loss account; the entries then carry the new LCY amount, so a later payment

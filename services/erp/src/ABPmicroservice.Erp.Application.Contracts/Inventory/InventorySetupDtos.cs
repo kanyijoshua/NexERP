@@ -37,7 +37,7 @@ public class CreateUpdateLocationDto : CreateUpdateCodeTableDto
     public string Contact { get; set; }
 }
 
-/// <summary>Inventory Setup (BC page 461).</summary>
+/// <summary>Inventory Setup.</summary>
 public class InventorySetupDto
 {
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]

@@ -118,7 +118,7 @@ export type ErpFilterOperator =
   // Boolean operators
   | 'isTrue'
   | 'isFalse'
-  // A Business Central filter expression, e.g. `1000..2000|3000`, `A*`, `<>0`
+  // A filter expression, e.g. `1000..2000|3000`, `A*`, `<>0`
   | 'expression';
 
 export interface ErpFilterCriterion {
@@ -144,7 +144,7 @@ export interface ErpSavedColumnConfig {
   width?: number;
 }
 
-/** A saved filter (BC "view", Odoo "favorite"): search, conditions and match logic under a name. */
+/** A saved filter: search, conditions and match logic under a name. */
 export interface ErpSavedView {
   name: string;
   state: ErpFilterState;

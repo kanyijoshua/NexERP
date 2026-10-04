@@ -372,7 +372,7 @@ public interface IFinancialReportAppService : IApplicationService
 }
 
 /// <summary>
-/// Account schedules and their lines. Mirrors Business Central tables 84 and 85.
+/// Account schedules and their lines.
 /// </summary>
 public interface IAccountScheduleAppService : IApplicationService
 {
@@ -394,7 +394,7 @@ public interface IAccountScheduleAppService : IApplicationService
 }
 
 /// <summary>
-/// Column layouts and their lines. Mirrors Business Central tables 333 and 334.
+/// Column layouts and their lines.
 /// </summary>
 public interface IColumnLayoutAppService : IApplicationService
 {
@@ -416,8 +416,7 @@ public interface IColumnLayoutAppService : IApplicationService
 }
 
 /// <summary>
-/// The layouts a report can be printed through. Mirrors Business Central's Report Layouts page
-/// and table 9651 "Report Layout Selection".
+/// The layouts a report can be printed through, and which of them each report uses.
 /// </summary>
 public interface IReportLayoutAppService : IApplicationService
 {
@@ -446,4 +445,55 @@ public interface IReportLayoutAppService : IApplicationService
 
     /// <summary>Routed as POST /api/erp/report-layout/run-preview.</summary>
     Task<string> RunPreviewAsync(PreviewReportLayoutInput input);
+
+    /// <summary>
+    /// Converts an RDLC layout and saves it as a layout of the report.
+    /// Routed as POST /api/erp/report-layout/import-rdlc.
+    /// </summary>
+    Task<RdlcImportResultDto> ImportRdlcAsync(ImportRdlcLayoutInput input);
+}
+
+/// <summary>An RDLC layout to convert into a layout of a report.</summary>
+public class ImportRdlcLayoutInput
+{
+    [Required]
+    [StringLength(ErpDomainConsts.MaxNameLength)]
+    public string ReportName { get; set; }
+
+    [Required]
+    [StringLength(ErpDomainConsts.MaxCustomLayoutCodeLength)]
+    public string LayoutName { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxDescriptionLength)]
+    public string Description { get; set; }
+
+    /// <summary>The .rdl or .rdlc file, base64 encoded.</summary>
+    [Required]
+    public string ContentBase64 { get; set; }
+
+    /// <summary>Print the report through the converted layout from now on.</summary>
+    public bool SetAsDefault { get; set; }
+}
+
+public class RdlcColumnMatchDto
+{
+    public string Caption { get; set; }
+
+    /// <summary>The dataset field the RDLC column showed; null for a column the RDLC did not have.</summary>
+    public string RdlcField { get; set; }
+
+    /// <summary>The report column that fills it; null for an RDLC column that was left out.</summary>
+    public string ReportColumnKey { get; set; }
+}
+
+/// <summary>The layout an RDLC file became, and what did and did not carry over.</summary>
+public class RdlcImportResultDto
+{
+    public ReportLayoutDto Layout { get; set; }
+
+    public int MatchedColumns { get; set; }
+
+    public List<RdlcColumnMatchDto> Columns { get; set; } = new();
+
+    public List<string> Notes { get; set; } = new();
 }

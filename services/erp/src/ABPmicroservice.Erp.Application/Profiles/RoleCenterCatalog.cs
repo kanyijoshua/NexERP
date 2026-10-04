@@ -20,9 +20,8 @@ public sealed record RoleCenterDefinition(string ProfileId, IReadOnlyList<RoleCe
 }
 
 /// <summary>
-/// The profiles and their role centers. Mirrors the navigation Business Central's role centers
-/// ship with (Business Manager page 9022, Accountant 9027, Order Processor 9006, Purchasing Agent
-/// 9007, Administrator 9018): a few direct links to the lists used every day, then a menu per area.
+/// The profiles and their role centers (Business Manager, Accountant, Order Processor, Purchasing
+/// Agent, Administrator): a few direct links to the lists used every day, then a menu per area.
 /// Routes and permissions match the Angular routes they open.
 /// </summary>
 public static class RoleCenterCatalog

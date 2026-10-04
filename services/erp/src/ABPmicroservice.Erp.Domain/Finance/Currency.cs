@@ -9,7 +9,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Currency. Mirrors Business Central table 4: a foreign currency customers, vendors and bank
+/// Currency: a foreign currency customers, vendors and bank
 /// accounts may deal in. The local currency (LCY) is not a row here; it is the General Ledger
 /// Setup's LCY Code.
 /// </summary>
@@ -26,6 +26,39 @@ public class Currency : CodeTableEntity
     public string UnrealizedGainsAccountNo { get; private set; }
 
     public string UnrealizedLossesAccountNo { get; private set; }
+
+    /// <summary>ISO Code.</summary>
+    public string IsoCode { get; private set; }
+
+    /// <summary>ISO Numeric Code.</summary>
+    public string IsoNumericCode { get; private set; }
+
+    /// <summary>Unit-Amount Rounding Precision.</summary>
+    public decimal UnitAmountRoundingPrecision { get; private set; }
+
+    /// <summary>Invoice Rounding Precision.</summary>
+    public decimal InvoiceRoundingPrecision { get; private set; }
+
+    /// <summary>Invoice Rounding Type.</summary>
+    public CurrencyInvoiceRoundingType InvoiceRoundingType { get; private set; }
+
+    /// <summary>Appln. Rounding Precision.</summary>
+    public decimal ApplnRoundingPrecision { get; private set; }
+
+    /// <summary>Amount Decimal Places.</summary>
+    public string AmountDecimalPlaces { get; private set; }
+
+    /// <summary>Unit-Amount Decimal Places.</summary>
+    public string UnitAmountDecimalPlaces { get; private set; }
+
+    /// <summary>EMU Currency.</summary>
+    public bool EmuCurrency { get; private set; }
+
+    /// <summary>Payment Tolerance %.</summary>
+    public decimal PaymentTolerancePct { get; private set; }
+
+    /// <summary>Max. Payment Tolerance Amount.</summary>
+    public decimal MaxPaymentToleranceAmount { get; private set; }
 
     protected Currency() { }
 
@@ -77,10 +110,38 @@ public class Currency : CodeTableEntity
                 .WithData("currencyCode", Code)
                 .WithData("account", (realized ? "Realized" : "Unrealized") + (gain ? "Gains" : "Losses") + "AccountNo");
     }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string isoCode,
+        string isoNumericCode,
+        decimal unitAmountRoundingPrecision,
+        decimal invoiceRoundingPrecision,
+        CurrencyInvoiceRoundingType invoiceRoundingType,
+        decimal applnRoundingPrecision,
+        string amountDecimalPlaces,
+        string unitAmountDecimalPlaces,
+        bool emuCurrency,
+        decimal paymentTolerancePct,
+        decimal maxPaymentToleranceAmount
+    )
+    {
+        IsoCode = CodeTableEntity.NormalizeCode(Check.Length(isoCode, nameof(isoCode), 3));
+        IsoNumericCode = CodeTableEntity.NormalizeCode(Check.Length(isoNumericCode, nameof(isoNumericCode), 3));
+        UnitAmountRoundingPrecision = unitAmountRoundingPrecision;
+        InvoiceRoundingPrecision = invoiceRoundingPrecision;
+        InvoiceRoundingType = invoiceRoundingType;
+        ApplnRoundingPrecision = applnRoundingPrecision;
+        AmountDecimalPlaces = Check.Length(amountDecimalPlaces, nameof(amountDecimalPlaces), 5);
+        UnitAmountDecimalPlaces = Check.Length(unitAmountDecimalPlaces, nameof(unitAmountDecimalPlaces), 5);
+        EmuCurrency = emuCurrency;
+        PaymentTolerancePct = paymentTolerancePct;
+        MaxPaymentToleranceAmount = maxPaymentToleranceAmount;
+    }
 }
 
 /// <summary>
-/// Currency Exchange Rate. Mirrors Business Central table 330: from its starting date on,
+/// Currency Exchange Rate: from its starting date on,
 /// <see cref="ExchangeRateAmount"/> units of the currency are worth
 /// <see cref="RelationalExchangeRateAmount"/> units of LCY.
 /// </summary>
@@ -121,7 +182,7 @@ public class CurrencyExchangeRate : CompanyEntity
 }
 
 /// <summary>
-/// Turns foreign currency amounts into LCY. Mirrors the parts of Business Central table 330's
+/// Turns foreign currency amounts into LCY. Holds the
 /// functions the posting routines use: the rate in force on a date and the "Currency Factor"
 /// (units of currency per unit of LCY) a document or journal line carries.
 /// </summary>
@@ -160,7 +221,7 @@ public class CurrencyExchangeRateManager : DomainService
 
     /// <summary>
     /// Units of the currency one unit of LCY buys on <paramref name="date"/>, from the latest rate
-    /// starting on or before it. 1 for LCY. BC "ExchangeRate" / "Currency Factor".
+    /// starting on or before it. 1 for LCY.
     /// </summary>
     public async Task<decimal> GetCurrencyFactorAsync(string currencyCode, DateTime date)
     {

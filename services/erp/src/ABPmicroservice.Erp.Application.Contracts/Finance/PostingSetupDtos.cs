@@ -106,7 +106,7 @@ public class CreateUpdateInventoryPostingSetupDto
     public string InventoryAccountNo { get; set; }
 }
 
-/// <summary>General Ledger Setup (BC page 118). Blank dates mean no limit.</summary>
+/// <summary>General Ledger Setup. Blank dates mean no limit.</summary>
 public class GeneralLedgerSetupDto
 {
     public DateTime? AllowPostingFrom { get; set; }
@@ -173,6 +173,40 @@ public class GeneralLedgerSetupDto
     public bool NotifyOnSuccess { get; set; }
 
     public bool RegisterTime { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension3Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension4Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension5Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension6Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension7Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension8Code { get; set; }
+
+    public decimal VatTolerancePct { get; set; }
+
+    public decimal ApplnRoundingPrecision { get; set; }
+
+    public bool EmuCurrency { get; set; }
+
+    public bool PrintVatSpecificationInLcy { get; set; }
+
+    public GeneralLedgerSetupShowAmounts ShowAmounts { get; set; }
+
+    public GLSetupVatCalculation BillToSellToVatCalc { get; set; }
+
+    public DateTime? AllowDeferralPostingFrom { get; set; }
+
+    public DateTime? AllowDeferralPostingTo { get; set; }
 }
 
 public class VatPostingSetupDto : FullAuditedEntityDto<Guid>

@@ -5,7 +5,7 @@ using Volo.Abp.Application.Services;
 
 namespace ABPmicroservice.Erp.Sales;
 
-/// <summary>Salesperson/Purchaser (BC page 14). The description is the person's name.</summary>
+/// <summary>Salesperson/Purchaser. The description is the person's name.</summary>
 public class SalespersonPurchaserDto : CodeTableDto
 {
     public string Email { get; set; }

@@ -595,7 +595,7 @@
           ></textarea>
         </div>
 
-        <!-- RECURRENCE CARD (Business Central & Odoo Reference) -->
+        <!-- RECURRENCE CARD -->
         <div class="col-12 mt-4">
           <h6 class="text-uppercase text-secondary fw-bold small border-bottom pb-1">
             {{ 'Erp::Recurrence' | abpLocalization }}
@@ -624,7 +624,7 @@
           <div class="col-md-6">
             <label class="form-label">{{ 'Erp::NextRunDateFormula' | abpLocalization }}</label>
             <input type="text" class="form-control font-monospace text-uppercase" formControlName="nextRunDateFormula" placeholder="1D, 1W, 1M+CM" />
-            <div class="form-text small">Business Central Date Formula: e.g. <code>1D</code>, <code>1W</code>, <code>1M+CM</code></div>
+            <div class="form-text small">Date formula: e.g. <code>1D</code>, <code>1W</code>, <code>1M+CM</code></div>
           </div>
 
           <div class="col-md-6">
@@ -781,7 +781,7 @@
   </ng-template>
 </abp-modal>
 
-<!-- MODAL 3: ERROR DETAILS DIALOG (Business Central Show Error Style) -->
+<!-- MODAL 3: ERROR DETAILS DIALOG -->
 <abp-modal [(visible)]="isErrorModalOpen">
   <ng-template #abpHeader>
     <h4 class="text-danger mb-0">

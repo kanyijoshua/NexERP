@@ -13,7 +13,7 @@ public abstract class PostingGroupBase : CodeTableEntity
 }
 
 /// <summary>
-/// Gen. Business Posting Group. Mirrors Business Central table 250: who a customer or vendor is
+/// Gen. Business Posting Group: who a customer or vendor is
 /// (domestic, EU, export), the row key of the General Posting Setup.
 /// </summary>
 public class GenBusinessPostingGroup : PostingGroupBase
@@ -25,7 +25,7 @@ public class GenBusinessPostingGroup : PostingGroupBase
 }
 
 /// <summary>
-/// Gen. Product Posting Group. Mirrors Business Central table 251: what an item or G/L line is
+/// Gen. Product Posting Group: what an item or G/L line is
 /// (retail goods, services, raw materials), the column key of the General Posting Setup.
 /// </summary>
 public class GenProductPostingGroup : PostingGroupBase

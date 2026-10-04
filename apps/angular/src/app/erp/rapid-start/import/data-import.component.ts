@@ -30,7 +30,7 @@ import {
 } from '../rapid-start.helpers';
 
 /**
- * The import wizard. Mirrors Odoo's "Import records": upload a CSV or Excel file, match each column
+ * The import wizard: upload a CSV or Excel file, match each column
  * to a field, test, then import. The import is all or nothing: one row in error and nothing is written.
  */
 @Component({

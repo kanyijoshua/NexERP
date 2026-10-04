@@ -37,9 +37,38 @@ const ACCOUNT_KIND: Record<string, GenJournalAccountType> = {
 };
 
 /**
- * The general journal. Mirrors Business Central page 39: pick a batch, fill in the lines, watch
+ * The general journal. pick a batch, fill in the lines, watch
  * the balance, then check, preview and post.
  */
+/** Line fields the journal grid does not show; a save sends them back unchanged. */
+const UNSHOWN_LINE_FIELDS = [
+  'postingGroup',
+  'shortcutDimension1Code',
+  'shortcutDimension2Code',
+  'salespersPurchCode',
+  'sourceCode',
+  'reasonCode',
+  'paymentMethodCode',
+  'appliesToId',
+  'bankPaymentType',
+  'correction',
+  'quantity',
+  'dueDate',
+  'onHold',
+  'vatRegistrationNo',
+  'countryRegionCode',
+  'paymentReference',
+  'messageToRecipient',
+] as const satisfies readonly (keyof GenJournalLineDto)[];
+
+function pick<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    result[key] = source[key];
+  }
+  return result;
+}
+
 @Component({
   selector: 'app-general-journal',
   templateUrl: './general-journal.component.html',
@@ -119,7 +148,7 @@ export class GeneralJournalComponent implements OnInit {
     return this.batchList.map(b => ({ id: b.id!, name: b.name ?? '' }));
   }
 
-  /** The recurring columns only appear under a recurring template, as they do in BC. */
+  /** The recurring columns only appear under a recurring template. */
   get lineColumns(): DocumentLineColumn[] {
     const columns: DocumentLineColumn[] = [
       { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: '140px' },
@@ -239,7 +268,7 @@ export class GeneralJournalComponent implements OnInit {
 
   /**
    * A looked-up account carries which list it came from, so the account type follows it. A G/L
-   * account also brings its posting type and VAT groups, as validating the account does in BC;
+   * account also brings its posting type and VAT groups;
    * any other account carries no VAT.
    */
   onLineChange(change: DocumentLineChange): void {
@@ -419,8 +448,11 @@ export class GeneralJournalComponent implements OnInit {
       });
   }
 
+  /** What the server holds for each line, so the fields the grid does not show survive a save. */
+  private readonly lineSources = new WeakMap<FormGroup, GenJournalLineDto>();
+
   private buildLine(line?: GenJournalLineDto): FormGroup {
-    return this.fb.group({
+    const group = this.fb.group({
       postingDate: [
         line?.postingDate?.substring(0, 10) ?? new Date().toISOString().substring(0, 10),
         Validators.required,
@@ -445,12 +477,21 @@ export class GeneralJournalComponent implements OnInit {
       recurringFrequency: [line?.recurringFrequency ?? ''],
       expirationDate: [line?.expirationDate?.substring(0, 10) ?? null],
     });
+
+    if (line) {
+      this.lineSources.set(group, line);
+    }
+
+    return group;
   }
 
   private toInput(form: FormGroup): CreateUpdateGenJournalLineDto {
     const value = form.getRawValue();
+    const source = this.lineSources.get(form);
 
     return {
+      // Fields the grid has no column for keep what the server holds.
+      ...(source ? pick(source, UNSHOWN_LINE_FIELDS) : {}),
       genJournalBatchId: this.selectedBatchId!,
       postingDate: value.postingDate,
       documentType: value.documentType,

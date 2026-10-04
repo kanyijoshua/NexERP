@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Posted Purchase Invoice Header. Mirrors Business Central table 122 "Purch. Inv. Header".
+/// Posted Purchase Invoice Header.
 /// Immutable historical posted document.
 /// </summary>
 public class PostedPurchaseHeader : CompanyBasicEntity
@@ -63,7 +63,7 @@ public class PostedPurchaseHeader : CompanyBasicEntity
 }
 
 /// <summary>
-/// Posted Purchase Invoice Line. Mirrors Business Central table 123 "Purch. Inv. Line".
+/// Posted Purchase Invoice Line.
 /// </summary>
 public class PostedPurchaseLine : Entity<Guid>
 {

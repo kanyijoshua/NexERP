@@ -26,7 +26,7 @@ export type RecordFieldType =
   | 'lookup'
   | 'readonly';
 
-/** One field of a record card (BC card page field, Odoo form field). */
+/** One field of a record card. */
 export interface RecordField {
   /** Property of the DTO and name of the form control. */
   field: string;
@@ -49,7 +49,7 @@ export interface RecordField {
   helpKey?: string;
   /** Localization key of the placeholder. */
   placeholderKey?: string;
-  /** Leaves the field out of the quick-create dialog (Odoo's quick create shows the essentials). */
+  /** Leaves the field out of the quick-create dialog. */
   cardOnly?: boolean;
   /** Editable on a new record only, e.g. a code other records point at. */
   createOnly?: boolean;
@@ -61,7 +61,7 @@ export interface RecordField {
 export interface RecordSection {
   key: string;
   labelKey: string;
-  /** Starts collapsed on the card page, as BC does for the less used FastTabs. */
+  /** Starts collapsed on the card page for the less used FastTabs. */
   collapsed?: boolean;
 }
 
@@ -81,7 +81,7 @@ export interface RecordColumn {
   filterable?: boolean;
 }
 
-/** A record table's columns as grid columns: the first one links to the card, as in BC. */
+/** A record table's columns as grid columns: the first one links to the card. */
 export function toRecordTableColumns(columns: RecordColumn[]): ErpTableColumn[] {
   return columns.map((column, index) => ({
     field: column.field,
@@ -94,7 +94,7 @@ export function toRecordTableColumns(columns: RecordColumn[]): ErpTableColumn[] 
   }));
 }
 
-/** A value of the FactBox on the card page (BC FactBox, Odoo stat info). */
+/** A value of the FactBox on the card page. */
 export interface RecordFact {
   labelKey: string;
   value: string | number | boolean | null | undefined;
@@ -116,6 +116,27 @@ export interface RecordAction<TDto> {
 }
 
 /**
+ * A table of lines shown on a record's card under its fields, e.g. a voucher's lines. The lines are
+ * records of another registered entity, opened, added and deleted through its card dialog.
+ */
+export interface RecordPart<TDto> {
+  /** Registry key of the line entity. */
+  entity: string;
+  /** Heading; the line entity's plural when omitted. */
+  titleKey?: string;
+  /** The lines of the record. */
+  lines(dto: TDto): Observable<Record<string, any>[]>;
+  /** Values a new line starts with, e.g. the number of the document it belongs to. */
+  newLine?(dto: TDto): Record<string, unknown>;
+  /** Fields of the line entity's columns to show, in order; all of them when omitted. */
+  columns?: string[];
+  /** Currency or number fields totalled under the table. */
+  totals?: string[];
+  /** Whether lines can be added, changed and deleted; always, when omitted. */
+  editable?(dto: TDto): boolean;
+}
+
+/**
  * Everything the generic record UI (lookup dropdown, full list, quick card dialog and the card page)
  * needs to know about one master-data table. A descriptor is the only place a table is described:
  * the lookup, the "Search More" list, the dialog and the card page all read it.
@@ -131,6 +152,13 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   permission: string;
   /** Route of the list page; the card page is `[...listRoute, id]`. */
   listRoute?: string[];
+  /**
+   * Name of the table in the server's entity registry, e.g. `FixedAsset`: the card page then shows
+   * the files attached to the record. Defaults to `chatterEntityType`.
+   */
+  attachmentEntityType?: string;
+  /** A table only posting writes (ledger entries, posted statements): no New, Edit or Delete. */
+  readOnly?: boolean;
   /** Chatter thread key for the card page. No chatter when omitted. */
   chatterEntityType?: string;
 
@@ -148,18 +176,20 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   toItem(dto: TDto): LookupItem;
   /** Form value to create/update DTO. Defaults to the form value itself. */
   toInput?(value: Record<string, unknown>): TInput;
-  /** Values of a new record; `term` is what the user typed in the lookup (Odoo "Create 'term'"). */
+  /** Values of a new record; `term` is what the user typed in the lookup. */
   newRecord(term?: string): Partial<TDto>;
   /**
-   * The input for Odoo's one-click "Create 'term'". Leave it out when a record needs more than
+   * The input for the one-click "Create 'term'". Leave it out when a record needs more than
    * a name: the lookup then offers "Create and edit..." with the term filled in instead.
    */
   quickCreate?(term: string): TInput;
 
   facts?(dto: TDto): RecordFact[];
   actions?: RecordAction<TDto>[];
-  /** Odoo smart buttons of the card page. */
+  /** Smart buttons of the card page. */
   related?(dto: TDto): Observable<SmartButton[]>;
+  /** Line tables of the card page, under the fields. */
+  parts?: RecordPart<TDto>[];
 }
 
 /**
@@ -191,7 +221,15 @@ export class RecordEntityRegistry {
   }
 }
 
+/** A policy name nobody holds; what a read-only table asks for to change a record. */
+export const READ_ONLY_PERMISSION = 'Erp.ReadOnlyTable';
+
 export function recordPermission(entity: RecordEntity, action?: 'Create' | 'Update' | 'Delete'): string {
+  if (action && entity.readOnly) {
+    // Never granted, so every create, edit and delete affordance stays hidden.
+    return READ_ONLY_PERMISSION;
+  }
+
   return action ? `${entity.permission}.${action}` : entity.permission;
 }
 

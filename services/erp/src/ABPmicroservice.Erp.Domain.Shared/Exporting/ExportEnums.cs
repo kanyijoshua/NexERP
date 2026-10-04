@@ -1,8 +1,7 @@
 namespace ABPmicroservice.Erp.Exporting;
 
 /// <summary>
-/// File format of a data export. Business Central writes Excel and CSV from its
-/// configuration packages; Odoo's export dialog offers CSV and XLSX.
+/// File format of a data export.
 /// </summary>
 public enum ExportFormat
 {

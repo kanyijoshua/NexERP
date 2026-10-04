@@ -8,9 +8,9 @@ namespace ABPmicroservice.Erp.Reporting;
 /// The account filter people type into an account schedule's Totaling field, and into the
 /// account filter of a report request page.
 /// <para>
-/// The syntax is Business Central's: alternatives separated by <c>|</c>, each either a single
+/// The syntax: alternatives separated by <c>|</c>, each either a single
 /// account number or a range written <c>from..to</c>. "1000..1999|2100" is every account from
-/// 1000 to 1999 plus 2100. Account numbers are compared as text, as BC compares codes.
+/// 1000 to 1999 plus 2100. Account numbers are compared as text.
 /// </para>
 /// </summary>
 public sealed class AccountTotaling
@@ -42,7 +42,7 @@ public sealed class AccountTotaling
 
         var parts = new List<Part>();
 
-        // Commas are accepted alongside BC's pipe: people type both.
+        // Commas are accepted alongside the pipe: people type both.
         foreach (var alternative in text.Split(['|', ','], StringSplitOptions.RemoveEmptyEntries))
         {
             var trimmed = alternative.Trim();
@@ -61,7 +61,7 @@ public sealed class AccountTotaling
             var from = trimmed[..rangeAt].Trim();
             var to = trimmed[(rangeAt + 2)..].Trim();
 
-            // "1000.." and "..1999" are open-ended, as in BC.
+            // "1000.." and "..1999" are open-ended.
             parts.Add(new Part(from.Length == 0 ? null : from, to.Length == 0 ? null : to));
         }
 
@@ -90,7 +90,7 @@ public sealed class AccountTotaling
             }
 
             // An account number longer than the upper bound but starting with it, such as "19990"
-            // against "1999", is still inside the range, which is how BC reads a code range.
+            // against "1999", is still inside the range, which is how a code range is read.
             if (To != null && string.CompareOrdinal(accountNo, To) > 0 && !accountNo.StartsWith(To, StringComparison.Ordinal))
             {
                 return false;

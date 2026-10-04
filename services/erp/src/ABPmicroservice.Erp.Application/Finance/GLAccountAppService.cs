@@ -65,6 +65,13 @@ public class GLAccountAppService
         account.SetCostTypeNo(input.CostTypeNo);
         account.SetDefaultDeferralTemplateCode(input.DefaultDeferralTemplateCode);
         account.SetOmitDefaultDescrInJnl(input.OmitDefaultDescrInJnl);
+        account.SetAdditionalFields(
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.Indentation,
+            input.NoOfBlankLines,
+            input.NewPage
+        );
 
         await Repository.InsertAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);
@@ -102,6 +109,13 @@ public class GLAccountAppService
         account.SetCostTypeNo(input.CostTypeNo);
         account.SetDefaultDeferralTemplateCode(input.DefaultDeferralTemplateCode);
         account.SetOmitDefaultDescrInJnl(input.OmitDefaultDescrInJnl);
+        account.SetAdditionalFields(
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.Indentation,
+            input.NoOfBlankLines,
+            input.NewPage
+        );
 
         await Repository.UpdateAsync(account, autoSave: true);
         return await MapToGetOutputDtoAsync(account);
@@ -135,7 +149,7 @@ public class GLAccountAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
-        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        // Lower-cased on both sides: lookups search case-insensitively, on any provider.
         var filter = input.Filter?.Trim().ToLower();
 
         return query

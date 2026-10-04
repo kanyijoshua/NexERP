@@ -9,14 +9,14 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Purchase document header. Mirrors Business Central table 38 "Purchase Header".
+/// Purchase document header.
 /// Aggregate root that owns its <see cref="PurchaseLine"/> collection.
 /// </summary>
 public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
 {
     public PurchaseDocumentType DocumentType { get; private set; }
 
-    /// <summary>Business key. Mirrors BC field "No.".</summary>
+    /// <summary>Business key.</summary>
     public string No { get; private set; }
 
     public Guid VendorId { get; private set; }
@@ -91,6 +91,111 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
     public decimal PrepaymentPct { get; private set; }
 
     public Collection<PurchaseLine> Lines { get; private set; }
+
+    /// <summary>Posting Description.</summary>
+    public string PostingDescription { get; private set; }
+
+    /// <summary>Document Date.</summary>
+    public DateTime? DocumentDate { get; private set; }
+
+    /// <summary>Purchaser Code.</summary>
+    public string PurchaserCode { get; private set; }
+
+    /// <summary>Vendor Order No..</summary>
+    public string VendorOrderNo { get; private set; }
+
+    /// <summary>Vendor Shipment No..</summary>
+    public string VendorShipmentNo { get; private set; }
+
+    /// <summary>Vendor Cr. Memo No..</summary>
+    public string VendorCrMemoNo { get; private set; }
+
+    /// <summary>Buy-from Vendor Name 2.</summary>
+    public string BuyFromVendorName2 { get; private set; }
+
+    /// <summary>Buy-from Address.</summary>
+    public string BuyFromAddress { get; private set; }
+
+    /// <summary>Buy-from Address 2.</summary>
+    public string BuyFromAddress2 { get; private set; }
+
+    /// <summary>Buy-from City.</summary>
+    public string BuyFromCity { get; private set; }
+
+    /// <summary>Buy-from Post Code.</summary>
+    public string BuyFromPostCode { get; private set; }
+
+    /// <summary>Buy-from County.</summary>
+    public string BuyFromCounty { get; private set; }
+
+    /// <summary>Buy-from Country/Region Code.</summary>
+    public string BuyFromCountryRegionCode { get; private set; }
+
+    /// <summary>Buy-from Contact.</summary>
+    public string BuyFromContact { get; private set; }
+
+    /// <summary>Pay-to Name 2.</summary>
+    public string PayToName2 { get; private set; }
+
+    /// <summary>Pay-to Address 2.</summary>
+    public string PayToAddress2 { get; private set; }
+
+    /// <summary>Pay-to County.</summary>
+    public string PayToCounty { get; private set; }
+
+    /// <summary>Ship-to Name 2.</summary>
+    public string ShipToName2 { get; private set; }
+
+    /// <summary>Ship-to Address 2.</summary>
+    public string ShipToAddress2 { get; private set; }
+
+    /// <summary>Ship-to County.</summary>
+    public string ShipToCounty { get; private set; }
+
+    /// <summary>Order Address Code.</summary>
+    public string OrderAddressCode { get; private set; }
+
+    /// <summary>VAT Registration No..</summary>
+    public string VatRegistrationNo { get; private set; }
+
+    /// <summary>Payment Discount %.</summary>
+    public decimal PaymentDiscountPct { get; private set; }
+
+    /// <summary>Pmt. Discount Date.</summary>
+    public DateTime? PmtDiscountDate { get; private set; }
+
+    /// <summary>VAT Base Discount %.</summary>
+    public decimal VatBaseDiscountPct { get; private set; }
+
+    /// <summary>Language Code.</summary>
+    public string LanguageCode { get; private set; }
+
+    /// <summary>Quote No..</summary>
+    public string QuoteNo { get; private set; }
+
+    /// <summary>Responsibility Center.</summary>
+    public string ResponsibilityCenter { get; private set; }
+
+    /// <summary>Requested Receipt Date.</summary>
+    public DateTime? RequestedReceiptDate { get; private set; }
+
+    /// <summary>Promised Receipt Date.</summary>
+    public DateTime? PromisedReceiptDate { get; private set; }
+
+    /// <summary>Assigned User ID.</summary>
+    public string AssignedUserId { get; private set; }
+
+    /// <summary>Payment Reference.</summary>
+    public string PaymentReference { get; private set; }
+
+    /// <summary>Invoice Received Date.</summary>
+    public DateTime? InvoiceReceivedDate { get; private set; }
+
+    /// <summary>Creditor No..</summary>
+    public string CreditorNo { get; private set; }
+
+    /// <summary>Reason Code.</summary>
+    public string ReasonCode { get; private set; }
 
     protected PurchaseHeader()
     {
@@ -396,5 +501,81 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         {
             throw new DocumentAlreadyPostedException(No);
         }
+    }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string postingDescription,
+        DateTime? documentDate,
+        string purchaserCode,
+        string vendorOrderNo,
+        string vendorShipmentNo,
+        string vendorCrMemoNo,
+        string buyFromVendorName2,
+        string buyFromAddress,
+        string buyFromAddress2,
+        string buyFromCity,
+        string buyFromPostCode,
+        string buyFromCounty,
+        string buyFromCountryRegionCode,
+        string buyFromContact,
+        string payToName2,
+        string payToAddress2,
+        string payToCounty,
+        string shipToName2,
+        string shipToAddress2,
+        string shipToCounty,
+        string orderAddressCode,
+        string vatRegistrationNo,
+        decimal paymentDiscountPct,
+        DateTime? pmtDiscountDate,
+        decimal vatBaseDiscountPct,
+        string languageCode,
+        string quoteNo,
+        string responsibilityCenter,
+        DateTime? requestedReceiptDate,
+        DateTime? promisedReceiptDate,
+        string assignedUserId,
+        string paymentReference,
+        DateTime? invoiceReceivedDate,
+        string creditorNo,
+        string reasonCode
+    )
+    {
+        PostingDescription = Check.Length(postingDescription, nameof(postingDescription), 100);
+        DocumentDate = documentDate?.Date;
+        PurchaserCode = CodeTableEntity.NormalizeCode(Check.Length(purchaserCode, nameof(purchaserCode), 20));
+        VendorOrderNo = CodeTableEntity.NormalizeCode(Check.Length(vendorOrderNo, nameof(vendorOrderNo), 35));
+        VendorShipmentNo = CodeTableEntity.NormalizeCode(Check.Length(vendorShipmentNo, nameof(vendorShipmentNo), 35));
+        VendorCrMemoNo = CodeTableEntity.NormalizeCode(Check.Length(vendorCrMemoNo, nameof(vendorCrMemoNo), 35));
+        BuyFromVendorName2 = Check.Length(buyFromVendorName2, nameof(buyFromVendorName2), 50);
+        BuyFromAddress = Check.Length(buyFromAddress, nameof(buyFromAddress), 100);
+        BuyFromAddress2 = Check.Length(buyFromAddress2, nameof(buyFromAddress2), 50);
+        BuyFromCity = Check.Length(buyFromCity, nameof(buyFromCity), 30);
+        BuyFromPostCode = CodeTableEntity.NormalizeCode(Check.Length(buyFromPostCode, nameof(buyFromPostCode), 20));
+        BuyFromCounty = Check.Length(buyFromCounty, nameof(buyFromCounty), 30);
+        BuyFromCountryRegionCode = CodeTableEntity.NormalizeCode(Check.Length(buyFromCountryRegionCode, nameof(buyFromCountryRegionCode), 10));
+        BuyFromContact = Check.Length(buyFromContact, nameof(buyFromContact), 100);
+        PayToName2 = Check.Length(payToName2, nameof(payToName2), 50);
+        PayToAddress2 = Check.Length(payToAddress2, nameof(payToAddress2), 50);
+        PayToCounty = Check.Length(payToCounty, nameof(payToCounty), 30);
+        ShipToName2 = Check.Length(shipToName2, nameof(shipToName2), 50);
+        ShipToAddress2 = Check.Length(shipToAddress2, nameof(shipToAddress2), 50);
+        ShipToCounty = Check.Length(shipToCounty, nameof(shipToCounty), 30);
+        OrderAddressCode = CodeTableEntity.NormalizeCode(Check.Length(orderAddressCode, nameof(orderAddressCode), 10));
+        VatRegistrationNo = Check.Length(vatRegistrationNo, nameof(vatRegistrationNo), 20);
+        PaymentDiscountPct = paymentDiscountPct;
+        PmtDiscountDate = pmtDiscountDate?.Date;
+        VatBaseDiscountPct = vatBaseDiscountPct;
+        LanguageCode = CodeTableEntity.NormalizeCode(Check.Length(languageCode, nameof(languageCode), 10));
+        QuoteNo = CodeTableEntity.NormalizeCode(Check.Length(quoteNo, nameof(quoteNo), 20));
+        ResponsibilityCenter = CodeTableEntity.NormalizeCode(Check.Length(responsibilityCenter, nameof(responsibilityCenter), 10));
+        RequestedReceiptDate = requestedReceiptDate?.Date;
+        PromisedReceiptDate = promisedReceiptDate?.Date;
+        AssignedUserId = CodeTableEntity.NormalizeCode(Check.Length(assignedUserId, nameof(assignedUserId), 50));
+        PaymentReference = CodeTableEntity.NormalizeCode(Check.Length(paymentReference, nameof(paymentReference), 50));
+        InvoiceReceivedDate = invoiceReceivedDate?.Date;
+        CreditorNo = CodeTableEntity.NormalizeCode(Check.Length(creditorNo, nameof(creditorNo), 20));
+        ReasonCode = CodeTableEntity.NormalizeCode(Check.Length(reasonCode, nameof(reasonCode), 10));
     }
 }

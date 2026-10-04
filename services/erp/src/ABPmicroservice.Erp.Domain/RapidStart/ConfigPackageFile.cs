@@ -5,8 +5,7 @@ namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
 /// A configuration package as a file: its definition, the data templates its tables use, and the
-/// records of every table. Business Central's .rapidstart file carries the same three things as
-/// compressed XML; this is the JSON equivalent, readable and diffable.
+/// records of every table. It is JSON, readable and diffable.
 /// </summary>
 public class ConfigPackageFile
 {

@@ -13,7 +13,7 @@ import { CompanyService } from '../../services/company.service';
 import { MAX_IMPORT_FILE_BYTES } from '../rapid-start.helpers';
 
 /**
- * RapidStart Configuration Packages list. Mirrors Business Central page 8615 "Config. Packages".
+ * RapidStart Configuration Packages list.
  */
 @Component({
   selector: 'app-config-packages',

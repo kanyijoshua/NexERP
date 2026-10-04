@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// A line of the configuration worksheet. Mirrors Business Central table 8622 "Config. Line": the
+/// A line of the configuration worksheet: the
 /// implementation checklist of a new company, arranged as areas, groups and tables, each table
 /// with who is responsible for it, how far it has got and which package fills it.
 /// </summary>
@@ -27,7 +27,7 @@ public class ConfigLine : CompanyAggregateRoot
 
     public string Comments { get; private set; }
 
-    /// <summary>Position on the worksheet. BC's "Vertical Sorting".</summary>
+    /// <summary>Position on the worksheet.</summary>
     public int SortOrder { get; private set; }
 
     protected ConfigLine() { }

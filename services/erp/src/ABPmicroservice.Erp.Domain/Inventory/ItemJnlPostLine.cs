@@ -8,7 +8,7 @@ namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
 /// Core Item Journal Posting Engine.
-/// Mirrors Business Central Codeunit 22 "Item Jnl.-Post Line".
+///
 /// Creates Item Ledger Entries & Value Entries and updates Item inventory stock and unit costs.
 /// </summary>
 public class ItemJnlPostLine : DomainService

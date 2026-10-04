@@ -7,7 +7,7 @@ namespace ABPmicroservice.Erp.Finance;
 /// <summary>
 /// The date formula is what moves a recurring journal on and what shifts a comparison column.
 /// A formula that reads wrongly would post to the wrong period without anyone noticing, so the
-/// Business Central forms are pinned down here.
+/// accepted forms are pinned down here.
 /// </summary>
 public class DateFormula_Tests
 {
@@ -38,7 +38,7 @@ public class DateFormula_Tests
         result.ShouldBe(DateTime.Parse(expected));
     }
 
-    /// <summary>A month past the 31st lands on the last day of the shorter month, as BC does.</summary>
+    /// <summary>A month past the 31st lands on the last day of the shorter month.</summary>
     [Fact]
     public void A_Month_From_The_End_Of_A_Long_Month_Lands_On_The_End_Of_A_Short_One()
     {

@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Finance;
 
-/// <summary>
-/// Mirrors Business Central table 17 "G/L Entry" field 57 "Source Type".
-/// </summary>
 public enum GLEntrySourceType
 {
     None = 0,

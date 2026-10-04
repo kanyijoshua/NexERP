@@ -11,7 +11,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Accounting Period. Mirrors Business Central table 50: the first day of a period, and whether it
+/// Accounting Period: the first day of a period, and whether it
 /// opens a fiscal year. A period runs until the next one starts.
 /// </summary>
 public class AccountingPeriod : CompanyEntity
@@ -23,7 +23,7 @@ public class AccountingPeriod : CompanyEntity
     /// <summary>Set by Close Year on every period of a closed fiscal year.</summary>
     public bool Closed { get; private set; }
 
-    /// <summary>Set with Closed; BC's "Date Locked" stops the period from being edited.</summary>
+    /// <summary>Set with Closed; "Date Locked" stops the period from being edited.</summary>
     public bool DateLocked { get; private set; }
 
     protected AccountingPeriod() { }
@@ -43,7 +43,7 @@ public class AccountingPeriod : CompanyEntity
     }
 }
 
-/// <summary>Create Year and Close Year of Business Central's Accounting Periods page.</summary>
+/// <summary>Create Year and Close Year of the Accounting Periods page.</summary>
 public class AccountingPeriodManager : DomainService
 {
     private readonly IRepository<AccountingPeriod, Guid> _repository;
@@ -56,7 +56,7 @@ public class AccountingPeriodManager : DomainService
     /// <summary>
     /// Creates a fiscal year of <paramref name="noOfPeriods"/> periods, each <paramref name="periodLength"/>
     /// long (a date formula, "1M" by default), from <paramref name="startingDate"/>, plus the first
-    /// period of the next year so the year has an end (BC codeunit "Create Fiscal Year").
+    /// period of the next year so the year has an end.
     /// </summary>
     public async Task<List<AccountingPeriod>> CreateFiscalYearAsync(DateTime startingDate, int noOfPeriods, string periodLength)
     {
@@ -118,7 +118,7 @@ public class AccountingPeriodManager : DomainService
     }
 
     /// <summary>
-    /// Closes the oldest open fiscal year (BC "Close Year"). The following year must already
+    /// Closes the oldest open fiscal year. The following year must already
     /// exist, so the closed year has an end date.
     /// </summary>
     public async Task<(DateTime From, DateTime To)> CloseFiscalYearAsync()

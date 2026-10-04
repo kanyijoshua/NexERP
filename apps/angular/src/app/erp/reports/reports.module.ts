@@ -6,6 +6,7 @@ import { AccountSchedulesComponent } from './account-schedules/account-schedules
 import { ColumnLayoutsComponent } from './column-layouts/column-layouts.component';
 import { ReportLayoutsComponent } from './report-layouts/report-layouts.component';
 import { ReportViewerComponent } from './report-viewer/report-viewer.component';
+import { StandardReportsComponent } from './standard-reports/standard-reports.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'financial', pathMatch: 'full' },
@@ -15,6 +16,9 @@ const routes: Routes = [
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.Reports' },
   },
+  // Each report needs the permission of its own area, which the server checks; the list it
+  // returns holds only what the user may run.
+  { path: 'standard', component: StandardReportsComponent },
   {
     path: 'account-schedules',
     component: AccountSchedulesComponent,
@@ -38,6 +42,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     ReportViewerComponent,
+    StandardReportsComponent,
     AccountSchedulesComponent,
     ColumnLayoutsComponent,
     ReportLayoutsComponent,

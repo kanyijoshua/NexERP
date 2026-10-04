@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Inventory Setup. Mirrors Business Central table 313: one row per company with the item number
+/// Inventory Setup: one row per company with the item number
 /// series and the rules stock moves by.
 /// </summary>
 public class InventorySetup : CompanyEntity

@@ -168,7 +168,7 @@ describe('ErpTableComponent', () => {
       expect(table.rows().map(r => r.id)).toEqual(['2', '4']);
     }));
 
-    it('accepts Business Central filter expressions', fakeAsync(() => {
+    it('accepts filter expressions with ranges and alternatives', fakeAsync(() => {
       const table = createTable();
       init(table, sampleItems);
 
@@ -290,7 +290,7 @@ describe('erp-table filter helpers', () => {
     });
   });
 
-  it('reads Business Central filter expressions', () => {
+  it('reads filter expressions', () => {
     const today = new Date(2026, 8, 30);
     expect(expression('1500', '1000..2000', 'text', today)).toBeTrue();
     expect(expression('2500', '1000..2000|3000', 'text', today)).toBeFalse();

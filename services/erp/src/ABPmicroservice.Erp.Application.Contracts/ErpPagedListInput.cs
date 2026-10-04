@@ -15,7 +15,7 @@ public interface IHasDynamicFilter
 
 /// <summary>
 /// The paged, sorted list input of every ERP list page. Besides paging and sorting it takes the
-/// Business Central / Odoo style filter conditions the list's filter pane builds.
+/// filter conditions the list's filter pane builds.
 /// </summary>
 public class ErpPagedListInput : PagedAndSortedResultRequestDto, IHasDynamicFilter
 {

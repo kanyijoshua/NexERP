@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// VAT Entry. Mirrors Business Central table 254: one row per VAT amount a posting produced, the
+/// VAT Entry: one row per VAT amount a posting produced, the
 /// basis of the VAT return. <see cref="Base"/> and <see cref="Amount"/> carry the G/L sign: a sale
 /// is negative (output VAT owed), a purchase positive (input VAT reclaimable).
 /// </summary>

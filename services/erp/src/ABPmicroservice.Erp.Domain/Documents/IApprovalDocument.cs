@@ -3,8 +3,8 @@ using System;
 namespace ABPmicroservice.Erp.Documents;
 
 /// <summary>
-/// What the approval engine needs from a document. Business Central reaches documents through
-/// RecordRef in codeunit 1535; here the sales and purchase headers implement this instead.
+/// What the approval engine needs from a document.
+/// The sales and purchase headers and the payment voucher implement this.
 /// </summary>
 public interface IApprovalDocument
 {

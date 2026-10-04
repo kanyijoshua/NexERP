@@ -7,6 +7,8 @@ import { NgbDropdownModule, NgbNavModule, NgbTypeaheadModule } from '@ng-bootstr
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { SharedModule } from '../../shared/shared.module';
 
+import { AttachmentsWidgetComponent } from '../components/attachments-widget/attachments-widget.component';
+import { SpreadsheetDialogComponent } from './spreadsheet/spreadsheet-dialog.component';
 import { ChatterWidgetComponent } from '../components/chatter-widget/chatter-widget.component';
 import { DocumentPageComponent } from './document-page/document-page.component';
 import { JournalPageComponent } from './journal-page/journal-page.component';
@@ -17,6 +19,7 @@ import { PageToolbarComponent } from './page-toolbar/page-toolbar.component';
 import { RecordCardDialogComponent } from './record/record-card-dialog.component';
 import { RecordFormComponent } from './record/record-form.component';
 import { RecordListDialogComponent } from './record/record-list-dialog.component';
+import { RecordPartComponent } from './record/record-part.component';
 import { ErpAmountPipe } from './pipes/erp-amount.pipe';
 import { ReportPageComponent } from './report-page/report-page.component';
 import { SmartButtonsComponent } from './smart-buttons/smart-buttons.component';
@@ -37,6 +40,8 @@ import { ErpBadgeComponent } from './badge/erp-badge.component';
 const DECLARATIONS = [
   // On every ERP page, so every lazy ERP module needs it.
   ChatterWidgetComponent,
+  AttachmentsWidgetComponent,
+  SpreadsheetDialogComponent,
   PageToolbarComponent,
   LookupComponent,
   LineGridComponent,
@@ -48,6 +53,7 @@ const DECLARATIONS = [
   RecordFormComponent,
   RecordCardDialogComponent,
   RecordListDialogComponent,
+  RecordPartComponent,
   ErpTableComponent,
   ErpTableColDirective,
   ErpTableActionsDirective,

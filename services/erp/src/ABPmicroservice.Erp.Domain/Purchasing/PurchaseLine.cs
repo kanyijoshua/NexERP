@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Purchase document line. Mirrors Business Central table 39 "Purchase Line".
+/// Purchase document line.
 /// Child entity of <see cref="PurchaseHeader"/>.
 /// </summary>
 public class PurchaseLine : Entity<Guid>
@@ -26,7 +26,6 @@ public class PurchaseLine : Entity<Guid>
 
     public decimal Quantity { get; private set; }
 
-    /// <summary>Mirrors BC field "Direct Unit Cost".</summary>
     public decimal DirectUnitCost { get; private set; }
 
     public decimal LineDiscountPercent { get; private set; }

@@ -17,7 +17,7 @@ import { CrudListBase, DocumentLineColumn, ErpTableColumn } from '../../erp-shar
 
 /**
  * Account schedules: the rows of a financial report, defined by the user rather than in code.
- * Mirrors Business Central pages 103 and 104.
+ *
  */
 @Component({
   selector: 'app-account-schedules',

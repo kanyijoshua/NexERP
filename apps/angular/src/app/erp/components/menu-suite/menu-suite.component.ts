@@ -12,7 +12,7 @@ import { MenuIndexService } from './menu-index.service';
 import { SuiteEntry, filterMenuSuite, pagesOf } from './menu-suite.model';
 
 /**
- * Business Central's menu suite: every area of the menu as a column of pages, with a Find box.
+ * The menu suite: every area of the menu as a column of pages, with a Find box.
  * The columns come from the live menu, so they follow permissions and the modules this company
  * has switched on.
  */

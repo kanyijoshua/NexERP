@@ -9,7 +9,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
 /**
- * General Ledger Setup. Mirrors Business Central page 118: the company's allowed posting dates,
+ * General Ledger Setup. the company's allowed posting dates,
  * local currency, rounding precisions and global dimensions, one record per company.
  */
 @Component({
@@ -61,6 +61,9 @@ export class GeneralLedgerSetupComponent implements OnInit {
     bankAccountNos: this.fb.control<string | null>(null),
   });
 
+  /** The setup as last read, so a save sends back the fields this page has no control for. */
+  private current?: GeneralLedgerSetupDto;
+
   ngOnInit(): void {
     this.load();
     this.companyService.companyChanged$
@@ -76,6 +79,8 @@ export class GeneralLedgerSetupComponent implements OnInit {
 
     const value = this.form.getRawValue();
     const input: GeneralLedgerSetupDto = {
+      // Fields this page does not show keep what the server holds.
+      ...this.current,
       allowPostingFrom: value.allowPostingFrom || undefined,
       allowPostingTo: value.allowPostingTo || undefined,
       lcyCode: value.lcyCode?.trim() || undefined,
@@ -137,6 +142,7 @@ export class GeneralLedgerSetupComponent implements OnInit {
 
   // Dates arrive as ISO date-times; the date inputs want yyyy-MM-dd.
   private reset(setup: GeneralLedgerSetupDto): void {
+    this.current = setup;
     this.form.reset({
       allowPostingFrom: setup.allowPostingFrom?.substring(0, 10) ?? null,
       allowPostingTo: setup.allowPostingTo?.substring(0, 10) ?? null,

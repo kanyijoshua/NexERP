@@ -12,9 +12,9 @@ interface ThemePreset {
 const HEX = /^#[0-9a-f]{6}$/i;
 
 export const THEME_PRESETS: ThemePreset[] = [
-  { key: 'Odoo', theme: DEFAULT_THEME },
+  { key: 'Plum', theme: DEFAULT_THEME },
   {
-    key: 'BusinessCentral',
+    key: 'Teal',
     theme: {
       primaryColor: '#005A64',
       accentColor: '#00707A',

@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Numbering;
 
 /// <summary>
-/// Number Series. Mirrors Business Central table 308 "No. Series".
+/// Number Series.
 /// </summary>
 public class NoSeries : CompanyAggregateRoot
 {
@@ -93,7 +93,7 @@ public class NoSeries : CompanyAggregateRoot
 }
 
 /// <summary>
-/// Number Series Line. Mirrors Business Central table 309 "No. Series Line".
+/// Number Series Line.
 /// </summary>
 public class NoSeriesLine : Entity<Guid>
 {
@@ -180,7 +180,7 @@ public class NoSeriesLine : Entity<Guid>
         return next == null || (EndingNo != null && NoSeriesIncrement.Compare(next, EndingNo) > 0) ? null : next;
     }
 
-    /// <summary>True when the warning number has been reached (BC shows a notification).</summary>
+    /// <summary>True when the warning number has been reached.</summary>
     public bool IsPastWarningNo()
     {
         return WarningNo != null && LastNoUsed != null && NoSeriesIncrement.Compare(LastNoUsed, WarningNo) >= 0;

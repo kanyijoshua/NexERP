@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ABPmicroservice.Erp.Academics;
+using ABPmicroservice.Erp.Payroll;
 using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Finance;
+using ABPmicroservice.Erp.FixedAssets;
 using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
+using ABPmicroservice.Erp.Pensions;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
@@ -171,9 +175,8 @@ public sealed class ErpEntityDefinition
 /// <summary>
 /// Every table the ERP is willing to hand out, with the permission that guards it.
 /// <para>
-/// Business Central decides what leaves the system through configuration packages (which tables
-/// a package covers) and web services (which pages are published). Odoo's export dialog works
-/// from the same idea: one list of models, each with its fields. This registry is that list, and
+/// What leaves the system is decided in one place: one list of tables, each with its
+/// fields. This registry is that list, and
 /// it is the single source for exports, the integration API and webhook subscriptions, so a table
 /// cannot be reachable through one of them and not the others.
 /// </para>
@@ -281,6 +284,132 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<GroundsForTermination>(),
             Define<Employee>(),
             Define<EmployeeAbsence>(),
+
+            // Base tables: setup, sub-ledgers and registers
+            Define<SourceCode>(),
+            Define<ReasonCode>(),
+            Define<CountryRegion>(),
+            Define<PostCode>(),
+            Define<ShipmentMethod>(),
+            Define<ResponsibilityCenter>(),
+            Define<UserSetup>(),
+            Define<GLBudgetName>(),
+            Define<GLBudgetEntry>(),
+            Define<CommentLine>(),
+            Define<CustomerBankAccount>(),
+            Define<DetailedCustLedgEntry>(),
+            Define<VendorBankAccount>(),
+            Define<DetailedVendorLedgEntry>(),
+            Define<OrderAddress>(),
+            Define<ItemVendor>(),
+            Define<PurchCommentLine>(),
+            Define<BankAccReconciliation>(),
+            Define<BankAccReconciliationLine>(),
+            Define<BankAccountStatement>(),
+            Define<BankAccountStatementLine>(),
+            Define<CheckLedgerEntry>(),
+            Define<Relative>(),
+            Define<MiscArticle>(),
+            Define<Confidential>(),
+            Define<EmployeeStatisticsGroup>(),
+            Define<EmployeeRelative>(),
+            Define<EmployeeQualification>(),
+            Define<MiscArticleInformation>(),
+            Define<ConfidentialInformation>(),
+            Define<AlternativeAddress>(),
+            Define<HumanResourceCommentLine>(),
+            Define<FAClass>(),
+            Define<FASubclass>(),
+            Define<FALocation>(),
+            Define<Maintenance>(),
+            Define<DepreciationBook>(),
+            Define<FAPostingGroup>(),
+            Define<FASetup>(),
+            Define<FixedAsset>(),
+            Define<FADepreciationBook>(),
+            Define<FALedgerEntry>(),
+            Define<MaintenanceRegistration>(),
+            Define<MainAssetComponent>(),
+            Define<ReportSelection>(),
+            Define<CustomReportSelection>(),
+            Define<WorkflowUserGroup>(),
+            Define<WorkflowUserGroupMember>(),
+            Define<ApprovalCommentLine>(),
+
+            // Pensions
+            Define<PensionScheme>(),
+            Define<PensionSponsor>(),
+            Define<PensionMember>(),
+            Define<MemberLedgerEntry>(),
+            Define<PensionContributionHeader>(),
+            Define<PensionContributionLine>(),
+            Define<PensionInterestRate>(),
+            Define<ExitReason>(),
+            Define<LumpsumTaxTable>(),
+            Define<LumpsumTaxBand>(),
+            Define<MemberExit>(),
+
+            // Academics
+            Define<AcademicYear>(),
+            Define<Semester>(),
+            Define<Intake>(),
+            Define<ExamCategory>(),
+            Define<GradingBand>(),
+            Define<ExamComponent>(),
+            Define<Programme>(),
+            Define<ProgrammeStage>(),
+            Define<CourseUnit>(),
+            Define<FeeItem>(),
+            Define<FeeStructureLine>(),
+            Define<StudentApplication>(),
+            Define<Student>(),
+            Define<SemesterRegistration>(),
+            Define<StudentUnit>(),
+            Define<StudentBillHeader>(),
+            Define<StudentBillLine>(),
+            Define<ExamResultHeader>(),
+            Define<ExamResultLine>(),
+            Define<StudentReceipt>(),
+            Define<StudentRefund>(),
+            Define<StudentStatusChange>(),
+
+            // Pensioners and pension payroll
+            Define<Pensioner>(),
+            Define<PensionPayrollHeader>(),
+            Define<PensionPayrollLine>(),
+            Define<PensionBenefitCalculation>(),
+
+            // Payroll
+            Define<PayrollEarning>(),
+            Define<PayrollDeduction>(),
+            Define<PayrollTaxBand>(),
+            Define<EmployeePayItem>(),
+            Define<PayrollRun>(),
+            Define<Payslip>(),
+            Define<PayslipLine>(),
+
+            // Campus
+            Define<LectureRoom>(),
+            Define<TimetableEntry>(),
+            Define<AttendanceRegister>(),
+            Define<AttendanceLine>(),
+            Define<Hostel>(),
+            Define<HostelRoom>(),
+            Define<HostelAllocation>(),
+            Define<ClinicVisit>(),
+            Define<ClinicPrescription>(),
+            Define<LaundryItem>(),
+            Define<LaundryOrder>(),
+            Define<LaundryOrderLine>(),
+            Define<ShortCourse>(),
+            Define<ShortCourseApplication>(),
+            Define<ShortCourseParticipant>(),
+
+            // Payment vouchers
+            Define<PaymentDeductionCode>(),
+            Define<PaymentType>(),
+            Define<PaymentVoucherHeader>(),
+            Define<PaymentVoucherLine>(),
 
             Define<Company>(),
         };

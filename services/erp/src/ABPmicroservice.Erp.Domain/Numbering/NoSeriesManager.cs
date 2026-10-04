@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Numbering;
 
 /// <summary>
-/// Hands out numbers. Mirrors Business Central codeunit 396 "NoSeriesManagement".
+/// Hands out numbers.
 /// </summary>
 public class NoSeriesManager : DomainService
 {
@@ -20,7 +20,7 @@ public class NoSeriesManager : DomainService
 
     /// <summary>
     /// Takes the next number of the series and records it as used. The number is only
-    /// consumed if the surrounding unit of work commits. (BC: GetNextNo with ModifySeries = true.)
+    /// consumed if the surrounding unit of work commits.
     /// </summary>
     public async Task<string> GetNextNoAsync(string seriesCode, DateTime usageDate)
     {
@@ -59,7 +59,7 @@ public class NoSeriesManager : DomainService
     }
 
     /// <summary>
-    /// Resolves the number of a new record, as BC's InitSeries does: a typed number needs a series
+    /// Resolves the number of a new record: a typed number needs a series
     /// that allows manual numbers; a blank one takes the next number of a default-numbers series.
     /// With no series configured the typed number is simply required.
     /// </summary>

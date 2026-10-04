@@ -12,7 +12,7 @@ namespace ABPmicroservice.Erp.Reporting;
 /// <summary>
 /// Renders a report through the layout this company has chosen for it.
 /// <para>
-/// Mirrors what Business Central does when it prints: look up the Report Layout Selection, fall
+/// When a report prints: look up the Report Layout Selection, fall
 /// back to the built-in layout if there is none, and render the dataset through it.
 /// </para>
 /// </summary>

@@ -172,7 +172,7 @@ namespace ABPmicroservice.Erp.Migrations
                 nullable: false,
                 defaultValue: 0L);
 
-            // The account type on a journal line becomes an enum. The BC captions it used to hold
+            // The account type on a journal line becomes an enum. The captions it used to hold
             // are mapped across; anything unrecognised falls back to a G/L account, which is what
             // a blank account type meant before.
             migrationBuilder.Sql(

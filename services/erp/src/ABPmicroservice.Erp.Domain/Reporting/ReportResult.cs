@@ -34,7 +34,7 @@ public class ReportRow
 
     /// <summary>
     /// Accounts behind the row, in the Totaling syntax ("1000..1999"). The report viewer passes
-    /// it back to the G/L detail report, which is how BC's drill-down works.
+    /// it back to the G/L detail report, which is how drill-down works.
     /// </summary>
     public string DrillDownFilter { get; set; }
 }

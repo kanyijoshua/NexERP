@@ -279,14 +279,14 @@ public class JobQueueAppService_Tests : ErpApplicationTestBase
     }
 
     [Fact]
-    public async Task Can_Manage_Job_Queue_With_Base_BC_Columns()
+    public async Task Can_Manage_Job_Queue_With_Base_Columns()
     {
         await InCompanyAsync(DefaultCompanyName, async () =>
         {
             var refTime = new DateTime(2026, 1, 1, 8, 30, 0, DateTimeKind.Utc);
             var entry = await _jobQueueAppService.CreateAsync(new CreateJobQueueEntryDto
             {
-                Description = "BC Base Columns Test",
+                Description = "Base Columns Test",
                 JobType = "CleanupJobQueueLogs",
                 UserId = "ADMIN_USER",
                 RecordIdToProcess = "Customer: 10000",
@@ -311,7 +311,7 @@ public class JobQueueAppService_Tests : ErpApplicationTestBase
             // Update
             var updated = await _jobQueueAppService.UpdateAsync(entry.Id, new UpdateJobQueueEntryDto
             {
-                Description = "BC Base Columns Test Updated",
+                Description = "Base Columns Test Updated",
                 JobType = "CleanupJobQueueLogs",
                 UserId = "SUPERVISOR",
                 RecordIdToProcess = "Customer: 20000",
@@ -329,7 +329,7 @@ public class JobQueueAppService_Tests : ErpApplicationTestBase
             updated.NotifyOnSuccess.ShouldBeFalse();
             updated.InactivityTimeoutPeriod.ShouldBe(120);
 
-            // Execute once and verify audit log has BC fields
+            // Execute once and verify audit log has the base fields
             var runResult = await _jobQueueAppService.RunOnceAsync(entry.Id);
             runResult.Success.ShouldBeTrue();
 

@@ -11,7 +11,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// Configuration package. Mirrors Business Central table 8623 "Config. Package": a named set of
+/// Configuration package: a named set of
 /// tables, each with the fields and filters to carry, used to move setup and master data into a
 /// company — from a file, from Excel, or from another company.
 /// </summary>
@@ -21,7 +21,7 @@ public class ConfigPackage : CompanyAggregateRoot
 
     public string PackageName { get; private set; }
 
-    /// <summary>Version of the system the package was made for; informational, as in BC.</summary>
+    /// <summary>Version of the system the package was made for; informational.</summary>
     public string ProductVersion { get; private set; }
 
     public DateTime? LastImportedTime { get; private set; }
@@ -50,8 +50,8 @@ public class ConfigPackage : CompanyAggregateRoot
     }
 
     /// <summary>
-    /// Adds a table with every field it can carry, key fields marked as such. BC's "Config.
-    /// Package Table" does the same on insert: all fields included until someone excludes some.
+    /// Adds a table with every field it can carry, key fields marked as such:
+    /// all fields included until someone excludes some.
     /// </summary>
     public ConfigPackageTable AddTable(Guid tableId, ConfigTableProfile profile, int processingOrder, Func<Guid> newId)
     {
@@ -101,7 +101,7 @@ public class ConfigPackage : CompanyAggregateRoot
     public void MarkApplied(DateTime time) => LastAppliedTime = time;
 }
 
-/// <summary>A table in a configuration package. Mirrors BC table 8613 "Config. Package Table".</summary>
+/// <summary>A table in a configuration package.</summary>
 public class ConfigPackageTable : Entity<Guid>
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -115,20 +115,20 @@ public class ConfigPackageTable : Entity<Guid>
     public int ProcessingOrder { get; private set; }
 
     /// <summary>
-    /// Empties the table before the package's records are applied. BC's "Delete Recs Before
+    /// Empties the table before the package's records are applied. "Delete Recs Before
     /// Processing": for replacing a list outright rather than merging into it.
     /// </summary>
     public bool DeleteRecordsBeforeProcessing { get; private set; }
 
     /// <summary>
-    /// A configuration template whose values fill in what a new record leaves blank. BC's "Data
+    /// A configuration template whose values fill in what a new record leaves blank. The "Data
     /// Template" on a package table.
     /// </summary>
     public string DataTemplateCode { get; private set; }
 
     /// <summary>
     /// Which records to take when the package is filled from the database or exported, stored as
-    /// JSON. BC keeps these in table 8626 "Config. Package Filter".
+    /// JSON.
     /// </summary>
     public string Filters { get; private set; }
 
@@ -196,7 +196,7 @@ public class ConfigPackageTable : Entity<Guid>
     }
 }
 
-/// <summary>A field of a package table. Mirrors BC table 8616 "Config. Package Field".</summary>
+/// <summary>A field of a package table.</summary>
 public class ConfigPackageField : Entity<Guid>
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -210,7 +210,7 @@ public class ConfigPackageField : Entity<Guid>
 
     /// <summary>
     /// Whether the value is checked against the field's relation and length before it is written.
-    /// BC's "Validate Field": off, the value goes in as it stands.
+    /// "Validate Field": off, the value goes in as it stands.
     /// </summary>
     public bool ValidateField { get; private set; }
 
@@ -220,7 +220,7 @@ public class ConfigPackageField : Entity<Guid>
     public bool PrimaryKey { get; private set; }
 
     /// <summary>
-    /// Values to translate on the way in, stored as JSON: BC's "Config. Field Mapping", which turns
+    /// Values to translate on the way in, stored as JSON: the "Config. Field Mapping", which turns
     /// the codes of an old system into this one's.
     /// </summary>
     public string Mappings { get; private set; }

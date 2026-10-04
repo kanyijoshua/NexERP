@@ -6,13 +6,14 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {
   CreateUpdateReportLayoutDto,
+  RdlcImportResultDto,
   ReportLayoutDetailDto,
   ReportLayoutDto,
   ReportLayoutService,
   ReportLayoutType,
   ReportNameDto,
 } from '@proxy/reporting';
-import { Observable, map } from 'rxjs';
+import { Observable, finalize, map } from 'rxjs';
 import { CrudListBase, ErpTableColumn, saveBlob } from '../../erp-shared';
 
 export type StudioViewMode = 'visual' | 'split' | 'code' | 'preview';
@@ -177,6 +178,16 @@ export class ReportLayoutsComponent
 
   blocks: ReportLayoutBlock[] = [];
 
+  // RDLC import
+  isImportOpen = false;
+  isImporting = false;
+  importReportName = '';
+  importLayoutName = '';
+  importDescription = '';
+  importSetAsDefault = false;
+  importFile: File | null = null;
+  importResult: RdlcImportResultDto | null = null;
+
   constructor(
     private readonly service: ReportLayoutService,
     private readonly fb: FormBuilder,
@@ -216,6 +227,61 @@ export class ReportLayoutsComponent
 
   onReportFilterChange(): void {
     this.list.get();
+  }
+
+  openImport(): void {
+    this.importReportName = this.reportFilter;
+    this.importLayoutName = '';
+    this.importDescription = '';
+    this.importSetAsDefault = false;
+    this.importFile = null;
+    this.importResult = null;
+    this.isImportOpen = true;
+  }
+
+  onImportFileChange(event: Event): void {
+    this.importFile = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (this.importFile && !this.importLayoutName) {
+      // The layout name doubles as its code, which is at most 20 characters.
+      this.importLayoutName = this.importFile.name.replace(/\.rdlc?$/i, '').slice(0, 20);
+    }
+  }
+
+  get canImport(): boolean {
+    return !!this.importReportName && !!this.importLayoutName.trim() && !!this.importFile;
+  }
+
+  importRdlc(): void {
+    const file = this.importFile;
+    if (!file || !this.canImport || this.isImporting) {
+      return;
+    }
+
+    this.isImporting = true;
+    const reader = new FileReader();
+    reader.onerror = () => (this.isImporting = false);
+    reader.onload = () => {
+      // readAsDataURL gives "data:...;base64,<content>".
+      const contentBase64 = String(reader.result).split(',')[1] ?? '';
+      this.service
+        .importRdlc({
+          reportName: this.importReportName,
+          layoutName: this.importLayoutName.trim(),
+          description: this.importDescription.trim() || undefined,
+          contentBase64,
+          setAsDefault: this.importSetAsDefault,
+        })
+        .pipe(
+          finalize(() => (this.isImporting = false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe(result => {
+          this.importResult = result;
+          this.toaster.success(this.savedMessageKey);
+          this.list.get();
+        });
+    };
+    reader.readAsDataURL(file);
   }
 
   protected buildForm(item?: ReportLayoutDto): FormGroup {

@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
-/// Report Layout Selection. Mirrors Business Central Table 9651 "Report Layout Selection".
+/// Report Layout Selection.
 /// Says which layout a report is printed through in this company. With no row, the report falls
 /// back to the built-in layout, which is how a company that has never customised anything still
 /// prints.
@@ -18,16 +18,16 @@ public class ReportLayoutSelection : CompanyEntity
 
     public ReportLayoutType LayoutType { get; private set; }
 
-    /// <summary>Report ID. Mirrors BC field 1 "Report ID".</summary>
+    /// <summary>Report ID.</summary>
     public int ReportID { get; private set; }
 
-    /// <summary>Custom Report Layout Code. Mirrors BC field 6 "Custom Report Layout Code".</summary>
+    /// <summary>Custom Report Layout Code.</summary>
     public string CustomReportLayoutCode { get; private set; }
 
-    /// <summary>Report Layout Description. Mirrors BC field 7 "Report Layout Description".</summary>
+    /// <summary>Report Layout Description.</summary>
     public string ReportLayoutDescription { get; private set; }
 
-    /// <summary>Report Caption. Mirrors BC field 8 "Report Caption".</summary>
+    /// <summary>Report Caption.</summary>
     public string ReportCaption { get; private set; }
 
     protected ReportLayoutSelection() { }
@@ -65,10 +65,10 @@ public class ReportLayoutSelection : CompanyEntity
 }
 
 /// <summary>
-/// Custom Report Layout. Mirrors Business Central Table 9650 "Custom Report Layouts".
+/// Custom Report Layout.
 /// <para>
 /// A layout is the markup a report is rendered through, held as text so it can be downloaded,
-/// edited and uploaded again the way BC's Word and Excel layouts are.
+/// edited and uploaded again.
 /// </para>
 /// </summary>
 public class CustomReportLayout : CompanyEntity
@@ -86,22 +86,22 @@ public class CustomReportLayout : CompanyEntity
     /// <summary>The layout itself. See <see cref="ReportTemplate"/> for what it may contain.</summary>
     public string TemplateContent { get; private set; }
 
-    /// <summary>Layout code. Mirrors BC field 1 "Code".</summary>
+    /// <summary>Layout code.</summary>
     public string Code { get; private set; }
 
-    /// <summary>Report ID. Mirrors BC field 2 "Report ID".</summary>
+    /// <summary>Report ID.</summary>
     public int ReportID { get; private set; }
 
-    /// <summary>File extension. Mirrors BC field 10 "File Extension".</summary>
+    /// <summary>File extension.</summary>
     public string FileExtension { get; private set; }
 
-    /// <summary>Built-in layout flag. Mirrors BC field 14 "Built-In".</summary>
+    /// <summary>Built-in layout flag.</summary>
     public bool BuiltIn { get; private set; }
 
-    /// <summary>User who last modified the layout. Mirrors BC field 9 "Last Modified by User".</summary>
+    /// <summary>User who last modified the layout.</summary>
     public string LastModifiedByUser { get; private set; }
 
-    /// <summary>Timestamp of last layout update. Mirrors BC field 15 "Layout Last Updated".</summary>
+    /// <summary>Timestamp of last layout update.</summary>
     public DateTime? LayoutLastUpdated { get; private set; }
 
     protected CustomReportLayout() { }
@@ -193,7 +193,7 @@ public class CustomReportLayout : CompanyEntity
     }
 
     /// <summary>
-    /// Word and Excel layouts are in the model for parity with BC but nothing can render them
+    /// Word and Excel layouts are in the model but nothing can render them
     /// yet, so they are refused here rather than accepted and quietly skipped when printing.
     /// </summary>
     private void EnsureRenderable()

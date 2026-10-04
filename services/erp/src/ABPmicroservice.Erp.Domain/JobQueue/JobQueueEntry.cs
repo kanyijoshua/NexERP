@@ -6,7 +6,6 @@ namespace ABPmicroservice.Erp.JobQueue;
 
 /// <summary>
 /// A scheduled or recurring task to be executed in the background.
-/// Mirrors Business Central Table 472 "Job Queue Entry" and Odoo ir.cron / queue.job.
 /// </summary>
 public class JobQueueEntry : CompanyAggregateRoot
 {
@@ -77,34 +76,34 @@ public class JobQueueEntry : CompanyAggregateRoot
 
     public string LastErrorStackTrace { get; private set; }
 
-    /// <summary>User ID that created or owns this entry. Mirrors BC Field 2 "User ID".</summary>
+    /// <summary>User ID that created or owns this entry.</summary>
     public string UserId { get; private set; }
 
-    /// <summary>Entity record ID or reference to process. Mirrors BC Field 15 "Record ID to Process".</summary>
+    /// <summary>Entity record ID or reference to process.</summary>
     public string RecordIdToProcess { get; private set; }
 
-    /// <summary>Recurring date formula (e.g. 1D, 1W, 1M+CM). Mirrors BC Field 29 "Next Run Date Formula".</summary>
+    /// <summary>Recurring date formula (e.g. 1D, 1W, 1M+CM).</summary>
     public string NextRunDateFormula { get; private set; }
 
-    /// <summary>Reference baseline starting timestamp. Mirrors BC Field 28 "Reference Starting Time".</summary>
+    /// <summary>Reference baseline starting timestamp.</summary>
     public DateTime? ReferenceStartingTime { get; private set; }
 
-    /// <summary>Timestamp when entry was transitioned to Ready. Mirrors BC Field 4 "Last Ready State".</summary>
+    /// <summary>Timestamp when entry was transitioned to Ready.</summary>
     public DateTime? LastReadyState { get; private set; }
 
-    /// <summary>Whether to trigger notification upon successful execution. Mirrors BC Field 43 "Notify On Success".</summary>
+    /// <summary>Whether to trigger notification upon successful execution.</summary>
     public bool NotifyOnSuccess { get; private set; }
 
-    /// <summary>Whether this entry is currently scheduled by the background task scheduler. Mirrors BC Field 49 "Scheduled".</summary>
+    /// <summary>Whether this entry is currently scheduled by the background task scheduler.</summary>
     public bool Scheduled { get; private set; }
 
-    /// <summary>Whether recurrence is manually managed rather than automatic. Mirrors BC Field 50 "Manual Recurrence".</summary>
+    /// <summary>Whether recurrence is manually managed rather than automatic.</summary>
     public bool ManualRecurrence { get; private set; }
 
-    /// <summary>Minutes of inactivity allowed before entry is set on hold. Mirrors BC Field 52 "Inactivity Timeout Period".</summary>
+    /// <summary>Minutes of inactivity allowed before entry is set on hold.</summary>
     public int? InactivityTimeoutPeriod { get; private set; }
 
-    /// <summary>Background runtime / scheduler task tracking GUID. Mirrors BC Field 48 "System Task ID".</summary>
+    /// <summary>Background runtime / scheduler task tracking GUID.</summary>
     public Guid? SystemTaskId { get; private set; }
 
     protected JobQueueEntry() { }
@@ -350,7 +349,7 @@ public class JobQueueEntry : CompanyAggregateRoot
     /// <summary>
     /// Computes the next scheduled execution timestamp based on recurrence settings,
     /// weekday filters, and allowed daily execution windows.
-    /// Mirrors Business Central Codeunit 448 "Job Queue Dispatcher" schedule calculation.
+    ///schedule calculation.
     /// </summary>
     public DateTime? CalculateNextRun(DateTime from)
     {

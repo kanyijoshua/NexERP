@@ -37,6 +37,25 @@ public class BankAccountDto : FullAuditedEntityDto<Guid>
     public decimal Balance { get; set; }
     public decimal BalanceLcy { get; set; }
     public bool Blocked { get; set; }
+
+    public string Name2 { get; set; }
+    public string Address2 { get; set; }
+    public string PostCode { get; set; }
+    public string County { get; set; }
+    public string CountryRegionCode { get; set; }
+    public string Email { get; set; }
+    public string FaxNo { get; set; }
+    public string HomePage { get; set; }
+    public string GlobalDimension1Code { get; set; }
+    public string GlobalDimension2Code { get; set; }
+    public string OurContactCode { get; set; }
+    public decimal MinBalance { get; set; }
+    public string LastStatementNo { get; set; }
+    public decimal BalanceLastStatement { get; set; }
+    public string LastPaymentStatementNo { get; set; }
+    public string LastCheckNo { get; set; }
+    public string TransitNo { get; set; }
+    public string BankClearingCode { get; set; }
 }
 
 public class CreateUpdateBankAccountDto
@@ -78,6 +97,58 @@ public class CreateUpdateBankAccountDto
 
     [StringLength(ErpDomainConsts.MaxNameLength)]
     public string Contact { get; set; }
+
+    [StringLength(50)]
+    public string Name2 { get; set; }
+
+    [StringLength(50)]
+    public string Address2 { get; set; }
+
+    [StringLength(20)]
+    public string PostCode { get; set; }
+
+    [StringLength(30)]
+    public string County { get; set; }
+
+    [StringLength(10)]
+    public string CountryRegionCode { get; set; }
+
+    [StringLength(80)]
+    public string Email { get; set; }
+
+    [StringLength(30)]
+    public string FaxNo { get; set; }
+
+    [StringLength(80)]
+    public string HomePage { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension1Code { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension2Code { get; set; }
+
+    [StringLength(20)]
+    public string OurContactCode { get; set; }
+
+    public decimal MinBalance { get; set; }
+
+    [StringLength(20)]
+    public string LastStatementNo { get; set; }
+
+    public decimal BalanceLastStatement { get; set; }
+
+    [StringLength(20)]
+    public string LastPaymentStatementNo { get; set; }
+
+    [StringLength(20)]
+    public string LastCheckNo { get; set; }
+
+    [StringLength(20)]
+    public string TransitNo { get; set; }
+
+    [StringLength(50)]
+    public string BankClearingCode { get; set; }
 }
 
 public class GetBankAccountListInput : ErpPagedListInput
@@ -112,6 +183,10 @@ public class PaymentMethodDto : CodeTableDto
 {
     public GenJournalAccountType? BalAccountType { get; set; }
     public string BalAccountNo { get; set; }
+
+    public bool DirectDebit { get; set; }
+    public string DirectDebitPmtTermsCode { get; set; }
+    public string PmtExportLineDefinition { get; set; }
 }
 
 public class CreateUpdatePaymentMethodDto : CreateUpdateCodeTableDto
@@ -121,6 +196,14 @@ public class CreateUpdatePaymentMethodDto : CreateUpdateCodeTableDto
 
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string BalAccountNo { get; set; }
+
+    public bool DirectDebit { get; set; }
+
+    [StringLength(10)]
+    public string DirectDebitPmtTermsCode { get; set; }
+
+    [StringLength(20)]
+    public string PmtExportLineDefinition { get; set; }
 }
 
 public interface IBankAccountPostingGroupAppService

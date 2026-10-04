@@ -14,8 +14,8 @@ interface SeriesField {
 }
 
 /**
- * Number series per kind of record. Mirrors the "Number Series" tabs of Business Central's
- * Sales &amp; Receivables Setup (page 459) and Purchases &amp; Payables Setup (page 460).
+ * Number series per kind of record: the "Number Series" tabs of the
+ * Sales &amp; Receivables Setup and Purchases &amp; Payables Setup pages.
  */
 @Component({
   selector: 'app-document-setup',
@@ -136,7 +136,7 @@ export class DocumentSetupComponent implements OnInit {
       });
   }
 
-  /** The General fields BC shows above the number series on the same setup page. */
+  /** The General fields shown above the number series on the same setup page. */
   private withControls(group: FormGroup, values: Record<string, unknown>): FormGroup {
     Object.entries(values).forEach(([name, value]) => group.addControl(name, this.fb.control(value)));
     return group;

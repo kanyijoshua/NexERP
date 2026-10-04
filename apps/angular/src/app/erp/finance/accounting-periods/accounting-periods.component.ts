@@ -9,7 +9,7 @@ import { ErpTableAction, ErpTableColumn, ErpTableComponent, ErpTableSource } fro
 import { CompanyService } from '../../services/company.service';
 
 /**
- * Accounting Periods. Mirrors Business Central page 100 with its Create Year and Close Year actions.
+ * Accounting Periods.with its Create Year and Close Year actions.
  */
 @Component({
   selector: 'app-accounting-periods',

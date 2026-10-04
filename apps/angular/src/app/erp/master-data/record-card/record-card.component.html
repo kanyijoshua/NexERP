@@ -33,7 +33,7 @@
       </button>
     }
     @if (!isNew) {
-      <button *abpPermission="entity.permission + '.Create'" type="button" class="btn btn-sm btn-outline-primary" (click)="newRecord()">
+      <button *abpPermission="createPermission" type="button" class="btn btn-sm btn-outline-primary" (click)="newRecord()">
         <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
       </button>
     }
@@ -62,6 +62,11 @@
         <erp-record-form idPrefix="card" [entity]="entity" [form]="form" [record]="record" [collapsible]="true"></erp-record-form>
         <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
       </form>
+      @if (!isNew && record) {
+        @for (part of entity.parts ?? []; track part.entity) {
+          <erp-record-part [part]="part" [record]="record" (changed)="refreshRecord()"></erp-record-part>
+        }
+      }
       @if (!canEdit) {
         <div class="alert alert-light border small">
           <i class="fas fa-lock me-1"></i>{{ 'Erp::ReadOnlyNoPermission' | abpLocalization }}
@@ -95,6 +100,13 @@
             }
           </dl>
         </div>
+      }
+      @if (!isNew && (entity.attachmentEntityType ?? entity.chatterEntityType) && record) {
+        <app-attachments-widget
+          *abpPermission="'Erp.Attachments'"
+          [entityType]="(entity.attachmentEntityType ?? entity.chatterEntityType)!"
+          [entityId]="record['id']"
+        ></app-attachments-widget>
       }
       @if (!isNew && entity.chatterEntityType && record) {
         <app-chatter-widget

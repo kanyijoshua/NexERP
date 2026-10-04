@@ -159,7 +159,7 @@ public class IncludeConfigTablesInput
     [MinLength(1)]
     public List<string> EntityNames { get; set; } = new();
 
-    /// <summary>Also add the tables these refer to and their line tables: BC's "Get Related Tables".</summary>
+    /// <summary>Also add the tables these refer to and their line tables: Get Related Tables.</summary>
     public bool IncludeRelatedTables { get; set; }
 }
 

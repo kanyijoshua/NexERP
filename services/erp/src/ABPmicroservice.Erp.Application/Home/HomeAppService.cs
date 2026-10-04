@@ -17,7 +17,7 @@ namespace ABPmicroservice.Erp.Home;
 /// <summary>
 /// The landing page.
 /// <para>
-/// A Business Central Role Center opens on what needs doing rather than on a menu, and Odoo opens
+/// The page opens on what needs doing rather than on a menu, and
 /// on the apps you have installed. This serves both from one call: the activity cues first, then
 /// the modules this company has switched on, as tiles.
 /// </para>

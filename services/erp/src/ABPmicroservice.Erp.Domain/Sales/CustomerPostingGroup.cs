@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Customer Posting Group. Mirrors Business Central table 92 "Customer Posting Group".
+/// Customer Posting Group.
 /// Maps Customer Posting Group Code -> Receivables G/L Account.
 /// </summary>
 public class CustomerPostingGroup : PostingGroupBase

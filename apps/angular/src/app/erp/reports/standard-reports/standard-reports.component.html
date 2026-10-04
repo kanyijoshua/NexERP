@@ -1,0 +1,167 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <h4 class="mb-0 fw-bold">
+      <i class="fas fa-rectangle-list text-primary me-2"></i>{{ 'Erp::StandardReports' | abpLocalization }}
+    </h4>
+    @if (title()) {
+      <div class="small text-muted">{{ title() }}</div>
+    }
+  </div>
+
+  <ng-container *abpPermission="'Erp.Reports.ExportExcel'">
+    @if (hasRun()) {
+      <button type="button" class="btn btn-sm btn-outline-success" [disabled]="busy() || rows().length === 0" (click)="openInSpreadsheet()">
+        <i class="fas fa-table-cells me-1"></i>{{ 'Erp::OpenInSpreadsheet' | abpLocalization }}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="exportReport(ExportFormat.Html)">
+        <i class="fas fa-print me-1"></i>{{ 'Erp::Print' | abpLocalization }}
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="exportReport(ExportFormat.Xlsx)">
+        <i class="fas fa-file-excel me-1"></i>Excel
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="exportReport(ExportFormat.Csv)">
+        <i class="fas fa-file-csv me-1"></i>CSV
+      </button>
+    }
+  </ng-container>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-3">
+    <div class="card border-0 shadow-sm">
+      <div class="list-group list-group-flush">
+        @for (group of groups(); track group.area) {
+          <div class="list-group-item bg-light small fw-semibold text-uppercase text-muted">
+            {{ 'Erp::ReportArea:' + group.area | abpLocalization }}
+          </div>
+          @for (report of group.reports; track report.code) {
+            <button
+              type="button"
+              class="list-group-item list-group-item-action py-2"
+              [class.active]="selected()?.code === report.code"
+              (click)="select(report)"
+            >
+              {{ report.name }}
+            </button>
+          }
+        } @empty {
+          <div class="list-group-item text-muted">{{ 'Erp::NoDataAvailable' | abpLocalization }}</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-9">
+    @if (selected(); as report) {
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            @if (report.hasPeriod) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-from">{{ 'Erp::FromDate' | abpLocalization }}</label>
+                <input id="sr-from" type="date" class="form-control form-control-sm" [(ngModel)]="fromDate" />
+              </div>
+            }
+            @if (report.hasPeriod || report.hasAsOfDate) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-to">
+                  {{ (report.hasPeriod ? 'Erp::ToDate' : 'Erp::AsOfDate') | abpLocalization }}
+                </label>
+                <input id="sr-to" type="date" class="form-control form-control-sm" [(ngModel)]="toDate" />
+              </div>
+            }
+            @if (report.hasNoFilter) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-filter">{{ 'Erp::NoFilter' | abpLocalization }}</label>
+                <input id="sr-filter" type="text" class="form-control form-control-sm" placeholder="1000..1999|2100" [(ngModel)]="noFilter" />
+              </div>
+            }
+            @if (report.hasBudgetName) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-budget">{{ 'Erp::BudgetName' | abpLocalization }}</label>
+                <erp-lookup inputId="sr-budget" entity="glBudgetName" [(ngModel)]="budgetName"></erp-lookup>
+              </div>
+            }
+            @if (report.hasScheme) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-scheme">{{ 'Erp::SchemeCode' | abpLocalization }}</label>
+                <erp-lookup inputId="sr-scheme" entity="pensionScheme" [(ngModel)]="schemeCode"></erp-lookup>
+              </div>
+            }
+            @if (report.hasDepreciationBook) {
+              <div class="col-md-3">
+                <label class="form-label small" for="sr-book">{{ 'Erp::DepreciationBookCode' | abpLocalization }}</label>
+                <erp-lookup inputId="sr-book" entity="depreciationBook" [(ngModel)]="depreciationBookCode"></erp-lookup>
+              </div>
+            }
+            <div class="col-md-2">
+              <button type="button" class="btn btn-primary btn-sm w-100" [disabled]="busy()" (click)="run()">
+                @if (busy()) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                } @else {
+                  <i class="fas fa-play me-1"></i>
+                }
+                {{ 'Erp::Run' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm erp-table-card">
+        <div class="card-body p-0">
+          @if (rows().length) {
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    @for (column of columns(); track column.field) {
+                      <th scope="col" [class.text-end]="column.type === 'currency'">{{ column.labelKey }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows(); track $index) {
+                    <tr [ngClass]="rowClass(row)">
+                      @for (column of columns(); track column.field; let first = $first) {
+                        <td
+                          [class.text-end]="column.type === 'currency'"
+                          [style.padding-left.rem]="first ? row.__indent * 1.25 + 0.5 : null"
+                        >
+                          @switch (column.type) {
+                            @case ('currency') {
+                              @if (row[column.field] !== undefined && row[column.field] !== null) {
+                                <span class="font-monospace">{{ row[column.field] | erpAmount }}</span>
+                              }
+                            }
+                            @case ('date') {
+                              {{ $any(row[column.field]) | date: 'mediumDate' }}
+                            }
+                            @default {
+                              {{ row[column.field] }}
+                            }
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="text-center text-muted py-5">
+              @if (busy()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                {{ 'Erp::Loading' | abpLocalization }}
+              } @else if (hasRun()) {
+                <i class="fas fa-inbox fa-2x d-block mb-2"></i>{{ 'Erp::NoDataAvailable' | abpLocalization }}
+              } @else {
+                <i class="fas fa-play fa-2x d-block mb-2"></i>{{ 'Erp::RunReportHint' | abpLocalization }}
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

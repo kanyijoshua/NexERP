@@ -17,7 +17,6 @@ namespace ABPmicroservice.Erp;
 
 /// <summary>
 /// Background worker daemon executing scheduled and recurring Job Queue entries across companies.
-/// Mirrors Business Central Job Queue background dispatcher (Codeunit 448) and Odoo cron daemon (runner.py).
 /// </summary>
 public class JobQueueWorker : BackgroundService
 {

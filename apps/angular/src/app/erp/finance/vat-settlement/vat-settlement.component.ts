@@ -14,7 +14,7 @@ function lastMonth(): { from: string; to: string } {
 }
 
 /**
- * Calc. and Post VAT Settlement. Mirrors Business Central report 20: show what the open VAT
+ * Calc. and Post VAT Settlement. show what the open VAT
  * entries of a period add up to per VAT posting setup, then close them and move the net to the
  * settlement account, which is what is owed to (or reclaimable from) the tax authority.
  */

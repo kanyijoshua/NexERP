@@ -47,7 +47,7 @@ public static class SpreadsheetWriter
 
     /// <summary>
     /// Writes one tab per sheet, in order. A configuration package uses this to put each of its
-    /// tables on a tab of its own, as Business Central's "Export to Excel" does.
+    /// tables on a tab of its own.
     /// </summary>
     public static byte[] Write(IReadOnlyList<SpreadsheetSheet> sheets)
     {

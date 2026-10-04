@@ -57,7 +57,7 @@ public class ConfigEntityStore<TEntity> : IConfigEntityStore
             Expression member = Expression.Property(parameter, fieldName);
             var value = key.GetValueOrDefault(fieldName);
 
-            // Codes match whatever their case, as they do in BC, and on PostgreSQL as on SQLite.
+            // Codes match whatever their case, on PostgreSQL as on SQLite.
             if (member.Type == typeof(string) && value is string text)
             {
                 member = Expression.Call(member, typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!);
@@ -126,8 +126,8 @@ public class ConfigEntityStore<TEntity> : IConfigEntityStore
 
 /// <summary>
 /// Sets a property whatever its accessibility. Entities keep their setters private so that screens
-/// go through their methods; a package deliberately writes the stored value as it stands, as BC's
-/// RapidStart does with field validation switched off, and checks the value itself beforehand.
+/// go through their methods; a package deliberately writes the stored value as it stands,
+/// as with field validation switched off, and checks the value itself beforehand.
 /// </summary>
 public static class ConfigEntityWriter
 {

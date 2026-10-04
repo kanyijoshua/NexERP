@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Inventory;
 
-/// <summary>
-/// Mirrors Business Central "Entry Type" on the Item Ledger Entry.
-/// </summary>
 public enum ItemLedgerEntryType
 {
     Purchase = 0,

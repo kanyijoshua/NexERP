@@ -35,8 +35,8 @@ public class DynamicFilterList_Tests : ErpApplicationTestBase
                 DynamicFilter = """{"conditions":[{"field":"no","operator":"expression","value":"1000..1999"}]}""",
             });
 
-            result.Items.Select(a => a.No).ShouldBe(["1010", "1020", "1200", "1400"]);
-            result.TotalCount.ShouldBe(4);
+            result.Items.Select(a => a.No).ShouldBe(["1010", "1020", "1200", "1310", "1400"]);
+            result.TotalCount.ShouldBe(5);
         });
     }
 
@@ -57,7 +57,7 @@ public class DynamicFilterList_Tests : ErpApplicationTestBase
                     """,
             });
 
-            result.Items.Select(a => a.No).ShouldBe(["4000", "6100", "8910"]);
+            result.Items.Select(a => a.No).ShouldBe(["4000", "6100", "6200", "6210", "8610", "8620", "8910"]);
         });
     }
 

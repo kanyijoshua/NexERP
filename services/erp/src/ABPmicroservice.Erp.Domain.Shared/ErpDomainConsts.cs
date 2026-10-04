@@ -1,8 +1,7 @@
 namespace ABPmicroservice.Erp;
 
 /// <summary>
-/// Field length constraints shared across the ERP domain. These lengths
-/// intentionally mirror Microsoft Dynamics 365 Business Central table fields.
+/// Field length constraints shared across the ERP domain.
 /// </summary>
 public static class ErpDomainConsts
 {
@@ -65,6 +64,13 @@ public static class ErpDomainConsts
     public const int MaxShipmentMethodCodeLength = 10;
     public const int MaxOnHoldLength = 3;
     public const int MaxFileExtensionLength = 30;
+    public const int MaxContentTypeLength = 100;
+
+    /// <summary>
+    /// Largest file that may be attached to a record. It arrives whole in one request and is kept
+    /// in the database, so the cap bounds both the request and the row.
+    /// </summary>
+    public const int MaxAttachmentBytes = 10 * 1024 * 1024;
     public const int MaxHomePageLength = 80;
     public const int MaxCustomLayoutCodeLength = 20;
 
@@ -106,7 +112,7 @@ public static class ErpDomainConsts
 
     /// <summary>
     /// Days added to the posting date for the due date of a journal-posted receivable or payable.
-    /// A stand-in until payment terms (BC table 3) carry their own date formula.
+    /// A stand-in until payment terms carry their own date formula.
     /// </summary>
     public const int DefaultPaymentDueDays = 30;
 }

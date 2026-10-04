@@ -5,10 +5,10 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// General Posting Setup. Mirrors Business Central table 252 "General Posting Setup".
+/// General Posting Setup.
 /// Maps (Gen. Bus. Posting Group + Gen. Prod. Posting Group) -> G/L accounts.
 /// <para>
-/// As in BC the business group may be blank (the row used for parties without one), and every
+/// The business group may be blank (the row used for parties without one), and every
 /// account may be blank: posting refuses a blank account only when it actually needs it.
 /// </para>
 /// </summary>

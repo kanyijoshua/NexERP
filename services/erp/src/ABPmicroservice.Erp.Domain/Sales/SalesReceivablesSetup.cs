@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Sales &amp; Receivables Setup. Mirrors Business Central table 311: one row per company,
+/// Sales &amp; Receivables Setup: one row per company,
 /// naming the number series each kind of sales record draws from. A blank code means
 /// numbers are typed by hand.
 /// </summary>
@@ -25,7 +25,7 @@ public class SalesReceivablesSetup : CompanyEntity
     /// <summary>What releasing or posting a document checks the customer's credit against.</summary>
     public CreditWarnings CreditWarnings { get; private set; } = CreditWarnings.BothWarnings;
 
-    /// <summary>A document cannot be posted without the customer's own reference (BC "Ext. Doc. No. Mandatory").</summary>
+    /// <summary>A document cannot be posted without the customer's own reference.</summary>
     public bool ExtDocNoMandatory { get; private set; }
 
     protected SalesReceivablesSetup() { }

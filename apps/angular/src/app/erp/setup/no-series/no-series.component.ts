@@ -9,7 +9,7 @@ import {
 } from '@proxy/numbering';
 import { DocumentLineColumn, ErpTableColumn, ErpTableCrudBase } from '../../erp-shared';
 
-/** No. Series list and card. Mirrors Business Central pages 456 "No. Series" and 457 "No. Series Lines". */
+/** No. Series list and card. */
 @Component({
   selector: 'app-no-series',
   templateUrl: './no-series.component.html',

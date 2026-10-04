@@ -16,9 +16,6 @@ import { CompanyService } from '../../services/company.service';
 /**
  * Exporting any table the user is allowed to read: pick a table, pick columns, filter, preview,
  * then take it away as CSV, Excel or JSON.
- * <p>
- * Mirrors Odoo's export dialog and the Excel export of a Business Central configuration package.
- * </p>
  */
 @Component({
   selector: 'app-data-export',

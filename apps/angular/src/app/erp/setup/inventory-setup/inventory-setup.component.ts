@@ -7,7 +7,7 @@ import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
-/** Inventory Setup. Mirrors Business Central page 461: item numbering and the rules stock moves by. */
+/** Inventory Setup. item numbering and the rules stock moves by. */
 @Component({
   selector: 'app-inventory-setup',
   templateUrl: './inventory-setup.component.html',

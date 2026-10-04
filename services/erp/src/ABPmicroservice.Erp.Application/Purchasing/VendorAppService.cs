@@ -50,7 +50,7 @@ public class VendorAppService
 
     public override async Task<VendorDto> CreateAsync(CreateUpdateVendorDto input)
     {
-        // Blank takes the next number of the Vendor Nos. series (BC: InitSeries).
+        // Blank takes the next number of the Vendor Nos. series.
         var setup = await _setupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.VendorNos, input.No, Clock.Now);
 
@@ -102,7 +102,7 @@ public class VendorAppService
         await Repository.UpdateAsync(vendor, autoSave: true);
     }
 
-    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    /// <summary>A posting group on the card must exist; blank means none.</summary>
     private async Task EnsurePostingGroupsExistAsync(CreateUpdateVendorDto input)
     {
         var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
@@ -134,6 +134,21 @@ public class VendorAppService
         vendor.SetInvoiceDiscCode(input.InvoiceDiscCode);
         vendor.SetTaxDetails(input.VATRegistrationNo, input.TaxAreaCode, input.TaxLiable, input.PricesIncludingVAT);
         vendor.SetPaymentPreferences(input.OurAccountNo, input.BlockPaymentTolerance, input.PrepaymentPct, input.AllowMultiplePostingGroups);
+        vendor.SetAdditionalFields(
+            input.County,
+            input.FaxNo,
+            input.RegistrationNumber,
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.LanguageCode,
+            input.PayToVendorNo,
+            input.Priority,
+            input.ApplicationMethod,
+            input.ResponsibilityCenter,
+            input.PreferredBankAccountCode,
+            input.PrimaryContactNo,
+            input.PrivacyBlocked
+        );
     }
 
     protected override async Task<IQueryable<Vendor>> CreateFilteredQueryAsync(
@@ -142,7 +157,7 @@ public class VendorAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
-        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        // Lower-cased on both sides: lookups search case-insensitively, on any provider.
         var filter = input.Filter?.Trim().ToLower();
 
         return query

@@ -14,7 +14,7 @@ interface RoleRow {
 }
 
 /**
- * Profiles (Roles). Mirrors Business Central's Profiles page, where an administrator decides which
+ * Profiles (Roles): where an administrator decides which
  * role center people open on. Here a profile is given per role; users can still pick their own
  * under "My role" on the navigation bar.
  */

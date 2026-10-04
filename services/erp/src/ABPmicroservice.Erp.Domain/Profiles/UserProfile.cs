@@ -6,7 +6,7 @@ using Volo.Abp.MultiTenancy;
 namespace ABPmicroservice.Erp.Profiles;
 
 /// <summary>
-/// User Personalization Profile. Mirrors Business Central Table 2000000073 "User Personalization":
+/// User Personalization Profile.
 /// the profile (role) a user chose to work as, which decides their role center navigation.
 /// </summary>
 public class UserProfile : FullAuditedEntity<Guid>, IMultiTenant

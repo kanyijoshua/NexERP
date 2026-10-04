@@ -63,7 +63,7 @@ public class PurchaseDocumentAppService
 
         var vendor = await GetPurchasableVendorAsync(input.VendorId);
 
-        // Blank takes the next number of the series set up for this document type (BC: InitSeries).
+        // Blank takes the next number of the series set up for this document type.
         var setup = await _setupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.GetDocumentNos(input.DocumentType), input.No, input.PostingDate);
 
@@ -96,7 +96,7 @@ public class PurchaseDocumentAppService
 
         var header = await GetEntityByIdAsync(id);
 
-        // A released document is frozen until it is reopened, as in Business Central.
+        // A released document is frozen until it is reopened.
         if (header.Status != DocumentStatus.Open)
         {
             throw new DocumentNotOpenException(header.No);
@@ -233,7 +233,7 @@ public class PurchaseDocumentAppService
 
     /// <summary>
     /// The header fields; payment terms and currency default to the vendor's, and a blank due date
-    /// follows from the payment terms, as BC fills them in from the vendor.
+    /// follows from the payment terms.
     /// </summary>
     private async Task ApplyHeaderAsync(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input, Vendor vendor)
     {
@@ -283,6 +283,43 @@ public class PurchaseDocumentAppService
         header.SetAppliesTo(input.AppliesToDocType, input.AppliesToDocNo, input.AppliesToId);
         header.SetTax(input.TaxAreaCode ?? vendor.TaxAreaCode, input.TaxLiable || vendor.TaxLiable);
         header.SetPrepayment(input.PrepaymentPct != 0 ? input.PrepaymentPct : vendor.PrepaymentPct);
+        header.SetAdditionalFields(
+            input.PostingDescription,
+            input.DocumentDate,
+            input.PurchaserCode,
+            input.VendorOrderNo,
+            input.VendorShipmentNo,
+            input.VendorCrMemoNo,
+            input.BuyFromVendorName2,
+            input.BuyFromAddress,
+            input.BuyFromAddress2,
+            input.BuyFromCity,
+            input.BuyFromPostCode,
+            input.BuyFromCounty,
+            input.BuyFromCountryRegionCode,
+            input.BuyFromContact,
+            input.PayToName2,
+            input.PayToAddress2,
+            input.PayToCounty,
+            input.ShipToName2,
+            input.ShipToAddress2,
+            input.ShipToCounty,
+            input.OrderAddressCode,
+            input.VatRegistrationNo,
+            input.PaymentDiscountPct,
+            input.PmtDiscountDate,
+            input.VatBaseDiscountPct,
+            input.LanguageCode,
+            input.QuoteNo,
+            input.ResponsibilityCenter,
+            input.RequestedReceiptDate,
+            input.PromisedReceiptDate,
+            input.AssignedUserId,
+            input.PaymentReference,
+            input.InvoiceReceivedDate,
+            input.CreditorNo,
+            input.ReasonCode
+        );
     }
 
     // The client always sends the whole document, so the line set is replaced wholesale.

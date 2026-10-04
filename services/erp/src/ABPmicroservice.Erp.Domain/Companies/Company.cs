@@ -6,7 +6,7 @@ using Volo.Abp.MultiTenancy;
 namespace ABPmicroservice.Erp.Companies;
 
 /// <summary>
-/// Legal Entity Company. Mirrors Business Central Table 2000000006 "Company".
+/// Legal Entity Company.
 /// Scoped by Multi-Tenancy.
 /// </summary>
 public class Company : FullAuditedAggregateRoot<Guid>, IMultiTenant
@@ -45,7 +45,7 @@ public class Company : FullAuditedAggregateRoot<Guid>, IMultiTenant
 }
 
 /// <summary>
-/// Company Information. Mirrors Business Central Table 79 "Company Information".
+/// Company Information.
 /// Stores official registration numbers, bank details, and addresses.
 /// </summary>
 public class CompanyInformation : FullAuditedEntity<Guid>, IMultiTenant

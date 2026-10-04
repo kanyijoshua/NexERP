@@ -70,7 +70,7 @@ describe('ReportLayoutsComponent', () => {
     component.ngOnInit();
   });
 
-  /** A new layout opens on the built-in one, the way BC hands you a copy to edit. */
+  /** A new layout opens on the built-in one, as a copy to edit. */
   it('starts a new layout from the built-in one', () => {
     component.openCreate();
 

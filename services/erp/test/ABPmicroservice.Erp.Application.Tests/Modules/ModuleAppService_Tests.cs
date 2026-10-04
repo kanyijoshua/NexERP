@@ -64,7 +64,7 @@ public class ModuleAppService_Tests : ErpApplicationTestBase
     }
 
     /// <summary>
-    /// The rule Odoo enforces on uninstall: something that is still needed cannot go first.
+    /// The rule on uninstall: something that is still needed cannot go first.
     /// Core modules cover the built-in dependencies, so this is shown with a stored one.
     /// </summary>
     [Fact]

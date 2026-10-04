@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Finance;
 
-/// <summary>
-/// Mirrors Business Central "G/L Account Category" option.
-/// </summary>
 public enum GLAccountCategory
 {
     Assets = 0,

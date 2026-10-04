@@ -13,7 +13,7 @@ import { ErpTableColumn, ErpTableCrudBase, LookupItem } from '../../erp-shared';
 
 /**
  * Who approves whose requests, and up to what amount.
- * Mirrors Business Central page 663 "Approval User Setup".
+ *
  */
 @Component({
     selector: 'app-approval-user-setup',

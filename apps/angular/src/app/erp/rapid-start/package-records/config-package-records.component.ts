@@ -18,7 +18,7 @@ import { errorsByField, sortFieldsByProcessingOrder } from '../rapid-start.helpe
 export const RECORDS_PAGE_SIZE = 25;
 
 /**
- * The staged records of one package table. Mirrors Business Central's "Config. Package Records"
+ * The staged records of one package table: the "Config. Package Records"
  * page, where data brought in is checked and corrected before it is applied.
  */
 @Component({

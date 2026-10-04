@@ -15,6 +15,7 @@ import {
   RecordDialogService,
   RecordEntity,
   RecordEntityRegistry,
+  recordPermission,
   toRecordTableColumns,
 } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
@@ -22,9 +23,9 @@ import { CompanyService } from '../../services/company.service';
 const VIEW_MODE_KEY = 'nexerp_master_data_view_mode';
 
 /**
- * The list page of a master-data table (BC list page, Odoo list view), driven by the route's
+ * The list page of a master-data table, driven by the route's
  * `entity`. The grid loads as the user scrolls and filters on the server; the user picks and
- * fixes columns. Card format (Odoo kanban / BC tiles) shows the same rows, and the rows loaded
+ * fixes columns. Card format shows the same rows, and the rows loaded
  * can be exported to Excel, CSV, print or the clipboard.
  */
 @Component({
@@ -57,6 +58,11 @@ export class RecordListComponent implements OnInit {
 
   viewMode: 'table' | 'card' = this.readViewMode();
 
+  /** The policy an action needs; one nobody holds when the table is read-only. */
+  permission(action: 'Create' | 'Update' | 'Delete'): string {
+    return recordPermission(this.entity, action);
+  }
+
   ngOnInit(): void {
     this.entity = this.registry.get(this.route.snapshot.data['entity']);
     // A smart button may open the list already searched, e.g. an employee's absences.
@@ -75,7 +81,7 @@ export class RecordListComponent implements OnInit {
         title: 'Erp::Delete',
         icon: 'fas fa-trash',
         btnClass: 'btn-outline-danger',
-        permission: this.entity.permission + '.Delete',
+        permission: this.permission('Delete'),
         action: (row, event) => this.remove(row, event),
       },
     ];

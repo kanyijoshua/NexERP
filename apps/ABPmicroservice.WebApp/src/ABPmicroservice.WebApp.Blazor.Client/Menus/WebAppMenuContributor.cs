@@ -28,7 +28,7 @@ public class WebAppMenuContributor : IMenuContributor
 
         var erpMenu = new ApplicationMenuItem(
             WebAppMenus.Erp,
-            "Business Central ERP",
+            "ERP",
             icon: "fas fa-calculator"
         );
 

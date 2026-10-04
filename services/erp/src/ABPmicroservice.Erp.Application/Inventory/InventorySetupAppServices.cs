@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Inventory;
 
-/// <summary>Locations (BC page 15).</summary>
+/// <summary>Locations.</summary>
 [Authorize(ErpPermissions.Locations.Default)]
 public class LocationAppService : CodeTableAppServiceBase<Location, LocationDto, CreateUpdateLocationDto>, ILocationAppService
 {
@@ -26,7 +26,7 @@ public class LocationAppService : CodeTableAppServiceBase<Location, LocationDto,
     }
 }
 
-/// <summary>Inventory Setup (BC page 461): one record per company, created on first read.</summary>
+/// <summary>Inventory Setup: one record per company, created on first read.</summary>
 [Authorize(ErpPermissions.InventorySetup.Default)]
 public class InventorySetupAppService : ErpAppService, IInventorySetupAppService
 {

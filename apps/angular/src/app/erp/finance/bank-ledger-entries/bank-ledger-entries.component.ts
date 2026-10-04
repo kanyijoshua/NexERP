@@ -6,7 +6,7 @@ import { ErpTableColumn, ErpTableComponent, ErpTableSource } from '../../erp-sha
 import { CompanyService } from '../../services/company.service';
 
 /**
- * Bank Account Ledger Entries. Mirrors Business Central page 372; opened from a bank account card
+ * Bank Account Ledger Entries.; opened from a bank account card
  * with `?bankAccountId=`, or unfiltered from the menu.
  */
 @Component({

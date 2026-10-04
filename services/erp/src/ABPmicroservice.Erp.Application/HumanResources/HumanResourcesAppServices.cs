@@ -13,7 +13,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.HumanResources;
 
-/// <summary>Human Resources Setup (BC page 5233): one record per company, created on first read.</summary>
+/// <summary>Human Resources Setup: one record per company, created on first read.</summary>
 [Authorize(ErpPermissions.HumanResourcesSetup.Default)]
 public class HumanResourcesSetupAppService : ErpAppService, IHumanResourcesSetupAppService
 {
@@ -65,7 +65,7 @@ public abstract class HumanResourcesCodeTableAppService<TEntity, TDto, TInput> :
         : base(repository, ErpPermissions.HumanResourcesSetup.Default) { }
 }
 
-/// <summary>Human Resource Units of Measure (BC page 5236).</summary>
+/// <summary>Human Resource Units of Measure.</summary>
 public class HumanResourceUnitOfMeasureAppService
     : HumanResourcesCodeTableAppService<HumanResourceUnitOfMeasure, HumanResourceUnitOfMeasureDto, CreateUpdateHumanResourceUnitOfMeasureDto>,
         IHumanResourceUnitOfMeasureAppService
@@ -83,7 +83,7 @@ public class HumanResourceUnitOfMeasureAppService
     }
 }
 
-/// <summary>Employee Posting Groups (BC page 5222).</summary>
+/// <summary>Employee Posting Groups.</summary>
 public class EmployeePostingGroupAppService
     : HumanResourcesCodeTableAppService<EmployeePostingGroup, EmployeePostingGroupDto, CreateUpdateEmployeePostingGroupDto>,
         IEmployeePostingGroupAppService
@@ -101,7 +101,7 @@ public class EmployeePostingGroupAppService
     }
 }
 
-/// <summary>Causes of Absence (BC page 5210).</summary>
+/// <summary>Causes of Absence.</summary>
 public class CauseOfAbsenceAppService
     : HumanResourcesCodeTableAppService<CauseOfAbsence, CauseOfAbsenceDto, CreateUpdateCauseOfAbsenceDto>,
         ICauseOfAbsenceAppService
@@ -119,7 +119,7 @@ public class CauseOfAbsenceAppService
     }
 }
 
-/// <summary>Qualifications (BC page 5205).</summary>
+/// <summary>Qualifications.</summary>
 public class QualificationAppService
     : HumanResourcesCodeTableAppService<Qualification, CodeTableDto, CreateUpdateCodeTableDto>,
         IQualificationAppService
@@ -130,7 +130,7 @@ public class QualificationAppService
     protected override Qualification NewEntity(Guid id, CreateUpdateCodeTableDto input) => new(id, input.Code, input.Description);
 }
 
-/// <summary>Unions (BC page 5213).</summary>
+/// <summary>Unions.</summary>
 public class UnionAppService : HumanResourcesCodeTableAppService<Union, CodeTableDto, CreateUpdateCodeTableDto>, IUnionAppService
 {
     public UnionAppService(IRepository<Union, Guid> repository)
@@ -139,7 +139,7 @@ public class UnionAppService : HumanResourcesCodeTableAppService<Union, CodeTabl
     protected override Union NewEntity(Guid id, CreateUpdateCodeTableDto input) => new(id, input.Code, input.Description);
 }
 
-/// <summary>Employment Contracts (BC page 5217).</summary>
+/// <summary>Employment Contracts.</summary>
 public class EmploymentContractAppService
     : HumanResourcesCodeTableAppService<EmploymentContract, CodeTableDto, CreateUpdateCodeTableDto>,
         IEmploymentContractAppService
@@ -150,7 +150,7 @@ public class EmploymentContractAppService
     protected override EmploymentContract NewEntity(Guid id, CreateUpdateCodeTableDto input) => new(id, input.Code, input.Description);
 }
 
-/// <summary>Grounds for Termination (BC page 5221).</summary>
+/// <summary>Grounds for Termination.</summary>
 public class GroundsForTerminationAppService
     : HumanResourcesCodeTableAppService<GroundsForTermination, CodeTableDto, CreateUpdateCodeTableDto>,
         IGroundsForTerminationAppService
@@ -161,7 +161,7 @@ public class GroundsForTerminationAppService
     protected override GroundsForTermination NewEntity(Guid id, CreateUpdateCodeTableDto input) => new(id, input.Code, input.Description);
 }
 
-/// <summary>Employees (BC pages 5201 and 5200).</summary>
+/// <summary>Employees.</summary>
 [Authorize(ErpPermissions.Employees.Default)]
 public class EmployeeAppService
     : ErpCrudAppService<Employee, EmployeeDto, Guid, GetEmployeeListInput, CreateUpdateEmployeeDto, CreateUpdateEmployeeDto>,
@@ -208,7 +208,7 @@ public class EmployeeAppService
         await CheckCreatePolicyAsync();
         await ValidateAsync(input);
 
-        // Blank takes the next number of the Employee Nos. series (BC: InitSeries).
+        // Blank takes the next number of the Employee Nos. series.
         var setup = await _setupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.EmployeeNos, input.No, Clock.Now);
         await EnsureNoIsUniqueAsync(no, null);
@@ -287,10 +287,34 @@ public class EmployeeAppService
         employee.SetEmployment(input.EmploymentDate, input.EmplymtContractCode, input.UnionCode);
         employee.SetStatus(input.Status, input.InactiveDate, input.TerminationDate, input.GroundsForTermCode);
         employee.SetPayment(input.EmployeePostingGroup, input.BankAccountNo, input.Iban, input.SalespersPurchCode);
+        employee.SetAdditionalFields(
+            input.Initials,
+            input.SearchName,
+            input.Address2,
+            input.County,
+            input.Gender,
+            input.Extension,
+            input.FaxNo,
+            input.Pager,
+            input.ManagerNo,
+            input.StatisticsGroupCode,
+            input.CauseOfInactivityCode,
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.AltAddressCode,
+            input.AltAddressStartDate,
+            input.AltAddressEndDate,
+            input.BankBranchNo,
+            input.SwiftCode,
+            input.CurrencyCode,
+            input.ApplicationMethod,
+            input.UnionMembershipNo,
+            input.PrivacyBlocked
+        );
     }
 }
 
-/// <summary>Employee Absences (BC page 5211).</summary>
+/// <summary>Employee Absences.</summary>
 [Authorize(ErpPermissions.Employees.Default)]
 public class EmployeeAbsenceAppService
     : ErpCrudAppService<EmployeeAbsence, EmployeeAbsenceDto, Guid, GetEmployeeAbsenceListInput, CreateUpdateEmployeeAbsenceDto, CreateUpdateEmployeeAbsenceDto>,
@@ -373,7 +397,7 @@ public class EmployeeAbsenceAppService
             ?? throw new BusinessException(ErpErrorCodes.HumanResources.EmployeeNotFound).WithData("no", no ?? "");
     }
 
-    // The unit defaults to the cause's, then to the Human Resources Setup's base unit, as BC fills it in.
+    // The unit defaults to the cause's, then to the Human Resources Setup's base unit.
     private async Task ApplyAsync(EmployeeAbsence absence, CreateUpdateEmployeeAbsenceDto input)
     {
         await _codeTableChecker.EnsureExistsAsync<CauseOfAbsence>(input.CauseOfAbsenceCode);
@@ -395,7 +419,7 @@ public class EmployeeAbsenceAppService
     }
 }
 
-/// <summary>Employee Ledger Entries (BC page 5237): expense claims and the payouts that settle them.</summary>
+/// <summary>Employee Ledger Entries: expense claims and the payouts that settle them.</summary>
 public class EmployeeLedgerEntryAppService
     : ErpReadOnlyAppService<EmployeeLedgerEntry, EmployeeLedgerEntryDto, Guid, GetEmployeeLedgerEntryListInput>,
         IEmployeeLedgerEntryAppService

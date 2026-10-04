@@ -7,7 +7,7 @@ import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
-/** Human Resources Setup. Mirrors Business Central page 5233. */
+/** Human Resources Setup. */
 @Component({
   selector: 'app-human-resources-setup',
   templateUrl: './human-resources-setup.component.html',

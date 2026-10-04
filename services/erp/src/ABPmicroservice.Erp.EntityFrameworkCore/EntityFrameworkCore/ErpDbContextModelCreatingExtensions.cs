@@ -1013,5 +1013,12 @@ public static class ErpDbContextModelCreatingExtensions
             b.Property(x => x.ParameterString).HasMaxLength(ErpDomainConsts.MaxJobParameterLength);
             b.HasIndex(x => new { x.CompanyId, x.JobQueueEntryId, x.StartDateTime });
         });
+
+        builder.ConfigureErpBaseTables();
+        builder.ConfigureErpAttachments();
+        builder.ConfigureErpPensions();
+        builder.ConfigureErpAcademics();
+        builder.ConfigureErpPayroll();
+        builder.ConfigureErpPaymentVouchers();
     }
 }

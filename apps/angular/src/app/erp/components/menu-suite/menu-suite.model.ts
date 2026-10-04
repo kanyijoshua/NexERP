@@ -10,7 +10,7 @@ export interface SuiteEntry {
   count: number;
 }
 
-/** One column heading of the menu suite, like "Enrollment (6)" in Business Central. */
+/** One column heading of the menu suite, like "Enrollment (6)". */
 export interface SuiteSection {
   name: string;
   entries: SuiteEntry[];
@@ -25,7 +25,7 @@ export interface SuiteOptions {
 }
 
 /**
- * Lays the menu tree out the way Business Central's menu suite does.
+ * Lays the menu tree out as a menu suite.
  * <p>
  * Every top-level menu becomes a section of its own direct pages, and every group under it becomes
  * a section too, so "ERP → Setup" reads as a "Setup" column rather than a line inside "ERP".

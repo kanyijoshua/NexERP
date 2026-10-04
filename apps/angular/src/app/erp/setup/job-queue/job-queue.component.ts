@@ -324,7 +324,7 @@ export class JobQueueComponent implements OnInit {
       });
   }
 
-  // --- Entry State Machine Actions (Business Central / Odoo) ---
+  // --- Entry State Machine Actions ---
   runOnce(entry: JobQueueEntryDto): void {
     this.isBusy = true;
     this.jobQueueService

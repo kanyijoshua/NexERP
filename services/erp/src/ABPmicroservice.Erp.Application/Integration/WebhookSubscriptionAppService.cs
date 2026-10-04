@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
 /// Outbound notifications to other systems, and the log of every call made.
-/// Mirrors Business Central's webhook subscriptions.
 /// </summary>
 [Authorize(ErpPermissions.Webhooks.Default)]
 public class WebhookSubscriptionAppService : ErpAppService, IWebhookSubscriptionAppService

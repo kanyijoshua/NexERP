@@ -52,7 +52,7 @@ public class ConfigRecordApplier_Tests : ErpDomainTestBase
         (await CustomersAsync()).ShouldContain(c => c.No == "C00010");
     }
 
-    /// <summary>BC's own message for a TableRelation that is not met.</summary>
+    /// <summary>The message for a TableRelation that is not met.</summary>
     [Fact]
     public async Task A_Value_Missing_From_The_Related_Table_Is_An_Error()
     {

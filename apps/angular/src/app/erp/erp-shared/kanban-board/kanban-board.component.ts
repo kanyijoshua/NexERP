@@ -10,7 +10,7 @@ import {
 import { KanbanColumn, KanbanMoveEvent } from '../models';
 
 /**
- * Odoo style kanban board (CRM pipeline, service tickets ...), built on `@angular/cdk/drag-drop`.
+ * Kanban board (CRM pipeline, service tickets ...), built on `@angular/cdk/drag-drop`.
  *
  * A drop is applied optimistically to the `cards` arrays of the columns (in place, so the
  * parent keeps its references) and reported through `(moved)`; call `event.revert()` when the

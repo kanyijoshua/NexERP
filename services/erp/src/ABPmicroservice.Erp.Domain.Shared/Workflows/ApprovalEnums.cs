@@ -1,7 +1,7 @@
 namespace ABPmicroservice.Erp.Workflows;
 
 /// <summary>
-/// Mirrors Business Central "Approval Entry".Status.
+///Status.
 /// Only one entry of a request is Open at a time; the ones behind it wait as Created.
 /// </summary>
 public enum ApprovalStatus
@@ -13,15 +13,16 @@ public enum ApprovalStatus
     Approved = 4,
 }
 
-/// <summary>The kind of record an approval request is about (BC: "Table ID" on the approval entry).</summary>
+/// <summary>The kind of record an approval request is about.</summary>
 public enum ApprovalDocumentKind
 {
     SalesDocument = 0,
     PurchaseDocument = 1,
+    PaymentVoucher = 2,
 }
 
 /// <summary>
-/// Mirrors Business Central's "Approver Limit Type" option of the
+/// The "Approver Limit Type" option of the
 /// "Create an approval request" workflow response.
 /// </summary>
 public enum ApproverLimitType

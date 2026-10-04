@@ -172,7 +172,7 @@ public class GetWebhookDeliveriesInput : PagedAndSortedResultRequestDto
 }
 
 /// <summary>
-/// Which tables are exposed to other systems. Mirrors Business Central's Web Services page (7700).
+/// Which tables are exposed to other systems.
 /// </summary>
 public interface IWebServiceAppService : IApplicationService
 {
@@ -189,7 +189,7 @@ public interface IWebServiceAppService : IApplicationService
 }
 
 /// <summary>
-/// The read endpoint other systems call. It is the counterpart of Business Central's OData
+/// The read endpoint other systems call. It is an OData-style
 /// endpoint: one address per published web service, with field selection, filters and paging.
 /// </summary>
 public interface IIntegrationDataAppService : IApplicationService
@@ -205,8 +205,7 @@ public interface IIntegrationDataAppService : IApplicationService
 }
 
 /// <summary>
-/// Outbound notifications. Mirrors Business Central's webhook subscriptions and takes the place
-/// of Odoo's automated actions that call another system.
+/// Outbound notifications: webhook subscriptions that call another system.
 /// </summary>
 public interface IWebhookSubscriptionAppService : IApplicationService
 {

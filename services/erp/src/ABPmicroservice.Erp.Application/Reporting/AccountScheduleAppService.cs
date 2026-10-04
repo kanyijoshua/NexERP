@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
 /// Account schedules: the rows of a financial report.
-/// Mirrors Business Central pages 103 and 104.
 /// </summary>
 [Authorize(ErpPermissions.AccountSchedules.Default)]
 public class AccountScheduleAppService : ErpAppService, IAccountScheduleAppService

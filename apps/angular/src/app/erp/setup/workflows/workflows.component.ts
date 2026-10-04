@@ -64,7 +64,7 @@ const SALES_COLUMNS: ConditionColumnOption[] = [
   { field: 'LocationCode', label: 'Location Code', type: 'text' },
 ];
 
-const BC_EVENTS: string[] = [
+const WORKFLOW_EVENTS: string[] = [
   'Approval of a purchase document is requested.',
   'Approval of a sales document is requested.',
   'An approval request is approved.',
@@ -74,7 +74,7 @@ const BC_EVENTS: string[] = [
   'A document status is changed to Pending Approval.',
 ];
 
-const BC_RESPONSES: string[] = [
+const WORKFLOW_RESPONSES: string[] = [
   'Set the document status to Pending Approval. Create an approval request. Send the first request.',
   'Send the next approval request.',
   'Release the document.',
@@ -83,7 +83,7 @@ const BC_RESPONSES: string[] = [
   'Send the request to the substitute, or to the approver\'s approver.',
 ];
 
-/** Approval workflows. Mirrors Business Central page 1500 "Workflows" with dynamic conditions and approval sequences. */
+/** Approval workflows.with dynamic conditions and approval sequences. */
 @Component({
   selector: 'app-workflows',
   templateUrl: './workflows.component.html',
@@ -95,8 +95,8 @@ export class WorkflowsComponent implements OnInit {
 
   readonly documentKinds = approvalDocumentKindOptions;
   readonly limitTypes = approverLimitTypeOptions;
-  readonly bcEvents = BC_EVENTS;
-  readonly bcResponses = BC_RESPONSES;
+  readonly workflowEvents = WORKFLOW_EVENTS;
+  readonly workflowResponses = WORKFLOW_RESPONSES;
   readonly operators = ['>=', '>', '<=', '<', '=', '<>', 'contains'];
 
   readonly canManage = inject(PermissionService).getGrantedPolicy('Erp.Workflows.Manage');
@@ -415,7 +415,7 @@ export class WorkflowsComponent implements OnInit {
     }
   }
 
-  resetToBcDefaults(): void {
+  resetToDefaults(): void {
     const kind = this.form?.get('documentKind')?.value ?? ApprovalDocumentKind.PurchaseDocument;
     const limitType = this.form?.get('approverLimitType')?.value ?? ApproverLimitType.DirectApprover;
     this.initDefaultSteps(kind, limitType);
@@ -427,9 +427,9 @@ export class WorkflowsComponent implements OnInit {
     const newSeq = this.formSteps.length + 1;
     const step: FormWorkflowStep = {
       sequenceNo: newSeq,
-      eventName: this.bcEvents[0],
+      eventName: this.workflowEvents[0],
       conditionRule: 'Always',
-      responseAction: this.bcResponses[0],
+      responseAction: this.workflowResponses[0],
       approverLimitType: this.form?.get('approverLimitType')?.value ?? ApproverLimitType.DirectApprover,
       dueDays: 3,
     };

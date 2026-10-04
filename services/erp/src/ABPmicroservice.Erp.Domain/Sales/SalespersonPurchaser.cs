@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Salesperson/Purchaser. Mirrors Business Central table 13: the person responsible for a
+/// Salesperson/Purchaser: the person responsible for a
 /// customer or a vendor. The description is the person's name.
 /// </summary>
 public class SalespersonPurchaser : CodeTableEntity

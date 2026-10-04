@@ -14,7 +14,7 @@ function lastMonth(): { from: string; to: string } {
 }
 
 /**
- * VAT Statement. Mirrors Business Central page 317 with a fixed layout: the return's boxes
+ * VAT Statement.with a fixed layout: the return's boxes
  * (output VAT, input VAT, the net due, sales and purchases before VAT) and the rates behind them,
  * for open, closed (settled) or all VAT entries of a period.
  */

@@ -16,7 +16,6 @@ public class SalesPostBatchParameters
 
 /// <summary>
 /// Background job that batch posts released sales invoices.
-/// Mirrors Business Central Report 296 "Batch Post Sales Invoices".
 /// </summary>
 public class SalesPostBatchJobHandler : IJobHandler, ITransientDependency
 {

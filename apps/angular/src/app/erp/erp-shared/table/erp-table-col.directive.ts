@@ -41,8 +41,8 @@ export class ErpTableActionsDirective {
 }
 
 /**
- * Declares how one row looks when `<erp-table>` shows cards (`layout="cards"`, Odoo kanban /
- * BC tiles). The toolbar, filters and infinite scrolling are the grid's.
+ * Declares how one row looks when `<erp-table>` shows cards (`layout="cards"`, kanban /
+ * tiles). The toolbar, filters and infinite scrolling are the grid's.
  *
  * ```html
  * <ng-template erpTableCard let-row>

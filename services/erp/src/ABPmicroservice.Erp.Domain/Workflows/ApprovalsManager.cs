@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Documents;
 using ABPmicroservice.Erp.Purchasing;
@@ -22,8 +23,7 @@ public class ApprovalRequestResult
 }
 
 /// <summary>
-/// Runs approval requests. Mirrors Business Central codeunit 1535 "Approvals Mgmt." together with
-/// the approval responses of the workflow engine: create the approver chain, send, approve,
+/// Runs approval requests, together with the approval responses of the workflow engine: create the approver chain, send, approve,
 /// reject, delegate and cancel, moving the document between Open, Pending Approval and Released.
 /// </summary>
 public class ApprovalsManager : DomainService
@@ -33,6 +33,7 @@ public class ApprovalsManager : DomainService
     private readonly IRepository<ApprovalUserSetup, Guid> _userSetupRepository;
     private readonly IRepository<SalesHeader, Guid> _salesHeaderRepository;
     private readonly IRepository<PurchaseHeader, Guid> _purchaseHeaderRepository;
+    private readonly IRepository<PaymentVoucherHeader, Guid> _paymentVoucherRepository;
     private readonly IRepository<ActivityStreamEntry, Guid> _activityRepository;
 
     public ApprovalsManager(
@@ -41,6 +42,7 @@ public class ApprovalsManager : DomainService
         IRepository<ApprovalUserSetup, Guid> userSetupRepository,
         IRepository<SalesHeader, Guid> salesHeaderRepository,
         IRepository<PurchaseHeader, Guid> purchaseHeaderRepository,
+        IRepository<PaymentVoucherHeader, Guid> paymentVoucherRepository,
         IRepository<ActivityStreamEntry, Guid> activityRepository
     )
     {
@@ -49,6 +51,7 @@ public class ApprovalsManager : DomainService
         _userSetupRepository = userSetupRepository;
         _salesHeaderRepository = salesHeaderRepository;
         _purchaseHeaderRepository = purchaseHeaderRepository;
+        _paymentVoucherRepository = paymentVoucherRepository;
         _activityRepository = activityRepository;
     }
 
@@ -71,7 +74,7 @@ public class ApprovalsManager : DomainService
     }
 
     /// <summary>
-    /// Guards a manual release. BC: "This document can only be released when the approval process is complete."
+    /// Guards a manual release: "This document can only be released when the approval process is complete."
     /// </summary>
     public async Task EnsureCanReleaseAsync(ApprovalDocumentKind kind, IApprovalDocument document)
     {
@@ -188,7 +191,7 @@ public class ApprovalsManager : DomainService
         var entry = await GetOpenEntryForAsync(entryId, userId);
         var now = Clock.Now;
 
-        // One rejection ends the whole request, as in Business Central.
+        // One rejection ends the whole request.
         foreach (var pending in await GetPendingEntriesAsync(entry.DocumentKind, entry.DocumentId))
         {
             pending.Reject(now, pending.Id == entry.Id ? comment : null);
@@ -252,8 +255,8 @@ public class ApprovalsManager : DomainService
     }
 
     /// <summary>
-    /// Builds the list of approvers, in order. Mirrors CreateApprovalRequestForApproverChain /
-    /// ...ForDirectApprover / ...ForFirstQualifiedApprover in codeunit 1535.
+    /// Builds the list of approvers, in order: the approver chain, the direct approver, or the
+    /// first qualified approver, depending on the approver limit type.
     /// </summary>
     private static List<ApprovalUserSetup> BuildApproverChain(
         ApproverLimitType limitType,
@@ -355,20 +358,29 @@ public class ApprovalsManager : DomainService
 
     private async Task<IApprovalDocument> GetDocumentAsync(ApprovalDocumentKind kind, Guid documentId)
     {
-        return kind == ApprovalDocumentKind.SalesDocument
-            ? await _salesHeaderRepository.GetAsync(documentId)
-            : await _purchaseHeaderRepository.GetAsync(documentId);
+        return kind switch
+        {
+            ApprovalDocumentKind.SalesDocument => await _salesHeaderRepository.GetAsync(documentId),
+            ApprovalDocumentKind.PaymentVoucher => await _paymentVoucherRepository.GetAsync(documentId),
+            _ => await _purchaseHeaderRepository.GetAsync(documentId),
+        };
     }
 
     private async Task UpdateDocumentAsync(ApprovalDocumentKind kind, IApprovalDocument document)
     {
-        if (kind == ApprovalDocumentKind.SalesDocument)
+        switch (kind)
         {
-            await _salesHeaderRepository.UpdateAsync((SalesHeader)document);
-        }
-        else
-        {
-            await _purchaseHeaderRepository.UpdateAsync((PurchaseHeader)document);
+            case ApprovalDocumentKind.SalesDocument:
+                await _salesHeaderRepository.UpdateAsync((SalesHeader)document);
+                break;
+
+            case ApprovalDocumentKind.PaymentVoucher:
+                await _paymentVoucherRepository.UpdateAsync((PaymentVoucherHeader)document);
+                break;
+
+            default:
+                await _purchaseHeaderRepository.UpdateAsync((PurchaseHeader)document);
+                break;
         }
     }
 
@@ -377,7 +389,12 @@ public class ApprovalsManager : DomainService
     {
         await _activityRepository.InsertAsync(new ActivityStreamEntry(
             GuidGenerator.Create(),
-            kind == ApprovalDocumentKind.SalesDocument ? nameof(SalesHeader) : nameof(PurchaseHeader),
+            kind switch
+            {
+                ApprovalDocumentKind.SalesDocument => nameof(SalesHeader),
+                ApprovalDocumentKind.PaymentVoucher => nameof(PaymentVoucherHeader),
+                _ => nameof(PurchaseHeader),
+            },
             document.Id,
             document.No,
             nameof(IApprovalDocument.Status),

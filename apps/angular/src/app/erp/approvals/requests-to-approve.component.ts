@@ -18,7 +18,7 @@ type ApprovalView = 'toApprove' | 'sentByMe' | 'all';
 type PendingAction = 'approve' | 'reject';
 
 /**
- * The approver's work list. Mirrors Business Central page 654 "Requests to Approve",
+ * The approver's work list.,
  * with "Requests Sent for Approval" and the full log as further views.
  */
 @Component({

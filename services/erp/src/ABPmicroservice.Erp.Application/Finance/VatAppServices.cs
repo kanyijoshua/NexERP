@@ -11,7 +11,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// VAT Posting Setup (BC page 472): per business and product VAT group, the rate, how it is
+/// VAT Posting Setup: per business and product VAT group, the rate, how it is
 /// calculated and the accounts the VAT posts to.
 /// </summary>
 [Authorize(ErpPermissions.PostingSetup.Default)]
@@ -112,7 +112,7 @@ public class VatPostingSetupAppService
     }
 }
 
-/// <summary>VAT Entries (BC page 315): what the VAT return is made of.</summary>
+/// <summary>VAT Entries: what the VAT return is made of.</summary>
 [Authorize(ErpPermissions.VatEntries.Default)]
 public class VatEntryAppService : ErpReadOnlyAppService<VatEntry, VatEntryDto, Guid, GetVatEntryListInput>, IVatEntryAppService
 {

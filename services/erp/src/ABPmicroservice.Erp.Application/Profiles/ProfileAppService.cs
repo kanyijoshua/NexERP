@@ -179,11 +179,14 @@ public class ProfileAppService : ErpAppService, IProfileAppService
         // Each link is checked once even when several menus list it.
         var allowed = new Dictionary<RoleCenterLink, bool>();
 
+        // The module states are read once for the whole menu rather than once per link.
+        var states = await _moduleManager.GetStatesAsync();
+
         async Task<bool> CanOpenAsync(RoleCenterLink link)
         {
             if (!allowed.TryGetValue(link, out var can))
             {
-                can = await _moduleManager.IsEnabledAsync(link.Module);
+                can = ErpModuleManager.IsEnabledIn(link.Module, states);
                 foreach (var permission in link.Permissions)
                 {
                     can = can && await AuthorizationService.IsGrantedAsync(permission);

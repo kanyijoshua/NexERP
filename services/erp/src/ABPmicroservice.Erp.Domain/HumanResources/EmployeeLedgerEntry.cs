@@ -6,7 +6,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.HumanResources;
 
 /// <summary>
-/// Employee Ledger Entry. Mirrors Business Central table 5222: the expenses a company owes its
+/// Employee Ledger Entry: the expenses a company owes its
 /// employees and the payouts that settle them. An expense claim is a credit (negative), a payout
 /// a debit, always in LCY.
 /// </summary>
@@ -33,7 +33,7 @@ public class EmployeeLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
     public long ReversedByEntryNo { get; internal set; }
     public long ReversedEntryNo { get; internal set; }
 
-    // Employees are paid in LCY only, as in Business Central.
+    // Employees are paid in LCY only.
     string IApplicableLedgerEntry.CurrencyCode => null;
     decimal IApplicableLedgerEntry.RemainingAmountLcy => RemainingAmount;
 

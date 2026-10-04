@@ -135,7 +135,7 @@ public interface IWorkflowAppService : IApplicationService
     Task DisableAsync(Guid id);
 }
 
-/// <summary>What an approver does with requests. BC: the "Requests to Approve" page.</summary>
+/// <summary>What an approver does with requests: the "Requests to Approve" page.</summary>
 public interface IApprovalEntryAppService : IApplicationService
 {
     /// <summary>Routed as GET /api/erp/approval-entry.</summary>

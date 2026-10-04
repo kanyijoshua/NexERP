@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Documents;
 
-/// <summary>
-/// Mirrors Business Central "Type" option on sales/purchase lines.
-/// </summary>
 public enum DocumentLineType
 {
     None = 0,

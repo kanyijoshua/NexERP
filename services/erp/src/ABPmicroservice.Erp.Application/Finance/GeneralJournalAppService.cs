@@ -14,8 +14,7 @@ using Volo.Abp.Uow;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// The general journal. Mirrors Business Central page 39 "General Journal" together with the
-/// check and post-batch codeunits behind its Post action.
+/// The general journal, together with the checks and the batch posting behind its Post action.
 /// </summary>
 [Authorize(ErpPermissions.Journals.Default)]
 public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
@@ -198,7 +197,7 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
 
     /// <summary>
     /// Posts inside a transaction that is never committed, then reads back what it wrote.
-    /// Mirrors Business Central's Preview Posting, and costs nothing but the rollback.
+    /// Costs nothing but the rollback.
     /// </summary>
     [Authorize(ErpPermissions.Journals.Post)]
     public async Task<PostingPreviewDto> PreviewAsync(Guid batchId)
@@ -283,7 +282,7 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         string documentNo
     )
     {
-        // A line without its own balancing account takes the batch's, as a new line does in BC.
+        // A line without its own balancing account takes the batch's.
         var balAccountNo = input.BalAccountNo.IsNullOrWhiteSpace() ? batch.BalAccountNo : input.BalAccountNo;
         var balAccountType = input.BalAccountNo.IsNullOrWhiteSpace() ? batch.BalAccountType : input.BalAccountType;
 
@@ -304,6 +303,25 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         );
 
         line.SetRecurring(input.RecurringMethod, input.RecurringFrequency, input.ExpirationDate);
+        line.SetAdditionalFields(
+            input.PostingGroup,
+            input.ShortcutDimension1Code,
+            input.ShortcutDimension2Code,
+            input.SalespersPurchCode,
+            input.SourceCode,
+            input.ReasonCode,
+            input.PaymentMethodCode,
+            input.AppliesToId,
+            input.BankPaymentType,
+            input.Correction,
+            input.Quantity,
+            input.DueDate,
+            input.OnHold,
+            input.VatRegistrationNo,
+            input.CountryRegionCode,
+            input.PaymentReference,
+            input.MessageToRecipient
+        );
 
         await ApplyCurrencyAsync(line, input);
         await ApplyVatAsync(line, input);
@@ -323,7 +341,7 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
 
     /// <summary>
     /// The posting type and VAT groups of both sides, then the VAT they carry. A null posting type
-    /// takes the G/L account's defaults, as choosing the account does in BC.
+    /// takes the G/L account's defaults.
     /// </summary>
     private async Task ApplyVatAsync(GenJournalLine line, CreateUpdateGenJournalLineDto input)
     {

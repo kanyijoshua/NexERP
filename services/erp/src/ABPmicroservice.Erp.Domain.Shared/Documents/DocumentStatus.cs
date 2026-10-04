@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Documents;
 
-/// <summary>
-/// Mirrors Business Central "Status" on sales/purchase documents.
-/// </summary>
 public enum DocumentStatus
 {
     Open = 0,

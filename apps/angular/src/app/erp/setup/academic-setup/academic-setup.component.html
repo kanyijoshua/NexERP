@@ -1,0 +1,116 @@
+<erp-page-toolbar
+  title="Erp::AcademicSetup"
+  breadcrumb="Erp::Menu:Academics"
+  icon="fas fa-graduation-cap"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::AcademicSetupHelp' | abpLocalization }}</p>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card border-0 shadow-sm mb-3" style="max-width: 760px">
+    <div class="card-header bg-light fw-semibold">{{ 'Erp::Registration' | abpLocalization }}</div>
+    <div class="card-body">
+      <div class="form-check form-switch mb-2">
+        <input id="as-bill" type="checkbox" class="form-check-input" formControlName="billOnRegistration" />
+        <label class="form-check-label" for="as-bill">{{ 'Erp::BillOnRegistration' | abpLocalization }}</label>
+        <div class="form-text">{{ 'Erp::BillOnRegistrationHelp' | abpLocalization }}</div>
+      </div>
+      <div class="form-check form-switch mb-2">
+        <input id="as-balance" type="checkbox" class="form-check-input" formControlName="checkStudentBalance" />
+        <label class="form-check-label" for="as-balance">{{ 'Erp::CheckStudentBalance' | abpLocalization }}</label>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-max-balance">{{ 'Erp::MaxFeeBalanceToRegister' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="as-max-balance" type="number" min="0" step="0.01" class="form-control form-control-sm" formControlName="maxFeeBalanceToRegister" />
+          <div class="form-text">{{ 'Erp::MaxFeeBalanceToRegisterHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-rounding">{{ 'Erp::ExamRoundingDecimals' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="as-rounding" class="form-select form-select-sm" formControlName="examRoundingDecimals">
+            <option [ngValue]="0">0</option>
+            <option [ngValue]="1">1</option>
+            <option [ngValue]="2">2</option>
+          </select>
+          <div class="form-text">{{ 'Erp::ExamRoundingDecimalsHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3" style="max-width: 760px">
+    <div class="card-header bg-light fw-semibold">{{ 'Erp::CampusServices' | abpLocalization }}</div>
+    <div class="card-body">
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-min-attendance">{{ 'Erp::MinAttendancePct' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="as-min-attendance" type="number" min="0" max="100" step="1" class="form-control form-control-sm" formControlName="minAttendancePct" />
+          <div class="form-text">{{ 'Erp::MinAttendancePctHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-express">{{ 'Erp::LaundryExpressChargePct' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="as-express" type="number" min="0" max="100" step="1" class="form-control form-control-sm" formControlName="laundryExpressChargePct" />
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-medical">{{ 'Erp::MedicalFeeItemCode' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="as-medical" formControlName="medicalFeeItemCode" entity="feeItem"></erp-lookup>
+          <div class="form-text">{{ 'Erp::MedicalFeeItemCodeHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3" style="max-width: 760px">
+    <div class="card-header bg-light fw-semibold">{{ 'Erp::Numbering' | abpLocalization }}</div>
+    <div class="card-body">
+      @for (field of seriesFields; track field.control) {
+        <div class="row align-items-center mb-2">
+          <label class="col-sm-5 col-form-label" [for]="'as-' + field.control">{{ field.labelKey | abpLocalization }}</label>
+          <div class="col-sm-7">
+            <select [id]="'as-' + field.control" class="form-select form-select-sm" [formControlName]="field.control">
+              <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+              @for (s of series(); track s.id) {
+                <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm" style="max-width: 760px">
+    <div class="card-header bg-light fw-semibold">{{ 'Erp::Posting' | abpLocalization }}</div>
+    <div class="card-body">
+      <p class="text-muted small">{{ 'Erp::StudentPostingGroupHelp' | abpLocalization }}</p>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-posting-group">{{ 'Erp::StudentPostingGroup' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="as-posting-group" formControlName="studentPostingGroup" entity="customerPostingGroup"></erp-lookup>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="as-gen-bus">{{ 'Erp::StudentGenBusPostingGroup' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="as-gen-bus" formControlName="studentGenBusPostingGroup" entity="genBusPostingGroup"></erp-lookup>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.AcademicSetup.Update'" class="mt-3" style="max-width: 760px">
+    <div class="text-end">
+      <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+        {{ 'Erp::Save' | abpLocalization }}
+      </abp-button>
+    </div>
+  </div>
+</form>

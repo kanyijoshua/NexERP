@@ -10,12 +10,12 @@ export function enumOptions(
   return options.map(o => ({ value: o.value, label: `Erp::Enum:${enumName}.${o.key}` }));
 }
 
-/** A typed term as a BC code: upper case, no spaces at the ends, cut to the field length. */
+/** A typed term as a code: upper case, no spaces at the ends, cut to the field length. */
 export function codeOf(term: string | undefined, maxLength: number): string {
   return (term ?? '').trim().toUpperCase().substring(0, maxLength);
 }
 
-/** BC's Block / Unblock on customers, vendors, items, G/L and bank accounts. */
+/** Block / Unblock on customers, vendors, items, G/L and bank accounts. */
 export function blockActions<T extends { id?: string; blocked: boolean }>(
   permission: string,
   service: { block(id: string): Observable<void>; unblock(id: string): Observable<void> },
@@ -74,9 +74,9 @@ export interface CodeTableOptions<TDto> {
   /** Permission prefix, e.g. `Erp.PostingSetup`. */
   permission: string;
   route: string;
-  /** BC Code length: 20 by default, 10 for currencies, payment terms and locations. */
+  /** Code length: 20 by default, 10 for currencies, payment terms and locations. */
   codeLength?: number;
-  /** Label of the description, e.g. `Erp::Name` where BC calls it a name. */
+  /** Label of the description, e.g. `Erp::Name` where the table calls it a name. */
   descriptionKey?: string;
   columns?: RecordColumn[];
   fields?: RecordField[];
@@ -131,7 +131,7 @@ export function codeTableEntity<TDto extends { id?: string; code?: string; descr
 }
 
 /**
- * A BC posting group table (Gen. Business, Gen. Product, VAT, Customer, Vendor, Inventory, Bank
+ * A posting group table (Gen. Business, Gen. Product, VAT, Customer, Vendor, Inventory, Bank
  * Account): a code, a description and, for some, the account the group posts to.
  */
 export function postingGroupEntity<TDto extends { id?: string; code?: string; description?: string }, TInput>(

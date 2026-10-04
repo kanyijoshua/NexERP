@@ -43,7 +43,7 @@ const TITLES: Record<PartyLedgerKind, { title: string; party: string; icon: stri
 };
 
 /**
- * Customer, vendor and employee ledger entries. Mirrors Business Central pages 25, 29 and 5237:
+ * Customer, vendor and employee ledger entries.
  * each entry in its own currency and in LCY, what is still open of it, and the entry that closed
  * it. Which ledger is shown comes from the route's `kind`; `?partyNo=` narrows it to one party.
  */

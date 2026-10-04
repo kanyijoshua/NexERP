@@ -45,8 +45,8 @@ public static class ImportFileReader
 
     /// <summary>
     /// The field a column header names, or null. A header may be the field's name ("PostCode"),
-    /// its display name ("Post Code"), or either with different spacing and case, as Odoo's import
-    /// accepts both the technical and the human name of a field. A reference field also answers
+    /// its display name ("Post Code"), or either with different spacing and case:
+    /// both the technical and the human name of a field are accepted. A reference field also answers
     /// to its name without "Id", so "Item Category" finds ItemCategoryId.
     /// </summary>
     public static string MatchField(ConfigTableProfile profile, string header)

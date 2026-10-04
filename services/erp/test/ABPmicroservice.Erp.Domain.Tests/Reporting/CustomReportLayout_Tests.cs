@@ -52,7 +52,7 @@ public class CustomReportLayout_Tests
     }
 
     /// <summary>
-    /// Word and Excel are in the model for parity with BC, so a layout of that type must be
+    /// Word and Excel are in the model but cannot be rendered, so a layout of that type must be
     /// refused rather than accepted and quietly skipped at print time.
     /// </summary>
     [Theory]

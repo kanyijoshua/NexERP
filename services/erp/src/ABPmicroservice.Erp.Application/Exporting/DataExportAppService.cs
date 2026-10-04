@@ -15,8 +15,7 @@ namespace ABPmicroservice.Erp.Exporting;
 /// <summary>
 /// Exporting any table the caller is allowed to read.
 /// <para>
-/// Mirrors Odoo's export dialog — pick a model, pick fields, filter, choose a format — and does
-/// the job Business Central gives to a configuration package's Excel export. The permission that
+/// Pick a model, pick fields, filter, choose a format. The permission that
 /// guards a table on screen guards it here too, so the export cannot be a way around it.
 /// </para>
 /// </summary>

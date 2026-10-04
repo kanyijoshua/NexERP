@@ -34,7 +34,7 @@ public class ReversalResult
 }
 
 /// <summary>
-/// Reverses a posting run. Mirrors Business Central codeunit 17 "Gen. Jnl.-Post Reverse".
+/// Reverses a posting run.
 /// <para>
 /// Nothing is deleted: the reversal writes mirror-image entries on the original posting date and
 /// marks both sides reversed, so the audit trail keeps both halves. This is why the ledgers can
@@ -183,7 +183,7 @@ public class GenJnlPostReverse : DomainService
 
     /// <summary>
     /// An entry that has been settled against another one cannot be reversed: undoing it would
-    /// leave the application dangling. Business Central refuses the same case.
+    /// leave the application dangling.
     /// </summary>
     private static void EnsureNotApplied(
         IEnumerable<CustomerLedgerEntry> customerEntries,

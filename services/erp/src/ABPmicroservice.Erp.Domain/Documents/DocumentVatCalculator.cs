@@ -10,7 +10,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Documents;
 
 /// <summary>
-/// Gives every line of a sales or purchase document its VAT, as Business Central does when a line
+/// Gives every line of a sales or purchase document its VAT when a line
 /// is validated: the party's VAT business group and the item's or G/L account's VAT product group
 /// pick a VAT Posting Setup. A line whose product has no VAT group carries no VAT.
 /// </summary>

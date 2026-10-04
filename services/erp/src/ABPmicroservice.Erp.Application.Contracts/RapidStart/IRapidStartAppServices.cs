@@ -7,7 +7,7 @@ using Volo.Abp.Content;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// Configuration packages. Mirrors Business Central's RapidStart Services: design a package from
+/// Configuration packages: design a package from
 /// tables and fields, fill it from the database or from a file, check it, and apply it.
 /// Routed under /api/erp/config-package.
 /// </summary>
@@ -36,7 +36,7 @@ public interface IConfigPackageAppService : IApplicationService
     /// <summary>Changes a table's options, filters and fields. PUT /api/erp/config-package/{id}/table.</summary>
     Task<ConfigPackageDetailDto> UpdateTableAsync(Guid id, UpdateConfigPackageTableDto input);
 
-    /// <summary>BC's "Get Data from Database": stages what the tables hold now.</summary>
+    /// <summary>Get Data from Database: stages what the tables hold now.</summary>
     Task<ConfigPackageDetailDto> FillFromDatabaseAsync(Guid id, ConfigPackageTablesInput input);
 
     Task<ConfigPackageRunResultDto> ValidatePackageAsync(Guid id, ConfigPackageTablesInput input);
@@ -98,7 +98,7 @@ public interface IConfigWorksheetAppService : IApplicationService
 }
 
 /// <summary>
-/// The import wizard. Mirrors Odoo's import: upload a CSV or Excel file, match its columns to
+/// The import wizard: upload a CSV or Excel file, match its columns to
 /// fields, test, then import — all or nothing. Routed under /api/erp/data-import.
 /// </summary>
 public interface IDataImportAppService : IApplicationService

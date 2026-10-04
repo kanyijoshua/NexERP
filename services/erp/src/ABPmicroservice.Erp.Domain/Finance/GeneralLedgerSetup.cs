@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// General Ledger Setup. Mirrors Business Central table 98: one row per company holding the
+/// General Ledger Setup: one row per company holding the
 /// ledger-wide rules, above all the range of dates anything may be posted on.
 /// </summary>
 public class GeneralLedgerSetup : CompanyEntity
@@ -29,63 +29,105 @@ public class GeneralLedgerSetup : CompanyEntity
     public decimal UnitAmountRoundingPrecision { get; private set; } = DefaultUnitAmountRoundingPrecision;
     public decimal InvRoundingPrecisionLcy { get; private set; } = DefaultAmountRoundingPrecision;
 
-    /// <summary>The two dimensions every entry carries as a column of its own (BC Global Dimension 1 and 2).</summary>
+    /// <summary>The two dimensions every entry carries as a column of its own.</summary>
     public string GlobalDimension1Code { get; private set; }
     public string GlobalDimension2Code { get; private set; }
 
     /// <summary>The series a new bank account's number is drawn from when it is left blank.</summary>
     public string BankAccountNos { get; private set; }
 
-    /// <summary>Local currency symbol. Mirrors BC field 162 "Local Currency Symbol".</summary>
+    /// <summary>Local currency symbol.</summary>
     public string LocalCurrencySymbol { get; private set; }
 
-    /// <summary>Local currency description. Mirrors BC field 163 "Local Currency Description".</summary>
+    /// <summary>Local currency description.</summary>
     public string LocalCurrencyDescription { get; private set; }
 
-    /// <summary>Invoice rounding type. Mirrors BC field 59 "Inv. Rounding Type (LCY)".</summary>
+    /// <summary>Invoice rounding type.</summary>
     public RoundingType InvRoundingType { get; private set; } = RoundingType.Nearest;
 
-    /// <summary>VAT rounding type. Mirrors BC field 90 "VAT Rounding Type".</summary>
+    /// <summary>VAT rounding type.</summary>
     public RoundingType VATRoundingType { get; private set; } = RoundingType.Nearest;
 
-    /// <summary>Payment discount excludes VAT. Mirrors BC field 28 "Pmt. Disc. Excl. VAT".</summary>
+    /// <summary>Payment discount excludes VAT.</summary>
     public bool PmtDiscExclVAT { get; private set; }
 
-    /// <summary>Unrealized VAT handling. Mirrors BC field 48 "Unrealized VAT".</summary>
+    /// <summary>Unrealized VAT handling.</summary>
     public bool UnrealizedVAT { get; private set; }
 
-    /// <summary>Adjust for payment discount. Mirrors BC field 49 "Adjust for Payment Disc.".</summary>
+    /// <summary>Adjust for payment discount.</summary>
     public bool AdjustForPaymentDisc { get; private set; }
 
-    /// <summary>Mark credit memos as corrections. Mirrors BC field 56 "Mark Cr. Memos as Corrections".</summary>
+    /// <summary>Mark credit memos as corrections.</summary>
     public bool MarkCrMemosAsCorrections { get; private set; }
 
-    /// <summary>Additional reporting currency. Mirrors BC field 68 "Additional Reporting Currency".</summary>
+    /// <summary>Additional reporting currency.</summary>
     public string AdditionalReportingCurrency { get; private set; }
 
-    /// <summary>Maximum VAT difference allowed. Mirrors BC field 89 "Max. VAT Difference Allowed".</summary>
+    /// <summary>Maximum VAT difference allowed.</summary>
     public decimal MaxVATDifferenceAllowed { get; private set; }
 
-    /// <summary>Payment tolerance percent. Mirrors BC field 94 "Payment Tolerance %".</summary>
+    /// <summary>Payment tolerance percent.</summary>
     public decimal PaymentTolerancePct { get; private set; }
 
-    /// <summary>Maximum payment tolerance amount. Mirrors BC field 95 "Max. Payment Tolerance Amount".</summary>
+    /// <summary>Maximum payment tolerance amount.</summary>
     public decimal MaxPaymentToleranceAmount { get; private set; }
 
-    /// <summary>Block deletion of G/L accounts. Mirrors BC field 104 "Block Deletion of G/L Accounts".</summary>
+    /// <summary>Block deletion of G/L accounts.</summary>
     public bool BlockDeletionOfGLAccounts { get; private set; }
 
-    /// <summary>Post with job queue. Mirrors BC field 50 "Post with Job Queue".</summary>
+    /// <summary>Post with job queue.</summary>
     public bool PostWithJobQueue { get; private set; }
 
-    /// <summary>Job queue category code for posting. Mirrors BC field 51 "Job Queue Category Code".</summary>
+    /// <summary>Job queue category code for posting.</summary>
     public string JobQueueCategoryCode { get; private set; }
 
-    /// <summary>Notify on job queue success. Mirrors BC field 55 "Notify On Success".</summary>
+    /// <summary>Notify on job queue success.</summary>
     public bool NotifyOnSuccess { get; private set; }
 
-    /// <summary>Register user time. Mirrors BC field 4 "Register Time".</summary>
+    /// <summary>Register user time.</summary>
     public bool RegisterTime { get; private set; }
+
+    /// <summary>Shortcut Dimension 3 Code.</summary>
+    public string ShortcutDimension3Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 4 Code.</summary>
+    public string ShortcutDimension4Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 5 Code.</summary>
+    public string ShortcutDimension5Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 6 Code.</summary>
+    public string ShortcutDimension6Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 7 Code.</summary>
+    public string ShortcutDimension7Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 8 Code.</summary>
+    public string ShortcutDimension8Code { get; private set; }
+
+    /// <summary>VAT Tolerance %.</summary>
+    public decimal VatTolerancePct { get; private set; }
+
+    /// <summary>Appln. Rounding Precision.</summary>
+    public decimal ApplnRoundingPrecision { get; private set; }
+
+    /// <summary>EMU Currency.</summary>
+    public bool EmuCurrency { get; private set; }
+
+    /// <summary>Print VAT specification in LCY.</summary>
+    public bool PrintVatSpecificationInLcy { get; private set; }
+
+    /// <summary>Show Amounts.</summary>
+    public GeneralLedgerSetupShowAmounts ShowAmounts { get; private set; }
+
+    /// <summary>Bill-to/Sell-to VAT Calc..</summary>
+    public GLSetupVatCalculation BillToSellToVatCalc { get; private set; }
+
+    /// <summary>Allow Deferral Posting From.</summary>
+    public DateTime? AllowDeferralPostingFrom { get; private set; }
+
+    /// <summary>Allow Deferral Posting To.</summary>
+    public DateTime? AllowDeferralPostingTo { get; private set; }
 
     protected GeneralLedgerSetup() { }
 
@@ -209,6 +251,40 @@ public class GeneralLedgerSetup : CompanyEntity
             ? null
             : Check.Length(code.Trim().ToUpperInvariant(), name, ErpDomainConsts.MaxDimensionCodeLength);
     }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string shortcutDimension3Code,
+        string shortcutDimension4Code,
+        string shortcutDimension5Code,
+        string shortcutDimension6Code,
+        string shortcutDimension7Code,
+        string shortcutDimension8Code,
+        decimal vatTolerancePct,
+        decimal applnRoundingPrecision,
+        bool emuCurrency,
+        bool printVatSpecificationInLcy,
+        GeneralLedgerSetupShowAmounts showAmounts,
+        GLSetupVatCalculation billToSellToVatCalc,
+        DateTime? allowDeferralPostingFrom,
+        DateTime? allowDeferralPostingTo
+    )
+    {
+        ShortcutDimension3Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension3Code, nameof(shortcutDimension3Code), 20));
+        ShortcutDimension4Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension4Code, nameof(shortcutDimension4Code), 20));
+        ShortcutDimension5Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension5Code, nameof(shortcutDimension5Code), 20));
+        ShortcutDimension6Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension6Code, nameof(shortcutDimension6Code), 20));
+        ShortcutDimension7Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension7Code, nameof(shortcutDimension7Code), 20));
+        ShortcutDimension8Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension8Code, nameof(shortcutDimension8Code), 20));
+        VatTolerancePct = vatTolerancePct;
+        ApplnRoundingPrecision = applnRoundingPrecision;
+        EmuCurrency = emuCurrency;
+        PrintVatSpecificationInLcy = printVatSpecificationInLcy;
+        ShowAmounts = showAmounts;
+        BillToSellToVatCalc = billToSellToVatCalc;
+        AllowDeferralPostingFrom = allowDeferralPostingFrom?.Date;
+        AllowDeferralPostingTo = allowDeferralPostingTo?.Date;
+    }
 }
 
 public class GeneralLedgerSetupManager : DomainService
@@ -228,7 +304,7 @@ public class GeneralLedgerSetupManager : DomainService
     }
 
     /// <summary>
-    /// Refuses a posting date outside the allowed range (BC "is not within your range of allowed
+    /// Refuses a posting date outside the allowed range ("is not within your range of allowed
     /// posting dates"). Read only: a company without a setup row may post on any date.
     /// </summary>
     public async Task CheckPostingDateAsync(DateTime postingDate)

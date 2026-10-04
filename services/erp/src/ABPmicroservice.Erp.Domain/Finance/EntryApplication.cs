@@ -4,8 +4,8 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// A customer, vendor or employee ledger entry that payments can be applied to. Mirrors the
-/// fields Business Central's "Cust. Entry-Apply Posted Entries" works on.
+/// A customer, vendor or employee ledger entry that payments can be applied to. Carries the
+/// fields that applying posted entries works on.
 /// </summary>
 public interface IApplicableLedgerEntry
 {
@@ -29,8 +29,8 @@ public interface IApplicableLedgerEntry
 }
 
 /// <summary>
-/// Applies a new entry (usually a payment) to an open one (usually an invoice). Mirrors the core
-/// of Business Central codeunit 12's application: each side gives up the applied amount, and
+/// Applies a new entry (usually a payment) to an open one (usually an invoice). The core
+/// of an application: each side gives up the applied amount, and
 /// whatever LCY is left over because the two were booked at different rates is the realized gain
 /// or loss.
 /// </summary>

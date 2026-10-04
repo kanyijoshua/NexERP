@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Numbering;
 
-/// <summary>Setup pages store series codes; this refuses codes that do not exist (BC: TableRelation).</summary>
+/// <summary>Setup pages store series codes; this refuses codes that do not exist.</summary>
 public class NoSeriesCodeValidator : ITransientDependency
 {
     private readonly IRepository<NoSeries, Guid> _repository;

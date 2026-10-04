@@ -170,6 +170,11 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
                     await SeedInventoryAndSalesSetupAsync();
                     await SeedCashManagementAsync();
                     await SeedHumanResourcesAsync();
+                    await SeedBaseTablesAsync();
+                    await SeedPensionsAsync();
+                    await SeedAcademicsAsync();
+                    await SeedPayrollAsync();
+                    await SeedBundledReportLayoutsAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {
@@ -431,7 +436,7 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
 
     /// <summary>
     /// A balance sheet and an income statement defined as account schedules, plus the column
-    /// layouts BC ships: this period, and this period against the same one last year.
+    /// layouts: this period, and this period against the same one last year.
     /// </summary>
     private async Task SeedFinancialReportsAsync()
     {

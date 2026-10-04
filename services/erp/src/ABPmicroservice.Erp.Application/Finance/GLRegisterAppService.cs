@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
 /// G/L registers: what was posted, by whom, and the action that undoes it.
-/// Mirrors Business Central page 116 "G/L Registers".
 /// </summary>
 [Authorize(ErpPermissions.GLRegisters.Default)]
 public class GLRegisterAppService : ErpAppService, IGLRegisterAppService

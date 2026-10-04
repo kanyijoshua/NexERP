@@ -22,8 +22,8 @@ import { CompanyService } from '../../services/company.service';
 export const NEW_RECORD_ID = 'new';
 
 /**
- * The card page of a master-data record (BC card page, Odoo form view), driven by the route's
- * `entity`: FastTabs of fields, a FactBox of figures, actions (Block, Delete, New), Odoo smart buttons
+ * The card page of a master-data record, driven by the route's
+ * `entity`: FastTabs of fields, a FactBox of figures, actions (Block, Delete, New), smart buttons
  * to related documents and the record's chatter. `/new` opens an empty card.
  */
 @Component({
@@ -50,6 +50,10 @@ export class RecordCardComponent implements OnInit {
   isBusy = false;
   canEdit = false;
   canDelete = false;
+
+  get createPermission(): string {
+    return recordPermission(this.entity, 'Create');
+  }
 
   get isNew(): boolean {
     return !this.id;
@@ -100,7 +104,7 @@ export class RecordCardComponent implements OnInit {
       .subscribe(() => this.router.navigate(this.listRoute));
   }
 
-  /** Ctrl+S saves, as it does in Odoo. */
+  /** Ctrl+S saves. */
   @HostListener('document:keydown.control.s', ['$event'])
   onSaveShortcut(event: Event): void {
     event.preventDefault();
@@ -197,6 +201,22 @@ export class RecordCardComponent implements OnInit {
         if (reloaded) {
           this.toaster.success('Erp::SavedSuccessfully');
           this.show(reloaded);
+        }
+      });
+  }
+
+  /**
+   * Re-reads the record after one of its lines changed, for the totals. Unsaved edits on the
+   * card are kept: only the figures beside them are refreshed then.
+   */
+  refreshRecord(): void {
+    this.load()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(record => {
+        if (this.form?.dirty) {
+          this.record = record;
+        } else {
+          this.show(record);
         }
       });
   }

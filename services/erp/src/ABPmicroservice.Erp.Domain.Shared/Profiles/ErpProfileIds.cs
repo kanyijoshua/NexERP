@@ -1,7 +1,7 @@
 namespace ABPmicroservice.Erp.Profiles;
 
 /// <summary>
-/// The profiles (roles) a user can work as. Mirrors Business Central's shipped profiles: each one
+/// The profiles (roles) a user can work as: each one
 /// opens a role center with its own navigation bar.
 /// </summary>
 public static class ErpProfileIds

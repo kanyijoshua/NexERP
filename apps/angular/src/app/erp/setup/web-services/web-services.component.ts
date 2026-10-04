@@ -14,7 +14,7 @@ import { ErpTableAction, ErpTableColumn, ErpTableCrudBase } from '../../erp-shar
 
 /**
  * Which tables this company exposes to other systems.
- * Mirrors Business Central's Web Services page: nothing is readable until it is published.
+ * Nothing is readable until it is published.
  */
 @Component({
   selector: 'app-web-services',

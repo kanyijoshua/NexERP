@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Unit of Measure. Mirrors Business Central table 204 "Unit of Measure".
+/// Unit of Measure.
 /// </summary>
 public class UnitOfMeasure : CompanyAggregateRoot
 {

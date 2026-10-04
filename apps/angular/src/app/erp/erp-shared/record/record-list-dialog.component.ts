@@ -11,7 +11,7 @@ import { RecordEntity, recordPermission, toRecordTableColumns } from './record-e
 type Row = Record<string, any>;
 
 /**
- * The full list of a record table in a dialog: Odoo's "Search More..." and BC's "Select from full
+ * The full list of a record table in a dialog: "Search More..." and "Select from full
  * list". It is the same grid as the list pages (search, filter pane, columns, infinite scrolling).
  * Records can be opened, created, edited and deleted from it; with `selectable` it closes with
  * the picked record.
@@ -96,7 +96,7 @@ export class RecordListDialogComponent implements OnInit {
     });
   }
 
-  /** A record created from the picker is the one wanted, so it is picked straight away (as Odoo does). */
+  /** A record created from the picker is the one wanted, so it is picked straight away. */
   createNew(): void {
     this.card(null, true, this.table?.searchTerm ?? '').then(result => {
       if (!result) {

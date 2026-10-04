@@ -10,16 +10,16 @@ public static class ErpThemeSettings
 {
     private const string Prefix = "Erp.Theme.";
 
-    /// <summary>The brand colour: the top bar and headings. Odoo's plum by default.</summary>
+    /// <summary>The brand colour: the top bar and headings. Plum by default.</summary>
     public const string PrimaryColor = Prefix + "PrimaryColor";
 
-    /// <summary>The action colour: buttons, links and the activity tiles. Odoo's teal by default.</summary>
+    /// <summary>The action colour: buttons, links and the activity tiles. Teal by default.</summary>
     public const string AccentColor = Prefix + "AccentColor";
 
     /// <summary>"Brand" paints the top bar in the primary colour; "Light" keeps it white.</summary>
     public const string NavbarStyle = Prefix + "NavbarStyle";
 
-    /// <summary>"Rounded" (Odoo) or "Square" (Business Central).</summary>
+    /// <summary>"Rounded" or "Square".</summary>
     public const string CornerStyle = Prefix + "CornerStyle";
 
     public const string DefaultPrimaryColor = "#714B67";

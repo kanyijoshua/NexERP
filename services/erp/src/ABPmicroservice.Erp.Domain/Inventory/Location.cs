@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Location. Mirrors Business Central table 14: a warehouse or store stock is kept at. The
+/// Location: a warehouse or store stock is kept at. The
 /// description is the location's name.
 /// </summary>
 public class Location : CodeTableEntity

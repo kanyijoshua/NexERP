@@ -15,7 +15,7 @@ public class NoSeriesDto : EntityDto<Guid>
     public bool ManualNos { get; set; }
     public bool DateOrder { get; set; }
 
-    /// <summary>From the line in force today; shown in the list like BC's No. Series page.</summary>
+    /// <summary>From the line in force today; shown in the list.</summary>
     public string StartingNo { get; set; }
     public string EndingNo { get; set; }
     public string LastNoUsed { get; set; }

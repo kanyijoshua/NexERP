@@ -1,9 +1,8 @@
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// File a configuration package travels in. Business Central writes a package file of its own
-/// (definition and data together) and an Excel workbook with one sheet per table; this follows
-/// both, with JSON in place of BC's compressed XML.
+/// File a configuration package travels in: a package file
+/// (definition and data together, as JSON) or an Excel workbook with one sheet per table.
 /// </summary>
 public enum ConfigPackageFileFormat
 {
@@ -14,7 +13,7 @@ public enum ConfigPackageFileFormat
     Xlsx = 1,
 }
 
-/// <summary>What a configuration worksheet line is. Mirrors BC table 8622 "Config. Line", field "Line Type".</summary>
+/// <summary>What a configuration worksheet line is., field "Line Type".</summary>
 public enum ConfigLineType
 {
     /// <summary>A functional area such as Finance: a heading.</summary>
@@ -27,7 +26,7 @@ public enum ConfigLineType
     Table = 2,
 }
 
-/// <summary>How far set-up of a worksheet line has got. Mirrors the Status option of BC's Config. Line.</summary>
+/// <summary>How far set-up of a worksheet line has got.</summary>
 public enum ConfigLineStatus
 {
     NotStarted = 0,

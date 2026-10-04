@@ -13,7 +13,7 @@ import {
   ReportResultDto,
 } from '@proxy/reporting';
 import { Observable } from 'rxjs';
-import { ReportColumn, saveBlob } from '../../erp-shared';
+import { ReportColumn, SpreadsheetDialogService, saveBlob } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
 /** A report row flattened for the generic table, with its formatting kept alongside. */
@@ -43,6 +43,7 @@ export class ReportViewerComponent implements OnInit {
   private readonly reports = inject(FinancialReportService);
   private readonly schedules = inject(AccountScheduleService);
   private readonly layouts = inject(ColumnLayoutService);
+  private readonly spreadsheets = inject(SpreadsheetDialogService);
 
   readonly ReportKind = ReportKind;
 
@@ -143,6 +144,11 @@ export class ReportViewerComponent implements OnInit {
       scheduleName: this.scheduleName || undefined,
       columnLayoutName: this.columnLayoutName || undefined,
     };
+  }
+
+  /** Opens the report in the spreadsheet view, where it can be worked on without downloading it. */
+  openInSpreadsheet(): void {
+    this.spreadsheets.openReport(this.title, this.columns, this.rows, row => row['__bold'] === true);
   }
 
   exportReport(format: ExportFormat): void {

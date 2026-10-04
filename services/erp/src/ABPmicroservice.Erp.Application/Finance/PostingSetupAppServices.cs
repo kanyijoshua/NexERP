@@ -13,7 +13,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// General Posting Setup (BC page 252): one row per business and product posting group pair,
+/// General Posting Setup: one row per business and product posting group pair,
 /// naming the accounts sales and purchase lines of that pair post to.
 /// </summary>
 [Authorize(ErpPermissions.PostingSetup.Default)]
@@ -115,7 +115,7 @@ public class GeneralPostingSetupAppService
     }
 }
 
-/// <summary>Inventory Posting Setup (BC page 5826): the inventory account per inventory posting group.</summary>
+/// <summary>Inventory Posting Setup: the inventory account per inventory posting group.</summary>
 [Authorize(ErpPermissions.PostingSetup.Default)]
 public class InventoryPostingSetupAppService
     : ErpCrudAppService<
@@ -198,7 +198,7 @@ public class InventoryPostingSetupAppService
     }
 }
 
-/// <summary>General Ledger Setup (BC page 118): one row per company, created blank on first read.</summary>
+/// <summary>General Ledger Setup: one row per company, created blank on first read.</summary>
 [Authorize(ErpPermissions.GeneralLedgerSetup.Default)]
 public class GeneralLedgerSetupAppService : ErpAppService, IGeneralLedgerSetupAppService
 {
@@ -242,6 +242,22 @@ public class GeneralLedgerSetupAppService : ErpAppService, IGeneralLedgerSetupAp
         setup.SetFlags(input.BlockDeletionOfGLAccounts, input.RegisterTime);
         setup.SetGlobalDimensions(input.GlobalDimension1Code, input.GlobalDimension2Code);
         setup.SetNumbering(input.BankAccountNos);
+        setup.SetAdditionalFields(
+            input.ShortcutDimension3Code,
+            input.ShortcutDimension4Code,
+            input.ShortcutDimension5Code,
+            input.ShortcutDimension6Code,
+            input.ShortcutDimension7Code,
+            input.ShortcutDimension8Code,
+            input.VatTolerancePct,
+            input.ApplnRoundingPrecision,
+            input.EmuCurrency,
+            input.PrintVatSpecificationInLcy,
+            input.ShowAmounts,
+            input.BillToSellToVatCalc,
+            input.AllowDeferralPostingFrom,
+            input.AllowDeferralPostingTo
+        );
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<GeneralLedgerSetup, GeneralLedgerSetupDto>(setup);

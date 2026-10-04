@@ -23,7 +23,7 @@ html {
 
 /*
  * ERP theme tokens. AppThemeService overwrites --erp-primary / --erp-accent (and their -rgb and
- * on- colours) with the tenant's theme; the values here are the Odoo-inspired defaults, so the
+ * on- colours) with the tenant's theme; the values here are the defaults, so the
  * page is right before the theme has loaded. Everything else is derived from those two.
  */
 :root {
@@ -50,7 +50,7 @@ html {
   --erp-shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
   --erp-shadow-raised: 0 8px 20px rgb(16 24 40 / 12%);
 
-  // Odoo rounds everything softly; Business Central keeps it square.
+  // Corners are either softly rounded or square.
   --erp-radius: 0.75rem;
   --erp-radius-sm: 0.5rem;
 
@@ -107,7 +107,7 @@ body {
   --bs-btn-active-border-color: var(--erp-accent);
 }
 
-/* Cards as Odoo draws them: white, a hairline border, a soft shadow and the theme's corners. */
+/* Cards: white, a hairline border, a soft shadow and the theme's corners. */
 .card {
   --bs-card-border-color: var(--erp-rule);
   --bs-card-border-radius: var(--erp-radius);
@@ -126,9 +126,9 @@ body {
 }
 
 /*
- * The top bar (ABP Basic theme, #main-navbar). "Brand" paints it in the primary colour, as
- * Odoo does; "Light" keeps it white with the accent for the current page, as Business Central
- * does. Bootstrap's own dark navbar colours are replaced either way.
+ * The top bar (ABP Basic theme, #main-navbar). "Brand" paints it in the primary colour;
+ * "Light" keeps it white with the accent for the current page. Bootstrap's own dark navbar
+ * colours are replaced either way.
  */
 #main-navbar {
   min-height: 3.5rem !important;
@@ -239,7 +239,7 @@ body {
 }
 
 /* ==========================================================================
-   ERP MODERN UI ENHANCEMENTS (Odoo & Business Central Style)
+   ERP MODERN UI ENHANCEMENTS
    ========================================================================== */
 
 /* --- 1. Page Toolbar --- */
@@ -329,7 +329,7 @@ body {
   }
 }
 
-/* --- 4. Modern Datatable & Table Styling (Business Central / ERP style) --- */
+/* --- 4. Modern Datatable & Table Styling --- */
 .card:has(ngx-datatable),
 .card:has(.ngx-datatable),
 .card:has(table.table),
@@ -617,7 +617,7 @@ table.table {
   }
 }
 
-/* --- 5. Card Format / Tile View (Odoo & BC Cards) --- */
+/* --- 5. Card Format / Tile View --- */
 .erp-card-grid {
   margin-top: 0.25rem;
 }
@@ -726,7 +726,7 @@ table.table {
   background-color: #ffffff;
 }
 
-/* --- 6. Soft Status Badges (Odoo / BC Style) --- */
+/* --- 6. Soft Status Badges --- */
 .badge.bg-success {
   background-color: #ecfdf5 !important;
   color: #047857 !important;
@@ -768,7 +768,7 @@ table.table {
   border-radius: 4px;
 }
 
-/* --- 7. Resizable & Draggable Modals (Business Central / Odoo Style) --- */
+/* --- 7. Resizable & Draggable Modals --- */
 
 .modal-dialog-resizable {
   max-width: calc(100vw - 2rem) !important;
@@ -917,7 +917,7 @@ table.table {
   cursor: nesw-resize;
 }
 
-/* Maximize and Minimize to Normal Size Buttons in Modal Header (Business Central style) */
+/* Maximize and Minimize to Normal Size Buttons in Modal Header */
 .erp-modal-btn {
   background: transparent;
   border: 1px solid transparent;

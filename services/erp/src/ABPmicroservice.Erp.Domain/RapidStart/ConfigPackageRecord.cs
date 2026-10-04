@@ -8,8 +8,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// A record staged in a package, waiting to be validated and applied. Business Central holds these
-/// in "Config. Package Record" with one "Config. Package Data" row per field; here the field
+/// A record staged in a package, waiting to be validated and applied. The field
 /// values travel together as one JSON object of text, which is also how they arrived.
 /// </summary>
 public class ConfigPackageRecord : CompanyBasicEntity
@@ -76,7 +75,7 @@ public class ConfigPackageRecord : CompanyBasicEntity
 }
 
 /// <summary>
-/// Why a staged record could not be applied. Mirrors BC table 8617 "Config. Package Error": one
+/// Why a staged record could not be applied: one
 /// row per field that failed, so the error can be shown next to the value that caused it.
 /// </summary>
 public class ConfigPackageError : CompanyBasicEntity

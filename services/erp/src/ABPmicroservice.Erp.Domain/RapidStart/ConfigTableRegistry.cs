@@ -19,7 +19,7 @@ using Volo.Abp.DependencyInjection;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// A field that points at a record of another table. Mirrors a Business Central TableRelation:
+/// A field that points at a record of another table, a table relation:
 /// the value must exist in the related table before the record can be applied.
 /// </summary>
 public sealed class ConfigTableRelation
@@ -43,7 +43,7 @@ public sealed class ConfigTableRelation
     /// <summary>
     /// True when the field stores the related row's Guid. Ids differ from one company to the next,
     /// so a package carries the related row's key instead and the id is looked up on the way in.
-    /// This is what makes a package portable between companies, as BC's code-keyed tables are.
+    /// This is what makes a package portable between companies.
     /// </summary>
     public bool IsIdReference { get; }
 
@@ -57,8 +57,7 @@ public sealed class ConfigTableRelation
 
 /// <summary>
 /// How a configuration package may read and write one table: its primary key, its relations, and
-/// the checks a value must pass. This is the metadata Business Central keeps on every table and
-/// RapidStart reads from it; here it is declared once per table that may be imported.
+/// the checks a value must pass. It is declared once per table that may be imported.
 /// </summary>
 public sealed class ConfigTableProfile
 {
@@ -109,7 +108,7 @@ public sealed class ConfigTableProfile
     public string Area { get; }
 
     /// <summary>
-    /// Fields that identify a record, as BC's primary key does. A record in a file whose key
+    /// Fields that identify a record, as a primary key does. A record in a file whose key
     /// matches an existing one updates it; otherwise it is inserted. No key fields means the table
     /// holds one record per company (a setup table).
     /// </summary>
@@ -220,7 +219,7 @@ internal sealed class ConfigTableBuilder
         return this;
     }
 
-    /// <summary>Stored in capitals, as BC stores every Code field.</summary>
+    /// <summary>Stored in capitals, as every Code field is.</summary>
     public ConfigTableBuilder Capitals(params string[] fields)
     {
         UpperCase.AddRange(fields);
@@ -257,8 +256,7 @@ internal sealed class ConfigTableBuilder
 /// <summary>
 /// The tables a configuration package or a data import may write to.
 /// <para>
-/// Business Central's RapidStart can reach any table, and relies on the table's own triggers and
-/// relations to keep bad data out. Here writing is opt-in: master data and setup are listed, and
+/// Writing is opt-in: master data and setup are listed, and
 /// ledgers, posted documents and registers are not — those come only from posting, exactly as the
 /// append-only guard in the database context insists. A table in the entity registry that is not
 /// listed here can still be exported; it just cannot be imported.
@@ -525,7 +523,7 @@ public class ConfigTableRegistry : ISingletonDependency
 
     /// <summary>
     /// Tables the given ones refer to, directly or through other tables, and their line tables:
-    /// what BC's "Get Related Tables" adds, so a package does not arrive with customers whose
+    /// what "Get Related Tables" adds, so a package does not arrive with customers whose
     /// posting group it forgot to bring.
     /// </summary>
     public IReadOnlyList<string> GetRelatedTables(IEnumerable<string> names)
@@ -556,8 +554,8 @@ public class ConfigTableRegistry : ISingletonDependency
     }
 
     /// <summary>
-    /// Orders tables so that every table comes after the tables it relates to. BC leaves the
-    /// processing order to the person building the package; working it out from the relations
+    /// Orders tables so that every table comes after the tables it relates to. Working the
+    /// processing order out from the relations
     /// means a posting group is always in place before the customer that names it.
     /// </summary>
     public IReadOnlyList<string> SortByDependencies(IEnumerable<string> names)

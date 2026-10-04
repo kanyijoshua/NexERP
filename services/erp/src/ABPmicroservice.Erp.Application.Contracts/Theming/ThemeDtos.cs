@@ -6,10 +6,10 @@ namespace ABPmicroservice.Erp.Theming;
 
 public enum ErpNavbarStyle
 {
-    /// <summary>The top bar in the primary colour, as Odoo does it.</summary>
+    /// <summary>The top bar in the primary colour.</summary>
     Brand = 0,
 
-    /// <summary>A white top bar, as Business Central does it.</summary>
+    /// <summary>A white top bar it.</summary>
     Light = 1,
 }
 

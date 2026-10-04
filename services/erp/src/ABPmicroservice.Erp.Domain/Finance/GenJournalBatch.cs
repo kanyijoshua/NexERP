@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.CashManagement;
 using System;
 using ABPmicroservice.Erp.Companies;
 using Volo.Abp;
@@ -5,7 +6,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// General Journal Batch. Mirrors Business Central table 232 "Gen. Journal Batch".
+/// General Journal Batch.
 /// A batch is one worksheet of journal lines that are checked and posted together.
 /// </summary>
 public class GenJournalBatch : CompanyAggregateRoot
@@ -17,14 +18,14 @@ public class GenJournalBatch : CompanyAggregateRoot
 
     public string Description { get; private set; }
 
-    /// <summary>Stamped on posted entries. Mirrors BC "Reason Code".</summary>
+    /// <summary>Stamped on posted entries.</summary>
     public string ReasonCode { get; private set; }
 
     /// <summary>Number series the document numbers of new lines are taken from.</summary>
     public string NoSeriesCode { get; private set; }
 
     /// <summary>
-    /// Balancing account applied to lines that leave theirs blank. Mirrors BC "Bal. Account No.",
+    /// Balancing account applied to lines that leave theirs blank,
     /// which is how the cash-receipt and payment journals point at the bank account once.
     /// </summary>
     public GenJournalAccountType? BalAccountType { get; private set; }
@@ -76,7 +77,7 @@ public class GenJournalBatch : CompanyAggregateRoot
 }
 
 /// <summary>
-/// General Journal Line. Mirrors Business Central table 81 "Gen. Journal Line".
+/// General Journal Line.
 /// Lines live only until they are posted: posting writes the ledgers and clears the line,
 /// except on a recurring journal, where the line stays and its date moves on.
 /// </summary>
@@ -103,7 +104,7 @@ public class GenJournalLine : CompanyEntity
 
     public string Description { get; private set; }
 
-    /// <summary>Positive debits the account, negative credits it, as in Business Central.</summary>
+    /// <summary>Positive debits the account, negative credits it.</summary>
     public decimal Amount { get; private set; }
 
     public GenJournalAccountType? BalAccountType { get; private set; }
@@ -118,15 +119,15 @@ public class GenJournalLine : CompanyEntity
     /// <summary>Date formula the posting date moves on by after posting, e.g. "1M" or "1M+CM".</summary>
     public string RecurringFrequency { get; private set; }
 
-    /// <summary>After this date the recurring line is skipped. Mirrors BC "Expiration Date".</summary>
+    /// <summary>After this date the recurring line is skipped.</summary>
     public DateTime? ExpirationDate { get; private set; }
 
-    /// <summary>Open customer or vendor entry this line settles. Mirrors BC "Applies-to Doc. No.".</summary>
+    /// <summary>Open customer or vendor entry this line settles.</summary>
     public string AppliesToDocNo { get; private set; }
 
     public string Comment { get; private set; }
 
-    /// <summary>The currency of <see cref="Amount"/>; null for LCY. BC "Currency Code".</summary>
+    /// <summary>The currency of <see cref="Amount"/>; null for LCY.</summary>
     public string CurrencyCode { get; private set; }
 
     /// <summary>Units of the currency per unit of LCY at the posting date. 1 for LCY.</summary>
@@ -157,6 +158,57 @@ public class GenJournalLine : CompanyEntity
     public decimal BalVatAmount { get; private set; }
 
     public decimal BalVatBaseAmount { get; private set; }
+
+    /// <summary>Posting Group.</summary>
+    public string PostingGroup { get; private set; }
+
+    /// <summary>Shortcut Dimension 1 Code.</summary>
+    public string ShortcutDimension1Code { get; private set; }
+
+    /// <summary>Shortcut Dimension 2 Code.</summary>
+    public string ShortcutDimension2Code { get; private set; }
+
+    /// <summary>Salespers./Purch. Code.</summary>
+    public string SalespersPurchCode { get; private set; }
+
+    /// <summary>Source Code.</summary>
+    public string SourceCode { get; private set; }
+
+    /// <summary>Reason Code.</summary>
+    public string ReasonCode { get; private set; }
+
+    /// <summary>Payment Method Code.</summary>
+    public string PaymentMethodCode { get; private set; }
+
+    /// <summary>Applies-to ID.</summary>
+    public string AppliesToId { get; private set; }
+
+    /// <summary>Bank Payment Type.</summary>
+    public BankPaymentType BankPaymentType { get; private set; }
+
+    /// <summary>Correction.</summary>
+    public bool Correction { get; private set; }
+
+    /// <summary>Quantity.</summary>
+    public decimal Quantity { get; private set; }
+
+    /// <summary>Due Date.</summary>
+    public DateTime? DueDate { get; private set; }
+
+    /// <summary>On Hold.</summary>
+    public string OnHold { get; private set; }
+
+    /// <summary>VAT Registration No..</summary>
+    public string VatRegistrationNo { get; private set; }
+
+    /// <summary>Country/Region Code.</summary>
+    public string CountryRegionCode { get; private set; }
+
+    /// <summary>Payment Reference.</summary>
+    public string PaymentReference { get; private set; }
+
+    /// <summary>Message to Recipient.</summary>
+    public string MessageToRecipient { get; private set; }
 
     protected GenJournalLine() { }
 
@@ -322,7 +374,7 @@ public class GenJournalLine : CompanyEntity
 
     /// <summary>
     /// Moves a recurring line to its next period. Variable methods also blank the amount, so the
-    /// next posting needs it typed again. Mirrors what BC's post batch does to a recurring line.
+    /// next posting needs it typed again.
     /// </summary>
     internal void AdvanceRecurring()
     {
@@ -334,5 +386,45 @@ public class GenJournalLine : CompanyEntity
         {
             Amount = 0m;
         }
+    }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string postingGroup,
+        string shortcutDimension1Code,
+        string shortcutDimension2Code,
+        string salespersPurchCode,
+        string sourceCode,
+        string reasonCode,
+        string paymentMethodCode,
+        string appliesToId,
+        BankPaymentType bankPaymentType,
+        bool correction,
+        decimal quantity,
+        DateTime? dueDate,
+        string onHold,
+        string vatRegistrationNo,
+        string countryRegionCode,
+        string paymentReference,
+        string messageToRecipient
+    )
+    {
+        PostingGroup = CodeTableEntity.NormalizeCode(Check.Length(postingGroup, nameof(postingGroup), 20));
+        ShortcutDimension1Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension1Code, nameof(shortcutDimension1Code), 20));
+        ShortcutDimension2Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension2Code, nameof(shortcutDimension2Code), 20));
+        SalespersPurchCode = CodeTableEntity.NormalizeCode(Check.Length(salespersPurchCode, nameof(salespersPurchCode), 20));
+        SourceCode = CodeTableEntity.NormalizeCode(Check.Length(sourceCode, nameof(sourceCode), 10));
+        ReasonCode = CodeTableEntity.NormalizeCode(Check.Length(reasonCode, nameof(reasonCode), 10));
+        PaymentMethodCode = CodeTableEntity.NormalizeCode(Check.Length(paymentMethodCode, nameof(paymentMethodCode), 10));
+        AppliesToId = CodeTableEntity.NormalizeCode(Check.Length(appliesToId, nameof(appliesToId), 50));
+        BankPaymentType = bankPaymentType;
+        Correction = correction;
+        Quantity = quantity;
+        DueDate = dueDate?.Date;
+        OnHold = CodeTableEntity.NormalizeCode(Check.Length(onHold, nameof(onHold), 3));
+        VatRegistrationNo = Check.Length(vatRegistrationNo, nameof(vatRegistrationNo), 20);
+        CountryRegionCode = CodeTableEntity.NormalizeCode(Check.Length(countryRegionCode, nameof(countryRegionCode), 10));
+        PaymentReference = CodeTableEntity.NormalizeCode(Check.Length(paymentReference, nameof(paymentReference), 50));
+        MessageToRecipient = Check.Length(messageToRecipient, nameof(messageToRecipient), 140);
     }
 }

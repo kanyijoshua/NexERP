@@ -4,7 +4,7 @@ import { GetVatEntryListInput, VatEntryDto, VatEntryService, VatEntryType, vatEn
 import { ErpTableColumn, ErpTableComponent, ErpTableSource } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
-/** VAT Entries. Mirrors Business Central page 315: what the VAT return is built from. */
+/** VAT Entries. what the VAT return is built from. */
 @Component({
   selector: 'app-vat-entries',
   templateUrl: './vat-entries.component.html',

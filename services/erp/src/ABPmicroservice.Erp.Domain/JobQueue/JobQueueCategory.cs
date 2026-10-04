@@ -6,7 +6,6 @@ namespace ABPmicroservice.Erp.JobQueue;
 
 /// <summary>
 /// A category for grouping job queue entries and managing worker queues.
-/// Mirrors Business Central Table 471 "Job Queue Category" and Odoo queue.job.channel.
 /// </summary>
 public class JobQueueCategory : CompanyAggregateRoot
 {

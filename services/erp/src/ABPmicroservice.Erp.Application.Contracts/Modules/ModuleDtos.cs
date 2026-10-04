@@ -44,8 +44,7 @@ public class SetModuleEnabledInput
 }
 
 /// <summary>
-/// Installing and uninstalling the system's own apps. Mirrors Odoo's Apps page and Business
-/// Central's per-company feature management.
+/// Installing and uninstalling the system's own apps, per company.
 /// </summary>
 public interface IModuleAppService : IApplicationService
 {

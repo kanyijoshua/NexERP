@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Purchases &amp; Payables Setup. Mirrors Business Central table 312: one row per company,
+/// Purchases &amp; Payables Setup: one row per company,
 /// naming the number series each kind of purchase record draws from. A blank code means
 /// numbers are typed by hand.
 /// </summary>
@@ -26,7 +26,7 @@ public class PurchasesPayablesSetup : CompanyEntity
     public string PostedReturnShptNos { get; private set; }
     public string ReturnOrderNos { get; private set; }
 
-    /// <summary>An invoice cannot be posted without the vendor's invoice number (BC "Ext. Doc. No. Mandatory").</summary>
+    /// <summary>An invoice cannot be posted without the vendor's invoice number.</summary>
     public bool ExtDocNoMandatory { get; private set; }
 
     public PurchasingDiscountPosting DiscountPosting { get; private set; }

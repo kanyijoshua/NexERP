@@ -10,7 +10,6 @@ namespace ABPmicroservice.Erp.JobQueue;
 
 /// <summary>
 /// Background job that inspects stalled or failed webhook deliveries and queues retries.
-/// Mirrors Odoo mail queue / webhook sweep worker.
 /// </summary>
 public class WebhookRetrySweepJobHandler : IJobHandler, ITransientDependency
 {

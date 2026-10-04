@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Sales;
 
-/// <summary>
-/// Mirrors Business Central "Document Type" for the Sales Header.
-/// </summary>
 public enum SalesDocumentType
 {
     Quote = 0,

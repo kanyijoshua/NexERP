@@ -13,7 +13,7 @@ namespace ABPmicroservice.Erp.Modules;
 /// <summary>
 /// Which modules this company runs.
 /// <para>
-/// The rules are the ones Odoo enforces when you install or uninstall an app: a module cannot be
+/// The rules for switching a module on or off: a module cannot be
 /// switched on while something it needs is off, and cannot be switched off while something that
 /// needs it is on. Core modules are never switchable.
 /// </para>
@@ -45,7 +45,9 @@ public class ErpModuleManager : DomainService
             return ErpModuleRegistry.All.ToDictionary(m => m.Code, _ => true, StringComparer.OrdinalIgnoreCase);
         }
 
-        var stored = await _stateRepository.GetListAsync();
+        // Two columns, read without change tracking: this runs on every page's navigation.
+        var query = await _stateRepository.GetQueryableAsync();
+        var stored = await AsyncExecuter.ToListAsync(query.Select(s => new { s.ModuleCode, s.Enabled }));
         var byCode = stored.ToDictionary(s => s.ModuleCode, s => s.Enabled, StringComparer.OrdinalIgnoreCase);
 
         return ErpModuleRegistry.All.ToDictionary(
@@ -68,7 +70,21 @@ public class ErpModuleManager : DomainService
             return true;
         }
 
-        var states = await GetStatesAsync();
+        return IsEnabledIn(moduleCode, await GetStatesAsync());
+    }
+
+    /// <summary>
+    /// The same answer as <see cref="IsEnabledAsync"/> from states already read, for callers that
+    /// ask about many modules at once.
+    /// </summary>
+    public static bool IsEnabledIn(string moduleCode, IReadOnlyDictionary<string, bool> states)
+    {
+        var module = ErpModuleRegistry.Find(moduleCode);
+        if (module == null || module.IsCore)
+        {
+            return true;
+        }
+
         return states.TryGetValue(module.Code, out var enabled) && enabled;
     }
 

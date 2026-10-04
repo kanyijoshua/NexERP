@@ -13,13 +13,13 @@ import { RecordListDialogComponent } from './record-list-dialog.component';
 export interface OpenListOptions {
   /** Starting search text. */
   filter?: string;
-  /** Shows a "Select" button and closes with the picked record (BC "Select from full list"). */
+  /** Shows a "Select" button and closes with the picked record. */
   selectable?: boolean;
 }
 
 /**
  * Opens the generic record dialogs on top of whatever page is showing: the full list ("Search More...",
- * BC's "Select from full list") and the record card (view, edit, create, delete). The dialogs stack, so
+ * "Select from full list") and the record card (view, edit, create, delete). The dialogs stack, so
  * a lookup inside a card dialog opens another dialog above it.
  */
 @Injectable({ providedIn: 'root' })

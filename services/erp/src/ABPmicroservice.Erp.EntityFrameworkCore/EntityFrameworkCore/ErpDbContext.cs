@@ -37,7 +37,7 @@ using Volo.Abp.EntityFrameworkCore;
 namespace ABPmicroservice.Erp.EntityFrameworkCore;
 
 [ConnectionStringName(ErpDbProperties.ConnectionStringName)]
-public class ErpDbContext : AbpDbContext<ErpDbContext>
+public partial class ErpDbContext : AbpDbContext<ErpDbContext>
 {
     public DbSet<Company> Companies { get; set; }
     public DbSet<CompanyInformation> CompanyInformations { get; set; }
@@ -209,7 +209,7 @@ public class ErpDbContext : AbpDbContext<ErpDbContext>
     {
         base.ConfigureConventions(configurationBuilder);
 
-        // Amounts, quantities and unit costs: numeric(18,5), as Business Central stores them.
+        // Amounts, quantities and unit costs: numeric(18,5).
         var decimals = configurationBuilder.Properties<decimal>().HavePrecision(18, 5);
 
         // SQLite (tests) has no decimal type and cannot SUM or ORDER BY it as text.

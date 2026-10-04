@@ -20,8 +20,10 @@ export interface OpenCardOptions {
   id?: string | null;
   /** What the user typed in the lookup, handed to `entity.newRecord`. */
   term?: string;
-  /** Odoo's quick form: only the essential fields. Defaults to `true` for a new record. */
+  /** The quick form: only the essential fields. Defaults to `true` for a new record. */
   quick?: boolean;
+  /** Values set on a new record over `entity.newRecord`, e.g. the document a line belongs to. */
+  values?: Record<string, unknown>;
 }
 
 /** Opens a record card dialog; resolves with `null` when it is cancelled. */
@@ -42,6 +44,7 @@ export function openRecordCardDialog<TDto = any>(
   card.id = options.id ?? null;
   card.term = options.term ?? '';
   card.quick = options.quick ?? !options.id;
+  card.values = options.values ?? {};
   // A dismissed dialog rejects its promise; to callers that is simply "nothing".
   return (ref.result as Promise<RecordCardResult<TDto>>).then(
     result => result ?? null,
@@ -50,7 +53,7 @@ export function openRecordCardDialog<TDto = any>(
 }
 
 /**
- * A record in a dialog: Odoo's "Create and edit..." / internal-link form, BC's card opened from a
+ * A record in a dialog: the "Create and edit..." / internal-link form, the card opened from a
  * lookup. Opened through `RecordDialogService.openCard`; closes with `{ record }` after a save and
  * `{ record, deleted: true }` after a delete.
  */
@@ -70,6 +73,7 @@ export class RecordCardDialogComponent implements OnInit {
   id: string | null = null;
   term = '';
   quick = false;
+  values: Record<string, unknown> = {};
 
   record: Record<string, any> | null = null;
   form: FormGroup | null = null;
@@ -107,7 +111,7 @@ export class RecordCardDialogComponent implements OnInit {
       !this.isNew && this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Delete'));
 
     if (this.isNew) {
-      this.show(this.entity.newRecord(this.term || undefined));
+      this.show({ ...this.entity.newRecord(this.term || undefined), ...this.values });
       return;
     }
 

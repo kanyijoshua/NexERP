@@ -9,7 +9,7 @@ using Xunit;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// The lookups of the front end search as the user types, in any case, the way Odoo's many2one does.
+/// The lookups of the front end search as the user types, in any case.
 /// </summary>
 public class MasterDataSearch_Tests : ErpApplicationTestBase
 {

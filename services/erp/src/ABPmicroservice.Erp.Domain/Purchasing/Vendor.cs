@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Companies;
 using System;
 using Volo.Abp;
@@ -6,11 +7,11 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
-/// Vendor card. Mirrors Business Central table 23 "Vendor".
+/// Vendor card.
 /// </summary>
-public class Vendor : CompanyAggregateRoot
+public class Vendor : CompanyAggregateRoot, IHasNo
 {
-    /// <summary>Business key. Mirrors BC field "No.".</summary>
+    /// <summary>Business key.</summary>
     public string No { get; private set; }
 
     public string Name { get; private set; }
@@ -46,62 +47,101 @@ public class Vendor : CompanyAggregateRoot
 
     public bool Blocked { get; private set; }
 
-    /// <summary>Search Name. Mirrors BC field 3 "Search Name".</summary>
+    /// <summary>Search Name.</summary>
     public string SearchName { get; private set; }
 
-    /// <summary>Name 2. Mirrors BC field 4 "Name 2".</summary>
+    /// <summary>Name 2.</summary>
     public string Name2 { get; private set; }
 
-    /// <summary>Address 2. Mirrors BC field 6 "Address 2".</summary>
+    /// <summary>Address 2.</summary>
     public string Address2 { get; private set; }
 
-    /// <summary>Contact person. Mirrors BC field 8 "Contact".</summary>
+    /// <summary>Contact person.</summary>
     public string Contact { get; private set; }
 
-    /// <summary>Our account number with the vendor. Mirrors BC field 14 "Our Account No.".</summary>
+    /// <summary>Our account number with the vendor.</summary>
     public string OurAccountNo { get; private set; }
 
-    /// <summary>Shipment Method Code. Mirrors BC field 30 "Shipment Method Code".</summary>
+    /// <summary>Shipment Method Code.</summary>
     public string ShipmentMethodCode { get; private set; }
 
-    /// <summary>Shipping Agent Code. Mirrors BC field 31 "Shipping Agent Code".</summary>
+    /// <summary>Shipping Agent Code.</summary>
     public string ShippingAgentCode { get; private set; }
 
-    /// <summary>Invoice Disc. Code. Mirrors BC field 33 "Invoice Disc. Code".</summary>
+    /// <summary>Invoice Disc. Code.</summary>
     public string InvoiceDiscCode { get; private set; }
 
-    /// <summary>Prices Including VAT. Mirrors BC field 82 "Prices Including VAT".</summary>
+    /// <summary>Prices Including VAT.</summary>
     public bool PricesIncludingVAT { get; private set; }
 
-    /// <summary>VAT Registration No. Mirrors BC field 86 "VAT Registration No.".</summary>
+    /// <summary>VAT Registration No.</summary>
     public string VATRegistrationNo { get; private set; }
 
-    /// <summary>Home Page. Mirrors BC field 103 "Home Page".</summary>
+    /// <summary>Home Page.</summary>
     public string HomePage { get; private set; }
 
-    /// <summary>Tax Area Code. Mirrors BC field 108 "Tax Area Code".</summary>
+    /// <summary>Tax Area Code.</summary>
     public string TaxAreaCode { get; private set; }
 
-    /// <summary>Tax Liable. Mirrors BC field 109 "Tax Liable".</summary>
+    /// <summary>Tax Liable.</summary>
     public bool TaxLiable { get; private set; }
 
-    /// <summary>Block Payment Tolerance. Mirrors BC field 116 "Block Payment Tolerance".</summary>
+    /// <summary>Block Payment Tolerance.</summary>
     public bool BlockPaymentTolerance { get; private set; }
 
-    /// <summary>Prepayment %. Mirrors BC field 124 "Prepayment %".</summary>
+    /// <summary>Prepayment %.</summary>
     public decimal PrepaymentPct { get; private set; }
 
-    /// <summary>Allow Multiple Posting Groups. Mirrors BC field 175 "Allow Multiple Posting Groups".</summary>
+    /// <summary>Allow Multiple Posting Groups.</summary>
     public bool AllowMultiplePostingGroups { get; private set; }
 
-    /// <summary>Mobile Phone No. Mirrors BC field 5061 "Mobile Phone No.".</summary>
+    /// <summary>Mobile Phone No.</summary>
     public string MobilePhoneNo { get; private set; }
 
-    /// <summary>Default Receiving Location Code. Mirrors BC field 5701 "Location Code".</summary>
+    /// <summary>Default Receiving Location Code.</summary>
     public string LocationCode { get; private set; }
 
-    /// <summary>Lead Time Calculation formula. Mirrors BC field 5790 "Lead Time Calculation".</summary>
+    /// <summary>Lead Time Calculation formula.</summary>
     public string LeadTimeCalculation { get; private set; }
+
+    /// <summary>County.</summary>
+    public string County { get; private set; }
+
+    /// <summary>Fax No..</summary>
+    public string FaxNo { get; private set; }
+
+    /// <summary>Registration Number.</summary>
+    public string RegistrationNumber { get; private set; }
+
+    /// <summary>Global Dimension 1 Code.</summary>
+    public string GlobalDimension1Code { get; private set; }
+
+    /// <summary>Global Dimension 2 Code.</summary>
+    public string GlobalDimension2Code { get; private set; }
+
+    /// <summary>Language Code.</summary>
+    public string LanguageCode { get; private set; }
+
+    /// <summary>Pay-to Vendor No..</summary>
+    public string PayToVendorNo { get; private set; }
+
+    /// <summary>Priority.</summary>
+    public int Priority { get; private set; }
+
+    /// <summary>Application Method.</summary>
+    public ApplicationMethod ApplicationMethod { get; private set; }
+
+    /// <summary>Responsibility Center.</summary>
+    public string ResponsibilityCenter { get; private set; }
+
+    /// <summary>Preferred Bank Account Code.</summary>
+    public string PreferredBankAccountCode { get; private set; }
+
+    /// <summary>Primary Contact No..</summary>
+    public string PrimaryContactNo { get; private set; }
+
+    /// <summary>Privacy Blocked.</summary>
+    public bool PrivacyBlocked { get; private set; }
 
     protected Vendor() { }
 
@@ -264,4 +304,36 @@ public class Vendor : CompanyAggregateRoot
 
     public void SetPaymentMethodCode(string paymentMethodCode) =>
         PaymentMethodCode = CodeTableEntity.NormalizeCode(Check.Length(paymentMethodCode, nameof(paymentMethodCode), ErpDomainConsts.MaxCodeLength));
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(
+        string county,
+        string faxNo,
+        string registrationNumber,
+        string globalDimension1Code,
+        string globalDimension2Code,
+        string languageCode,
+        string payToVendorNo,
+        int priority,
+        ApplicationMethod applicationMethod,
+        string responsibilityCenter,
+        string preferredBankAccountCode,
+        string primaryContactNo,
+        bool privacyBlocked
+    )
+    {
+        County = Check.Length(county, nameof(county), 30);
+        FaxNo = Check.Length(faxNo, nameof(faxNo), 30);
+        RegistrationNumber = Check.Length(registrationNumber, nameof(registrationNumber), 50);
+        GlobalDimension1Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension1Code, nameof(globalDimension1Code), 20));
+        GlobalDimension2Code = CodeTableEntity.NormalizeCode(Check.Length(globalDimension2Code, nameof(globalDimension2Code), 20));
+        LanguageCode = CodeTableEntity.NormalizeCode(Check.Length(languageCode, nameof(languageCode), 10));
+        PayToVendorNo = CodeTableEntity.NormalizeCode(Check.Length(payToVendorNo, nameof(payToVendorNo), 20));
+        Priority = priority;
+        ApplicationMethod = applicationMethod;
+        ResponsibilityCenter = CodeTableEntity.NormalizeCode(Check.Length(responsibilityCenter, nameof(responsibilityCenter), 10));
+        PreferredBankAccountCode = CodeTableEntity.NormalizeCode(Check.Length(preferredBankAccountCode, nameof(preferredBankAccountCode), 20));
+        PrimaryContactNo = CodeTableEntity.NormalizeCode(Check.Length(primaryContactNo, nameof(primaryContactNo), 20));
+        PrivacyBlocked = privacyBlocked;
+    }
 }

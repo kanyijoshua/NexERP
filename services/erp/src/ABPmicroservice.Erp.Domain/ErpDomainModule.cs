@@ -27,5 +27,15 @@ public class ErpDomainModule : AbpModule
         context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.SalesPostBatchJobHandler>();
         context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.PurchasingPostBatchJobHandler>();
         context.Services.AddTransient<JobQueue.IJobHandler, JobQueue.WebhookRetrySweepJobHandler>();
+
+        // The standard report catalog asks for every report at once, and the conventional
+        // registrar exposes a class only under the interface that shares its name.
+        foreach (var report in typeof(ErpDomainModule).Assembly.GetTypes())
+        {
+            if (report.IsClass && !report.IsAbstract && typeof(Reporting.IStandardReport).IsAssignableFrom(report))
+            {
+                context.Services.AddTransient(typeof(Reporting.IStandardReport), report);
+            }
+        }
     }
 }

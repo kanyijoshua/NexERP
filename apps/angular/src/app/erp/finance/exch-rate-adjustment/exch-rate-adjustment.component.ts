@@ -20,7 +20,7 @@ function lastMonthEnd(): string {
 }
 
 /**
- * Adjust Exchange Rates. Mirrors Business Central report 596 with page 106 underneath: revalue
+ * Adjust Exchange Rates.with page 106 underneath: revalue
  * what is open in foreign currencies at the rate on the ending date, preview the gains and losses,
  * post them, and see what earlier runs adjusted.
  */

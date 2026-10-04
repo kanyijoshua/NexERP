@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
 /// Saved sets of journal lines that can be dropped into a batch again.
-/// Mirrors Business Central's Standard General Journals (tables 750 and 751).
 /// </summary>
 [Authorize(ErpPermissions.Journals.Default)]
 public class StandardJournalAppService : ErpAppService, IStandardJournalAppService
@@ -72,7 +71,7 @@ public class StandardJournalAppService : ErpAppService, IStandardJournalAppServi
 
         var code = input.Code.Trim().ToUpperInvariant();
 
-        // Saving again under the same code replaces the stored lines, as BC's Save does.
+        // Saving again under the same code replaces the stored lines.
         var journal = await _standardJournalRepository.FindAsync(j =>
             j.JournalTemplateName == batch.JournalTemplateName && j.Code == code
         );

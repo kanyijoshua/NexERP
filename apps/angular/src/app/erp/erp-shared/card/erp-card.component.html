@@ -1,5 +1,5 @@
 <div class="erp-card-page">
-  <!-- Card Header Toolbar (Business Central Action Bar) -->
+  <!-- Card Header Toolbar -->
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <div class="me-auto">
       @if (breadcrumb) {
@@ -60,7 +60,7 @@
         }
       }
 
-      <!-- FactBox Toggle Button (BC Alt+F2) -->
+      <!-- FactBox Toggle Button -->
       @if (showFactBoxToggle && (factBoxGroups.length > 0 || hasFactBoxSlot)) {
         <button
           type="button"
@@ -93,7 +93,7 @@
       <ng-content></ng-content>
     </div>
 
-    <!-- Right FactBox Pane (Business Central FactBox Pane) -->
+    <!-- Right FactBox Pane -->
     @if (showFactBox && (factBoxGroups.length > 0 || hasFactBoxSlot)) {
       <div class="col-12 col-xl-4 erp-factbox-pane">
         <!-- Built-in FactBox groups -->

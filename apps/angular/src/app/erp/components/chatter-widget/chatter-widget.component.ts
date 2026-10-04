@@ -11,7 +11,7 @@ interface TimelineItem {
 }
 
 /**
- * Odoo-style chatter: the notes people wrote and what the system did to the record
+ * Chatter: the notes people wrote and what the system did to the record
  * (approval requests, status changes), merged into one timeline, newest first.
  */
 @Component({

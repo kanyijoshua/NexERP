@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// VAT Business Posting Group. Mirrors Business Central table 323: how a customer or vendor is
+/// VAT Business Posting Group: how a customer or vendor is
 /// taxed (domestic, EU, export), the row key of the VAT Posting Setup.
 /// </summary>
 public class VatBusinessPostingGroup : PostingGroupBase
@@ -17,7 +17,7 @@ public class VatBusinessPostingGroup : PostingGroupBase
 }
 
 /// <summary>
-/// VAT Product Posting Group. Mirrors Business Central table 324: the VAT rate class of an item or
+/// VAT Product Posting Group: the VAT rate class of an item or
 /// G/L account (standard, reduced, zero), the column key of the VAT Posting Setup.
 /// </summary>
 public class VatProductPostingGroup : PostingGroupBase
@@ -29,7 +29,7 @@ public class VatProductPostingGroup : PostingGroupBase
 }
 
 /// <summary>
-/// VAT Posting Setup. Mirrors Business Central table 325: per business and product VAT group, the
+/// VAT Posting Setup: per business and product VAT group, the
 /// rate, how it is calculated and the accounts the VAT posts to. Either key may be blank.
 /// </summary>
 public class VatPostingSetup : CompanyEntity

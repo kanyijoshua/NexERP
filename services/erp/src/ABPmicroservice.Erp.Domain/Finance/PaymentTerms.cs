@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Payment Terms. Mirrors Business Central table 3: when an invoice falls due and when a payment
+/// Payment Terms: when an invoice falls due and when a payment
 /// discount runs out, as date formulas on the document date ("30D", "CM+15D").
 /// </summary>
 public class PaymentTerms : CodeTableEntity
@@ -18,6 +18,9 @@ public class PaymentTerms : CodeTableEntity
     public string DueDateCalculation { get; private set; }
     public string DiscountDateCalculation { get; private set; }
     public decimal DiscountPercent { get; private set; }
+
+    /// <summary>Calc. Pmt. Disc. on Cr. Memos.</summary>
+    public bool CalcPmtDiscOnCrMemos { get; private set; }
 
     protected PaymentTerms() { }
 
@@ -65,6 +68,12 @@ public class PaymentTerms : CodeTableEntity
         }
 
         return trimmed;
+    }
+
+    /// <summary>The card fields beyond those the posting routines read.</summary>
+    public void SetAdditionalFields(bool calcPmtDiscOnCrMemos)
+    {
+        CalcPmtDiscOnCrMemos = calcPmtDiscOnCrMemos;
     }
 }
 

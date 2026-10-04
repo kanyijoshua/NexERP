@@ -43,7 +43,7 @@ public sealed class ExportFile
 /// <summary>
 /// Turns rows into a file people can open.
 /// <para>
-/// Business Central exports its configuration packages to Excel; Odoo's list views export to CSV
+/// Configuration packages export to Excel; list views export to CSV
 /// or XLSX with a chosen set of fields. Both are the same job, so every export in this system —
 /// a table, a report, a filtered list — comes through here and comes out consistent.
 /// </para>

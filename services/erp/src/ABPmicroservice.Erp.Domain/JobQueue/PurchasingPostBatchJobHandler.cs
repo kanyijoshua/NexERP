@@ -16,7 +16,6 @@ public class PurchasingPostBatchParameters
 
 /// <summary>
 /// Background job that batch posts released purchase invoices.
-/// Mirrors Business Central Report 496 "Batch Post Purchase Invoices".
 /// </summary>
 public class PurchasingPostBatchJobHandler : IJobHandler, ITransientDependency
 {

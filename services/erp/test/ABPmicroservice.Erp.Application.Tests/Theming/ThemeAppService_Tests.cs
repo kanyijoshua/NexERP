@@ -15,7 +15,7 @@ public class ThemeAppService_Tests : ErpApplicationTestBase
     }
 
     [Fact]
-    public async Task Starts_From_The_Odoo_Inspired_Defaults()
+    public async Task Starts_From_The_Default_Colours()
     {
         await _theme.ResetAsync();
 

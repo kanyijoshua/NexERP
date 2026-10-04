@@ -8,7 +8,7 @@ using Volo.Abp.Application.Services;
 
 namespace ABPmicroservice.Erp.HumanResources;
 
-/// <summary>Human Resources Setup (BC page 5233).</summary>
+/// <summary>Human Resources Setup.</summary>
 public class HumanResourcesSetupDto
 {
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
@@ -84,6 +84,29 @@ public class EmployeeDto : FullAuditedEntityDto<Guid>
     public string Iban { get; set; }
     public string SalespersPurchCode { get; set; }
     public bool Blocked { get; set; }
+
+    public string Initials { get; set; }
+    public string SearchName { get; set; }
+    public string Address2 { get; set; }
+    public string County { get; set; }
+    public EmployeeGender Gender { get; set; }
+    public string Extension { get; set; }
+    public string FaxNo { get; set; }
+    public string Pager { get; set; }
+    public string ManagerNo { get; set; }
+    public string StatisticsGroupCode { get; set; }
+    public string CauseOfInactivityCode { get; set; }
+    public string GlobalDimension1Code { get; set; }
+    public string GlobalDimension2Code { get; set; }
+    public string AltAddressCode { get; set; }
+    public DateTime? AltAddressStartDate { get; set; }
+    public DateTime? AltAddressEndDate { get; set; }
+    public string BankBranchNo { get; set; }
+    public string SwiftCode { get; set; }
+    public string CurrencyCode { get; set; }
+    public ApplicationMethod ApplicationMethod { get; set; }
+    public string UnionMembershipNo { get; set; }
+    public bool PrivacyBlocked { get; set; }
 }
 
 public class CreateUpdateEmployeeDto
@@ -159,6 +182,67 @@ public class CreateUpdateEmployeeDto
 
     [StringLength(ErpDomainConsts.MaxCodeLength)]
     public string SalespersPurchCode { get; set; }
+
+    [StringLength(30)]
+    public string Initials { get; set; }
+
+    [StringLength(250)]
+    public string SearchName { get; set; }
+
+    [StringLength(50)]
+    public string Address2 { get; set; }
+
+    [StringLength(30)]
+    public string County { get; set; }
+
+    public EmployeeGender Gender { get; set; }
+
+    [StringLength(30)]
+    public string Extension { get; set; }
+
+    [StringLength(30)]
+    public string FaxNo { get; set; }
+
+    [StringLength(30)]
+    public string Pager { get; set; }
+
+    [StringLength(20)]
+    public string ManagerNo { get; set; }
+
+    [StringLength(10)]
+    public string StatisticsGroupCode { get; set; }
+
+    [StringLength(10)]
+    public string CauseOfInactivityCode { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension1Code { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension2Code { get; set; }
+
+    [StringLength(10)]
+    public string AltAddressCode { get; set; }
+
+    public DateTime? AltAddressStartDate { get; set; }
+
+    public DateTime? AltAddressEndDate { get; set; }
+
+    [StringLength(20)]
+    public string BankBranchNo { get; set; }
+
+    [StringLength(20)]
+    public string SwiftCode { get; set; }
+
+    [StringLength(10)]
+    public string CurrencyCode { get; set; }
+
+    public ApplicationMethod ApplicationMethod { get; set; }
+
+    [StringLength(30)]
+    public string UnionMembershipNo { get; set; }
+
+    public bool PrivacyBlocked { get; set; }
 }
 
 public class GetEmployeeListInput : ErpPagedListInput
@@ -267,7 +351,7 @@ public class GetEmployeeLedgerEntryListInput : ErpPagedListInput
     public bool OnlyOpen { get; set; }
 }
 
-/// <summary>Employee Ledger Entries (BC page 5237): expense claims and the payouts that settle them.</summary>
+/// <summary>Employee Ledger Entries: expense claims and the payouts that settle them.</summary>
 public interface IEmployeeLedgerEntryAppService : IApplicationService
 {
     Task<PagedResultDto<EmployeeLedgerEntryDto>> GetListAsync(GetEmployeeLedgerEntryListInput input);

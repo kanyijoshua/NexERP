@@ -15,7 +15,6 @@ public enum ActivityCueTone
 
 /// <summary>
 /// One figure on the home page, with somewhere to go when it is clicked.
-/// Mirrors a cue on a Business Central Role Center.
 /// </summary>
 public class ActivityCueDto
 {
@@ -57,8 +56,8 @@ public class HomeSummaryDto
 }
 
 /// <summary>
-/// The landing page. Mirrors a Business Central Role Center — activities first, with the apps you
-/// can open laid out as tiles the way Odoo's home does it.
+/// The landing page: activities first, with the apps you
+/// can open laid out as tiles.
 /// </summary>
 public interface IHomeAppService : IApplicationService
 {

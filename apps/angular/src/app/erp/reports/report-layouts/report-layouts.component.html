@@ -38,6 +38,15 @@
       <button
         *abpPermission="'Erp.ReportLayouts.Manage'"
         type="button"
+        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 px-3"
+        (click)="openImport()"
+      >
+        <i class="fas fa-file-import"></i>
+        <span>{{ 'Erp::ImportRdlc' | abpLocalization }}</span>
+      </button>
+      <button
+        *abpPermission="'Erp.ReportLayouts.Manage'"
+        type="button"
         class="btn btn-sm btn-primary d-inline-flex align-items-center gap-2 shadow-sm px-3"
         (click)="openCreate()"
       >
@@ -769,7 +778,7 @@
   <ng-template #abpFooter>
     <div class="d-flex align-items-center justify-content-between w-100">
       <div class="text-muted small">
-        <i class="fas fa-shield-alt text-success me-1"></i>Template syntax verified against Business Central report engine
+        <i class="fas fa-shield-alt text-success me-1"></i>Template syntax verified against the report engine
       </div>
       <div class="d-flex align-items-center gap-2">
         <button type="button" class="btn btn-outline-secondary px-3" abpClose>
@@ -785,6 +794,77 @@
         </abp-button>
       </div>
     </div>
+  </ng-template>
+</abp-modal>
+
+<!-- RDLC import -->
+<abp-modal [(visible)]="isImportOpen" [busy]="isImporting">
+  <ng-template #abpHeader>
+    <div class="d-flex align-items-center gap-2">
+      <i class="fas fa-file-import text-primary"></i>
+      <h5 class="modal-title mb-0">{{ 'Erp::ImportRdlc' | abpLocalization }}</h5>
+    </div>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <p class="form-text mt-0 text-muted">{{ 'Erp::ImportRdlcHelp' | abpLocalization }}</p>
+
+    @if (!importResult) {
+      <div class="mb-3">
+        <label class="form-label" for="rdlc-report">{{ 'Erp::ReportName' | abpLocalization }} *</label>
+        <select id="rdlc-report" class="form-select" [(ngModel)]="importReportName">
+          <option value=""></option>
+          <option *ngFor="let report of reportNames" [value]="report.name">
+            {{ report.displayName }}
+          </option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="rdlc-file">{{ 'Erp::RdlcFile' | abpLocalization }} *</label>
+        <input
+          id="rdlc-file"
+          type="file"
+          class="form-control"
+          accept=".rdl,.rdlc"
+          (change)="onImportFileChange($event)"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="rdlc-name">{{ 'Erp::LayoutName' | abpLocalization }} *</label>
+        <input id="rdlc-name" type="text" class="form-control" maxlength="20" [(ngModel)]="importLayoutName" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="rdlc-description">{{ 'Erp::Description' | abpLocalization }}</label>
+        <input id="rdlc-description" type="text" class="form-control" maxlength="250" [(ngModel)]="importDescription" />
+      </div>
+      <div class="form-check">
+        <input id="rdlc-default" type="checkbox" class="form-check-input" [(ngModel)]="importSetAsDefault" />
+        <label class="form-check-label" for="rdlc-default">{{ 'Erp::IsDefaultLayout' | abpLocalization }}</label>
+      </div>
+    } @else {
+      <div class="alert alert-success py-2">
+        {{ 'Erp::RdlcColumnsMatched' | abpLocalization: importResult.matchedColumns }}
+      </div>
+      @if (importResult.notes?.length) {
+        <h6 class="fw-semibold">{{ 'Erp::RdlcConversionNotes' | abpLocalization }}</h6>
+        <ul class="small text-muted mb-0">
+          @for (note of importResult.notes; track $index) {
+            <li>{{ note }}</li>
+          }
+        </ul>
+      }
+    }
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>
+      {{ 'AbpUi::Close' | abpLocalization }}
+    </button>
+    @if (!importResult) {
+      <button type="button" class="btn btn-primary" [disabled]="!canImport || isImporting" (click)="importRdlc()">
+        <i class="fas fa-file-import me-1"></i>{{ 'Erp::ImportRdlc' | abpLocalization }}
+      </button>
+    }
   </ng-template>
 </abp-modal>
 

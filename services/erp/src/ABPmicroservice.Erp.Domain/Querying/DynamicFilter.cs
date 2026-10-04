@@ -17,7 +17,7 @@ public class DynamicFilterCondition
     /// <summary>
     /// contains, notContains, equals, notEquals, startsWith, endsWith, isEmpty, isNotEmpty, gt, gte,
     /// lt, lte, between, before, after, today, thisWeek, thisMonth, thisYear, isTrue, isFalse, or
-    /// expression (a Business Central filter such as <c>1000..2000|3000</c>).
+    /// expression (a filter expression such as <c>1000..2000|3000</c>).
     /// </summary>
     public string Operator { get; set; }
 
@@ -28,8 +28,8 @@ public class DynamicFilterCondition
 }
 
 /// <summary>
-/// The filter a list page sends with its query. Mirrors Business Central's filter pane and
-/// Odoo's custom filters: any number of conditions on the list's fields, all or any of which must
+/// The filter a list page sends with its query:
+/// any number of conditions on the list's fields, all or any of which must
 /// hold. It travels as JSON in the list input's <c>DynamicFilter</c>.
 /// </summary>
 public class DynamicFilter
@@ -302,7 +302,7 @@ public static class DynamicFilterBuilder
                 "endsWith" => Expression.Call(lower, EndsWithMethod, Const(value)),
                 "equals" => Expression.Equal(lower, Const(value)),
                 "notEquals" => Expression.NotEqual(lower, Const(value)),
-                // Codes and numbers are compared as text, as BC does for a range like 1000..2000.
+                // Codes and numbers are compared as text for a range like 1000..2000.
                 "gt" => Expression.GreaterThan(Compare(value), Expression.Constant(0)),
                 "gte" => Expression.GreaterThanOrEqual(Compare(value), Expression.Constant(0)),
                 "lt" => Expression.LessThan(Compare(value), Expression.Constant(0)),
@@ -383,7 +383,7 @@ public static class DynamicFilterBuilder
             Expression Before(DateTime day) => Expression.LessThan(_member, Expression.Constant(day, _type));
             Expression Day(DateTime day) => Expression.AndAlso(From(day), Before(day.AddDays(1)));
 
-            // Weeks start on Monday, as in Business Central.
+            // Weeks start on Monday.
             var weekStart = _today.AddDays(-(((int)_today.DayOfWeek + 6) % 7));
             var monthStart = new DateTime(_today.Year, _today.Month, 1);
             var yearStart = new DateTime(_today.Year, 1, 1);
@@ -409,7 +409,7 @@ public static class DynamicFilterBuilder
         }
 
         /// <summary>
-        /// A Business Central filter expression: terms separated by <c>|</c> (or) and <c>&amp;</c>
+        /// A filter expression: terms separated by <c>|</c> (or) and <c>&amp;</c>
         /// (and); each term a value, a range <c>a..b</c>, a comparison (<c>&lt;&gt;</c>, <c>&gt;=</c>,
         /// <c>&lt;=</c>, <c>&gt;</c>, <c>&lt;</c>, <c>=</c>), a wildcard <c>*</c> on text, or
         /// <c>''</c> for blank. <c>@</c> (ignore case) is accepted; text is compared ignoring case anyway.
@@ -502,7 +502,7 @@ public static class DynamicFilterBuilder
             return condition ?? Expression.Constant(true);
         }
 
-        // BC's date shortcut: t is today (work date).
+        // The date shortcut: t is today (work date).
         private string Keyword(string value) =>
             _underlying == typeof(DateTime) && value.ToLowerInvariant() is "t" or "today"
                 ? _today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)

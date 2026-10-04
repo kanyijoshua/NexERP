@@ -5,7 +5,7 @@ namespace ABPmicroservice.Erp.Companies;
 
 /// <summary>
 /// A company table keyed by a short code with a description: posting groups, payment terms,
-/// causes of absence and the like. Codes are upper case, as Business Central's Code fields are,
+/// causes of absence and the like. Codes are upper case,
 /// so a lookup never misses by case.
 /// </summary>
 public abstract class CodeTableEntity : CompanyEntity
@@ -22,7 +22,7 @@ public abstract class CodeTableEntity : CompanyEntity
         SetDescription(description);
     }
 
-    /// <summary>The length of the BC Code field, 20 unless the table says otherwise (10 for currencies, locations).</summary>
+    /// <summary>The length of the Code field, 20 unless the table says otherwise (10 for currencies, locations).</summary>
     protected virtual int MaxCodeLength => ErpDomainConsts.MaxCodeLength;
 
     public void SetCode(string code)

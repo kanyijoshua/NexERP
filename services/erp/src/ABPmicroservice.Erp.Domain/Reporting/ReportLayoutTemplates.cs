@@ -3,7 +3,7 @@ namespace ABPmicroservice.Erp.Reporting;
 /// <summary>
 /// The layout every report prints through until someone customises it.
 /// <para>
-/// Business Central ships a built-in layout per report and lets a user download it as the starting
+/// Every report has a built-in layout a user can download as the starting
 /// point for their own. This is that starting point: it uses every placeholder the language has,
 /// so a user editing a copy can see what is available without reading documentation.
 /// </para>

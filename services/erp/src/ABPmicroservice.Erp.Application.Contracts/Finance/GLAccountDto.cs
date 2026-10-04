@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System;
 using Volo.Abp.Application.Dtos;
 
@@ -34,6 +35,12 @@ public class GLAccountDto : FullAuditedEntityDto<Guid>
     public string CostTypeNo { get; set; }
     public string DefaultDeferralTemplateCode { get; set; }
     public bool OmitDefaultDescrInJnl { get; set; }
+
+    public string GlobalDimension1Code { get; set; }
+    public string GlobalDimension2Code { get; set; }
+    public int Indentation { get; set; }
+    public int NoOfBlankLines { get; set; }
+    public bool NewPage { get; set; }
 }
 
 public class CreateUpdateGLAccountDto
@@ -64,6 +71,18 @@ public class CreateUpdateGLAccountDto
     public string CostTypeNo { get; set; }
     public string DefaultDeferralTemplateCode { get; set; }
     public bool OmitDefaultDescrInJnl { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension1Code { get; set; }
+
+    [StringLength(20)]
+    public string GlobalDimension2Code { get; set; }
+
+    public int Indentation { get; set; }
+
+    public int NoOfBlankLines { get; set; }
+
+    public bool NewPage { get; set; }
 }
 
 public class GetGLAccountListInput : ErpPagedListInput

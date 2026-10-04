@@ -6,7 +6,6 @@ namespace ABPmicroservice.Erp.JobQueue;
 
 /// <summary>
 /// Historical record of a job queue execution.
-/// Mirrors Business Central Table 474 "Job Queue Log Entry".
 /// </summary>
 public class JobQueueLogEntry : CompanyEntity
 {
@@ -22,16 +21,16 @@ public class JobQueueLogEntry : CompanyEntity
     public int ProcessedRecords { get; private set; }
     public string OutputDetails { get; private set; }
 
-    /// <summary>User ID that ran or scheduled this execution. Mirrors BC Field 3 "User ID".</summary>
+    /// <summary>User ID that ran or scheduled this execution.</summary>
     public string UserId { get; private set; }
 
-    /// <summary>Job queue category code. Mirrors BC Field 17 "Job Queue Category Code".</summary>
+    /// <summary>Job queue category code.</summary>
     public string CategoryCode { get; private set; }
 
-    /// <summary>Execution parameter payload. Mirrors BC Field 19 "Parameter String".</summary>
+    /// <summary>Execution parameter payload.</summary>
     public string ParameterString { get; private set; }
 
-    /// <summary>Background system task GUID. Mirrors BC Field 22 "System Task Id".</summary>
+    /// <summary>Background system task GUID.</summary>
     public Guid? SystemTaskId { get; private set; }
 
     protected JobQueueLogEntry() { }

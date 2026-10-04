@@ -164,7 +164,10 @@ public class ReportLayoutAppService_Tests : ErpApplicationTestBase
             DefaultCompanyName,
             () => _layouts.GetListAsync(new GetReportLayoutsInput { ReportName = Report })
         );
-        list.Items.ShouldBeEmpty();
+        // The layout that ships for the report is still offered; the deleted one is gone and
+        // nothing is left chosen, so the report prints through the built-in layout again.
+        list.Items.ShouldNotContain(l => l.Id == created.Id);
+        list.Items.ShouldAllBe(l => !l.IsDefault);
 
         (await PrintAsync(ReportKind.TrialBalance)).ShouldStartWith("<!DOCTYPE html>");
     }

@@ -15,7 +15,7 @@ namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
 /// What one posting run shares: its register, its transaction number and its source codes.
-/// Mirrors the state Business Central keeps in codeunit 12 between lines.
+/// This is the state kept between lines.
 /// </summary>
 public sealed class GLPostingContext
 {
@@ -37,7 +37,6 @@ public sealed class GLPostingContext
 
 /// <summary>
 /// Core General Journal Posting Engine.
-/// Mirrors Business Central Codeunit 12 "Gen. Jnl.-Post Line".
 /// <para>
 /// A customer, vendor, bank or employee line writes two rows, not one: the subledger entry and the
 /// G/L entry on the control account taken from the posting group. Without the second, a posted
@@ -537,7 +536,7 @@ public class GenJnlPostLine : DomainService
 
     /// <summary>
     /// An employee side: an expense claim (credit) or a payout (debit) on the employee's ledger,
-    /// and the same on the employee posting group's payables account. Mirrors BC's employee lines.
+    /// and the same on the employee posting group's payables account.
     /// </summary>
     private async Task PostEmployeeEntryAsync(LineContext line, Side side)
     {
@@ -660,7 +659,7 @@ public class GenJnlPostLine : DomainService
                 .WithData("postingGroup", bankAccount.BankAccPostingGroup ?? "");
     }
 
-    /// <summary>The due date the party's payment terms give a document of this date (BC "Due Date Calculation").</summary>
+    /// <summary>The due date the party's payment terms give a document of this date.</summary>
     private async Task<DateTime> DueDateAsync(string paymentTermsCode, DateTime documentDate, DateTime postingDate)
     {
         var baseDate = documentDate == default ? postingDate : documentDate;

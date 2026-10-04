@@ -55,7 +55,7 @@
   @if (form) {
     <form (ngSubmit)="save()">
       <erp-record-form idPrefix="dlg" [entity]="entity" [form]="form" [record]="record" [quick]="quick"></erp-record-form>
-      <!-- Enter in a text field saves, as it does in Odoo's quick create. -->
+      <!-- Enter in a text field saves. -->
       <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
     </form>
   }

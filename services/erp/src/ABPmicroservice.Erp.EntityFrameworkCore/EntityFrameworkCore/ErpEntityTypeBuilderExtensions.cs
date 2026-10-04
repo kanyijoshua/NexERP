@@ -10,7 +10,7 @@ namespace ABPmicroservice.Erp.EntityFrameworkCore;
 public static class ErpEntityTypeBuilderExtensions
 {
     /// <summary>
-    /// Unique per tenant and company, as Business Central keys are unique per company.
+    /// Unique per tenant and company.
     /// Soft-deleted rows are excluded so a deleted code can be reused, and NULL tenant
     /// ids (host side) are treated as equal, which PostgreSQL does not do by default.
     /// </summary>

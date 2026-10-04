@@ -1,14 +1,14 @@
 namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
-/// Mirrors Business Central "Totaling Type" on an Acc. Schedule Line (table 85 field 8).
+/// What an account schedule line totals.
 /// </summary>
 public enum AccountScheduleTotalingType
 {
     /// <summary>Sums the posting accounts listed in Totaling, e.g. "1000..1999|2100".</summary>
     PostingAccounts = 0,
 
-    /// <summary>Sums total accounts; evaluated the same way here, kept apart to mirror BC.</summary>
+    /// <summary>Sums total accounts; evaluated the same way here, but kept apart.</summary>
     TotalAccounts = 1,
 
     /// <summary>Adds and subtracts other rows by their row number, e.g. "R10+R20-R30".</summary>
@@ -18,9 +18,6 @@ public enum AccountScheduleTotalingType
     Description = 3,
 }
 
-/// <summary>
-/// Mirrors Business Central "Column Type" on a Column Layout line (table 334 field 4).
-/// </summary>
 public enum ColumnLayoutType
 {
     /// <summary>Movement inside the period.</summary>
@@ -37,7 +34,7 @@ public enum ColumnLayoutType
 }
 
 /// <summary>
-/// Mirrors the "Aged as of" choice on Business Central's Aged Accounts Receivable/Payable reports.
+/// The "Aged as of" choice on the Aged Accounts Receivable/Payable reports.
 /// </summary>
 public enum AgingMethod
 {
@@ -53,7 +50,7 @@ public enum ReportColumnKind
     Date = 2,
 }
 
-/// <summary>Which ledger a balance report reads. Mirrors the BC report request pages.</summary>
+/// <summary>Which ledger a balance report reads.</summary>
 public enum AgedLedgerKind
 {
     Receivables = 0,
@@ -61,8 +58,8 @@ public enum AgedLedgerKind
 }
 
 /// <summary>
-/// Format of a custom report layout. Mirrors the "Type" of Business Central table 9650
-/// "Custom Report Layouts", minus RDLC, which needs the Windows-only report viewer.
+/// Format of a custom report layout. RDLC is not offered,
+/// as it needs the Windows-only report viewer.
 /// <para>
 /// Only <see cref="Html"/> can be rendered today. The other two are kept so a layout uploaded for
 /// them is refused as unsupported rather than silently ignored.

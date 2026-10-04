@@ -24,7 +24,6 @@ public class AccountScheduleRunRequest
 
 /// <summary>
 /// Evaluates an account schedule against a column layout.
-/// Mirrors Business Central codeunit 8 "AccSchedManagement".
 /// <para>
 /// Rows say what to add up (account ranges, or other rows through a formula), columns say over
 /// which period. This is what makes a balance sheet or an income statement something a user

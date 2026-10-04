@@ -9,7 +9,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// Configuration template. Mirrors Business Central tables 8618/8619 "Config. Template Header" and
+/// Configuration template.and
 /// "Config. Template Line": default values for a table's fields, filled into every new record a
 /// package creates when the record leaves them blank. A customer template, for instance, gives
 /// every imported customer the right posting group without each row having to say so.

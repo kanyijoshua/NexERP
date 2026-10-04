@@ -273,7 +273,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   }
 
   /**
-   * Picking an item or G/L account fills the line the way BC's validation of "No." does:
+   * Picking an item or G/L account fills the line, as validating "No." does:
    * description, and for an item its price (sales) or cost (purchases). A new line type clears
    * the number, which pointed into the other table.
    */

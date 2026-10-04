@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Attachments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 
 /// <summary>
 /// Purchase Document Posting Engine.
-/// Mirrors Business Central Codeunit 90 "Purch.-Post".
+///
 /// Atomically posts Purchase Headers to Posted Purchase Invoices, G/L Entries, Vendor Ledger
 /// Entries, VAT Entries and Item Ledger Entries.
 /// <para>
@@ -25,7 +26,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// </summary>
 public class PurchasePostingEngine : DomainService
 {
-    /// <summary>Stamped on every entry the engine posts. Mirrors BC's "PURCHASES" source code.</summary>
+    /// <summary>Stamped on every entry the engine posts.</summary>
     private const string SourceCode = "PURCHASES";
 
     private readonly IRepository<PurchaseHeader, Guid> _purchaseHeaderRepository;
@@ -229,6 +230,11 @@ public class PurchasePostingEngine : DomainService
         // 4. Mark header as posted
         header.MarkPosted(postedDocNo);
         await _purchaseHeaderRepository.UpdateAsync(header);
+
+        // Attachments marked to flow follow the document onto the posted document.
+        await LazyServiceProvider
+            .LazyGetRequiredService<DocumentAttachmentManager>()
+            .FlowToPostedDocumentAsync(nameof(PurchaseHeader), header.Id, nameof(PostedPurchaseHeader), postedHeader.Id, postedHeader.No, purchase: true);
 
         return postedHeader;
     }

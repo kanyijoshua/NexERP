@@ -8,8 +8,7 @@ namespace ABPmicroservice.Erp.Exporting;
 
 /// <summary>
 /// A saved set of columns for a table, so the same export can be repeated without picking the
-/// fields again. Mirrors Odoo's saved export lists, and plays the part Business Central gives to
-/// a configuration package's field selection.
+/// fields again.
 /// </summary>
 public class ExportTemplate : CompanyAggregateRoot
 {

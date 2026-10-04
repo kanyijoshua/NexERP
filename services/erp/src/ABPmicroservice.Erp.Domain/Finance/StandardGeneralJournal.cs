@@ -8,9 +8,9 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Standard General Journal. Mirrors Business Central table 750 "Standard General Journal".
+/// Standard General Journal.
 /// <para>
-/// A saved copy of a batch's lines that can be dropped into the journal again. It is how BC
+/// A saved copy of a batch's lines that can be dropped into the journal again. It
 /// handles a monthly set of entries that is not regular enough to be a recurring journal.
 /// </para>
 /// </summary>
@@ -18,7 +18,7 @@ public class StandardGeneralJournal : CompanyAggregateRoot
 {
     public string JournalTemplateName { get; private set; }
 
-    /// <summary>Business key within the template. Mirrors BC "Code".</summary>
+    /// <summary>Business key within the template.</summary>
     public string Code { get; private set; }
 
     public string Description { get; private set; }
@@ -71,7 +71,7 @@ public class StandardGeneralJournal : CompanyAggregateRoot
 }
 
 /// <summary>
-/// Standard General Journal Line. Mirrors Business Central table 751.
+/// Standard General Journal Line.
 /// It carries no date or document number: those come from the journal it is copied into.
 /// </summary>
 public class StandardGeneralJournalLine : FullAuditedEntity<Guid>

@@ -28,10 +28,10 @@ import { RecordDialogService } from '../record/record-dialog.service';
 import { RecordEntity, RecordEntityRegistry, recordPermission } from '../record/record-entity';
 
 export const LOOKUP_DEBOUNCE_MS = 250;
-/** Records shown in the dropdown of an entity lookup before "Search More..." (Odoo shows 8). */
+/** Records shown in the dropdown of an entity lookup before "Search More...". */
 export const LOOKUP_DROPDOWN_LIMIT = 8;
 
-/** The rows under the records of an entity lookup (Odoo's many2one dropdown footer). */
+/** The rows under the records of an entity lookup. */
 export type LookupAction = 'searchMore' | 'create' | 'createEdit';
 
 /** A row of the dropdown: a record, or one of the actions under them. */
@@ -49,9 +49,9 @@ export interface LookupOption extends LookupItem {
  *
  * The form value is the item's `code` (default) or `id`, see `valueField`.
  *
- * With `entity` (a key of `RecordEntityRegistry`) it becomes a full Odoo many2one / BC table
+ * With `entity` (a key of `RecordEntityRegistry`) it becomes a full table
  * relation: the dropdown ends in "Search More..." (the full list), "Create 'term'" and
- * "Create and edit...", the "…" button opens the full list (BC "Select from full list") and the
+ * "Create and edit...", the "…" button opens the full list and the
  * arrow button opens the chosen record's card, where it can be edited or deleted.
  * `source`, when also given, still decides what the dropdown offers (e.g. only unblocked customers).
  */
@@ -238,12 +238,12 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
     this.select(option);
   }
 
-  /** The "…" button, BC's "Select from full list". */
+  /** The "…" button: "Select from full list". */
   openList(): void {
     this.runAction('searchMore', '');
   }
 
-  /** The arrow button: opens the chosen record's card (Odoo's internal link). */
+  /** The arrow button: opens the chosen record's card. */
   openCard(): void {
     const entity = this.recordEntity;
     if (!entity || this.value === null) {

@@ -16,7 +16,6 @@ import { CrudListBase, ErpTableColumn } from '../../erp-shared';
 
 /**
  * Outbound notifications to other systems, and the log of every call made.
- * Mirrors Business Central's webhook subscriptions.
  */
 @Component({
   selector: 'app-webhooks',

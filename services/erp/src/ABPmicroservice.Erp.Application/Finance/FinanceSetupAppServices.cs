@@ -13,7 +13,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Finance;
 
-/// <summary>Payment Terms (BC page 4).</summary>
+/// <summary>Payment Terms.</summary>
 [Authorize(ErpPermissions.FinanceSetup.Default)]
 public class PaymentTermsAppService
     : CodeTableAppServiceBase<PaymentTerms, PaymentTermsDto, CreateUpdatePaymentTermsDto>,
@@ -28,11 +28,12 @@ public class PaymentTermsAppService
     protected override Task ApplyAsync(PaymentTerms entity, CreateUpdatePaymentTermsDto input)
     {
         entity.SetCalculations(input.DueDateCalculation, input.DiscountDateCalculation, input.DiscountPercent);
+        entity.SetAdditionalFields(input.CalcPmtDiscOnCrMemos);
         return Task.CompletedTask;
     }
 }
 
-/// <summary>Currencies (BC page 5).</summary>
+/// <summary>Currencies.</summary>
 [Authorize(ErpPermissions.FinanceSetup.Default)]
 public class CurrencyAppService
     : CodeTableAppServiceBase<Currency, CurrencyDto, CreateUpdateCurrencyDto>,
@@ -58,10 +59,23 @@ public class CurrencyAppService
         entity.SetAmountRoundingPrecision(input.AmountRoundingPrecision);
         entity.SetGainLossAccounts(input.RealizedGainsAccountNo, input.RealizedLossesAccountNo);
         entity.SetUnrealizedAccounts(input.UnrealizedGainsAccountNo, input.UnrealizedLossesAccountNo);
+        entity.SetAdditionalFields(
+            input.IsoCode,
+            input.IsoNumericCode,
+            input.UnitAmountRoundingPrecision,
+            input.InvoiceRoundingPrecision,
+            input.InvoiceRoundingType,
+            input.ApplnRoundingPrecision,
+            input.AmountDecimalPlaces,
+            input.UnitAmountDecimalPlaces,
+            input.EmuCurrency,
+            input.PaymentTolerancePct,
+            input.MaxPaymentToleranceAmount
+        );
     }
 }
 
-/// <summary>Currency Exchange Rates (BC page 483): one rate per currency and starting date.</summary>
+/// <summary>Currency Exchange Rates: one rate per currency and starting date.</summary>
 [Authorize(ErpPermissions.FinanceSetup.Default)]
 public class CurrencyExchangeRateAppService
     : ErpCrudAppService<
@@ -144,7 +158,7 @@ public class CurrencyExchangeRateAppService
     }
 }
 
-/// <summary>Accounting Periods (BC page 100) with Create Year and Close Year.</summary>
+/// <summary>Accounting Periods with Create Year and Close Year.</summary>
 [Authorize(ErpPermissions.FinanceSetup.Default)]
 public class AccountingPeriodAppService : ErpAppService, IAccountingPeriodAppService
 {
@@ -187,7 +201,7 @@ public class AccountingPeriodAppService : ErpAppService, IAccountingPeriodAppSer
         return new FiscalYearClosedDto { FromDate = from, ToDate = to };
     }
 
-    /// <summary>A period of a closed year stays, as BC keeps closed periods.</summary>
+    /// <summary>A period of a closed year stays.</summary>
     [Authorize(ErpPermissions.FinanceSetup.Delete)]
     public async Task DeleteAsync(Guid id)
     {

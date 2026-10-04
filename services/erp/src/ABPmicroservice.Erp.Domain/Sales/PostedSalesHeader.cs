@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Posted Sales Invoice Header. Mirrors Business Central table 112 "Sales Invoice Header".
+/// Posted Sales Invoice Header.
 /// Immutable historical posted document.
 /// </summary>
 public class PostedSalesHeader : CompanyBasicEntity
@@ -63,7 +63,7 @@ public class PostedSalesHeader : CompanyBasicEntity
 }
 
 /// <summary>
-/// Posted Sales Invoice Line. Mirrors Business Central table 113 "Sales Invoice Line".
+/// Posted Sales Invoice Line.
 /// </summary>
 public class PostedSalesLine : Entity<Guid>
 {

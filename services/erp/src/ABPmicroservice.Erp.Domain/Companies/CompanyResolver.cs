@@ -27,8 +27,8 @@ public class TenantCompaniesCacheItem
 }
 
 /// <summary>
-/// Decides which company a request runs in. Business Central picks the company at sign-in;
-/// here the client names it per request and the tenant's default company is the fallback.
+/// Decides which company a request runs in.
+/// The client names it per request and the tenant's default company is the fallback.
 /// </summary>
 public class CompanyResolver : DomainService
 {

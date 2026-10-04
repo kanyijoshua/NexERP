@@ -22,8 +22,7 @@ interface TemplateDraft {
 }
 
 /**
- * Configuration templates: default values a new record takes. Mirrors Business Central page 8618
- * "Config. Template Header" with its lines.
+ * Configuration templates: default values a new record takes.* "Config. Template Header" with its lines.
  */
 @Component({
     selector: 'app-config-templates',

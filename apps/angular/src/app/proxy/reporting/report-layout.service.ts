@@ -1,7 +1,9 @@
 import type {
   CreateUpdateReportLayoutDto,
   GetReportLayoutsInput,
+  ImportRdlcLayoutInput,
   PreviewReportLayoutInput,
+  RdlcImportResultDto,
   ReportLayoutDetailDto,
   ReportLayoutDto,
   ReportNameDto,
@@ -70,6 +72,16 @@ export class ReportLayoutService {
       {
         method: 'GET',
         url: '/api/erp/report-layout/report-names',
+      },
+      { apiName: this.apiName, ...config },
+    );
+
+  importRdlc = (input: ImportRdlcLayoutInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, RdlcImportResultDto>(
+      {
+        method: 'POST',
+        url: '/api/erp/report-layout/import-rdlc',
+        body: input,
       },
       { apiName: this.apiName, ...config },
     );

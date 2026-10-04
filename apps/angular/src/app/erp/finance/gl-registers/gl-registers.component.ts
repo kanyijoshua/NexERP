@@ -8,7 +8,7 @@ import { CompanyService } from '../../services/company.service';
 
 /**
  * G/L registers: what each posting run wrote, and the action that undoes it.
- * Mirrors Business Central page 116 together with its Reverse Transaction action.
+ *together with its Reverse Transaction action.
  */
 @Component({
   selector: 'app-gl-registers',

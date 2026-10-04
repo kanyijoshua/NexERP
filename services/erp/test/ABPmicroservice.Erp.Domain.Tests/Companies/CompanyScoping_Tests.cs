@@ -15,7 +15,7 @@ namespace ABPmicroservice.Erp.Companies;
 public class CompanyScoping_Tests : ErpDomainTestBase
 {
     /// <summary>The chart of accounts the seeder gives every company: 7 core accounts, 3 VAT accounts, employee payables.</summary>
-    private const int SeededAccountCount = 15;
+    private const int SeededAccountCount = 31;
 
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<GLAccount, Guid> _glAccountRepository;

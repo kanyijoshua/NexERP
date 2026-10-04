@@ -2,8 +2,7 @@ namespace ABPmicroservice.Erp.JobQueue;
 
 /// <summary>
 /// Status of a job queue entry.
-/// Mirrors Business Central Table 472 "Job Queue Entry" Status (Ready, In Process, Error, On Hold, Finished)
-/// and Odoo queue.job states.
+///Status (Ready, In Process, Error, On Hold, Finished)
 /// </summary>
 public enum JobQueueStatus
 {
@@ -25,7 +24,7 @@ public enum JobQueueStatus
 
 /// <summary>
 /// Status of an execution in the job queue log.
-/// Mirrors Business Central Table 474 "Job Queue Log Entry" Status.
+///Status.
 /// </summary>
 public enum JobQueueLogStatus
 {
@@ -36,7 +35,6 @@ public enum JobQueueLogStatus
 
 /// <summary>
 /// Frequency interval unit for recurring jobs.
-/// Combines Business Central "No. of Minutes between Runs" with Odoo ir.cron "interval_type".
 /// </summary>
 public enum JobQueueIntervalType
 {

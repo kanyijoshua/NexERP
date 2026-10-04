@@ -70,7 +70,7 @@ public sealed class ConfigApplyRequest
     /// <summary>Defaults for what a new record leaves blank.</summary>
     public ConfigTemplate Template { get; init; }
 
-    /// <summary>Check everything, write nothing: BC's "Validate Package", Odoo's "Test".</summary>
+    /// <summary>Check everything, write nothing.</summary>
     public bool DryRun { get; init; }
 }
 
@@ -118,12 +118,12 @@ public sealed class ConfigApplyContext
 /// Validates and writes records into one table: the engine behind applying a configuration package
 /// and behind the import wizard.
 /// <para>
-/// For each record it does what Business Central's RapidStart does when it applies a package:
+/// For each record it does what applying a package takes:
 /// translate values through the field mappings, find the existing record by its primary key,
 /// fill a new one from the data template, check every value against its type, length and table
 /// relation, and then insert or modify. Errors are collected per field rather than stopping the
-/// run; the caller decides whether to write the good records anyway (a package, as in BC) or
-/// nothing at all (the import wizard, as in Odoo).
+/// run; the caller decides whether to write the good records anyway (a package) or
+/// nothing at all (the import wizard).
 /// </para>
 /// </summary>
 public class ConfigRecordApplier : DomainService

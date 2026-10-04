@@ -49,7 +49,7 @@ public class CustomerAppService
 
     public override async Task<CustomerDto> CreateAsync(CreateUpdateCustomerDto input)
     {
-        // Blank takes the next number of the Customer Nos. series (BC: InitSeries).
+        // Blank takes the next number of the Customer Nos. series.
         var setup = await _setupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.CustomerNos, input.No, Clock.Now);
 
@@ -101,7 +101,7 @@ public class CustomerAppService
         await Repository.UpdateAsync(customer, autoSave: true);
     }
 
-    /// <summary>A posting group on the card must exist (BC TableRelation); blank means none.</summary>
+    /// <summary>A posting group on the card must exist; blank means none.</summary>
     private async Task EnsurePostingGroupsExistAsync(CreateUpdateCustomerDto input)
     {
         var codes = LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>();
@@ -128,6 +128,40 @@ public class CustomerAppService
         customer.SetVatBusPostingGroup(input.VatBusPostingGroup);
         customer.SetSalespersonCode(input.SalespersonCode);
         customer.SetPaymentMethodCode(input.PaymentMethodCode);
+        customer.SetAdditionalFields(
+            input.SearchName,
+            input.Name2,
+            input.Address2,
+            input.County,
+            input.Contact,
+            input.MobilePhoneNo,
+            input.HomePage,
+            input.VatRegistrationNo,
+            input.RegistrationNumber,
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.LanguageCode,
+            input.LocationCode,
+            input.ShipmentMethodCode,
+            input.ResponsibilityCenter,
+            input.CustomerPriceGroup,
+            input.CustomerDiscGroup,
+            input.InvoiceDiscCode,
+            input.FinChargeTermsCode,
+            input.ReminderTermsCode,
+            input.ApplicationMethod,
+            input.PricesIncludingVat,
+            input.TaxAreaCode,
+            input.TaxLiable,
+            input.BlockPaymentTolerance,
+            input.PrepaymentPct,
+            input.PrintStatements,
+            input.LastStatementNo,
+            input.CombineShipments,
+            input.PreferredBankAccountCode,
+            input.PrimaryContactNo,
+            input.PrivacyBlocked
+        );
     }
 
     protected override async Task<IQueryable<Customer>> CreateFilteredQueryAsync(
@@ -136,7 +170,7 @@ public class CustomerAppService
     {
         var query = await base.CreateFilteredQueryAsync(input);
 
-        // Lower-cased on both sides: lookups search the way Odoo's ilike does, on any provider.
+        // Lower-cased on both sides: lookups search case-insensitively, on any provider.
         var filter = input.Filter?.Trim().ToLower();
 
         return query

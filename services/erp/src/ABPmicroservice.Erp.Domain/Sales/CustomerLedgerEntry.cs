@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Customer Ledger Entry. Mirrors Business Central table 21 "Cust. Ledger Entry".
+/// Customer Ledger Entry.
 /// Immutable subledger entry tracking accounts receivable balances per customer.
 /// </summary>
 public class CustomerLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
@@ -36,7 +36,7 @@ public class CustomerLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
     public bool Open { get; internal set; }
     public Guid DimensionSetId { get; private set; }
 
-    /// <summary>Groups the entries of one posting run. Mirrors BC "Transaction No.".</summary>
+    /// <summary>Groups the entries of one posting run.</summary>
     public long TransactionNo { get; internal set; }
 
     public long RegisterNo { get; internal set; }

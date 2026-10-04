@@ -54,8 +54,7 @@ public class VatSettlementResult
 }
 
 /// <summary>
-/// Calculates and posts the VAT settlement. Mirrors Business Central report 20 "Calc. and Post VAT
-/// Settlement": the open VAT entries of the period are closed, each VAT account is cleared of
+/// Calculates and posts the VAT settlement: the open VAT entries of the period are closed, each VAT account is cleared of
 /// them, and the net lands on the settlement account as one amount owed to or reclaimable from
 /// the tax authority.
 /// </summary>
@@ -278,8 +277,8 @@ public class VatReturnResult
 }
 
 /// <summary>
-/// Calculates the VAT return from the VAT entries. Mirrors Business Central's VAT Statement
-/// (page 317) with a fixed layout rather than user-defined statement lines.
+/// Calculates the VAT return from the VAT entries. A VAT Statement
+/// with a fixed layout rather than user-defined statement lines.
 /// </summary>
 public class VatReturnEngine : DomainService
 {

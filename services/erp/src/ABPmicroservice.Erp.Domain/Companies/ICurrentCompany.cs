@@ -7,7 +7,7 @@ namespace ABPmicroservice.Erp.Companies;
 
 /// <summary>
 /// Ambient Company Context, shaped like ABP's ICurrentTenant.
-/// Business Central scopes every table by company; this is the equivalent selector.
+/// Every table is scoped by company; this is the selector.
 /// </summary>
 public interface ICurrentCompany
 {

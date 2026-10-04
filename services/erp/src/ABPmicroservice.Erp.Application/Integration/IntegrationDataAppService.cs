@@ -12,7 +12,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
-/// The endpoint other systems read from. It plays the part of Business Central's OData service:
+/// The endpoint other systems read from. It plays the part of an OData service:
 /// one named service per published table, with field selection, filters, ordering and paging.
 /// <para>
 /// Callers use the same OAuth tokens as the rest of the API. Three things have to line up before

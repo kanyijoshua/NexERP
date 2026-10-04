@@ -7,7 +7,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Workflows;
 
 /// <summary>
-/// Approval workflow definition. Mirrors Business Central table 1501 "Workflow", narrowed to the
+/// Approval workflow definition., narrowed to the
 /// approval templates ("Sales Invoice Approval Workflow" and its siblings): the event condition
 /// is an amount threshold and the response is "Create an approval request" with an approver limit type.
 /// </summary>
@@ -50,7 +50,7 @@ public class Workflow : CompanyAggregateRoot
         Code = Check.NotNullOrWhiteSpace(code, nameof(code), ErpDomainConsts.MaxWorkflowCodeLength);
         Steps = new Collection<WorkflowStep>();
 
-        // As in Business Central, a new workflow does nothing until it is enabled.
+        // A new workflow does nothing until it is enabled.
         Enabled = false;
         Update(description, documentKind, minimumAmount, approverLimitType, dueDays);
     }
@@ -76,7 +76,7 @@ public class Workflow : CompanyAggregateRoot
     public void Disable() => Enabled = false;
 
     /// <summary>
-    /// Rewrites the readable step list (BC's workflow step grid) from the settings above.
+    /// Rewrites the readable step list from the settings above.
     /// The steps document the behaviour; ApprovalsManager carries it out.
     /// </summary>
     public void RebuildSteps(Func<Guid> newId)
@@ -111,7 +111,7 @@ public class Workflow : CompanyAggregateRoot
 }
 
 /// <summary>
-/// Workflow Step. Mirrors Business Central table 1502 "Workflow Step".
+/// Workflow Step.
 /// </summary>
 public class WorkflowStep : FullAuditedEntity<Guid>
 {
@@ -135,7 +135,7 @@ public class WorkflowStep : FullAuditedEntity<Guid>
 }
 
 /// <summary>
-/// Approval Entry. Mirrors Business Central table 454 "Approval Entry": one row per approver
+/// Approval Entry: one row per approver
 /// of a request, worked through in sequence.
 /// </summary>
 public class ApprovalEntry : CompanyEntity
@@ -216,7 +216,7 @@ public class ApprovalEntry : CompanyEntity
 }
 
 /// <summary>
-/// Approval User Setup. Mirrors the approval fields of Business Central table 91 "User Setup":
+/// Approval User Setup. Mirrors the approval fields of "User Setup":
 /// who approves a user's requests, up to what amount the user may approve, and who stands in.
 /// </summary>
 public class ApprovalUserSetup : CompanyEntity
@@ -230,7 +230,7 @@ public class ApprovalUserSetup : CompanyEntity
     public decimal PurchaseAmountApprovalLimit { get; private set; }
     public bool UnlimitedPurchaseApproval { get; private set; }
 
-    /// <summary>May approve, reject, delegate and cancel any request (BC: Approval Administrator).</summary>
+    /// <summary>May approve, reject, delegate and cancel any request.</summary>
     public bool IsApprovalAdministrator { get; private set; }
 
     protected ApprovalUserSetup() { }
@@ -266,7 +266,10 @@ public class ApprovalUserSetup : CompanyEntity
         IsApprovalAdministrator = isApprovalAdministrator;
     }
 
-    /// <summary>Whether this user's limit covers a document of the given kind and amount.</summary>
+    /// <summary>
+    /// Whether this user's limit covers a document of the given kind and amount. A payment voucher
+    /// is money going out, so it is held to the purchase limit.
+    /// </summary>
     public bool CanApprove(ApprovalDocumentKind kind, decimal amount)
     {
         return kind == ApprovalDocumentKind.SalesDocument

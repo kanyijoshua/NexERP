@@ -29,7 +29,7 @@ public sealed class ConfigTableRunResult
 }
 
 /// <summary>
-/// Everything a configuration package does, as Business Central's RapidStart services do it:
+/// Everything a configuration package does:
 /// collect tables, fill them from the database, export them, import them from a package file or an
 /// Excel workbook, and validate and apply the staged records.
 /// </summary>
@@ -123,7 +123,7 @@ public class ConfigPackageManager : DomainService
     }
 
     /// <summary>
-    /// Replaces the staged records of the tables with what the database holds now. BC's "Get Data
+    /// Replaces the staged records of the tables with what the database holds now. "Get Data
     /// from Database": the usual way to build a package from a company that is already set up.
     /// </summary>
     public async Task<int> FillFromDatabaseAsync(ConfigPackage package, IReadOnlyList<ConfigPackageTable> tables)
@@ -237,7 +237,7 @@ public class ConfigPackageManager : DomainService
 
     /// <summary>
     /// Reads a package file. A package with the same code is replaced — definition, templates and
-    /// staged data — as BC's "Import Package" replaces one; otherwise a new package is made. The
+    /// staged data; otherwise a new package is made. The
     /// records are only staged: they reach the tables when the package is applied.
     /// </summary>
     public async Task<ConfigPackage> ImportPackageAsync(byte[] content)
@@ -311,8 +311,8 @@ public class ConfigPackageManager : DomainService
     }
 
     /// <summary>
-    /// Reads data for the package's tables from an Excel workbook, one sheet per table, as BC's
-    /// "Import from Excel" does. Sheets that match no table of the package are ignored; a matched
+    /// Reads data for the package's tables from an Excel workbook, one sheet per table.
+    /// Sheets that match no table of the package are ignored; a matched
     /// table's staged records are replaced.
     /// </summary>
     public async Task<int> ImportDataAsync(ConfigPackage package, string fileName, byte[] content)

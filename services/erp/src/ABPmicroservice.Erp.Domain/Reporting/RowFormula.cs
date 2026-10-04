@@ -11,7 +11,7 @@ public readonly record struct RowFormulaTerm(int Sign, string RowNo);
 
 /// <summary>
 /// The formula an account schedule row can hold instead of accounts, e.g. "R10+R20-R30".
-/// Mirrors the Formula totaling type of Business Central's Acc. Schedule Line.
+/// This is the Formula totaling type of an account schedule line.
 /// </summary>
 public static class RowFormula
 {

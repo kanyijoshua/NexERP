@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.Attachments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
 /// Sales Document Posting Engine.
-/// Mirrors Business Central Codeunit 80 "Sales-Post".
+///
 /// Atomically posts Sales Headers to Posted Sales Invoices, G/L Entries, Customer Ledger Entries,
 /// VAT Entries and Item Ledger Entries.
 /// <para>
@@ -25,7 +26,7 @@ namespace ABPmicroservice.Erp.Sales;
 /// </summary>
 public class SalesPostingEngine : DomainService
 {
-    /// <summary>Stamped on every entry the engine posts. Mirrors BC's "SALES" source code.</summary>
+    /// <summary>Stamped on every entry the engine posts.</summary>
     private const string SourceCode = "SALES";
 
     private readonly IRepository<SalesHeader, Guid> _salesHeaderRepository;
@@ -258,6 +259,11 @@ public class SalesPostingEngine : DomainService
         // 4. Mark header as posted
         header.MarkPosted(postedDocNo);
         await _salesHeaderRepository.UpdateAsync(header);
+
+        // Attachments marked to flow follow the document onto the posted document.
+        await LazyServiceProvider
+            .LazyGetRequiredService<DocumentAttachmentManager>()
+            .FlowToPostedDocumentAsync(nameof(SalesHeader), header.Id, nameof(PostedSalesHeader), postedHeader.Id, postedHeader.No, purchase: false);
 
         return postedHeader;
     }

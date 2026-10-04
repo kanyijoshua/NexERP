@@ -10,7 +10,7 @@ namespace ABPmicroservice.Erp.Exporting;
 /// Reads CSV following RFC 4180, the counterpart of <see cref="DelimitedWriter"/>: a quoted field
 /// may hold the separator, doubled quotes and line breaks.
 /// <para>
-/// Odoo's import asks for the separator and guesses it when left blank; this does the same. A file
+/// The separator may be given, and is guessed when left blank. A file
 /// saved from Excel in a comma-decimal locale uses semicolons, and one exported from many tools
 /// uses tabs, so the separator is taken from whichever of the three the header line uses most.
 /// </para>

@@ -1,3 +1,5 @@
+import type { ApplicationMethod } from '../finance/application-method.enum';
+import type { EmployeeGender } from './employee-gender.enum';
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { GLEntryDocumentType } from '../finance/glentry-document-type.enum';
 import type { CodeTableDto, CreateUpdateCodeTableDto } from '../companies/models';
@@ -62,6 +64,28 @@ export interface EmployeeDto extends FullAuditedEntityDto<string> {
   iban?: string;
   salespersPurchCode?: string;
   blocked: boolean;
+  initials?: string;
+  searchName?: string;
+  address2?: string;
+  county?: string;
+  gender: EmployeeGender;
+  extension?: string;
+  faxNo?: string;
+  pager?: string;
+  managerNo?: string;
+  statisticsGroupCode?: string;
+  causeOfInactivityCode?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  altAddressCode?: string;
+  altAddressStartDate?: string;
+  altAddressEndDate?: string;
+  bankBranchNo?: string;
+  swiftCode?: string;
+  currencyCode?: string;
+  applicationMethod: ApplicationMethod;
+  unionMembershipNo?: string;
+  privacyBlocked: boolean;
 }
 
 export interface CreateUpdateEmployeeDto {
@@ -91,6 +115,28 @@ export interface CreateUpdateEmployeeDto {
   bankAccountNo?: string;
   iban?: string;
   salespersPurchCode?: string;
+  initials?: string;
+  searchName?: string;
+  address2?: string;
+  county?: string;
+  gender?: EmployeeGender;
+  extension?: string;
+  faxNo?: string;
+  pager?: string;
+  managerNo?: string;
+  statisticsGroupCode?: string;
+  causeOfInactivityCode?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  altAddressCode?: string;
+  altAddressStartDate?: string;
+  altAddressEndDate?: string;
+  bankBranchNo?: string;
+  swiftCode?: string;
+  currencyCode?: string;
+  applicationMethod?: ApplicationMethod;
+  unionMembershipNo?: string;
+  privacyBlocked?: boolean;
 }
 
 export interface GetEmployeeListInput extends PagedAndSortedResultRequestDto {

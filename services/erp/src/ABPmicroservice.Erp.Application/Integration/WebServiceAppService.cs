@@ -14,7 +14,7 @@ namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
 /// Which tables this company exposes to other systems.
-/// Mirrors Business Central's Web Services page, where a page is invisible to OData until it is
+/// A table is invisible to other systems until it is
 /// published. Nothing is reachable through the integration API by default.
 /// </summary>
 [Authorize(ErpPermissions.WebServices.Default)]

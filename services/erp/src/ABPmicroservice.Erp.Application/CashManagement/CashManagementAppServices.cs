@@ -12,7 +12,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.CashManagement;
 
-/// <summary>Bank Account Posting Groups (BC page 373).</summary>
+/// <summary>Bank Account Posting Groups.</summary>
 public class BankAccountPostingGroupAppService
     : PostingGroupAppServiceBase<BankAccountPostingGroup, BankAccountPostingGroupDto, CreateUpdateBankAccountPostingGroupDto>,
         IBankAccountPostingGroupAppService
@@ -30,7 +30,7 @@ public class BankAccountPostingGroupAppService
     }
 }
 
-/// <summary>Bank Accounts (BC pages 371 and 370).</summary>
+/// <summary>Bank Accounts.</summary>
 [Authorize(ErpPermissions.BankAccounts.Default)]
 public class BankAccountAppService
     : ErpCrudAppService<BankAccount, BankAccountDto, Guid, GetBankAccountListInput, CreateUpdateBankAccountDto, CreateUpdateBankAccountDto>,
@@ -66,7 +66,7 @@ public class BankAccountAppService
         await CheckCreatePolicyAsync();
         await ValidateAsync(input);
 
-        // Blank takes the next number of the Bank Account Nos. series (BC: InitSeries).
+        // Blank takes the next number of the Bank Account Nos. series.
         var setup = await _glSetupManager.GetAsync();
         var no = await _noSeriesManager.ResolveNoAsync(setup.BankAccountNos, input.No, Clock.Now);
         await EnsureNoIsUniqueAsync(no, null);
@@ -163,10 +163,30 @@ public class BankAccountAppService
         bankAccount.SetBankDetails(input.BankAccountNo, input.BankBranchNo, input.Iban, input.SwiftCode);
         bankAccount.SetAddress(input.Address, input.City, input.Contact, input.PhoneNo);
         bankAccount.SetPosting(input.BankAccPostingGroup, input.CurrencyCode);
+        bankAccount.SetAdditionalFields(
+            input.Name2,
+            input.Address2,
+            input.PostCode,
+            input.County,
+            input.CountryRegionCode,
+            input.Email,
+            input.FaxNo,
+            input.HomePage,
+            input.GlobalDimension1Code,
+            input.GlobalDimension2Code,
+            input.OurContactCode,
+            input.MinBalance,
+            input.LastStatementNo,
+            input.BalanceLastStatement,
+            input.LastPaymentStatementNo,
+            input.LastCheckNo,
+            input.TransitNo,
+            input.BankClearingCode
+        );
     }
 }
 
-/// <summary>Bank Account Ledger Entries (BC page 372).</summary>
+/// <summary>Bank Account Ledger Entries.</summary>
 [Authorize(ErpPermissions.BankAccounts.Default)]
 public class BankAccountLedgerEntryAppService
     : ErpReadOnlyAppService<BankAccountLedgerEntry, BankAccountLedgerEntryDto, Guid, GetBankAccountLedgerEntryListInput>,
@@ -198,7 +218,7 @@ public class BankAccountLedgerEntryAppService
     }
 }
 
-/// <summary>Payment Methods (BC page 427).</summary>
+/// <summary>Payment Methods.</summary>
 [Authorize(ErpPermissions.FinanceSetup.Default)]
 public class PaymentMethodAppService
     : CodeTableAppServiceBase<PaymentMethod, PaymentMethodDto, CreateUpdatePaymentMethodDto>,
@@ -229,5 +249,6 @@ public class PaymentMethodAppService
         }
 
         entity.SetBalancingAccount(input.BalAccountType ?? GenJournalAccountType.GLAccount, input.BalAccountNo);
+        entity.SetAdditionalFields(input.DirectDebit, input.DirectDebitPmtTermsCode, input.PmtExportLineDefinition);
     }
 }

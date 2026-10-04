@@ -1,3 +1,7 @@
+import type { BankPaymentType } from '../cash-management/bank-payment-type.enum';
+import type { CurrencyInvoiceRoundingType } from './currency-invoice-rounding-type.enum';
+import type { GLSetupVatCalculation } from './gl-setup-vat-calculation.enum';
+import type { GeneralLedgerSetupShowAmounts } from './general-ledger-setup-show-amounts.enum';
 import type { GenJournalAccountType } from './gen-journal-account-type.enum';
 import type { GLAccountType } from './glaccount-type.enum';
 import type { GLAccountCategory } from './glaccount-category.enum';
@@ -58,6 +62,11 @@ export interface CreateUpdateGLAccountDto {
   costTypeNo?: string;
   defaultDeferralTemplateCode?: string;
   omitDefaultDescrInJnl?: boolean;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  indentation?: number;
+  noOfBlankLines?: number;
+  newPage?: boolean;
 }
 
 export interface CreateUpdateGenJournalLineDto {
@@ -85,6 +94,23 @@ export interface CreateUpdateGenJournalLineDto {
   balGenPostingType?: GeneralPostingType;
   balVatBusPostingGroup?: string;
   balVatProdPostingGroup?: string;
+  postingGroup?: string;
+  shortcutDimension1Code?: string;
+  shortcutDimension2Code?: string;
+  salespersPurchCode?: string;
+  sourceCode?: string;
+  reasonCode?: string;
+  paymentMethodCode?: string;
+  appliesToId?: string;
+  bankPaymentType?: BankPaymentType;
+  correction?: boolean;
+  quantity?: number;
+  dueDate?: string;
+  onHold?: string;
+  vatRegistrationNo?: string;
+  countryRegionCode?: string;
+  paymentReference?: string;
+  messageToRecipient?: string;
 }
 
 export interface CreateUpdateGenJournalTemplateDto {
@@ -125,6 +151,11 @@ export interface GLAccountDto extends FullAuditedEntityDto<string> {
   costTypeNo?: string;
   defaultDeferralTemplateCode?: string;
   omitDefaultDescrInJnl?: boolean;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  indentation: number;
+  noOfBlankLines: number;
+  newPage: boolean;
 }
 
 export interface GLEntryDto extends EntityDto<string> {
@@ -219,6 +250,23 @@ export interface GenJournalLineDto extends EntityDto<string> {
   balVatProdPostingGroup?: string;
   balVatAmount: number;
   balVatBaseAmount: number;
+  postingGroup?: string;
+  shortcutDimension1Code?: string;
+  shortcutDimension2Code?: string;
+  salespersPurchCode?: string;
+  sourceCode?: string;
+  reasonCode?: string;
+  paymentMethodCode?: string;
+  appliesToId?: string;
+  bankPaymentType: BankPaymentType;
+  correction: boolean;
+  quantity: number;
+  dueDate?: string;
+  onHold?: string;
+  vatRegistrationNo?: string;
+  countryRegionCode?: string;
+  paymentReference?: string;
+  messageToRecipient?: string;
 }
 
 export interface GenJournalPostingResultDto {
@@ -418,6 +466,20 @@ export interface GeneralLedgerSetupDto {
   jobQueueCategoryCode?: string;
   notifyOnSuccess?: boolean;
   registerTime?: boolean;
+  shortcutDimension3Code?: string;
+  shortcutDimension4Code?: string;
+  shortcutDimension5Code?: string;
+  shortcutDimension6Code?: string;
+  shortcutDimension7Code?: string;
+  shortcutDimension8Code?: string;
+  vatTolerancePct?: number;
+  applnRoundingPrecision?: number;
+  emuCurrency?: boolean;
+  printVatSpecificationInLcy?: boolean;
+  showAmounts?: GeneralLedgerSetupShowAmounts;
+  billToSellToVatCalc?: GLSetupVatCalculation;
+  allowDeferralPostingFrom?: string;
+  allowDeferralPostingTo?: string;
 }
 
 export interface VatPostingSetupDto extends FullAuditedEntityDto<string> {
@@ -480,12 +542,14 @@ export interface PaymentTermsDto extends CodeTableDto {
   dueDateCalculation?: string;
   discountDateCalculation?: string;
   discountPercent: number;
+  calcPmtDiscOnCrMemos: boolean;
 }
 
 export interface CreateUpdatePaymentTermsDto extends CreateUpdateCodeTableDto {
   dueDateCalculation?: string;
   discountDateCalculation?: string;
   discountPercent: number;
+  calcPmtDiscOnCrMemos?: boolean;
 }
 
 export interface CurrencyDto extends CodeTableDto {
@@ -495,6 +559,17 @@ export interface CurrencyDto extends CodeTableDto {
   realizedLossesAccountNo?: string;
   unrealizedGainsAccountNo?: string;
   unrealizedLossesAccountNo?: string;
+  isoCode?: string;
+  isoNumericCode?: string;
+  unitAmountRoundingPrecision: number;
+  invoiceRoundingPrecision: number;
+  invoiceRoundingType: CurrencyInvoiceRoundingType;
+  applnRoundingPrecision: number;
+  amountDecimalPlaces?: string;
+  unitAmountDecimalPlaces?: string;
+  emuCurrency: boolean;
+  paymentTolerancePct: number;
+  maxPaymentToleranceAmount: number;
 }
 
 export interface CreateUpdateCurrencyDto extends CreateUpdateCodeTableDto {
@@ -504,6 +579,17 @@ export interface CreateUpdateCurrencyDto extends CreateUpdateCodeTableDto {
   realizedLossesAccountNo?: string;
   unrealizedGainsAccountNo?: string;
   unrealizedLossesAccountNo?: string;
+  isoCode?: string;
+  isoNumericCode?: string;
+  unitAmountRoundingPrecision?: number;
+  invoiceRoundingPrecision?: number;
+  invoiceRoundingType?: CurrencyInvoiceRoundingType;
+  applnRoundingPrecision?: number;
+  amountDecimalPlaces?: string;
+  unitAmountDecimalPlaces?: string;
+  emuCurrency?: boolean;
+  paymentTolerancePct?: number;
+  maxPaymentToleranceAmount?: number;
 }
 
 export interface CurrencyExchangeRateDto extends FullAuditedEntityDto<string> {

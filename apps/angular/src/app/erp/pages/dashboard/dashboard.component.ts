@@ -61,7 +61,7 @@ import { Component } from '@angular/core';
               <i class="fas fa-chart-area text-primary me-2"></i>Financial Overview & Cash Flow
             </h5>
             <div class="alert alert-info small mb-0">
-              <i class="fas fa-info-circle me-1"></i> Running standard Business Central Chart of
+              <i class="fas fa-info-circle me-1"></i> Running standard Chart of
               Accounts posting engine with double-entry balance verification.
             </div>
           </div>

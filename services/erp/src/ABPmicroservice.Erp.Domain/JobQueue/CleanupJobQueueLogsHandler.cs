@@ -14,7 +14,6 @@ public class CleanupJobQueueLogsParameters
 
 /// <summary>
 /// Background job that prunes historic Job Queue Log Entries older than a configured retention period.
-/// Mirrors Business Central standard maintenance task in Codeunit 448 and Odoo cron log cleanup.
 /// </summary>
 public class CleanupJobQueueLogsHandler : IJobHandler, ITransientDependency
 {

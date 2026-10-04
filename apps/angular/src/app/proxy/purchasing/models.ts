@@ -1,3 +1,4 @@
+import type { ApplicationMethod } from '../finance/application-method.enum';
 import type { PurchaseDocumentType } from './purchase-document-type.enum';
 import type { PurchasingDiscountPosting } from './purchasing-discount-posting.enum';
 import type { VatCalculationType } from '../finance/vat-calculation-type.enum';
@@ -47,6 +48,41 @@ export interface CreateUpdatePurchaseHeaderDto {
   shipToCountryRegionCode?: string;
   shipToContact?: string;
   lines: PurchaseLineInputDto[];
+  postingDescription?: string;
+  documentDate?: string;
+  purchaserCode?: string;
+  vendorOrderNo?: string;
+  vendorShipmentNo?: string;
+  vendorCrMemoNo?: string;
+  buyFromVendorName2?: string;
+  buyFromAddress?: string;
+  buyFromAddress2?: string;
+  buyFromCity?: string;
+  buyFromPostCode?: string;
+  buyFromCounty?: string;
+  buyFromCountryRegionCode?: string;
+  buyFromContact?: string;
+  payToName2?: string;
+  payToAddress2?: string;
+  payToCounty?: string;
+  shipToName2?: string;
+  shipToAddress2?: string;
+  shipToCounty?: string;
+  orderAddressCode?: string;
+  vatRegistrationNo?: string;
+  paymentDiscountPct?: number;
+  pmtDiscountDate?: string;
+  vatBaseDiscountPct?: number;
+  languageCode?: string;
+  quoteNo?: string;
+  responsibilityCenter?: string;
+  requestedReceiptDate?: string;
+  promisedReceiptDate?: string;
+  assignedUserId?: string;
+  paymentReference?: string;
+  invoiceReceivedDate?: string;
+  creditorNo?: string;
+  reasonCode?: string;
 }
 
 export interface CreateUpdateVendorDto {
@@ -84,6 +120,19 @@ export interface CreateUpdateVendorDto {
   leadTimeCalculation?: string;
   purchaserCode?: string;
   currencyCode?: string;
+  county?: string;
+  faxNo?: string;
+  registrationNumber?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  languageCode?: string;
+  payToVendorNo?: string;
+  priority?: number;
+  applicationMethod?: ApplicationMethod;
+  responsibilityCenter?: string;
+  preferredBankAccountCode?: string;
+  primaryContactNo?: string;
+  privacyBlocked?: boolean;
 }
 
 export interface GetPurchaseDocumentListInput extends PagedAndSortedResultRequestDto {
@@ -152,6 +201,41 @@ export interface PurchaseHeaderDto extends FullAuditedEntityDto<string> {
   posted: boolean;
   postedDocumentNo?: string;
   lines: PurchaseLineDto[];
+  postingDescription?: string;
+  documentDate?: string;
+  purchaserCode?: string;
+  vendorOrderNo?: string;
+  vendorShipmentNo?: string;
+  vendorCrMemoNo?: string;
+  buyFromVendorName2?: string;
+  buyFromAddress?: string;
+  buyFromAddress2?: string;
+  buyFromCity?: string;
+  buyFromPostCode?: string;
+  buyFromCounty?: string;
+  buyFromCountryRegionCode?: string;
+  buyFromContact?: string;
+  payToName2?: string;
+  payToAddress2?: string;
+  payToCounty?: string;
+  shipToName2?: string;
+  shipToAddress2?: string;
+  shipToCounty?: string;
+  orderAddressCode?: string;
+  vatRegistrationNo?: string;
+  paymentDiscountPct: number;
+  pmtDiscountDate?: string;
+  vatBaseDiscountPct: number;
+  languageCode?: string;
+  quoteNo?: string;
+  responsibilityCenter?: string;
+  requestedReceiptDate?: string;
+  promisedReceiptDate?: string;
+  assignedUserId?: string;
+  paymentReference?: string;
+  invoiceReceivedDate?: string;
+  creditorNo?: string;
+  reasonCode?: string;
 }
 
 export interface PurchaseLineDto extends EntityDto<string> {
@@ -287,4 +371,17 @@ export interface VendorDto extends FullAuditedEntityDto<string> {
   purchaserCode?: string;
   currencyCode?: string;
   blocked: boolean;
+  county?: string;
+  faxNo?: string;
+  registrationNumber?: string;
+  globalDimension1Code?: string;
+  globalDimension2Code?: string;
+  languageCode?: string;
+  payToVendorNo?: string;
+  priority: number;
+  applicationMethod: ApplicationMethod;
+  responsibilityCenter?: string;
+  preferredBankAccountCode?: string;
+  primaryContactNo?: string;
+  privacyBlocked: boolean;
 }

@@ -9,7 +9,7 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.HumanResources;
 
 /// <summary>
-/// Human Resources Setup. Mirrors Business Central table 5218: one row per company with the
+/// Human Resources Setup: one row per company with the
 /// employee number series and the unit absences are counted in.
 /// </summary>
 public class HumanResourcesSetup : CompanyEntity
@@ -50,7 +50,7 @@ public class HumanResourcesSetupManager : DomainService
     }
 }
 
-/// <summary>Human Resource Unit of Measure. Mirrors BC table 5220: DAY, HOUR, and how many base units each is.</summary>
+/// <summary>Human Resource Unit of Measure. DAY, HOUR, and how many base units each is.</summary>
 public class HumanResourceUnitOfMeasure : CodeTableEntity
 {
     protected override int MaxCodeLength => ErpDomainConsts.MaxUnitOfMeasureCodeLength;
@@ -72,7 +72,7 @@ public class HumanResourceUnitOfMeasure : CodeTableEntity
 }
 
 /// <summary>
-/// Employee Posting Group. Mirrors BC table 5221: the payables account employee expenses owed to
+/// Employee Posting Group: the payables account employee expenses owed to
 /// employees are carried on.
 /// </summary>
 public class EmployeePostingGroup : PostingGroupBase
@@ -93,7 +93,7 @@ public class EmployeePostingGroup : PostingGroupBase
     }
 }
 
-/// <summary>Cause of Absence. Mirrors BC table 5206: sickness, holiday, training, and the unit it is counted in.</summary>
+/// <summary>Cause of Absence: sickness, holiday, training, and the unit it is counted in.</summary>
 public class CauseOfAbsence : CodeTableEntity
 {
     public string UnitOfMeasureCode { get; private set; }
@@ -110,7 +110,7 @@ public class CauseOfAbsence : CodeTableEntity
         UnitOfMeasureCode = NormalizeCode(Check.Length(unitOfMeasureCode, nameof(unitOfMeasureCode), ErpDomainConsts.MaxUnitOfMeasureCodeLength));
 }
 
-/// <summary>Qualification. Mirrors BC table 5202: a degree, certificate or skill an employee can hold.</summary>
+/// <summary>Qualification: a degree, certificate or skill an employee can hold.</summary>
 public class Qualification : CodeTableEntity
 {
     protected Qualification() { }
@@ -119,7 +119,7 @@ public class Qualification : CodeTableEntity
         : base(id, code, description) { }
 }
 
-/// <summary>Union. Mirrors BC table 5209: a trade union employees may belong to. The description is its name.</summary>
+/// <summary>Union: a trade union employees may belong to. The description is its name.</summary>
 public class Union : CodeTableEntity
 {
     protected Union() { }
@@ -128,7 +128,7 @@ public class Union : CodeTableEntity
         : base(id, code, name) { }
 }
 
-/// <summary>Employment Contract. Mirrors BC table 5211: permanent, fixed-term, casual.</summary>
+/// <summary>Employment Contract: permanent, fixed-term, casual.</summary>
 public class EmploymentContract : CodeTableEntity
 {
     protected EmploymentContract() { }
@@ -137,7 +137,7 @@ public class EmploymentContract : CodeTableEntity
         : base(id, code, description) { }
 }
 
-/// <summary>Grounds for Termination. Mirrors BC table 5217: why employment ended.</summary>
+/// <summary>Grounds for Termination: why employment ended.</summary>
 public class GroundsForTermination : CodeTableEntity
 {
     protected GroundsForTermination() { }

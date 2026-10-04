@@ -23,7 +23,7 @@ public abstract class PostingGroupAppServiceBase<TEntity, TDto, TInput> : CodeTa
         : base(repository, ErpPermissions.PostingSetup.Default) { }
 }
 
-/// <summary>Gen. Business Posting Groups (BC page 312).</summary>
+/// <summary>Gen. Business Posting Groups.</summary>
 public class GenBusinessPostingGroupAppService
     : PostingGroupAppServiceBase<GenBusinessPostingGroup, PostingGroupDto, CreateUpdatePostingGroupDto>,
         IGenBusinessPostingGroupAppService
@@ -35,7 +35,7 @@ public class GenBusinessPostingGroupAppService
         new(id, input.Code, input.Description);
 }
 
-/// <summary>Gen. Product Posting Groups (BC page 313).</summary>
+/// <summary>Gen. Product Posting Groups.</summary>
 public class GenProductPostingGroupAppService
     : PostingGroupAppServiceBase<GenProductPostingGroup, PostingGroupDto, CreateUpdatePostingGroupDto>,
         IGenProductPostingGroupAppService
@@ -47,7 +47,7 @@ public class GenProductPostingGroupAppService
         new(id, input.Code, input.Description);
 }
 
-/// <summary>VAT Business Posting Groups (BC page 470).</summary>
+/// <summary>VAT Business Posting Groups.</summary>
 public class VatBusinessPostingGroupAppService
     : PostingGroupAppServiceBase<VatBusinessPostingGroup, PostingGroupDto, CreateUpdatePostingGroupDto>,
         IVatBusinessPostingGroupAppService
@@ -59,7 +59,7 @@ public class VatBusinessPostingGroupAppService
         new(id, input.Code, input.Description);
 }
 
-/// <summary>VAT Product Posting Groups (BC page 471).</summary>
+/// <summary>VAT Product Posting Groups.</summary>
 public class VatProductPostingGroupAppService
     : PostingGroupAppServiceBase<VatProductPostingGroup, PostingGroupDto, CreateUpdatePostingGroupDto>,
         IVatProductPostingGroupAppService
@@ -71,7 +71,7 @@ public class VatProductPostingGroupAppService
         new(id, input.Code, input.Description);
 }
 
-/// <summary>Inventory Posting Groups (BC page 112).</summary>
+/// <summary>Inventory Posting Groups.</summary>
 public class InventoryPostingGroupAppService
     : PostingGroupAppServiceBase<InventoryPostingGroup, PostingGroupDto, CreateUpdatePostingGroupDto>,
         IInventoryPostingGroupAppService
@@ -83,7 +83,7 @@ public class InventoryPostingGroupAppService
         new(id, input.Code, input.Description);
 }
 
-/// <summary>Customer Posting Groups (BC page 110).</summary>
+/// <summary>Customer Posting Groups.</summary>
 public class CustomerPostingGroupAppService
     : PostingGroupAppServiceBase<CustomerPostingGroup, CustomerPostingGroupDto, CreateUpdateCustomerPostingGroupDto>,
         ICustomerPostingGroupAppService
@@ -101,7 +101,7 @@ public class CustomerPostingGroupAppService
     }
 }
 
-/// <summary>Vendor Posting Groups (BC page 111).</summary>
+/// <summary>Vendor Posting Groups.</summary>
 public class VendorPostingGroupAppService
     : PostingGroupAppServiceBase<VendorPostingGroup, VendorPostingGroupDto, CreateUpdateVendorPostingGroupDto>,
         IVendorPostingGroupAppService

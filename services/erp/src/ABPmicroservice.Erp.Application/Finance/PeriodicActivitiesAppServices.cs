@@ -14,8 +14,7 @@ using Volo.Abp.Linq;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// The VAT statement and the VAT settlement. Mirrors Business Central page 317 "VAT Statement"
-/// and report 20 "Calc. and Post VAT Settlement".
+/// The VAT statement and the VAT settlement.
 /// </summary>
 [Authorize(ErpPermissions.VatEntries.Default)]
 public class VatReportingAppService : ErpAppService, IVatReportingAppService
@@ -66,8 +65,7 @@ public class VatReportingAppService : ErpAppService, IVatReportingAppService
 }
 
 /// <summary>
-/// Adjust Exchange Rates. Mirrors Business Central report 596 and page 106 "Exch. Rate Adjmt.
-/// Register".
+/// Adjust Exchange Rates, and the register of the adjustments made.
 /// </summary>
 [Authorize(ErpPermissions.PeriodicActivities.Default)]
 public class ExchRateAdjustmentAppService : ErpAppService, IExchRateAdjustmentAppService
@@ -125,7 +123,7 @@ public class ExchRateAdjustmentAppService : ErpAppService, IExchRateAdjustmentAp
     };
 }
 
-/// <summary>Customer Ledger Entries (BC page 25), with their currency and what is still open.</summary>
+/// <summary>Customer Ledger Entries, with their currency and what is still open.</summary>
 public class CustomerLedgerEntryAppService
     : ErpReadOnlyAppService<CustomerLedgerEntry, PartyLedgerEntryDto, Guid, GetPartyLedgerEntryListInput>,
         ICustomerLedgerEntryAppService
@@ -157,7 +155,7 @@ public class CustomerLedgerEntryAppService
         query.OrderByDescending(x => x.EntryNo);
 }
 
-/// <summary>Vendor Ledger Entries (BC page 29).</summary>
+/// <summary>Vendor Ledger Entries.</summary>
 public class VendorLedgerEntryAppService
     : ErpReadOnlyAppService<VendorLedgerEntry, PartyLedgerEntryDto, Guid, GetPartyLedgerEntryListInput>,
         IVendorLedgerEntryAppService

@@ -144,7 +144,6 @@ public class GetExportTemplatesInput
 
 /// <summary>
 /// Exporting any table, with the columns and filters the caller chooses.
-/// Mirrors Odoo's export dialog and the Excel export of a Business Central configuration package.
 /// </summary>
 public interface IDataExportAppService : IApplicationService
 {

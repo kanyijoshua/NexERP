@@ -8,7 +8,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
-/// Column Layout. Mirrors Business Central Table 333 "Column Layout Name".
+/// Column Layout.
 /// It is the "across" of a financial report: this period, last period, year to date, and so on.
 /// </summary>
 public class ColumnLayout : CompanyAggregateRoot
@@ -39,7 +39,7 @@ public class ColumnLayout : CompanyAggregateRoot
 }
 
 /// <summary>
-/// Column Layout line. Mirrors Business Central Table 334 "Column Layout".
+/// Column Layout line.
 /// </summary>
 public class ColumnLayoutLine : FullAuditedEntity<Guid>
 {
@@ -56,7 +56,6 @@ public class ColumnLayoutLine : FullAuditedEntity<Guid>
 
     /// <summary>
     /// Date formula that shifts this column's period, e.g. "-1Y" for the same period last year.
-    /// Mirrors BC "Comparison Date Formula".
     /// </summary>
     public string ComparisonDateFormula { get; private set; }
 

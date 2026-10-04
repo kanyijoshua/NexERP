@@ -4,7 +4,7 @@ using Volo.Abp.Localization;
 
 namespace ABPmicroservice.Erp.Permissions;
 
-public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
+public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
 {
     public override void Define(IPermissionDefinitionContext context)
     {
@@ -265,6 +265,28 @@ public class ErpPermissionDefinitionProvider : PermissionDefinitionProvider
         var jobQueue = erpGroup.AddPermission(ErpPermissions.JobQueue.Default, L("Permission:Erp:JobQueue"));
         jobQueue.AddChild(ErpPermissions.JobQueue.Manage, L("Permission:Erp:JobQueue:Manage"));
         jobQueue.AddChild(ErpPermissions.JobQueue.Execute, L("Permission:Erp:JobQueue:Execute"));
+
+        DefineBaseTables(erpGroup);
+
+        AddCrud(erpGroup, ErpPermissions.Pensions.Default, ErpPermissions.Pensions.Create, ErpPermissions.Pensions.Update, ErpPermissions.Pensions.Delete, "Pensions");
+        erpGroup.GetPermissionOrNull(ErpPermissions.Pensions.Default).AddChild(ErpPermissions.Pensions.Post, L("Permission:Erp:Pensions:Post"));
+        AddCrud(erpGroup, ErpPermissions.PensionSetup.Default, ErpPermissions.PensionSetup.Create, ErpPermissions.PensionSetup.Update, ErpPermissions.PensionSetup.Delete, "PensionSetup");
+
+        AddCrud(erpGroup, ErpPermissions.Academics.Default, ErpPermissions.Academics.Create, ErpPermissions.Academics.Update, ErpPermissions.Academics.Delete, "Academics");
+        erpGroup.GetPermissionOrNull(ErpPermissions.Academics.Default).AddChild(ErpPermissions.Academics.Post, L("Permission:Erp:Academics:Post"));
+        AddCrud(erpGroup, ErpPermissions.AcademicSetup.Default, ErpPermissions.AcademicSetup.Create, ErpPermissions.AcademicSetup.Update, ErpPermissions.AcademicSetup.Delete, "AcademicSetup");
+
+        AddCrud(erpGroup, ErpPermissions.PaymentVouchers.Default, ErpPermissions.PaymentVouchers.Create, ErpPermissions.PaymentVouchers.Update, ErpPermissions.PaymentVouchers.Delete, "PaymentVouchers");
+        erpGroup.GetPermissionOrNull(ErpPermissions.PaymentVouchers.Default).AddChild(ErpPermissions.PaymentVouchers.Post, L("Permission:Erp:PaymentVouchers:Post"));
+        AddCrud(erpGroup, ErpPermissions.PaymentVoucherSetup.Default, ErpPermissions.PaymentVoucherSetup.Create, ErpPermissions.PaymentVoucherSetup.Update, ErpPermissions.PaymentVoucherSetup.Delete, "PaymentVoucherSetup");
+
+        AddCrud(erpGroup, ErpPermissions.Payroll.Default, ErpPermissions.Payroll.Create, ErpPermissions.Payroll.Update, ErpPermissions.Payroll.Delete, "Payroll");
+        erpGroup.GetPermissionOrNull(ErpPermissions.Payroll.Default).AddChild(ErpPermissions.Payroll.Post, L("Permission:Erp:Payroll:Post"));
+        AddCrud(erpGroup, ErpPermissions.PayrollSetup.Default, ErpPermissions.PayrollSetup.Create, ErpPermissions.PayrollSetup.Update, ErpPermissions.PayrollSetup.Delete, "PayrollSetup");
+
+        var attachments = erpGroup.AddPermission(ErpPermissions.Attachments.Default, L("Permission:Erp:Attachments"));
+        attachments.AddChild(ErpPermissions.Attachments.Create, L("Permission:Erp:Attachments:Create"));
+        attachments.AddChild(ErpPermissions.Attachments.Delete, L("Permission:Erp:Attachments:Delete"));
     }
 
     private static void AddCrud(

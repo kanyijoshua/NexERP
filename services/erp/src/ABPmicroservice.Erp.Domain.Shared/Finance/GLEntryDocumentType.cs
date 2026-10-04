@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Finance;
 
-/// <summary>
-/// Mirrors Business Central "Document Type" on a posted G/L Entry.
-/// </summary>
 public enum GLEntryDocumentType
 {
     None = 0,

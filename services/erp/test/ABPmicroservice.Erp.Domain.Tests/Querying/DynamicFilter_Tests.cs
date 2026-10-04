@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ABPmicroservice.Erp.Querying;
 
-/// <summary>The filter pane's conditions and Business Central filter expressions, over plain objects.</summary>
+/// <summary>The filter pane's conditions and filter expressions, over plain objects.</summary>
 public class DynamicFilter_Tests
 {
     private enum Kind

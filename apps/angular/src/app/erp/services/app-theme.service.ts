@@ -4,7 +4,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { ErpCornerStyle, ErpNavbarStyle, ErpThemeDto, ThemeService } from '@proxy/theming';
 import { Observable, filter, switchMap, tap } from 'rxjs';
 
-/** The Odoo-inspired look the app starts from; the server holds the same defaults. */
+/** The look the app starts from; the server holds the same defaults. */
 export const DEFAULT_THEME: ErpThemeDto = {
   primaryColor: '#714B67',
   accentColor: '#017E84',

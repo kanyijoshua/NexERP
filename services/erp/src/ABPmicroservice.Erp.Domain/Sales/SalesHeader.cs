@@ -10,14 +10,14 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Sales;
 
 /// <summary>
-/// Sales document header. Mirrors Business Central table 36 "Sales Header".
+/// Sales document header.
 /// Aggregate root that owns its <see cref="SalesLine"/> collection.
 /// </summary>
 public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
 {
     public SalesDocumentType DocumentType { get; private set; }
 
-    /// <summary>Business key. Mirrors BC field "No.".</summary>
+    /// <summary>Business key.</summary>
     public string No { get; private set; }
 
     public Guid CustomerId { get; private set; }

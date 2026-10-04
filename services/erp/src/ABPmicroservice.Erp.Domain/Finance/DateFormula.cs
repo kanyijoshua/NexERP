@@ -5,7 +5,7 @@ using System.Text;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Business Central date formula, as typed into "Recurring Frequency" and payment terms.
+/// A date formula, as typed into "Recurring Frequency" and payment terms.
 /// <para>
 /// A formula is a sequence of terms applied left to right to a date. A term is an optional sign,
 /// an optional count and a unit: <c>D</c> day, <c>W</c> week, <c>M</c> month, <c>Q</c> quarter,
@@ -137,7 +137,7 @@ public sealed class DateFormula
                 case 'D':
                     return date;
                 case 'W':
-                    // The BC week ends on Sunday.
+                    // The week ends on Sunday.
                     var daysToSunday = ((int)DayOfWeek.Sunday - (int)date.DayOfWeek + 7) % 7;
                     return date.AddDays(daysToSunday);
                 case 'M':

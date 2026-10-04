@@ -8,7 +8,7 @@ import { MenuSuiteService } from './menu-suite.service';
 import { SuitePage, searchPages } from './menu-suite.model';
 
 /**
- * The top bar's page search, Business Central's "Tell me what you want to do". Type part of a
+ * The top bar's page search ("Tell me what you want to do"). Type part of a
  * page's name (or the area it sits in) and pick it; Alt+Q jumps here from anywhere. The last
  * option opens the full menu suite, for when the name does not come to mind.
  */

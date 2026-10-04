@@ -5,8 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
-/// Webhook Subscription. Mirrors Business Central table 2000000199 "Webhook Subscription" and
-/// plays the part of Odoo's automated actions that call out to another system.
+/// Webhook Subscription.
 /// <para>
 /// It says where to send a notification, for which table, and for which kinds of change. The
 /// secret signs each call so the receiver can tell a genuine notification from anyone else's

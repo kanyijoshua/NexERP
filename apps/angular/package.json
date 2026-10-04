@@ -37,6 +37,8 @@
     "@ng-bootstrap/ng-bootstrap": "~20.0.0",
     "@ngx-validate/core": "^0.2.0",
     "@swimlane/ngx-datatable": "~22.0.0",
+    "exceljs": "4.4.0",
+    "jspreadsheet-ce": "5.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.15.1"

@@ -112,6 +112,27 @@ export interface PreviewReportLayoutInput {
   templateContent: string;
 }
 
+export interface ImportRdlcLayoutInput {
+  reportName: string;
+  layoutName: string;
+  description?: string;
+  contentBase64: string;
+  setAsDefault: boolean;
+}
+
+export interface RdlcColumnMatchDto {
+  caption?: string;
+  rdlcField?: string;
+  reportColumnKey?: string;
+}
+
+export interface RdlcImportResultDto {
+  layout: ReportLayoutDto;
+  matchedColumns: number;
+  columns: RdlcColumnMatchDto[];
+  notes: string[];
+}
+
 export interface ReportNameDto {
   name?: string;
   displayName?: string;
@@ -181,4 +202,31 @@ export interface RunAccountScheduleInput {
 export interface SetDefaultReportLayoutInput {
   reportName: string;
   layoutId?: string;
+}
+
+export interface StandardReportDto {
+  id: number;
+  code?: string;
+  name?: string;
+  area?: string;
+  hasPeriod: boolean;
+  hasAsOfDate: boolean;
+  hasNoFilter: boolean;
+  hasBudgetName: boolean;
+  hasDepreciationBook: boolean;
+  hasScheme: boolean;
+}
+
+export interface RunStandardReportInput {
+  code: string;
+  fromDate?: string;
+  toDate?: string;
+  noFilter?: string;
+  budgetName?: string;
+  depreciationBookCode?: string;
+  schemeCode?: string;
+}
+
+export interface StandardReportExportInput extends RunStandardReportInput {
+  format: ExportFormat;
 }

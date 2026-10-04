@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Item Category. Mirrors Business Central table 5722 "Item Category".
+/// Item Category.
 /// </summary>
 public class ItemCategory : CompanyAggregateRoot
 {

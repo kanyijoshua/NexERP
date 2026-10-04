@@ -4,7 +4,7 @@ using ABPmicroservice.Erp.Finance;
 namespace ABPmicroservice.Erp.Documents;
 
 /// <summary>
-/// The VAT of one document line under a VAT Posting Setup, as Business Central's line
+/// The VAT of one document line under a VAT Posting Setup, as the line
 /// calculation works it out (prices exclude VAT):
 /// <list type="bullet">
 /// <item>Normal VAT: the rate on the line amount, added to what the party pays.</item>

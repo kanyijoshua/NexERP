@@ -31,7 +31,7 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
 /**
  * The role center navigation bar, shown under the top bar on every ERP page.
  * <p>
- * Mirrors the bar at the top of a Business Central role center: the company, then the links and
+ * The bar at the top of a role center: the company, then the links and
  * menus of the user's profile (Customers, Vendors… Finance ▾, Cash Management ▾), scrolled with
  * arrows when they do not fit, then the role the user works as and the full menu. The server
  * sends only the links the user may open in this company.
@@ -123,7 +123,7 @@ export class RoleNavBarComponent implements OnInit, AfterViewInit {
     this.menuSuite.open();
   }
 
-  /** Moves the links by most of the visible width, as Business Central's arrows do. */
+  /** Moves the links by most of the visible width. */
   scroll(direction: -1 | 1): void {
     const element = this.scrollerRef?.nativeElement;
     element?.scrollBy({ left: direction * element.clientWidth * 0.8, behavior: 'smooth' });

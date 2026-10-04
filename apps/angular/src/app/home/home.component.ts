@@ -28,7 +28,7 @@ interface CueGroup {
 }
 
 /**
- * The landing page, laid out as a Business Central Role Center.
+ * The landing page, laid out as a Role Center.
  * <p>
  * The company and the actions you can take sit at the top; under them, the activity cues as
  * coloured tiles, grouped by the area they count (Approvals, Finance, Sales…). A tile says how
@@ -112,7 +112,7 @@ export class HomeComponent implements OnInit {
   }
 
   /**
-   * Each app keeps its own colour, the way Odoo's home screen tells apps apart at a glance. The
+   * Each app keeps its own colour, so apps can be told apart at a glance. The
    * colour comes from the app's code, so it never moves when apps are switched on or off.
    */
   appColor(code: string | undefined): string {

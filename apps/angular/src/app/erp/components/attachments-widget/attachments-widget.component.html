@@ -1,0 +1,78 @@
+<div class="card shadow-sm border-0 mb-3">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <span class="fw-bold text-secondary">
+      <i class="fas fa-paperclip text-primary me-2"></i>{{ 'Erp::Attachments' | abpLocalization }}
+    </span>
+    <span class="badge bg-secondary">{{ attachments().length }}</span>
+  </div>
+
+  <ul class="list-group list-group-flush">
+    @for (attachment of attachments(); track attachment.id) {
+      <li class="list-group-item d-flex align-items-center gap-2 py-2">
+        <i class="fas fa-lg" [ngClass]="icon(attachment)" aria-hidden="true"></i>
+        <div class="flex-grow-1 text-truncate">
+          <button
+            type="button"
+            class="btn btn-link btn-sm p-0 text-decoration-none text-truncate mw-100"
+            [title]="'Erp::Download' | abpLocalization"
+            (click)="download(attachment)"
+          >
+            {{ fullName(attachment) }}
+          </button>
+          <div class="small text-muted">
+            {{ size(attachment.size) }} · {{ attachment.attachedByUserName }} · {{ attachment.attachedDate | date: 'short' }}
+          </div>
+        </div>
+        @if (isSpreadsheet(attachment)) {
+          <button
+            type="button"
+            class="btn btn-outline-success btn-sm"
+            [title]="'Erp::OpenInSpreadsheet' | abpLocalization"
+            [attr.aria-label]="'Erp::OpenInSpreadsheet' | abpLocalization"
+            (click)="openInSpreadsheet(attachment)"
+          >
+            <i class="fas fa-table-cells"></i>
+          </button>
+        }
+        @if (documentFlow) {
+          <button
+            *abpPermission="'Erp.Attachments.Create'"
+            type="button"
+            class="btn btn-sm"
+            [ngClass]="flows(attachment) ? 'btn-primary' : 'btn-outline-secondary'"
+            [attr.aria-pressed]="flows(attachment)"
+            [title]="'Erp::DocumentFlowHelp' | abpLocalization"
+            [attr.aria-label]="'Erp::DocumentFlowHelp' | abpLocalization"
+            (click)="toggleFlow(attachment)"
+          >
+            <i class="fas fa-share"></i>
+          </button>
+        }
+        <button
+          *abpPermission="'Erp.Attachments.Delete'"
+          type="button"
+          class="btn btn-outline-danger btn-sm"
+          [title]="'Erp::Delete' | abpLocalization"
+          [attr.aria-label]="'Erp::Delete' | abpLocalization"
+          (click)="remove(attachment)"
+        >
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </li>
+    } @empty {
+      <li class="list-group-item text-muted small text-center py-3">{{ 'Erp::NoAttachments' | abpLocalization }}</li>
+    }
+  </ul>
+
+  <div *abpPermission="'Erp.Attachments.Create'" class="card-body py-2">
+    <label class="btn btn-sm btn-outline-primary mb-0" [class.disabled]="busy()">
+      @if (busy()) {
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+      } @else {
+        <i class="fas fa-upload me-1"></i>
+      }
+      {{ 'Erp::AttachFile' | abpLocalization }}
+      <input type="file" class="d-none" multiple [disabled]="busy()" (change)="onFilesSelected($event)" />
+    </label>
+  </div>
+</div>

@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Chatter;
 
 /// <summary>
-/// Odoo Chatter Internal Note.
+/// Chatter Internal Note.
 /// Attaches internal comments, discussions, and log notes to any ERP entity.
 /// </summary>
 public class DocumentNote : CompanyEntity
@@ -31,7 +31,7 @@ public class DocumentNote : CompanyEntity
 }
 
 /// <summary>
-/// Odoo Chatter Activity Stream Entry. Audit log of entity status transitions.
+/// Chatter Activity Stream Entry. Audit log of entity status transitions.
 /// </summary>
 public class ActivityStreamEntry : CompanyEntity
 {
@@ -59,7 +59,7 @@ public class ActivityStreamEntry : CompanyEntity
 }
 
 /// <summary>
-/// Odoo Chatter Follow-Up Activity Task.
+/// Chatter Follow-Up Activity Task.
 /// </summary>
 public class DocumentActivityTask : CompanyEntity
 {

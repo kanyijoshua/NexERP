@@ -6,7 +6,7 @@ using Volo.Abp.Domain.Entities;
 namespace ABPmicroservice.Erp.Inventory;
 
 /// <summary>
-/// Value Entry. Mirrors Business Central table 5802 "Value Entry".
+/// Value Entry.
 /// Tracks monetary valuation changes and unit cost calculations for item transactions.
 /// </summary>
 public class ValueEntry : LedgerEntryBase

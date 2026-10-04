@@ -62,7 +62,7 @@ export abstract class ErpTableCrudBase<TDto extends { id?: string }, TCreateUpda
   }
 
   /**
-   * Builds the standard Business Central Edit and Delete actions.
+   * Builds the standard Edit and Delete actions.
    * Can be overridden or extended by subclasses.
    */
   protected buildDefaultActions(): ErpTableAction<TDto>[] {

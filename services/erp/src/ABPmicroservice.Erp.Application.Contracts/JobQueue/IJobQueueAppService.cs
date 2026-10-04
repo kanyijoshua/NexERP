@@ -21,7 +21,7 @@ public interface IJobQueueAppService : IApplicationService
     Task<JobQueueEntryDto> UpdateAsync(Guid id, UpdateJobQueueEntryDto input);
     Task DeleteAsync(Guid id);
 
-    // Entry Actions (Business Central / Odoo lifecycle operations)
+    // Entry Actions
     Task<JobQueueEntryDto> SetStatusReadyAsync(Guid id);
     Task<JobQueueEntryDto> SetStatusOnHoldAsync(Guid id);
     Task<JobQueueEntryDto> RestartAsync(Guid id);

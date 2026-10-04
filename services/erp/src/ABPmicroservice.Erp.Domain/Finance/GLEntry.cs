@@ -5,7 +5,7 @@ using Volo.Abp;
 namespace ABPmicroservice.Erp.Finance;
 
 /// <summary>
-/// Posted G/L Entry. Mirrors Business Central table 17 "G/L Entry".
+/// Posted G/L Entry.
 /// Entries are immutable once created (posted); only the reversal bookkeeping may still change.
 /// </summary>
 public class GLEntry : LedgerEntryBase
@@ -25,7 +25,7 @@ public class GLEntry : LedgerEntryBase
 
     public string Description { get; private set; }
 
-    /// <summary>Positive = debit, negative = credit (BC convention).</summary>
+    /// <summary>Positive = debit, negative = credit.</summary>
     public decimal Amount { get; private set; }
 
     public string SourceNo { get; private set; }
@@ -33,7 +33,7 @@ public class GLEntry : LedgerEntryBase
     public string GenBusPostingGroup { get; private set; }
 
     /// <summary>
-    /// Groups every entry written by one posting run, across ledgers. Mirrors BC "Transaction No.",
+    /// Groups every entry written by one posting run, across ledgers,
     /// which is the unit a reversal works on.
     /// </summary>
     public long TransactionNo { get; internal set; }
@@ -47,7 +47,7 @@ public class GLEntry : LedgerEntryBase
 
     public Guid DimensionSetId { get; private set; }
 
-    /// <summary>True once a reversal has cancelled this entry. Mirrors BC "Reversed".</summary>
+    /// <summary>True once a reversal has cancelled this entry.</summary>
     public bool Reversed { get; internal set; }
 
     /// <summary>Entry number of the correction that reversed this one.</summary>
@@ -56,52 +56,52 @@ public class GLEntry : LedgerEntryBase
     /// <summary>Set on a correction entry: the entry number it reverses.</summary>
     public long ReversedEntryNo { get; internal set; }
 
-    /// <summary>G/L Account Name snapshot. Mirrors BC field 76 "G/L Account Name".</summary>
+    /// <summary>G/L Account Name snapshot.</summary>
     public string GLAccountName { get; internal set; }
 
-    /// <summary>Gen. Posting Type. Mirrors BC field 48 "Gen. Posting Type".</summary>
+    /// <summary>Gen. Posting Type.</summary>
     public GeneralPostingType GenPostingType { get; internal set; }
 
-    /// <summary>Gen. Product Posting Group. Mirrors BC field 50 "Gen. Prod. Posting Group".</summary>
+    /// <summary>Gen. Product Posting Group.</summary>
     public string GenProdPostingGroup { get; internal set; }
 
-    /// <summary>Balancing Account Type. Mirrors BC field 51 "Bal. Account Type".</summary>
+    /// <summary>Balancing Account Type.</summary>
     public GenJournalAccountType BalAccountType { get; internal set; }
 
-    /// <summary>Balancing Account No. Mirrors BC field 10 "Bal. Account No.".</summary>
+    /// <summary>Balancing Account No.</summary>
     public string BalAccountNo { get; internal set; }
 
-    /// <summary>VAT Amount. Mirrors BC field 43 "VAT Amount".</summary>
+    /// <summary>VAT Amount.</summary>
     public decimal VATAmount { get; internal set; }
 
-    /// <summary>VAT Bus. Posting Group. Mirrors BC field 64 "VAT Bus. Posting Group".</summary>
+    /// <summary>VAT Bus. Posting Group.</summary>
     public string VATBusPostingGroup { get; internal set; }
 
-    /// <summary>VAT Prod. Posting Group. Mirrors BC field 65 "VAT Prod. Posting Group".</summary>
+    /// <summary>VAT Prod. Posting Group.</summary>
     public string VATProdPostingGroup { get; internal set; }
 
-    /// <summary>External Document No. Mirrors BC field 56 "External Document No.".</summary>
+    /// <summary>External Document No.</summary>
     public string ExternalDocumentNo { get; internal set; }
 
-    /// <summary>Source Type. Mirrors BC field 57 "Source Type".</summary>
+    /// <summary>Source Type.</summary>
     public GLEntrySourceType SourceType { get; internal set; }
 
-    /// <summary>User ID that posted the entry. Mirrors BC field 27 "User ID".</summary>
+    /// <summary>User ID that posted the entry.</summary>
     public string UserId { get; internal set; }
 
-    /// <summary>Journal Batch Name. Mirrors BC field 46 "Journal Batch Name".</summary>
+    /// <summary>Journal Batch Name.</summary>
     public string JournalBatchName { get; internal set; }
 
-    /// <summary>Quantity. Mirrors BC field 42 "Quantity".</summary>
+    /// <summary>Quantity.</summary>
     public decimal Quantity { get; internal set; }
 
-    /// <summary>Additional-Currency Amount. Mirrors BC field 68 "Additional-Currency Amount".</summary>
+    /// <summary>Additional-Currency Amount.</summary>
     public decimal AdditionalCurrencyAmount { get; internal set; }
 
-    /// <summary>Job No. / Project No. Mirrors BC field 41 "Job No.".</summary>
+    /// <summary>Job No. / Project No.</summary>
     public string JobNo { get; internal set; }
 
-    /// <summary>Business Unit Code. Mirrors BC field 45 "Business Unit Code".</summary>
+    /// <summary>Business Unit Code.</summary>
     public string BusinessUnitCode { get; internal set; }
 
     protected GLEntry() { }

@@ -6,7 +6,7 @@ import { fieldsOf, visibleSections } from './record-form';
 
 /**
  * The fields of a record, grouped by section. The quick dialog renders the sections as plain
- * headings; the card page renders them as collapsible FastTabs (`collapsible`), as Business Central does.
+ * headings; the card page renders them as collapsible FastTabs (`collapsible`).
  */
 @Component({
   selector: 'erp-record-form',
@@ -46,7 +46,7 @@ export class RecordFormComponent {
     return `${this.idPrefix}-${this.entity.key}-${field.field}`;
   }
 
-  /** Values shown on a folded FastTab header, as BC shows the key fields of a folded tab. */
+  /** Values shown on a folded FastTab header: the key fields of the folded tab. */
   summary(section: RecordSection): string {
     return this.fields(section)
       .map(f => this.display(f))

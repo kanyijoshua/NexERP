@@ -11,7 +11,7 @@ import { ConfigWorksheetComponent } from './worksheet/config-worksheet.component
 import { DataImportComponent } from './import/data-import.component';
 
 /**
- * RapidStart: Business Central's configuration packages, templates and worksheet, and Odoo's
+ * RapidStart: configuration packages, templates and worksheet, and the
  * import wizard, for bringing a company's set-up and master data in.
  */
 const routes: Routes = [

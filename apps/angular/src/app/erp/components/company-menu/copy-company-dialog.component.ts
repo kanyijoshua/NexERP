@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { CompanyDto, CompanyService } from '../../services/company.service';
 
-/** Copy Company (Business Central CU 357): a new company set up like the source one. */
+/** Copy Company: a new company set up like the source one. */
 @Component({
   selector: 'app-copy-company-dialog',
   template: `

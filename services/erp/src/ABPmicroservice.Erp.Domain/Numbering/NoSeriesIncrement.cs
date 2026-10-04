@@ -4,7 +4,7 @@ using System.Numerics;
 namespace ABPmicroservice.Erp.Numbering;
 
 /// <summary>
-/// Number arithmetic for number series. Mirrors Business Central's INCSTR:
+/// Number arithmetic for number series:
 /// the LAST group of digits in the text is incremented and keeps its width,
 /// so "SI-00099" + 1 is "SI-00100" and "2026-INV009A" + 1 is "2026-INV010A".
 /// </summary>
@@ -27,7 +27,7 @@ public static class NoSeriesIncrement
 
     /// <summary>
     /// Orders two numbers of the same series: by the value of the last digit group when the
-    /// surrounding text matches, otherwise by plain text as Business Central does.
+    /// surrounding text matches, otherwise by plain text.
     /// </summary>
     public static int Compare(string left, string right)
     {

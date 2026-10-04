@@ -12,6 +12,14 @@
     <ng-container *abpPermission="'Erp.Reports.ExportExcel'">
       <button
         type="button"
+        class="btn btn-sm btn-outline-success"
+        [disabled]="busy || rows.length === 0"
+        (click)="openInSpreadsheet()"
+        >
+        <i class="fas fa-table-cells me-1"></i>{{ 'Erp::OpenInSpreadsheet' | abpLocalization }}
+      </button>
+      <button
+        type="button"
         class="btn btn-sm btn-outline-secondary"
         [disabled]="busy || rows.length === 0"
         [title]="'Erp::PrintReport' | abpLocalization"

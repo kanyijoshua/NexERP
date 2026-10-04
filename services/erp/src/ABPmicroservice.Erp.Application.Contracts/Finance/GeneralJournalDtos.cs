@@ -1,3 +1,4 @@
+using ABPmicroservice.Erp.CashManagement;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -175,6 +176,24 @@ public class GenJournalLineDto : EntityDto<Guid>
     public decimal BalVatAmount { get; set; }
 
     public decimal BalVatBaseAmount { get; set; }
+
+    public string PostingGroup { get; set; }
+    public string ShortcutDimension1Code { get; set; }
+    public string ShortcutDimension2Code { get; set; }
+    public string SalespersPurchCode { get; set; }
+    public string SourceCode { get; set; }
+    public string ReasonCode { get; set; }
+    public string PaymentMethodCode { get; set; }
+    public string AppliesToId { get; set; }
+    public BankPaymentType BankPaymentType { get; set; }
+    public bool Correction { get; set; }
+    public decimal Quantity { get; set; }
+    public DateTime? DueDate { get; set; }
+    public string OnHold { get; set; }
+    public string VatRegistrationNo { get; set; }
+    public string CountryRegionCode { get; set; }
+    public string PaymentReference { get; set; }
+    public string MessageToRecipient { get; set; }
 }
 
 public class CreateUpdateGenJournalLineDto
@@ -228,7 +247,7 @@ public class CreateUpdateGenJournalLineDto
     public string CurrencyCode { get; set; }
 
     /// <summary>
-    /// Null takes the posting type and VAT groups from the G/L account, as BC does when the
+    /// Null takes the posting type and VAT groups from the G/L account when the
     /// account is chosen; None or a type sets them from the fields below.
     /// </summary>
     public GeneralPostingType? GenPostingType { get; set; }
@@ -247,6 +266,53 @@ public class CreateUpdateGenJournalLineDto
 
     [StringLength(ErpDomainConsts.MaxPostingGroupLength)]
     public string BalVatProdPostingGroup { get; set; }
+
+    [StringLength(20)]
+    public string PostingGroup { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension1Code { get; set; }
+
+    [StringLength(20)]
+    public string ShortcutDimension2Code { get; set; }
+
+    [StringLength(20)]
+    public string SalespersPurchCode { get; set; }
+
+    [StringLength(10)]
+    public string SourceCode { get; set; }
+
+    [StringLength(10)]
+    public string ReasonCode { get; set; }
+
+    [StringLength(10)]
+    public string PaymentMethodCode { get; set; }
+
+    [StringLength(50)]
+    public string AppliesToId { get; set; }
+
+    public BankPaymentType BankPaymentType { get; set; }
+
+    public bool Correction { get; set; }
+
+    public decimal Quantity { get; set; }
+
+    public DateTime? DueDate { get; set; }
+
+    [StringLength(3)]
+    public string OnHold { get; set; }
+
+    [StringLength(20)]
+    public string VatRegistrationNo { get; set; }
+
+    [StringLength(10)]
+    public string CountryRegionCode { get; set; }
+
+    [StringLength(50)]
+    public string PaymentReference { get; set; }
+
+    [StringLength(140)]
+    public string MessageToRecipient { get; set; }
 }
 
 public class GenJournalPostingResultDto
@@ -421,7 +487,7 @@ public class GetStandardJournalsInput
     public string JournalTemplateName { get; set; }
 }
 
-/// <summary>Journal templates. Mirrors Business Central table 80 "Gen. Journal Template".</summary>
+/// <summary>Journal templates.</summary>
 public interface IJournalTemplateAppService : IApplicationService
 {
     Task<ListResultDto<GenJournalTemplateDto>> GetListAsync();
@@ -435,7 +501,7 @@ public interface IJournalTemplateAppService : IApplicationService
 
 /// <summary>
 /// The general journal: batches, their lines, and posting them.
-/// Mirrors Business Central page 39 together with codeunits 11 and 13.
+///together with codeunits 11 and 13.
 /// </summary>
 public interface IGeneralJournalAppService : IApplicationService
 {
@@ -460,7 +526,7 @@ public interface IGeneralJournalAppService : IApplicationService
 
     /// <summary>
     /// Posts inside a transaction that is rolled back, and returns the entries that would have
-    /// been written. Mirrors Business Central's Preview Posting.
+    /// been written.
     /// </summary>
     Task<PostingPreviewDto> PreviewAsync(Guid batchId);
 
@@ -469,7 +535,7 @@ public interface IGeneralJournalAppService : IApplicationService
 }
 
 /// <summary>
-/// G/L registers and reversal. Mirrors Business Central page 116 and codeunit 17.
+/// G/L registers and reversal.
 /// </summary>
 public interface IGLRegisterAppService : IApplicationService
 {
@@ -483,7 +549,7 @@ public interface IGLRegisterAppService : IApplicationService
 }
 
 /// <summary>
-/// Saved sets of journal lines. Mirrors Business Central tables 750 and 751.
+/// Saved sets of journal lines.
 /// </summary>
 public interface IStandardJournalAppService : IApplicationService
 {

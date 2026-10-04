@@ -9,7 +9,6 @@ namespace ABPmicroservice.Erp.Modules;
 
 /// <summary>
 /// The system's own apps: which are on in this company, and turning them on and off.
-/// Mirrors Odoo's Apps page and Business Central's per-company feature management.
 /// </summary>
 [Authorize(ErpPermissions.Modules.Default)]
 public class ModuleAppService : ErpAppService, IModuleAppService

@@ -12,7 +12,6 @@ namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
 /// Column layouts: the periods a financial report is shown across.
-/// Mirrors Business Central pages 331 and 332.
 /// </summary>
 [Authorize(ErpPermissions.AccountSchedules.Default)]
 public class ColumnLayoutAppService : ErpAppService, IColumnLayoutAppService

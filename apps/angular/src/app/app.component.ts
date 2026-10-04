@@ -2,7 +2,7 @@ import { ConfigStateService } from '@abp/ng.core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 import { AppThemeService } from './erp/services/app-theme.service';
 import { CompanyService } from './erp/services/company.service';
 import { ModalResizeService } from './erp/services/modal-resize.service';
@@ -65,6 +65,8 @@ export class AppComponent implements OnInit {
       .getOne$('currentUser')
       .pipe(
         filter(user => !!user?.isAuthenticated),
+        // The configuration is re-read now and then; the modules only need reading per user.
+        distinctUntilChanged((a, b) => a?.id === b?.id),
         switchMap(() => this.moduleRoutes.refresh()),
         takeUntilDestroyed(this.destroyRef),
       )

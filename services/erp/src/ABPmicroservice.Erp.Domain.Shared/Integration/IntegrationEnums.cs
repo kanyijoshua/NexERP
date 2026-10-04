@@ -3,7 +3,6 @@ using System;
 namespace ABPmicroservice.Erp.Integration;
 
 /// <summary>
-/// Mirrors Business Central "Object Type" on a Web Service (table 7700 field 1).
 /// A Page is a table exposed as readable data; a Query is a read-only projection.
 /// </summary>
 public enum WebServiceObjectType
@@ -13,8 +12,7 @@ public enum WebServiceObjectType
 }
 
 /// <summary>
-/// Which changes a webhook subscriber wants. Mirrors the change types of Business Central's
-/// webhook subscriptions (table 2000000199) and Odoo's automated-action triggers.
+/// Which changes a webhook subscriber wants.
 /// </summary>
 [Flags]
 public enum EntityChangeKind

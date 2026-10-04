@@ -100,6 +100,9 @@ public static class ErpErrorCodes
         public const string LayoutTemplateNotValid = Prefix + ":Reports:00012";
         public const string LayoutNotFound = Prefix + ":Reports:00013";
         public const string LayoutBelongsToAnotherReport = Prefix + ":Reports:00014";
+        public const string UnknownStandardReport = Prefix + ":Reports:00015";
+        public const string RdlcNotValid = Prefix + ":Reports:00016";
+        public const string RdlcTooLarge = Prefix + ":Reports:00017";
     }
 
     public static class Exporting
@@ -238,6 +241,19 @@ public static class ErpErrorCodes
         public const string PostingGroupNotFound = Prefix + ":CashManagement:00004";
         public const string CannotDeleteWithEntries = Prefix + ":CashManagement:00005";
         public const string InvalidBalAccountType = Prefix + ":CashManagement:00006";
+        public const string VoucherNotOpen = Prefix + ":CashManagement:00007";
+        public const string VoucherNotReleased = Prefix + ":CashManagement:00008";
+        public const string VoucherHasNoLines = Prefix + ":CashManagement:00009";
+        public const string VoucherFieldMissing = Prefix + ":CashManagement:00010";
+        public const string VoucherAmountNotPositive = Prefix + ":CashManagement:00011";
+        public const string DeductionExceedsAmount = Prefix + ":CashManagement:00012";
+        public const string DeductionAccountMissing = Prefix + ":CashManagement:00013";
+        public const string WrongDeductionType = Prefix + ":CashManagement:00014";
+        public const string PaymentTypeBlocked = Prefix + ":CashManagement:00015";
+        public const string VoucherAccountNotFound = Prefix + ":CashManagement:00016";
+        public const string VoucherNosMissing = Prefix + ":CashManagement:00017";
+        public const string DeductionCodeInUse = Prefix + ":CashManagement:00018";
+        public const string InvalidVoucherAccountType = Prefix + ":CashManagement:00019";
     }
 
     public static class Inventory
@@ -278,6 +294,117 @@ public static class ErpErrorCodes
     public static class Profiles
     {
         public const string UnknownProfile = Prefix + ":Profiles:00001";
+    }
+
+    public static class Pensions
+    {
+        public const string InvalidRetirementAge = Prefix + ":Pensions:00001";
+        public const string SchemeClosed = Prefix + ":Pensions:00002";
+        public const string NegativeAmount = Prefix + ":Pensions:00003";
+        public const string DocumentNotOpen = Prefix + ":Pensions:00004";
+        public const string DocumentNotReleased = Prefix + ":Pensions:00005";
+        public const string NothingToPost = Prefix + ":Pensions:00006";
+        public const string MemberDuplicated = Prefix + ":Pensions:00007";
+        public const string MemberNotInScheme = Prefix + ":Pensions:00008";
+        public const string MemberNotContributing = Prefix + ":Pensions:00009";
+        public const string PeriodAlreadyPosted = Prefix + ":Pensions:00010";
+        public const string InterestAlreadyAllocated = Prefix + ":Pensions:00011";
+        public const string InvalidTaxBand = Prefix + ":Pensions:00012";
+        public const string ProjectionCannotBePosted = Prefix + ":Pensions:00013";
+        public const string BenefitOutOfDate = Prefix + ":Pensions:00014";
+        public const string MemberHasEntries = Prefix + ":Pensions:00015";
+        public const string SchemeInUse = Prefix + ":Pensions:00016";
+        public const string SponsorHasMembers = Prefix + ":Pensions:00017";
+        public const string SponsorBlocked = Prefix + ":Pensions:00018";
+        public const string ScheduleHasLines = Prefix + ":Pensions:00019";
+        public const string InterestPeriodOverlaps = Prefix + ":Pensions:00020";
+        public const string VoucherAlreadyRaised = Prefix + ":Pensions:00021";
+        public const string DocumentNotPosted = Prefix + ":Pensions:00022";
+        public const string PayrollPeriodAlreadyPosted = Prefix + ":Pensions:00023";
+        public const string PensionerDuplicated = Prefix + ":Pensions:00024";
+        public const string PensionerNotInScheme = Prefix + ":Pensions:00025";
+        public const string PensionerHasPayroll = Prefix + ":Pensions:00026";
+        public const string NotDefinedBenefitScheme = Prefix + ":Pensions:00027";
+        public const string MemberDataMissing = Prefix + ":Pensions:00028";
+        public const string RetirementTooEarly = Prefix + ":Pensions:00029";
+        public const string CommutationAboveMaximum = Prefix + ":Pensions:00030";
+    }
+
+    public static class Academics
+    {
+        public const string NegativeAmount = Prefix + ":Academics:00001";
+        public const string PeriodReversed = Prefix + ":Academics:00002";
+        public const string InvalidGradingBand = Prefix + ":Academics:00003";
+        public const string InvalidExamComponent = Prefix + ":Academics:00004";
+        public const string InvalidCapacity = Prefix + ":Academics:00005";
+        public const string UnitIsOwnPrerequisite = Prefix + ":Academics:00006";
+        public const string ApplicationStatusWrong = Prefix + ":Academics:00007";
+        public const string ProgrammeNotActive = Prefix + ":Academics:00008";
+        public const string DocumentNotOpen = Prefix + ":Academics:00009";
+        public const string StageRequired = Prefix + ":Academics:00010";
+        public const string NothingToPost = Prefix + ":Academics:00011";
+        public const string StudentNotActive = Prefix + ":Academics:00012";
+        public const string RegistrationClosed = Prefix + ":Academics:00013";
+        public const string StudentHasBalance = Prefix + ":Academics:00014";
+        public const string NoUnitsSelected = Prefix + ":Academics:00015";
+        public const string UnitCountOutOfRange = Prefix + ":Academics:00016";
+        public const string UnitAlreadyRegistered = Prefix + ":Academics:00017";
+        public const string PrerequisiteNotPassed = Prefix + ":Academics:00018";
+        public const string ResultsEntryBlocked = Prefix + ":Academics:00019";
+        public const string ExamComponentMissing = Prefix + ":Academics:00020";
+        public const string StudentDuplicated = Prefix + ":Academics:00021";
+        public const string StudentNotRegisteredForUnit = Prefix + ":Academics:00022";
+        public const string MarkAlreadyAssigned = Prefix + ":Academics:00023";
+        public const string MarkAboveMaximum = Prefix + ":Academics:00024";
+        public const string RecordInUse = Prefix + ":Academics:00025";
+        public const string UnitNotInProgramme = Prefix + ":Academics:00026";
+        public const string DocumentHasLines = Prefix + ":Academics:00027";
+        public const string RefundExceedsPrepayment = Prefix + ":Academics:00028";
+        public const string StatusChangeNotAllowed = Prefix + ":Academics:00029";
+        public const string StudentNotCleared = Prefix + ":Academics:00030";
+        public const string BillNotOfStudent = Prefix + ":Academics:00031";
+        public const string AmountNotPositive = Prefix + ":Academics:00032";
+        public const string TimetableClash = Prefix + ":Academics:00033";
+        public const string InvalidTimeRange = Prefix + ":Academics:00034";
+        public const string ClassExceedsRoom = Prefix + ":Academics:00035";
+        public const string NotEligibleForExam = Prefix + ":Academics:00036";
+        public const string HostelGenderMismatch = Prefix + ":Academics:00037";
+        public const string RoomFull = Prefix + ":Academics:00038";
+        public const string RoomUnavailable = Prefix + ":Academics:00039";
+        public const string StudentAlreadyAllocated = Prefix + ":Academics:00040";
+        public const string StudentNotRegisteredForSemester = Prefix + ":Academics:00041";
+        public const string DocumentStatusWrong = Prefix + ":Academics:00042";
+        public const string ParticipantCountWrong = Prefix + ":Academics:00043";
+        public const string ReasonRequired = Prefix + ":Academics:00044";
+        public const string ExamDateRequired = Prefix + ":Academics:00045";
+        public const string ItemNotInStock = Prefix + ":Academics:00046";
+    }
+
+    public static class Payroll
+    {
+        public const string NetPayNegative = Prefix + ":Payroll:00001";
+        public const string RunStatusWrong = Prefix + ":Payroll:00002";
+        public const string NothingToPost = Prefix + ":Payroll:00003";
+        public const string PeriodAlreadyPosted = Prefix + ":Payroll:00004";
+        public const string InvalidTaxBand = Prefix + ":Payroll:00005";
+        public const string RecordInUse = Prefix + ":Payroll:00006";
+        public const string VoucherAlreadyRaised = Prefix + ":Payroll:00007";
+        public const string NegativeAmount = Prefix + ":Payroll:00008";
+        public const string PayItemDuplicated = Prefix + ":Payroll:00009";
+    }
+
+    public static class Attachments
+    {
+        public const string FileEmpty = Prefix + ":Attachments:00001";
+        public const string FileTooLarge = Prefix + ":Attachments:00002";
+        public const string FileTypeNotAllowed = Prefix + ":Attachments:00003";
+        public const string RecordNotFound = Prefix + ":Attachments:00004";
+    }
+
+    /// <summary>The plain base tables: setup, sub-ledgers and registers.</summary>
+    public static class BaseTables
+    {
+        public const string RecordAlreadyExists = Prefix + ":BaseTables:00001";
     }
 
     public static class JobQueue

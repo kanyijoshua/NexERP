@@ -27,7 +27,7 @@ public class GenJnlPostBatchResult
 }
 
 /// <summary>
-/// Posts a whole journal batch. Mirrors Business Central codeunit 13 "Gen. Jnl.-Post Batch".
+/// Posts a whole journal batch.
 /// <para>
 /// Every line is checked before anything is written, so a batch posts whole or not at all.
 /// Ordinary lines are removed afterwards; recurring lines stay and move to their next period.
@@ -169,7 +169,7 @@ public class GenJnlPostBatch : DomainService
 
     /// <summary>
     /// An accrual reverses itself: the same line is posted again the next day with the opposite
-    /// sign. Mirrors what BC's reversing recurring methods do inside one posting run.
+    /// sign. This is what the reversing recurring methods do inside one posting run.
     /// </summary>
     private async Task PostReversingCounterpartAsync(GenJournalLine line, GLPostingContext context)
     {
@@ -218,7 +218,7 @@ public class GenJnlPostBatch : DomainService
 
     /// <summary>
     /// A foreign currency line posts at the rate of its posting date, which a recurring line moves
-    /// on every period. Mirrors BC re-reading the rate when the posting date changes.
+    /// on every period. The rate is read again when the posting date changes.
     /// </summary>
     private async Task RefreshCurrencyFactorAsync(GenJournalLine line)
     {
@@ -235,7 +235,7 @@ public class GenJnlPostBatch : DomainService
     }
 
     /// <summary>
-    /// Business Central refuses a journal unless every document balances. A line with a balancing
+    /// A journal is refused unless every document balances. A line with a balancing
     /// account balances itself; the rest must net to zero per document number.
     /// </summary>
     private static DocumentBalance FindOutOfBalanceDocument(IEnumerable<GenJournalLine> lines)

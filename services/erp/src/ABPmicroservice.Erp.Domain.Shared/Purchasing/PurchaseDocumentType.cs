@@ -1,8 +1,5 @@
 namespace ABPmicroservice.Erp.Purchasing;
 
-/// <summary>
-/// Mirrors Business Central "Document Type" for the Purchase Header.
-/// </summary>
 public enum PurchaseDocumentType
 {
     Quote = 0,

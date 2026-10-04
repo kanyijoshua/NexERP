@@ -7,8 +7,8 @@ using Volo.Abp.Domain.Entities.Auditing;
 namespace ABPmicroservice.Erp.Reporting;
 
 /// <summary>
-/// Account Schedule. Mirrors Business Central Table 84 "Acc. Schedule Name", which BC now shows
-/// as a Financial Report. The rows say what to add up; a <see cref="ColumnLayout"/> says over
+/// Account Schedule.
+/// The rows say what to add up; a <see cref="ColumnLayout"/> says over
 /// which periods. Together they are how a balance sheet or income statement is defined without
 /// writing code.
 /// </summary>
@@ -48,7 +48,7 @@ public class AccountSchedule : CompanyAggregateRoot
 }
 
 /// <summary>
-/// Account Schedule Line. Mirrors Business Central Table 85 "Acc. Schedule Line".
+/// Account Schedule Line.
 /// </summary>
 public class AccountScheduleLine : FullAuditedEntity<Guid>
 {
@@ -65,7 +65,7 @@ public class AccountScheduleLine : FullAuditedEntity<Guid>
 
     /// <summary>
     /// Accounts, e.g. "1000..1999|2100", or a formula over row numbers, e.g. "R10+R20".
-    /// Mirrors BC's Totaling field, which carries both depending on the totaling type.
+    /// The Totaling field carries both, depending on the totaling type.
     /// </summary>
     public string Totaling { get; private set; }
 
@@ -82,7 +82,7 @@ public class AccountScheduleLine : FullAuditedEntity<Guid>
     /// <summary>Nesting level of the row in the printed report.</summary>
     public int Indentation { get; private set; }
 
-    /// <summary>Leaves the row out when it computes to zero. Mirrors BC "Hide If Zero".</summary>
+    /// <summary>Leaves the row out when it computes to zero.</summary>
     public bool HideIfZero { get; private set; }
 
     protected AccountScheduleLine() { }

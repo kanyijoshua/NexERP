@@ -233,7 +233,7 @@ function dateTest(value: any, op: ErpFilterOperator, target: any, targetTo: any,
 }
 
 /**
- * A Business Central filter expression: `|` is or, `&` is and; a term is a value, a range
+ * A filter expression: `|` is or, `&` is and; a term is a value, a range
  * `a..b` (either end open), a comparison (`<>`, `>=`, `<=`, `>`, `<`, `=`), a text wildcard `*`,
  * or `''` for blank. `@` (ignore case) is accepted; text is compared ignoring case anyway.
  * The server implements the same syntax for lists it filters itself.

@@ -14,7 +14,7 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// Configuration packages, as Business Central's RapidStart Services offers them: design, fill,
+/// Configuration packages: design, fill,
 /// export, import, validate and apply.
 /// </summary>
 [Authorize(ErpPermissions.RapidStart.Default)]

@@ -2,7 +2,7 @@
   [title]="entity.pluralKey"
   [icon]="entity.icon"
   [showSearch]="false"
-  [permission]="entity.permission + '.Create'"
+  [permission]="permission('Create')"
   (create)="openNew()"
   [showViewSwitcher]="true"
   [(viewMode)]="viewMode"
@@ -23,7 +23,7 @@
   (codeClick)="openCard($event)"
   (rowsChange)="loadedRows = $event.rows"
 >
-  <!-- Card format (Odoo kanban / BC tiles) -->
+  <!-- Card format -->
   <ng-template erpTableCard let-row>
     <div class="card h-100 border erp-record-card shadow-sm" role="button" tabindex="0" (click)="openCard(row)" (keydown.enter)="openCard(row)">
       <div class="card-body p-3 d-flex flex-column">
@@ -81,7 +81,7 @@
               <i class="fas fa-pen-to-square"></i>
             </button>
             <button
-              *abpPermission="entity.permission + '.Delete'"
+              *abpPermission="permission('Delete')"
               type="button"
               class="btn btn-outline-danger btn-sm erp-card-btn"
               [title]="'Erp::Delete' | abpLocalization"

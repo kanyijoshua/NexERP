@@ -11,8 +11,8 @@ using Volo.Abp.Domain.Repositories;
 namespace ABPmicroservice.Erp.RapidStart;
 
 /// <summary>
-/// The configuration worksheet: a company's set-up checklist, as Business Central's
-/// "Configuration Worksheet" keeps it, with each table's current record count beside it.
+/// The configuration worksheet: a company's set-up checklist,
+/// with each table's current record count beside it.
 /// </summary>
 [Authorize(ErpPermissions.RapidStart.Default)]
 public class ConfigWorksheetAppService : ErpAppService, IConfigWorksheetAppService
@@ -77,7 +77,7 @@ public class ConfigWorksheetAppService : ErpAppService, IConfigWorksheetAppServi
 
     /// <summary>
     /// Adds each area as a heading with its tables beneath, leaving out what is already listed.
-    /// BC fills its worksheet the same way from "Get Tables"; lines already there keep their place.
+    /// Lines already there keep their place.
     /// </summary>
     [Authorize(ErpPermissions.RapidStart.Manage)]
     public async Task<ListResultDto<ConfigLineDto>> SuggestLinesAsync()

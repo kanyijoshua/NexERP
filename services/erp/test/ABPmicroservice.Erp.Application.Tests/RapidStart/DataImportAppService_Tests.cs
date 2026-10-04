@@ -13,7 +13,7 @@ using Xunit;
 
 namespace ABPmicroservice.Erp.RapidStart;
 
-/// <summary>The import wizard, which follows Odoo's: match columns, test, then all or nothing.</summary>
+/// <summary>The import wizard: match columns, test, then all or nothing.</summary>
 public class DataImportAppService_Tests : ErpApplicationTestBase
 {
     private const string CustomersCsv = "No,Name,Post Code,Customer Posting Group,Shoe Size\r\nC97000,Fabrikam,1000,DOMESTIC,44\r\nC97001,Contoso,2000,DOMESTIC,41\r\n";

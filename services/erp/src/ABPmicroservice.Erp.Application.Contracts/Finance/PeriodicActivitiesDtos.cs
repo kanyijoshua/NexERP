@@ -166,7 +166,7 @@ public class GetPartyLedgerEntryListInput : ErpPagedListInput
     public bool OnlyOpen { get; set; }
 }
 
-/// <summary>The VAT statement (return) and the VAT settlement (BC report 20).</summary>
+/// <summary>The VAT statement (return) and the VAT settlement.</summary>
 public interface IVatReportingAppService : IApplicationService
 {
     Task<VatReturnDto> CalculateReturnAsync(VatReturnInput input);
@@ -176,7 +176,7 @@ public interface IVatReportingAppService : IApplicationService
     Task<VatSettlementDto> SettleAsync(VatSettlementInput input);
 }
 
-/// <summary>Exchange rate adjustment (BC report 596) and its register (BC table 86).</summary>
+/// <summary>Exchange rate adjustment and its register.</summary>
 public interface IExchRateAdjustmentAppService : IApplicationService
 {
     Task<ExchRateAdjustmentDto> CalculateAsync(ExchRateAdjustmentInput input);
