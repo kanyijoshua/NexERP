@@ -27,7 +27,7 @@
         </button>
       }
     }
-    @for (action of actions; track action) {
+    @for (action of actions; track action.key) {
       <button *abpPermission="action.permission" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="run(action)">
         <i [class]="action.icon + ' me-1'"></i>{{ action.labelKey | abpLocalization }}
       </button>
@@ -80,7 +80,7 @@
             {{ 'Erp::Statistics' | abpLocalization }}
           </div>
           <dl class="list-group list-group-flush mb-0 small">
-            @for (fact of facts; track fact) {
+            @for (fact of facts; track fact.labelKey) {
               <div class="list-group-item d-flex justify-content-between">
                 <dt class="fw-normal text-muted">{{ fact.labelKey | abpLocalization }}</dt>
                 <dd class="mb-0 fw-bold" [class.text-danger]="fact.warnWhenTrue && fact.value === true">

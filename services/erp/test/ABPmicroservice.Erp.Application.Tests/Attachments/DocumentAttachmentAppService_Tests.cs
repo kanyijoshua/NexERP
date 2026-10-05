@@ -59,7 +59,7 @@ public class DocumentAttachmentAppService_Tests : ErpApplicationTestBase
             var list = await _attachments.GetListAsync(new GetDocumentAttachmentListInput { EntityName = "Vendor", RecordId = vendor.Id });
             list.Items.Select(a => a.FileName).ShouldBe(["Supply Contract", "price list"]);
 
-            var download = await _attachments.DownloadAsync(first.Id);
+            var download = await _attachments.GetDownloadAsync(first.Id);
             download.FileName.ShouldBe("Supply Contract.pdf");
             download.ContentType.ShouldBe("application/octet-stream");
             using var reader = new StreamReader(download.GetStream());

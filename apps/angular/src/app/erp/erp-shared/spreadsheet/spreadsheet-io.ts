@@ -20,11 +20,18 @@ const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
 /** Loaded on first use: the workbook library is large and most sessions never open a spreadsheet. */
 async function loadExcelJs(): Promise<any> {
   const module: any = await import('exceljs/dist/exceljs.min.js');
-  return module.default ?? module;
+  const lib = module.default ?? module;
+  if (lib?.Workbook) {
+    return lib;
+  }
+  if ((window as any)?.ExcelJS?.Workbook) {
+    return (window as any).ExcelJS;
+  }
+  return lib;
 }
 
 export function isSpreadsheetFile(fileName: string | null | undefined): boolean {
-  return /\.(xlsx|csv)$/i.test(fileName ?? '');
+  return /\.(xlsx|xlsm|csv)$/i.test(fileName ?? '');
 }
 
 /** "A", "B", ... "Z", "AA": the letters of a zero-based column number. */
@@ -90,8 +97,9 @@ function cellValue(cell: any): SpreadsheetCell {
   if (typeof value === 'object') {
     // A formula, or a cell sharing the formula of another: `cell.formula` is the formula as it
     // reads in this cell either way.
-    if (cell.formula) {
-      return '=' + cell.formula;
+    const formula = cell.formula || value.formula;
+    if (formula) {
+      return '=' + String(formula).replace(/^=/, '');
     }
 
     if (Array.isArray(value.richText)) {
@@ -106,7 +114,14 @@ function cellValue(cell: any): SpreadsheetCell {
       return String(value.error);
     }
 
-    return value.result ?? null;
+    if (value.result !== undefined && value.result !== null) {
+      if (typeof value.result === 'object' && value.result instanceof Date) {
+        return value.result.toISOString().substring(0, 10);
+      }
+      return value.result as SpreadsheetCell;
+    }
+
+    return null;
   }
 
   return value;
@@ -175,15 +190,20 @@ export async function readSpreadsheet(blob: Blob, fileName: string): Promise<Spr
   workbook.eachSheet((worksheet: any) => {
     const rows: SpreadsheetCell[][] = [];
     const boldRows: number[] = [];
-    const columnCount = worksheet.actualColumnCount ? worksheet.columnCount : 0;
+    const columnCount = Math.max(
+      worksheet.columnCount || 0,
+      worksheet.actualColumnCount || 0,
+      worksheet.columns?.length || 0,
+    );
 
-    for (let r = 1; r <= worksheet.rowCount; r++) {
+    const rowCount = worksheet.rowCount || 0;
+    for (let r = 1; r <= rowCount; r++) {
       const source = worksheet.getRow(r);
       const row: SpreadsheetCell[] = [];
       for (let c = 1; c <= columnCount; c++) {
         row.push(cellValue(source.getCell(c)));
       }
-      if (columnCount > 0 && source.getCell(1).font?.bold) {
+      if (columnCount > 0 && source.getCell(1)?.font?.bold) {
         boldRows.push(r - 1);
       }
       rows.push(row);

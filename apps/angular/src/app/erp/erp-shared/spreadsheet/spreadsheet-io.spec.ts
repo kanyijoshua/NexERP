@@ -7,6 +7,7 @@ describe('spreadsheet-io', () => {
 
   it('recognises the files the spreadsheet view can open', () => {
     expect(isSpreadsheetFile('Budget 2026.XLSX')).toBeTrue();
+    expect(isSpreadsheetFile('macros.xlsm')).toBeTrue();
     expect(isSpreadsheetFile('rates.csv')).toBeTrue();
     expect(isSpreadsheetFile('contract.pdf')).toBeFalse();
     expect(isSpreadsheetFile(undefined)).toBeFalse();

@@ -93,6 +93,8 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
   @Input() firstColumnFixed = true;
   /** Keeps the actions column in view on horizontal scrolling. */
   @Input() actionsColumnFixed = true;
+  /** Function returning CSS class string or object for each data row. */
+  @Input() rowClass?: (row: T) => string | Record<string, boolean>;
 
   // --- Layout ---
   /** Remembers the user's columns and views under this key; defaults to the page's path. */
@@ -733,8 +735,56 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
     return [col.headerClass, this.alignClass(col)].filter(Boolean).join(' ');
   }
 
-  getCellClass(col: ErpTableColumn<T>): string {
-    return [col.cellClass, this.alignClass(col)].filter(Boolean).join(' ');
+  private cellClassMap = new WeakMap<ErpTableColumn<T>, (data: any) => string>();
+
+  getCellClass(col: ErpTableColumn<T>): (data: { row: T; column: any; value: any }) => string {
+    let fn = this.cellClassMap.get(col);
+    if (!fn) {
+      fn = (data: { row: T; column: any; value: any }) => {
+        let customClass = '';
+        if (typeof col.cellClass === 'function') {
+          const res = col.cellClass(data.row);
+          if (typeof res === 'string') {
+            customClass = res;
+          } else if (res && typeof res === 'object') {
+            customClass = Object.entries(res)
+              .filter(([_, v]) => !!v)
+              .map(([k]) => k)
+              .join(' ');
+          }
+        } else if (typeof col.cellClass === 'string') {
+          customClass = col.cellClass;
+        }
+        return [customClass, this.alignClass(col)].filter(Boolean).join(' ');
+      };
+      this.cellClassMap.set(col, fn);
+    }
+    return fn;
+  }
+
+  getRowClass = (row: T): string => {
+    if (!row || !this.rowClass) return '';
+    const res = this.rowClass(row);
+    if (typeof res === 'string') return res;
+    if (res && typeof res === 'object') {
+      return Object.entries(res)
+        .filter(([_, v]) => !!v)
+        .map(([k]) => k)
+        .join(' ');
+    }
+    return '';
+  };
+
+  getIndentLevel(col: ErpTableColumn<T>, row: T): number {
+    if (!row || !col.indent) return 0;
+    const field = col.indentField || 'indentation';
+    const val = (row as any)[field] ?? (row as any).indent ?? 0;
+    return Math.max(0, Math.min(Number(val) || 0, 10));
+  }
+
+  getIndentArray(col: ErpTableColumn<T>, row: T): number[] {
+    const level = this.getIndentLevel(col, row);
+    return level > 0 ? Array.from({ length: level }, (_, i) => i) : [];
   }
 
   private alignClass(col: ErpTableColumn<T>): string {

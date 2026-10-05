@@ -81,7 +81,8 @@ public interface IDocumentAttachmentAppService : IApplicationService
     Task<DocumentAttachmentDto> UploadAsync(UploadDocumentAttachmentInput input);
 
     /// <summary>Routed as GET /api/erp/document-attachment/{id}/download.</summary>
-    Task<IRemoteStreamContent> DownloadAsync(Guid id);
+    /// <remarks>Named Get* so ABP's conventions expose it as GET <c>/{id}/download</c>; other names default to POST.</remarks>
+    Task<IRemoteStreamContent> GetDownloadAsync(Guid id);
 
     /// <summary>Routed as PUT /api/erp/document-attachment/{id}.</summary>
     Task<DocumentAttachmentDto> UpdateAsync(Guid id, UpdateDocumentAttachmentDto input);

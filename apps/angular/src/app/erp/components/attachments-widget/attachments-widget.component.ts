@@ -115,9 +115,30 @@ export class AttachmentsWidgetComponent implements OnChanges {
 
   download(attachment: DocumentAttachmentDto): void {
     this.service
-      .download(attachment.id!)
+      .download(attachment.id!, { skipHandleError: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(blob => saveBlob(blob, this.fullName(attachment)));
+      .subscribe({
+        next: blob => saveBlob(blob, this.fullName(attachment)),
+        error: err => this.showFailure(err, 'Erp::DownloadFailed'),
+      });
+  }
+
+  /** A failed download carries its error envelope as a Blob; read it so the real reason is shown. */
+  private async showFailure(err: any, fallbackKey: string): Promise<void> {
+    let message: string | undefined;
+    try {
+      const body = err?.error;
+      const text = body instanceof Blob ? await body.text() : typeof body === 'string' ? body : undefined;
+      message = text ? JSON.parse(text)?.error?.message : body?.error?.message;
+    } catch {
+      message = undefined;
+    }
+    console.error('Attachment request failed', err);
+    if (message) {
+      this.toaster.error(message);
+    } else {
+      this.toaster.error(fallbackKey);
+    }
   }
 
   isSpreadsheet(attachment: DocumentAttachmentDto): boolean {
@@ -127,9 +148,12 @@ export class AttachmentsWidgetComponent implements OnChanges {
   /** Opens a workbook in the spreadsheet view instead of saving it to disk. */
   openInSpreadsheet(attachment: DocumentAttachmentDto): void {
     this.service
-      .download(attachment.id!)
+      .download(attachment.id!, { skipHandleError: true })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(blob => this.spreadsheets.openFile(blob, this.fullName(attachment)));
+      .subscribe({
+        next: blob => this.spreadsheets.openFile(blob, this.fullName(attachment)),
+        error: err => this.showFailure(err, 'Erp::SpreadsheetNotReadable'),
+      });
   }
 
   toggleFlow(attachment: DocumentAttachmentDto): void {

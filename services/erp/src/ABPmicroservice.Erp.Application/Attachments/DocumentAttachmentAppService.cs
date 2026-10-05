@@ -77,7 +77,7 @@ public class DocumentAttachmentAppService : ErpAppService, IDocumentAttachmentAp
         return Map(attachment);
     }
 
-    public async Task<IRemoteStreamContent> DownloadAsync(Guid id)
+    public async Task<IRemoteStreamContent> GetDownloadAsync(Guid id)
     {
         var attachment = await _repository.GetAsync(id);
         await CheckRecordAccessAsync(attachment.EntityName);

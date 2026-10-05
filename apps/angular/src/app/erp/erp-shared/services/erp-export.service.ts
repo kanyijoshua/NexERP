@@ -5,7 +5,19 @@ import { saveBlob } from '../report-page/save-blob';
 export interface ErpExportColumn {
   field: string;
   title: string;
-  type?: 'text' | 'number' | 'currency' | 'date' | 'boolean' | 'select';
+  type?:
+    | 'text'
+    | 'number'
+    | 'currency'
+    | 'date'
+    | 'datetime'
+    | 'boolean'
+    | 'select'
+    | 'badge'
+    | 'code'
+    | 'link'
+    | 'switch'
+    | 'custom';
   formatter?: (value: any, row: any) => string | number;
 }
 

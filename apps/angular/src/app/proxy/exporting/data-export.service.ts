@@ -63,13 +63,15 @@ export class DataExportService {
   
 
   runExport = (input: DataExportInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'POST',
-      responseType: 'blob',
-      url: '/api/erp/data-export/run-export',
-      body: input,
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'POST',
+        responseType: 'blob',
+        url: '/api/erp/data-export/run-export',
+        body: input,
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
   
 
   updateTemplate = (id: string, input: CreateUpdateExportTemplateDto, config?: Partial<Rest.Config>) =>

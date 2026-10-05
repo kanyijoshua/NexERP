@@ -24,7 +24,7 @@
 <div class="modal-body">
   @if (facts.length) {
     <div class="d-flex flex-wrap gap-2 mb-3">
-      @for (fact of facts; track fact) {
+      @for (fact of facts; track fact.labelKey) {
         <span
           class="badge rounded-pill border fw-normal"
           [ngClass]="fact.warnWhenTrue && fact.value === true ? 'bg-danger-subtle text-danger border-danger' : 'bg-light text-dark'"

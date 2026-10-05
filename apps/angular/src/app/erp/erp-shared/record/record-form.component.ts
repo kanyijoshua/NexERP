@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { LookupItem } from '../models';
 import { RecordEntity, RecordField, RecordSection } from './record-entity';
@@ -13,7 +13,7 @@ import { fieldsOf, visibleSections } from './record-form';
   templateUrl: './record-form.component.html',
   standalone: false,
 })
-export class RecordFormComponent {
+export class RecordFormComponent implements OnChanges {
   @Input({ required: true }) entity!: RecordEntity;
   @Input({ required: true }) form!: FormGroup;
   /** The loaded record, for `readonly` fields and the codes shown for id lookups. */
@@ -25,13 +25,25 @@ export class RecordFormComponent {
   @Input() idPrefix = 'rec';
 
   private readonly collapsed = new Map<string, boolean>();
+  private _sections: RecordSection[] = [];
+  private _fieldsMap = new Map<string, RecordField[]>();
+
+  ngOnChanges(): void {
+    if (this.entity) {
+      this._sections = visibleSections(this.entity, this.quick);
+      this._fieldsMap.clear();
+      for (const section of this._sections) {
+        this._fieldsMap.set(section.key, fieldsOf(this.entity, section.key, this.quick));
+      }
+    }
+  }
 
   get sections(): RecordSection[] {
-    return visibleSections(this.entity, this.quick);
+    return this._sections.length ? this._sections : (this.entity ? visibleSections(this.entity, this.quick) : []);
   }
 
   fields(section: RecordSection): RecordField[] {
-    return fieldsOf(this.entity, section.key, this.quick);
+    return this._fieldsMap.get(section.key) ?? (this.entity ? fieldsOf(this.entity, section.key, this.quick) : []);
   }
 
   isCollapsed(section: RecordSection): boolean {

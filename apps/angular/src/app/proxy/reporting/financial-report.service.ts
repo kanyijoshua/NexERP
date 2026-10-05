@@ -55,13 +55,15 @@ export class FinancialReportService {
   
 
   runExport = (input: ReportExportInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'POST',
-      responseType: 'blob',
-      url: '/api/erp/financial-report/run-export',
-      body: input,
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'POST',
+        responseType: 'blob',
+        url: '/api/erp/financial-report/run-export',
+        body: input,
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
   
 
   runSchedule = (input: RunAccountScheduleInput, config?: Partial<Rest.Config>) =>

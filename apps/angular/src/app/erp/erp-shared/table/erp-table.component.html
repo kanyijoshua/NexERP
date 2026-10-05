@@ -279,6 +279,7 @@
       [scrollbarV]="true"
       [scrollbarH]="true"
       [rowHeight]="rowHeight"
+      [rowClass]="getRowClass"
       [headerHeight]="headerHeight"
       [footerHeight]="0"
       [externalSorting]="isServerMode"
@@ -329,64 +330,81 @@
             @if (getCustomTemplate(col.field); as customTpl) {
               <ng-container *ngTemplateOutlet="customTpl; context: { $implicit: row, row: row, value: value }"></ng-container>
             } @else {
-              @switch (col.type) {
-                @case ('code') {
-                  @if (isClickable(col, row)) {
+              <div class="erp-cell-container d-inline-flex align-items-center" [class.erp-indented-cell]="col.indent">
+                @if (col.indent && getIndentLevel(col, row) > 0) {
+                  <span class="erp-tree-indent-wrapper d-inline-flex align-items-center" aria-hidden="true">
+                    @for (idx of getIndentArray(col, row); track idx; let isLast = $last) {
+                      <span class="erp-tree-indent-step" [class.erp-tree-branch]="isLast" [class.erp-tree-line]="!isLast"></span>
+                    }
+                  </span>
+                }
+                @switch (col.type) {
+                  @case ('code') {
+                    @if (isClickable(col, row)) {
+                      <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
+                        @if (getIcon(col, row)) {
+                          <i [class]="getIcon(col, row) + ' me-1'"></i>
+                        }
+                        {{ value || '—' }}
+                      </a>
+                    } @else {
+                      <span class="fw-semibold">
+                        @if (getIcon(col, row)) {
+                          <i [class]="getIcon(col, row) + ' me-1'"></i>
+                        }
+                        {{ value || '—' }}
+                      </span>
+                    }
+                  }
+                  @case ('link') {
                     <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
                       @if (getIcon(col, row)) {
                         <i [class]="getIcon(col, row) + ' me-1'"></i>
                       }
                       {{ value || '—' }}
                     </a>
-                  } @else {
-                    <span class="fw-semibold">{{ value || '—' }}</span>
+                  }
+                  @case ('currency') {
+                    <span class="font-monospace" [class.text-danger]="value < 0">{{ col.format ? (col.format(value, row) || (value ?? 0 | erpAmount)) : (value ?? 0 | erpAmount) }}</span>
+                  }
+                  @case ('number') {
+                    <span class="font-monospace">{{ col.format ? col.format(value, row) : (value ?? 0) }}</span>
+                  }
+                  @case ('date') {
+                    <span>{{ value | date: 'yyyy-MM-dd' }}</span>
+                  }
+                  @case ('datetime') {
+                    <span class="small text-muted">{{ value | date: 'short' }}</span>
+                  }
+                  @case ('boolean') {
+                    <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted opacity-50'" [attr.aria-label]="value ? ('AbpUi::Yes' | abpLocalization) : ('AbpUi::No' | abpLocalization)"></i>
+                  }
+                  @case ('switch') {
+                    <div class="form-check form-switch d-inline-block m-0">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [checked]="value"
+                        [attr.aria-label]="getColumnLabel(col)"
+                        (change)="onSwitchToggle(col, row, $event)"
+                        (click)="$event.stopPropagation()"
+                      />
+                    </div>
+                  }
+                  @case ('select') {
+                    <span class="badge bg-light text-secondary border fw-normal">{{ optionLabel(col, value) }}</span>
+                  }
+                  @case ('badge') {
+                    <span class="badge" [ngClass]="getBadgeClass(col, row)">{{ col.format ? col.format(value, row) : (col.options ? optionLabel(col, value) : value) }}</span>
+                  }
+                  @default {
+                    @if (getIcon(col, row)) {
+                      <i [class]="getIcon(col, row) + ' me-1'"></i>
+                    }
+                    {{ col.format ? col.format(value, row) : (value !== null && value !== undefined && value !== '' ? value : '') }}
                   }
                 }
-                @case ('link') {
-                  <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
-                    {{ value || '—' }}
-                  </a>
-                }
-                @case ('currency') {
-                  <span class="font-monospace" [class.text-danger]="value < 0">{{ value ?? 0 | erpAmount }}</span>
-                }
-                @case ('number') {
-                  <span class="font-monospace">{{ col.format ? col.format(value, row) : (value ?? 0) }}</span>
-                }
-                @case ('date') {
-                  <span>{{ value | date: 'yyyy-MM-dd' }}</span>
-                }
-                @case ('datetime') {
-                  <span class="small text-muted">{{ value | date: 'short' }}</span>
-                }
-                @case ('boolean') {
-                  <i class="fas" [ngClass]="value ? 'fa-check text-success' : 'fa-minus text-muted opacity-50'" [attr.aria-label]="value ? ('AbpUi::Yes' | abpLocalization) : ('AbpUi::No' | abpLocalization)"></i>
-                }
-                @case ('switch') {
-                  <div class="form-check form-switch d-inline-block m-0">
-                    <input
-                      type="checkbox"
-                      class="form-check-input"
-                      [checked]="value"
-                      [attr.aria-label]="getColumnLabel(col)"
-                      (change)="onSwitchToggle(col, row, $event)"
-                      (click)="$event.stopPropagation()"
-                    />
-                  </div>
-                }
-                @case ('select') {
-                  <span class="badge bg-light text-secondary border fw-normal">{{ optionLabel(col, value) }}</span>
-                }
-                @case ('badge') {
-                  <span class="badge" [ngClass]="getBadgeClass(col, row)">{{ col.format ? col.format(value, row) : (col.options ? optionLabel(col, value) : value) }}</span>
-                }
-                @default {
-                  @if (getIcon(col, row)) {
-                    <i [class]="getIcon(col, row) + ' me-1 text-muted'"></i>
-                  }
-                  {{ col.format ? col.format(value, row) : (value !== null && value !== undefined && value !== '' ? value : '') }}
-                }
-              }
+              </div>
             }
           </ng-template>
         </ngx-datatable-column>

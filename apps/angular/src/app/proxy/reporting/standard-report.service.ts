@@ -27,13 +27,15 @@ export class StandardReportService {
 
 
   runExport = (input: StandardReportExportInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'POST',
-      responseType: 'blob',
-      url: '/api/erp/standard-report/run-export',
-      body: input,
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'POST',
+        responseType: 'blob',
+        url: '/api/erp/standard-report/run-export',
+        body: input,
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
 
   constructor(private restService: RestService) {}
 }

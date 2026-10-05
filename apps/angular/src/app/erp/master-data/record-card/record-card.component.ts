@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { finalize, switchMap } from 'rxjs/operators';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import {
   RecordAction,
   RecordEntity,
@@ -47,6 +47,10 @@ export class RecordCardComponent implements OnInit {
   form: FormGroup | null = null;
   related: SmartButton[] = [];
 
+  title = '';
+  facts: RecordFact[] = [];
+  actions: RecordAction<any>[] = [];
+
   isBusy = false;
   canEdit = false;
   canDelete = false;
@@ -59,32 +63,18 @@ export class RecordCardComponent implements OnInit {
     return !this.id;
   }
 
-  get title(): string {
-    if (!this.record || this.isNew) {
-      return '';
-    }
-    const item = this.entity.toItem(this.record);
-    return [item.code, item.name].filter(Boolean).join(' · ');
-  }
-
-  get facts(): RecordFact[] {
-    return this.record && !this.isNew && this.entity.facts ? this.entity.facts(this.record) : [];
-  }
-
-  get actions(): RecordAction<any>[] {
-    const record = this.record;
-    if (!record || this.isNew) {
-      return [];
-    }
-    return (this.entity.actions ?? []).filter(a => !a.visible || a.visible(record));
-  }
-
   get listRoute(): string[] {
     return this.entity.listRoute ?? ['/erp'];
   }
 
   ngOnInit(): void {
-    this.entity = this.registry.get(this.route.snapshot.data['entity']);
+    const entityKey = this.resolveEntityKey();
+    if (!entityKey) {
+      this.toaster.error('Erp::RecordNotFound');
+      this.router.navigate(['/erp']);
+      return;
+    }
+    this.entity = this.registry.get(entityKey);
 
     // The same component serves every id of the table, so it follows the route rather than reading it once.
     this.route.paramMap
@@ -96,7 +86,11 @@ export class RecordCardComponent implements OnInit {
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(record => this.show(record));
+      .subscribe(record => {
+        if (record) {
+          this.show(record);
+        }
+      });
 
     // A record belongs to one company; after switching there is nothing to show here.
     this.companyService.companyChanged$
@@ -213,16 +207,52 @@ export class RecordCardComponent implements OnInit {
     this.load()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(record => {
+        if (!record) return;
         if (this.form?.dirty) {
           this.record = record;
+          this.updateComputedProperties();
         } else {
           this.show(record);
         }
       });
   }
 
-  private load(): Observable<Record<string, any>> {
-    return this.id ? this.entity.get(this.id) : of(this.entity.newRecord());
+  private resolveEntityKey(): string {
+    let curr: ActivatedRoute | null = this.route;
+    while (curr) {
+      const key = curr.snapshot?.data?.['entity'];
+      if (key) {
+        return key;
+      }
+      curr = curr.parent;
+    }
+    return '';
+  }
+
+  private updateComputedProperties(): void {
+    if (!this.record || this.isNew) {
+      this.title = '';
+      this.facts = [];
+      this.actions = [];
+      return;
+    }
+    const item = this.entity.toItem(this.record);
+    this.title = [item.code, item.name].filter(Boolean).join(' · ');
+    this.facts = this.entity.facts ? this.entity.facts(this.record) : [];
+    this.actions = (this.entity.actions ?? []).filter(a => !a.visible || a.visible(this.record));
+  }
+
+  private load(): Observable<Record<string, any> | null> {
+    if (!this.id) {
+      return of(this.entity.newRecord());
+    }
+    return this.entity.get(this.id).pipe(
+      catchError(() => {
+        this.toaster.error('Erp::RecordNotFound');
+        this.router.navigate(this.listRoute);
+        return of(null);
+      }),
+    );
   }
 
   private show(record: Record<string, any>): void {
@@ -236,6 +266,7 @@ export class RecordCardComponent implements OnInit {
       isNew: this.isNew,
       readonly: !this.canEdit,
     });
+    this.updateComputedProperties();
 
     this.related = [];
     if (!this.isNew && this.entity.related) {

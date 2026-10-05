@@ -178,6 +178,152 @@
   .datatable-body-cell.text-center {
     justify-content: center;
   }
+
+  /* Indented tree cell styling */
+  .erp-cell-container {
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    width: 100%;
+  }
+
+  .erp-tree-indent-wrapper {
+    flex-shrink: 0;
+    height: 24px;
+    margin-right: 6px;
+    user-select: none;
+  }
+
+  .erp-tree-indent-step {
+    display: inline-block;
+    width: 18px;
+    height: 24px;
+    position: relative;
+    vertical-align: middle;
+
+    &.erp-tree-line {
+      &::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 1.5px;
+        background-color: var(--bs-border-color, #cbd5e1);
+        opacity: 0.65;
+      }
+    }
+
+    &.erp-tree-branch {
+      &::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        height: 12px;
+        width: 1.5px;
+        background-color: var(--bs-border-color, #cbd5e1);
+        opacity: 0.65;
+      }
+      &::after {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 12px;
+        width: 8px;
+        height: 1.5px;
+        background-color: var(--bs-border-color, #cbd5e1);
+        opacity: 0.65;
+      }
+    }
+  }
+
+  .datatable-body-row:hover {
+    .erp-tree-indent-step.erp-tree-line::before,
+    .erp-tree-indent-step.erp-tree-branch::before,
+    .erp-tree-indent-step.erp-tree-branch::after {
+      background-color: var(--erp-primary, var(--bs-primary, #0d6efd));
+      opacity: 0.85;
+    }
+  }
+
+  /* Chart of Accounts row classes */
+  .datatable-body-row.erp-coa-row-heading {
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+
+    .datatable-row-left,
+    .datatable-row-right,
+    .datatable-row-center {
+      background-color: var(--bs-tertiary-bg, #f8fafc) !important;
+      font-weight: 700 !important;
+      color: var(--bs-body-color, #0f172a);
+    }
+
+    .erp-code-link {
+      font-weight: 700 !important;
+    }
+  }
+
+  .datatable-body-row.erp-coa-row-begin-total {
+    font-weight: 600 !important;
+
+    .datatable-row-left,
+    .datatable-row-right,
+    .datatable-row-center {
+      font-weight: 600 !important;
+    }
+
+    .erp-code-link {
+      font-weight: 600 !important;
+    }
+  }
+
+  .datatable-body-row.erp-coa-row-end-total {
+    font-weight: 700 !important;
+
+    .datatable-row-left,
+    .datatable-row-right,
+    .datatable-row-center {
+      background-color: rgba(100, 116, 139, 0.04) !important;
+      font-weight: 700 !important;
+      border-top: 1px solid var(--bs-border-color, #cbd5e1) !important;
+    }
+
+    .erp-code-link {
+      font-weight: 700 !important;
+    }
+
+    .font-monospace {
+      font-weight: 700 !important;
+    }
+  }
+
+  .datatable-body-row.erp-coa-row-total {
+    font-weight: 700 !important;
+
+    .datatable-row-left,
+    .datatable-row-right,
+    .datatable-row-center {
+      background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.06) !important;
+      font-weight: 700 !important;
+      border-top: 1.5px solid var(--bs-border-color, #94a3b8) !important;
+      border-bottom: 3px double var(--bs-border-color, #64748b) !important;
+    }
+
+    .erp-code-link {
+      font-weight: 700 !important;
+    }
+
+    .font-monospace {
+      font-weight: 700 !important;
+    }
+  }
+
+  .datatable-body-row.erp-coa-row-blocked {
+    opacity: 0.65;
+  }
 }
 
 .erp-cards-scroller {

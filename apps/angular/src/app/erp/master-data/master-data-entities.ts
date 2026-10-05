@@ -427,19 +427,144 @@ export class MasterDataEntities {
     permission: 'Erp.GLAccounts',
     listRoute: ['/erp/chart-of-accounts'],
     chatterEntityType: 'GLAccount',
+    rowClass: (row: GLAccountDto) => {
+      const classes: Record<string, boolean> = {};
+      switch (row.accountType) {
+        case GLAccountType.Heading:
+          classes['erp-coa-row-heading'] = true;
+          break;
+        case GLAccountType.Total:
+          classes['erp-coa-row-total'] = true;
+          break;
+        case GLAccountType.BeginTotal:
+          classes['erp-coa-row-begin-total'] = true;
+          break;
+        case GLAccountType.EndTotal:
+          classes['erp-coa-row-end-total'] = true;
+          break;
+        default:
+          classes['erp-coa-row-posting'] = true;
+          break;
+      }
+      if (row.blocked) {
+        classes['erp-coa-row-blocked'] = true;
+      }
+      return classes;
+    },
     columns: [
-      { field: 'no', labelKey: 'Erp::No', width: 100 },
-      { field: 'name', labelKey: 'Erp::Name', width: 240 },
+      { field: 'no', labelKey: 'Erp::No', width: 110 },
+      {
+        field: 'name',
+        labelKey: 'Erp::Name',
+        width: 320,
+        indent: true,
+        icon: (row: GLAccountDto) => {
+          switch (row.accountType) {
+            case GLAccountType.Heading:
+              return 'fas fa-folder text-primary';
+            case GLAccountType.BeginTotal:
+              return 'fas fa-folder-open text-info';
+            case GLAccountType.EndTotal:
+              return 'fas fa-calculator text-success';
+            case GLAccountType.Total:
+              return 'fas fa-equals text-dark';
+            default:
+              return row.directPosting
+                ? 'far fa-file-lines text-muted opacity-50'
+                : 'fas fa-lock text-secondary opacity-50';
+          }
+        },
+      },
       { field: 'searchName', labelKey: 'Erp::SearchName', width: 140 },
-      { field: 'incomeBalance', labelKey: 'Erp::IncomeBalance', type: 'select', options: enumOptions(incomeBalanceTypeOptions, 'IncomeBalanceType') },
-      { field: 'accountCategory', labelKey: 'Erp::AccountCategory', type: 'select', options: enumOptions(glAccountCategoryOptions, 'GLAccountCategory') },
-      { field: 'accountType', labelKey: 'Erp::AccountType', type: 'select', options: enumOptions(glAccountTypeOptions, 'GLAccountType'), width: 110 },
+      {
+        field: 'incomeBalance',
+        labelKey: 'Erp::IncomeBalance',
+        type: 'badge',
+        options: enumOptions(incomeBalanceTypeOptions, 'IncomeBalanceType'),
+        width: 140,
+        badgeClass: (row: GLAccountDto) =>
+          row.incomeBalance === IncomeBalanceType.BalanceSheet
+            ? 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+            : 'bg-primary-subtle text-primary border border-primary-subtle',
+      },
+      {
+        field: 'accountCategory',
+        labelKey: 'Erp::AccountCategory',
+        type: 'badge',
+        options: enumOptions(glAccountCategoryOptions, 'GLAccountCategory'),
+        width: 140,
+        badgeClass: (row: GLAccountDto) => {
+          switch (row.accountCategory) {
+            case GLAccountCategory.Assets:
+              return 'bg-primary-subtle text-primary border border-primary-subtle';
+            case GLAccountCategory.Liabilities:
+              return 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+            case GLAccountCategory.Equity:
+              return 'bg-info-subtle text-info-emphasis border border-info-subtle';
+            case GLAccountCategory.Income:
+              return 'bg-success-subtle text-success border border-success-subtle';
+            case GLAccountCategory.CostOfGoodsSold:
+              return 'bg-secondary-subtle text-secondary border border-secondary-subtle';
+            case GLAccountCategory.Expense:
+              return 'bg-danger-subtle text-danger border border-danger-subtle';
+            default:
+              return 'bg-light text-secondary border';
+          }
+        },
+      },
+      {
+        field: 'accountType',
+        labelKey: 'Erp::AccountType',
+        type: 'badge',
+        options: enumOptions(glAccountTypeOptions, 'GLAccountType'),
+        width: 120,
+        badgeClass: (row: GLAccountDto) => {
+          switch (row.accountType) {
+            case GLAccountType.Heading:
+              return 'bg-primary-subtle text-primary border border-primary-subtle fw-semibold';
+            case GLAccountType.BeginTotal:
+              return 'bg-info-subtle text-info-emphasis border border-info-subtle fw-semibold';
+            case GLAccountType.EndTotal:
+              return 'bg-success-subtle text-success border border-success-subtle fw-bold';
+            case GLAccountType.Total:
+              return 'text-bg-dark fw-bold';
+            default:
+              return 'bg-light text-secondary border fw-normal';
+          }
+        },
+      },
+      {
+        field: 'indentation',
+        labelKey: 'Erp::Indentation',
+        type: 'badge',
+        width: 90,
+        badgeClass: (row: GLAccountDto) =>
+          row.indentation > 0
+            ? 'bg-primary-subtle text-primary border border-primary-subtle fw-semibold'
+            : 'bg-light text-muted border fw-normal',
+        format: (val: any) => `Level ${val ?? 0}`,
+      },
+      { field: 'directPosting', labelKey: 'Erp::DirectPosting', type: 'boolean', width: 100 },
       { field: 'debitCredit', labelKey: 'Erp::DebitCredit', type: 'select', options: enumOptions(glAccountDebitCreditOptions, 'GLAccountDebitCredit'), width: 100 },
       { field: 'totaling', labelKey: 'Erp::Totaling', width: 120 },
       { field: 'genBusPostingGroup', labelKey: 'Erp::GenBusPostingGroup', width: 110 },
       { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', width: 110 },
-      { field: 'netChange', labelKey: 'Erp::NetChange', type: 'currency', sortable: false, width: 130 },
-      { field: 'balance', labelKey: 'Erp::Balance', type: 'currency', sortable: false, width: 130 },
+      {
+        field: 'netChange',
+        labelKey: 'Erp::NetChange',
+        type: 'currency',
+        sortable: false,
+        width: 130,
+        format: (val: any, row: GLAccountDto) => (row.accountType === GLAccountType.Heading ? '—' : ''),
+      },
+      {
+        field: 'balance',
+        labelKey: 'Erp::Balance',
+        type: 'currency',
+        sortable: false,
+        width: 130,
+        format: (val: any, row: GLAccountDto) => (row.accountType === GLAccountType.Heading ? '—' : ''),
+      },
       { field: 'reconciliationAccount', labelKey: 'Erp::ReconciliationAccount', type: 'boolean', width: 90 },
       { field: 'blocked', labelKey: 'Erp::Blocked', type: 'boolean', width: 90 },
     ],
@@ -516,6 +641,12 @@ export class MasterDataEntities {
       omitDefaultDescrInJnl: false,
     }),
     facts: dto => [
+      {
+        labelKey: 'Erp::AccountType',
+        value: glAccountTypeOptions.find(o => o.value === dto.accountType)?.key ?? dto.accountType,
+        type: 'text',
+      },
+      { labelKey: 'Erp::Indentation', value: `Level ${dto.indentation ?? 0}`, type: 'text' },
       { labelKey: 'Erp::NetChange', value: dto.netChange, type: 'currency' },
       { labelKey: 'Erp::Balance', value: dto.balance, type: 'currency' },
       { labelKey: 'Erp::Blocked', value: dto.blocked, type: 'boolean', warnWhenTrue: true },

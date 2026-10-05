@@ -19,13 +19,15 @@ export class DataImportService {
 
 
   getTemplateFile = (entityName: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'GET',
-      responseType: 'blob',
-      url: '/api/erp/data-import/template-file',
-      params: { entityName },
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'GET',
+        responseType: 'blob',
+        url: '/api/erp/data-import/template-file',
+        params: { entityName },
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
 
 
   parseFile = (input: ImportFileInput, config?: Partial<Rest.Config>) =>

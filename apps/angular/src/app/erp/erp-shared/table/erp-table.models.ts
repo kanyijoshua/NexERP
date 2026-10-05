@@ -41,8 +41,8 @@ export interface ErpTableColumn<T = any> {
   sortable?: boolean;
   /** Custom header CSS class */
   headerClass?: string;
-  /** Custom cell CSS class */
-  cellClass?: string;
+  /** Custom cell CSS class or class function */
+  cellClass?: string | ((data: { row: T; column?: any; value?: any } | T) => string | Record<string, boolean>);
   /** For code/link: whether the value is a link that emits `codeClick`. */
   clickable?: boolean | ((row: T) => boolean);
   /** For badge type: function returning CSS classes or static class */
@@ -53,6 +53,10 @@ export interface ErpTableColumn<T = any> {
   icon?: string | ((row: T) => string);
   /** Optional custom template ref */
   template?: TemplateRef<any>;
+  /** Visual indentation settings: when true, indentation is applied based on row[indentField || 'indentation'] */
+  indent?: boolean;
+  /** Property on row providing indentation level (defaults to 'indentation') */
+  indentField?: string;
   /** `select` / `badge`: the values the field takes, shown by label and offered as filter values. */
   options?: ErpTableOption[];
 

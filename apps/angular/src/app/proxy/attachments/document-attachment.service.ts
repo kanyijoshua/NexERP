@@ -19,12 +19,14 @@ export class DocumentAttachmentService {
 
 
   download = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'GET',
-      responseType: 'blob',
-      url: `/api/erp/document-attachment/${id}/download`,
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'GET',
+        responseType: 'blob',
+        url: `/api/erp/document-attachment/${id}/download`,
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
 
 
   getList = (input: GetDocumentAttachmentListInput, config?: Partial<Rest.Config>) =>

@@ -3,6 +3,7 @@ import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, forkJoin } from 'rxjs';
 import {
   ErpExportColumn,
   ErpExportOptions,
@@ -57,6 +58,7 @@ export class RecordListComponent implements OnInit {
   loadedRows: Record<string, any>[] = [];
 
   viewMode: 'table' | 'card' = this.readViewMode();
+  isIndenting = false;
 
   /** The policy an action needs; one nobody holds when the table is read-only. */
   permission(action: 'Create' | 'Update' | 'Delete'): string {
@@ -64,30 +66,147 @@ export class RecordListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.entity = this.registry.get(this.route.snapshot.data['entity']);
+    const entityKey = this.resolveEntityKey();
+    this.entity = this.registry.get(entityKey);
     // A smart button may open the list already searched, e.g. an employee's absences.
     this.initialSearch = this.route.snapshot.queryParamMap.get('filter') ?? '';
 
     this.columns = toRecordTableColumns(this.entity.columns);
-    this.actions = [
+
+    const baseActions: ErpTableAction[] = [
       {
         key: 'edit',
         title: 'Erp::Edit',
         icon: 'fas fa-pen',
         action: (row, event) => this.quickEdit(row, event),
       },
-      {
-        key: 'delete',
-        title: 'Erp::Delete',
-        icon: 'fas fa-trash',
-        btnClass: 'btn-outline-danger',
-        permission: this.permission('Delete'),
-        action: (row, event) => this.remove(row, event),
-      },
     ];
+
+    if (this.entity.key === 'glAccount') {
+      baseActions.push(
+        {
+          key: 'indent',
+          title: 'Erp::Indent',
+          icon: 'fas fa-indent',
+          permission: this.permission('Update'),
+          action: (row, event) => this.adjustIndent(row, 1, event),
+        },
+        {
+          key: 'outdent',
+          title: 'Erp::Outdent',
+          icon: 'fas fa-outdent',
+          permission: this.permission('Update'),
+          disabled: row => !row['indentation'] || row['indentation'] <= 0,
+          action: (row, event) => this.adjustIndent(row, -1, event),
+        }
+      );
+    }
+
+    baseActions.push({
+      key: 'delete',
+      title: 'Erp::Delete',
+      icon: 'fas fa-trash',
+      btnClass: 'btn-outline-danger',
+      permission: this.permission('Delete'),
+      action: (row, event) => this.remove(row, event),
+    });
+
+    this.actions = baseActions;
     this.source = query => this.entity.getList(query);
 
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.table?.reload());
+  }
+
+  adjustIndent(row: Record<string, any>, delta: number, event?: Event): void {
+    event?.stopPropagation();
+    const current = Number(row['indentation']) || 0;
+    const next = Math.max(0, current + delta);
+    if (next === current) return;
+
+    const input = { ...row, indentation: next };
+    this.entity.update(row['id'], input).subscribe({
+      next: () => {
+        row['indentation'] = next;
+        this.toaster.success('Erp::IndentationUpdated');
+        this.table?.reload();
+      },
+      error: () => this.toaster.error('Erp::FailedToUpdateIndentation'),
+    });
+  }
+
+  indentChartOfAccounts(): void {
+    this.confirmation
+      .warn('Erp::IndentChartOfAccountsConfirm', 'Erp::IndentChartOfAccounts')
+      .subscribe((status: Confirmation.Status) => {
+        if (status !== Confirmation.Status.confirm) {
+          return;
+        }
+
+        this.isIndenting = true;
+        this.entity.getList({ skipCount: 0, maxResultCount: 1000, sorting: 'no asc' }).subscribe({
+          next: result => {
+            const items = [...(result.items || [])].sort((a, b) =>
+              (a['no'] || '').localeCompare(b['no'] || '', undefined, { numeric: true })
+            );
+
+            let currentIndent = 0;
+            const stack: any[] = [];
+            const updates: Observable<any>[] = [];
+
+            for (const acc of items) {
+              let targetIndent = currentIndent;
+              let autoTotaling = acc['totaling'];
+              const type = Number(acc['accountType']);
+
+              if (type === 3 /* BeginTotal */) {
+                targetIndent = currentIndent;
+                stack.push(acc);
+                currentIndent++;
+              } else if (type === 4 /* EndTotal */) {
+                const beginAcc = stack.pop();
+                currentIndent = Math.max(0, currentIndent - 1);
+                targetIndent = currentIndent;
+                if (!autoTotaling && beginAcc) {
+                  autoTotaling = `${beginAcc['no']}..${acc['no']}`;
+                }
+              } else {
+                targetIndent = currentIndent;
+              }
+
+              if (acc['indentation'] !== targetIndent || (autoTotaling && autoTotaling !== acc['totaling'])) {
+                const input = {
+                  ...acc,
+                  indentation: targetIndent,
+                  totaling: autoTotaling,
+                };
+                updates.push(this.entity.update(acc['id'], input));
+              }
+            }
+
+            if (updates.length === 0) {
+              this.isIndenting = false;
+              this.toaster.info('Erp::ChartOfAccountsAlreadyIndented');
+              return;
+            }
+
+            forkJoin(updates).subscribe({
+              next: () => {
+                this.isIndenting = false;
+                this.toaster.success('Erp::ChartOfAccountsIndentedSuccess');
+                this.table?.reload();
+              },
+              error: () => {
+                this.isIndenting = false;
+                this.toaster.error('Erp::FailedToUpdateIndentation');
+              },
+            });
+          },
+          error: () => {
+            this.isIndenting = false;
+            this.toaster.error('Erp::FailedToLoadAccounts');
+          },
+        });
+      });
   }
 
   onViewModeChange(mode: 'table' | 'card'): void {
@@ -109,7 +228,15 @@ export class RecordListComponent implements OnInit {
       field: c.field,
       title: this.localization.instant(c.labelKey) || c.labelKey.replace(/^Erp::/, ''),
       type: c.type,
-      formatter: (val, row) => (c.type === 'select' ? this.localization.instant(this.optionLabel(row, c)) : val),
+      formatter: (val, row) => {
+        if (c.format) {
+          return c.format(val, row);
+        }
+        if (c.type === 'select' || c.type === 'badge') {
+          return this.localization.instant(this.optionLabel(row, c));
+        }
+        return val;
+      },
     }));
 
     const options: ErpExportOptions = {
@@ -176,7 +303,17 @@ export class RecordListComponent implements OnInit {
 
   optionLabel(row: Record<string, any>, column: RecordColumn): string {
     const value = row[column.field];
+    if (column.format) {
+      return column.format(value, row);
+    }
     return column.options?.find(o => o.value === value)?.label ?? String(value ?? '');
+  }
+
+  getBadgeClass(column: RecordColumn, row: Record<string, any>): string {
+    if (typeof column.badgeClass === 'function') {
+      return column.badgeClass(row);
+    }
+    return column.badgeClass || 'bg-light text-secondary border';
   }
 
   getTitle(row: Record<string, any>): string {
@@ -220,6 +357,18 @@ export class RecordListComponent implements OnInit {
   getCardColumns(): RecordColumn[] {
     const shown = [this.entity.columns[0]?.field, this.entity.columns[1]?.field, 'name', 'no', 'code', 'description'];
     return this.entity.columns.filter(c => !shown.includes(c.field)).slice(0, 4);
+  }
+
+  private resolveEntityKey(): string {
+    let curr: ActivatedRoute | null = this.route;
+    while (curr) {
+      const key = curr.snapshot?.data?.['entity'];
+      if (key) {
+        return key;
+      }
+      curr = curr.parent;
+    }
+    return '';
   }
 
   private readViewMode(): 'table' | 'card' {

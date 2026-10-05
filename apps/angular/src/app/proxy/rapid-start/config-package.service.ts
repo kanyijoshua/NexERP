@@ -63,13 +63,15 @@ export class ConfigPackageService {
   
 
   exportPackage = (id: string, input: ExportConfigPackageInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, Blob>({
-      method: 'POST',
-      responseType: 'blob',
-      url: `/api/erp/config-package/${id}/export-package`,
-      body: input,
-    },
-    { apiName: this.apiName,...config });
+    this.restService.request<any, Blob>(
+      {
+        method: 'POST',
+        responseType: 'blob',
+        url: `/api/erp/config-package/${id}/export-package`,
+        body: input,
+      },
+      { apiName: this.apiName, responseType: Rest.ResponseType.Blob, ...config },
+    );
   
 
   fillFromDatabase = (id: string, input: ConfigPackageTablesInput, config?: Partial<Rest.Config>) =>

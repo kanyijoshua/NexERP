@@ -65,7 +65,19 @@ export interface RecordSection {
   collapsed?: boolean;
 }
 
-export type RecordColumnType = 'text' | 'number' | 'currency' | 'boolean' | 'select' | 'date';
+export type RecordColumnType =
+  | 'text'
+  | 'number'
+  | 'currency'
+  | 'boolean'
+  | 'select'
+  | 'date'
+  | 'badge'
+  | 'code'
+  | 'link'
+  | 'datetime'
+  | 'switch'
+  | 'custom';
 
 /** One column of the full list. */
 export interface RecordColumn {
@@ -79,6 +91,18 @@ export interface RecordColumn {
   width?: number;
   /** Offered in the list's filter pane; defaults to `true`. Turn off for values the server computes. */
   filterable?: boolean;
+  /** Custom badge class string or function */
+  badgeClass?: string | ((row: any) => string);
+  /** Custom cell CSS class or function */
+  cellClass?: string | ((data: any) => string | Record<string, boolean>);
+  /** Optional icon prefix for cell */
+  icon?: string | ((row: any) => string);
+  /** Custom formatter function */
+  format?: (value: any, row: any) => string;
+  /** Whether to render visual tree indentation */
+  indent?: boolean;
+  /** Row property for indentation depth */
+  indentField?: string;
 }
 
 /** A record table's columns as grid columns: the first one links to the card. */
@@ -91,6 +115,12 @@ export function toRecordTableColumns(columns: RecordColumn[]): ErpTableColumn[] 
     sortable: column.sortable !== false,
     filterable: column.filterable !== false,
     options: column.options,
+    indent: column.indent,
+    indentField: column.indentField,
+    cellClass: column.cellClass,
+    badgeClass: column.badgeClass,
+    icon: column.icon,
+    format: column.format,
   }));
 }
 
@@ -161,6 +191,8 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   readOnly?: boolean;
   /** Chatter thread key for the card page. No chatter when omitted. */
   chatterEntityType?: string;
+  /** Optional row-level styling function for table rows and card view. */
+  rowClass?: (row: TDto) => string | Record<string, boolean>;
 
   columns: RecordColumn[];
   fields: RecordField[];

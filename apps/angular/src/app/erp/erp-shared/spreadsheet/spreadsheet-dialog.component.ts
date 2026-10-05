@@ -61,7 +61,7 @@ export class SpreadsheetDialogComponent implements AfterViewInit, OnDestroy {
   async ngAfterViewInit(): Promise<void> {
     try {
       const [sheets, module] = await Promise.all([Promise.resolve(this.sheets), import('jspreadsheet-ce')]);
-      this.library = (module as any).default ?? module;
+      this.library = (module as any).default ?? (window as any).jspreadsheet ?? module;
 
       const cells = sheets.reduce((total, sheet) => total + sheet.rows.length * (sheet.rows[0]?.length ?? 0), 0);
       if (cells > MAX_SPREADSHEET_CELLS) {
@@ -73,7 +73,8 @@ export class SpreadsheetDialogComponent implements AfterViewInit, OnDestroy {
       // Outside the zone: the grid listens to every mouse move and key press, and none of them
       // changes anything Angular renders.
       this.zone.runOutsideAngular(() => this.render(sheets.length ? sheets : [{ name: 'Sheet1', rows: [] }]));
-    } catch {
+    } catch (err) {
+      console.error('Failed to open spreadsheet', err);
       this.failed.set(true);
       this.toaster.error('Erp::SpreadsheetNotReadable');
     } finally {
@@ -195,25 +196,25 @@ export class SpreadsheetDialogComponent implements AfterViewInit, OnDestroy {
   /** The workbook as it stands, formulas included, for saving. */
   private snapshot(): SpreadsheetSheet[] {
     return this.worksheets.map((worksheet, index) => {
-      const rows = worksheet.getData();
+      const rows = worksheet.getData ? worksheet.getData() : [];
       const boldRows: number[] = [];
       rows.forEach((_, row) => {
-        if (worksheet.getStyle('A' + (row + 1), 'font-weight') === 'bold') {
+        if (worksheet.getStyle && worksheet.getStyle('A' + (row + 1), 'font-weight') === 'bold') {
           boldRows.push(row);
         }
       });
 
       return {
-        name: worksheet.getConfig().worksheetName || `Sheet${index + 1}`,
+        name: (worksheet.getConfig && worksheet.getConfig().worksheetName) || `Sheet${index + 1}`,
         rows,
-        widths: (rows[0] ?? []).map((_, column) => Number(worksheet.getWidth(column)) || 100),
+        widths: (rows[0] ?? []).map((_, column) => (worksheet.getWidth ? Number(worksheet.getWidth(column)) : 100) || 100),
         boldRows,
       };
     });
   }
 
   private render(sheets: SpreadsheetSheet[]): void {
-    this.worksheets = this.library(this.host.nativeElement, {
+    const result = this.library(this.host.nativeElement, {
       tabs: sheets.length > 1,
       toolbar: false,
       about: false,
@@ -254,6 +255,7 @@ export class SpreadsheetDialogComponent implements AfterViewInit, OnDestroy {
           this.zone.run(() => this.cellContent.set(value === null || value === undefined ? '' : String(value)));
         }
       },
-    }) as Worksheet[];
+    });
+    this.worksheets = Array.isArray(result) ? (result as Worksheet[]) : [result as Worksheet];
   }
 }
