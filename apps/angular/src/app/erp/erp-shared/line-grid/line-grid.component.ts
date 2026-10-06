@@ -33,10 +33,27 @@ export class LineGridComponent implements AfterViewInit {
   @Input() columns: DocumentLineColumn[] = [];
   @Input() readonly = false;
   @Input() emptyKey = 'Erp::NoLines';
+  /** Whether new lines may be added and lines removed; editing the cells is `readonly`'s concern. */
+  @Input() allowAdd = true;
+  @Input() allowRemove = true;
+  /** Shows a button on each line that opens the line in full, e.g. its card. */
+  @Input() openable = false;
+  /** The "Add line" link under the grid; off when the page offers its own New Line button. */
+  @Input() showAddButton = true;
 
   @Output() addLine = new EventEmitter<void>();
   @Output() removeLine = new EventEmitter<number>();
   @Output() lineChange = new EventEmitter<DocumentLineChange>();
+  @Output() openLine = new EventEmitter<number>();
+
+  /** Whether the row has its own buttons column. */
+  get hasActions(): boolean {
+    return this.openable || (!this.readonly && this.allowRemove);
+  }
+
+  isReadonly(column: DocumentLineColumn): boolean {
+    return this.readonly || column.type === 'readonly' || !!column.readonly;
+  }
 
   @ViewChildren('rowEl') rowElements!: QueryList<ElementRef<HTMLTableRowElement>>;
 
@@ -64,7 +81,7 @@ export class LineGridComponent implements AfterViewInit {
   }
 
   requestAddLine(): void {
-    if (this.readonly) {
+    if (this.readonly || !this.allowAdd) {
       return;
     }
     this.focusNewRow = true;
@@ -79,7 +96,7 @@ export class LineGridComponent implements AfterViewInit {
       // defaultPrevented: the typeahead popup consumed Enter to pick an item.
       event.preventDefault();
       this.requestAddLine();
-    } else if (event.key === 'Delete' && event.ctrlKey) {
+    } else if (event.key === 'Delete' && event.ctrlKey && this.allowRemove) {
       event.preventDefault();
       this.removeLine.emit(index);
     }
@@ -112,6 +129,9 @@ export class LineGridComponent implements AfterViewInit {
     if (column.type === 'select') {
       const option = column.options?.find(o => o.value === value);
       return option ? option.label : String(value);
+    }
+    if (column.type === 'date' && typeof value === 'string') {
+      return value.substring(0, 10);
     }
     if (typeof value === 'number' && column.type !== 'number') {
       return this.amountPipe.transform(value);

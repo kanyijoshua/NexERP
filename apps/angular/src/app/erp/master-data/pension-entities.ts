@@ -2,6 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import {
   CreateUpdateLumpsumTaxBandDto,
   CreateUpdateMemberExitDto,
+  ExitReasonDocumentService,
+  MemberExitDocumentService,
+  PensionAgeFactorService,
+  PensionableSalaryBasis,
+  pensionableSalaryBasisOptions,
   CreateUpdatePensionContributionHeaderDto,
   CreateUpdatePensionContributionLineDto,
   CreateUpdatePensionInterestRateDto,
@@ -17,6 +22,12 @@ import {
   MemberLedgerEntryDto,
   MemberLedgerEntryService,
   MemberStatus,
+  MemberStatusEntryService,
+  MemberSalaryEntryService,
+  PensionBeneficiaryService,
+  PensionContributionRateService,
+  PensionVestingScaleService,
+  PensionerService,
   PensionContributionHeaderDto,
   PensionContributionLineDto,
   PensionContributionLineService,
@@ -85,6 +96,15 @@ export class PensionEntities {
   private readonly taxTables = inject(LumpsumTaxTableService);
   private readonly taxBands = inject(LumpsumTaxBandService);
   private readonly exits = inject(MemberExitService);
+  private readonly beneficiaries = inject(PensionBeneficiaryService);
+  private readonly rates = inject(PensionContributionRateService);
+  private readonly vesting = inject(PensionVestingScaleService);
+  private readonly statusEntries = inject(MemberStatusEntryService);
+  private readonly salaryEntries = inject(MemberSalaryEntryService);
+  private readonly pensioners = inject(PensionerService);
+  private readonly reasonDocuments = inject(ExitReasonDocumentService);
+  private readonly exitDocuments = inject(MemberExitDocumentService);
+  private readonly ageFactors = inject(PensionAgeFactorService);
 
   // ---------------------------------------------------------------- Setup
 
@@ -129,6 +149,16 @@ export class PensionEntities {
         cardOnly: true,
         helpKey: 'Erp::EarlyRetirementReductionHelp',
       },
+      {
+        field: 'pensionableSalaryBasis',
+        labelKey: 'Erp::PensionableSalaryBasis',
+        type: 'select',
+        options: enumOptions(pensionableSalaryBasisOptions, 'PensionableSalaryBasis'),
+        section: 'definedBenefit',
+        cardOnly: true,
+        helpKey: 'Erp::PensionableSalaryBasisHelp',
+      },
+      { field: 'salaryAveragingYears', labelKey: 'Erp::SalaryAveragingYears', type: 'number', min: 0, section: 'definedBenefit', cardOnly: true },
     ],
     sections: [
       { key: 'general', labelKey: 'Erp::General' },
@@ -147,9 +177,44 @@ export class PensionEntities {
       maxCommutationPct: 0,
       commutationFactor: 0,
       earlyRetirementReductionPct: 0,
+      pensionableSalaryBasis: PensionableSalaryBasis.CurrentSalary,
+      salaryAveragingYears: 3,
     },
     quickCreate: false,
   });
+
+  constructor() {
+    // Run from the scheme, since the overdue certificates are counted scheme by scheme.
+    this.pensionScheme.actions = [
+      {
+        key: 'suspendOverdue',
+        labelKey: 'Erp::SuspendOverduePensioners',
+        icon: 'fas fa-user-clock',
+        permission: `${PERMISSION}.Update`,
+        confirmKey: 'Erp::SuspendOverduePensionersConfirmation',
+        run: dto => this.pensioners.suspendOverdue({ schemeCode: dto.code! }),
+      },
+    ];
+    // Factor tables replace the formula's flat early retirement cut and commutation factor for the ages they cover.
+    this.pensionScheme.parts = [
+      {
+        entity: 'pensionAgeFactor',
+        titleKey: 'Erp::PensionAgeFactors',
+        lines: dto => this.ageFactors.getList({ schemeCode: dto.code, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ schemeCode: dto.code }),
+        columns: ['factorType', 'age', 'maleFactor', 'femaleFactor'],
+      },
+    ];
+    // Copied onto each exit for the reason, to be ticked off as they come in.
+    this.exitReason.parts = [
+      {
+        entity: 'exitReasonDocument',
+        lines: dto => this.reasonDocuments.getList({ exitReasonCode: dto.code, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ exitReasonCode: dto.code }),
+        columns: ['documentName', 'mandatory'],
+      },
+    ];
+  }
 
   readonly lumpsumTaxTable = codeTableEntity(this.taxTables, {
     key: 'lumpsumTaxTable',
@@ -218,8 +283,9 @@ export class PensionEntities {
       codeField('taxTableCode', 'Erp::TaxTableCode', 'lumpsumTaxTable'),
       { field: 'lumpsumTaxFree', labelKey: 'Erp::LumpsumTaxFree', type: 'checkbox' },
       { field: 'statusAfterExit', labelKey: 'Erp::StatusAfterExit', type: 'select', options: enumOptions(memberStatusOptions, 'MemberStatus') },
+      { field: 'applyVestingScale', labelKey: 'Erp::ApplyVestingScale', type: 'checkbox', helpKey: 'Erp::ApplyVestingScaleHelp' },
     ],
-    defaults: { paymentOption: 1, employerPortionPct: 100, lumpsumTaxFree: false, statusAfterExit: MemberStatus.Inactive },
+    defaults: { paymentOption: 1, employerPortionPct: 100, lumpsumTaxFree: false, statusAfterExit: MemberStatus.Inactive, applyVestingScale: false },
     quickCreate: false,
   });
 
@@ -357,6 +423,21 @@ export class PensionEntities {
           },
         ]),
       ),
+    // Dated rates win over the card's rates for the months they cover; the scale vests the employer's money by service.
+    parts: [
+      {
+        entity: 'pensionContributionRate',
+        lines: dto => this.rates.getList({ sponsorNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ sponsorNo: dto.no }),
+        columns: ['startDate', 'endDate', 'employeeRatePct', 'employerRatePct'],
+      },
+      {
+        entity: 'pensionVestingScale',
+        lines: dto => this.vesting.getList({ sponsorNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ sponsorNo: dto.no }),
+        columns: ['fromServiceYears', 'employerVestedPct'],
+      },
+    ],
   };
 
   readonly pensionMember: RecordEntity<PensionMemberDto, CreateUpdatePensionMemberDto> = {
@@ -447,8 +528,10 @@ export class PensionEntities {
         balance: this.members.getBalance(dto.id!),
         entries: this.ledger.getList({ memberNo: dto.no, maxResultCount: 1, skipCount: 0 }),
         exits: this.exits.getList({ memberNo: dto.no, maxResultCount: 1, skipCount: 0 }),
+        statuses: this.statusEntries.getList({ memberNo: dto.no, maxResultCount: 1, skipCount: 0 }),
+        salaries: this.salaryEntries.getList({ memberNo: dto.no, maxResultCount: 1, skipCount: 0 }),
       }).pipe(
-        map(({ balance, entries, exits }) => [
+        map(({ balance, entries, exits, statuses, salaries }) => [
           {
             labelKey: 'Erp::FundValue',
             icon: 'fas fa-piggy-bank',
@@ -473,8 +556,34 @@ export class PensionEntities {
             queryParams: { filter: dto.no },
             permission: PERMISSION,
           },
+          {
+            labelKey: 'Erp::MemberStatusEntries',
+            icon: 'fas fa-timeline',
+            count: statuses.totalCount ?? 0,
+            routerLink: ['/erp/member-status-entries'],
+            queryParams: { filter: dto.no },
+            permission: PERMISSION,
+          },
+          {
+            labelKey: 'Erp::MemberSalaryEntries',
+            icon: 'fas fa-money-check',
+            count: salaries.totalCount ?? 0,
+            routerLink: ['/erp/member-salary-entries'],
+            queryParams: { filter: dto.no },
+            permission: PERMISSION,
+          },
         ]),
       ),
+    // A death benefit is shared out by these percentages, which must come to 100% before it is approved.
+    parts: [
+      {
+        entity: 'pensionBeneficiary',
+        lines: dto => this.beneficiaries.getList({ memberNo: dto.no, sorting: 'lineNo', maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ memberNo: dto.no }),
+        columns: ['name', 'relationship', 'dateOfBirth', 'benefitPct', 'status'],
+        totals: ['benefitPct'],
+      },
+    ],
   };
 
   readonly memberLedgerEntry: RecordEntity<MemberLedgerEntryDto, never> = {
@@ -530,6 +639,16 @@ export class PensionEntities {
     icon: 'fas fa-file-invoice-dollar',
     permission: PERMISSION,
     listRoute: ['/erp/pension-contributions'],
+    parts: [
+      {
+        entity: 'pensionContributionLine',
+        lines: dto => this.contributionLines.getList({ documentNo: dto.no, sorting: 'lineNo', maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        columns: ['memberNo', 'memberName', 'basicSalary', 'employeeTaxExempt', 'employerTaxExempt', 'employeeAvcTaxExempt', 'employerAvcTaxExempt', 'employeeNonTaxExempt', 'employerNonTaxExempt', 'employeeAvcNonTaxExempt', 'employerAvcNonTaxExempt', 'totalAmount'],
+        totals: ['totalAmount'],
+        editable: dto => dto.status === PensionDocumentStatus.Open,
+      },
+    ],
     attachmentEntityType: 'PensionContributionHeader',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -553,6 +672,7 @@ export class PensionEntities {
         type: 'select',
         options: enumOptions(pensionContributionModeOptions, 'PensionContributionMode').filter(o => o.value !== 0),
       },
+      codeField('transferSchemeCode', 'Erp::TransferSchemeCode', 'otherPensionScheme', undefined, { cardOnly: true, helpKey: 'Erp::TransferSchemeCodeHelp' }),
       { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250, wide: true },
       figure('schemeCode', 'Erp::SchemeCode', 'general'),
       figure('postedBy', 'Erp::PostedBy', 'general'),
@@ -577,6 +697,14 @@ export class PensionEntities {
         permission: `${PERMISSION}.Update`,
         visible: dto => dto.status === PensionDocumentStatus.Open,
         run: dto => this.contributions.suggestLines(dto.id!),
+      },
+      {
+        key: 'split',
+        labelKey: 'Erp::SplitByTaxRelief',
+        icon: 'fas fa-scale-balanced',
+        permission: `${PERMISSION}.Update`,
+        visible: dto => dto.status === PensionDocumentStatus.Open,
+        run: dto => this.contributions.splitLines(dto.id!),
       },
       {
         key: 'release',
@@ -731,6 +859,16 @@ export class PensionEntities {
     delete: id => this.exits.delete(id),
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.memberName ?? undefined }),
     newRecord: () => ({ exitDate: today(), withdrawalType: 0 }),
+    // The documents the exit needs before it is approved, ticked off as they come in.
+    parts: [
+      {
+        entity: 'memberExitDocument',
+        lines: dto => this.exitDocuments.getList({ exitNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ exitNo: dto.no }),
+        columns: ['documentName', 'mandatory', 'received', 'receivedDate', 'remarks'],
+        editable: dto => dto.status === MemberExitStatus.Open,
+      },
+    ],
     facts: dto => [
       { labelKey: 'Erp::Status', value: MemberExitStatus[dto.status] },
       { labelKey: 'Erp::GrossLumpsum', value: dto.grossLumpsum, type: 'currency' },
@@ -746,6 +884,14 @@ export class PensionEntities {
         permission: `${PERMISSION}.Update`,
         visible: dto => dto.status === MemberExitStatus.Open,
         run: dto => this.exits.calculate(dto.id!),
+      },
+      {
+        key: 'copyDocuments',
+        labelKey: 'Erp::CopyRequiredDocuments',
+        icon: 'fas fa-file-import',
+        permission: `${PERMISSION}.Update`,
+        visible: dto => dto.status === MemberExitStatus.Open,
+        run: dto => this.exits.copyRequiredDocuments(dto.id!),
       },
       {
         key: 'approve',

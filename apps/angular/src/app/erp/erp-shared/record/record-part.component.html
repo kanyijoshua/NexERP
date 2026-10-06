@@ -1,98 +1,43 @@
-<div class="card border-0 shadow-sm mb-3">
-  <div class="card-header bg-light d-flex align-items-center gap-2">
+<div class="card border-0 shadow-sm mb-3 erp-record-part">
+  <div class="card-header bg-light d-flex align-items-center gap-2 py-1">
     <span class="fw-bold text-secondary small text-uppercase me-auto">
       <i [class]="entity.icon + ' me-1'"></i>{{ (part.titleKey ?? entity.pluralKey) | abpLocalization }}
-      <span class="badge bg-secondary ms-1">{{ lines.length }}</span>
+      <span class="badge bg-secondary ms-1">{{ count }}</span>
     </span>
     @if (loading) {
       <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
     }
     @if (canCreate) {
-      <button type="button" class="btn btn-sm btn-outline-primary" (click)="add()">
-        <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
+      <button type="button" class="btn btn-sm btn-link text-decoration-none" (click)="addLine()">
+        <i class="fas fa-plus me-1"></i>{{ 'Erp::NewLine' | abpLocalization }}
       </button>
     }
   </div>
-  <div class="table-responsive">
-    <table class="table table-sm table-hover align-middle mb-0 small">
-      <thead class="table-light">
-        <tr>
-          @for (column of columns; track column.field) {
-            <th [class.text-end]="column.type === 'currency' || column.type === 'number'">
-              {{ column.labelKey | abpLocalization }}
-            </th>
-          }
-          @if (canDelete) {
-            <th class="text-end" style="width: 1%"></th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (line of lines; track line['id']) {
-          <tr role="button" (click)="open(line)">
-            @for (column of columns; track column.field) {
-              @switch (column.type) {
-                @case ('currency') {
-                  <td class="text-end">{{ line[column.field] ?? 0 | erpAmount }}</td>
-                }
-                @case ('number') {
-                  <td class="text-end">{{ line[column.field] }}</td>
-                }
-                @case ('boolean') {
-                  <td>
-                    @if (line[column.field]) {
-                      <i class="fas fa-check text-success"></i>
-                    }
-                  </td>
-                }
-                @case ('select') {
-                  <td>{{ optionLabel(column, line[column.field]) | abpLocalization }}</td>
-                }
-                @case ('date') {
-                  <td>{{ line[column.field] | date: 'shortDate' }}</td>
-                }
-                @default {
-                  <td>{{ line[column.field] }}</td>
-                }
-              }
-            }
-            @if (canDelete) {
-              <td class="text-end">
-                <button
-                  type="button"
-                  class="btn btn-sm btn-link text-danger p-0"
-                  [title]="'Erp::Delete' | abpLocalization"
-                  (click)="remove(line, $event)"
-                >
-                  <i class="fas fa-trash"></i>
-                </button>
-              </td>
-            }
-          </tr>
-        } @empty {
-          <tr>
-            <td class="text-center text-muted py-3" [attr.colspan]="columns.length + (canDelete ? 1 : 0)">
-              {{ 'Erp::NoLines' | abpLocalization }}
-            </td>
-          </tr>
+
+  <div class="card-body p-2">
+    <erp-line-grid
+      [lines]="rows"
+      [columns]="gridColumns"
+      [readonly]="!canCreate && !canUpdate"
+      [allowAdd]="canCreate"
+      [allowRemove]="canDelete"
+      [openable]="true"
+      [showAddButton]="false"
+      (addLine)="addLine()"
+      (removeLine)="removeLine($event)"
+      (lineChange)="onLineChange($event)"
+      (openLine)="openLine($event)"
+    ></erp-line-grid>
+
+    @if (totals.length && count) {
+      <div class="d-flex flex-wrap justify-content-end gap-4 border-top mt-2 pt-2 small">
+        @for (total of totals; track total.field) {
+          <div>
+            <span class="text-muted me-2">{{ 'Erp::Total' | abpLocalization }} {{ total.labelKey | abpLocalization }}</span>
+            <span class="fw-bold font-monospace">{{ total.value | erpAmount }}</span>
+          </div>
         }
-      </tbody>
-      @if (part.totals?.length && lines.length) {
-        <tfoot class="table-light fw-bold">
-          <tr>
-            @for (column of columns; track column.field; let first = $first) {
-              @if (isTotalled(column.field)) {
-                <td class="text-end">{{ totals[column.field] | erpAmount }}</td>
-              } @else {
-                <td>{{ first ? ('Erp::Total' | abpLocalization) : '' }}</td>
-              }
-            }
-            @if (canDelete) {
-              <td></td>
-            }
-          </tr>
-        </tfoot>
-      }
-    </table>
+      </div>
+    }
   </div>
 </div>

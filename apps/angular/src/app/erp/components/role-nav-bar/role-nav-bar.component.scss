@@ -4,14 +4,25 @@
   margin: -0.75rem 0 1rem;
 }
 
+.role-nav-container {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--erp-rule, #dee2e6);
+  background: var(--erp-surface, #fff);
+}
+
 .role-bar {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   min-height: 3rem;
   padding: 0 0.5rem;
-  border-bottom: 1px solid var(--erp-rule, #dee2e6);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   background: var(--erp-surface, #fff);
+
+  &--standalone {
+    border-bottom: none;
+  }
 }
 
 .role-bar__company {
@@ -66,8 +77,23 @@
 }
 
 .role-bar__item--active {
-  border-bottom-color: var(--erp-primary);
-  font-weight: 600;
+  border-bottom-color: var(--erp-accent);
+  font-weight: 700;
+  color: var(--erp-ink, #1f2328);
+}
+
+.role-bar__caret-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.2rem;
+  margin-left: 0.15rem;
+  border-radius: var(--erp-radius-sm, 3px);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
 }
 
 .role-bar__caret {
@@ -96,6 +122,93 @@
 
 /* Hidden arrows keep their place, so the links do not jump when one appears. */
 .role-bar__arrow--hidden {
+  visibility: hidden;
+}
+
+/* Tier 2: Business Central Sublinks Bar */
+.role-subbar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.375rem;
+  padding: 0 0.5rem 0.25rem;
+  background: var(--erp-surface, #fff);
+}
+
+.role-subbar__items {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 0;
+  padding: 0.15rem 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.role-subbar__item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: var(--erp-radius-sm, 3px);
+  background: none;
+  color: var(--erp-accent, #017e84);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: color-mix(in srgb, var(--erp-accent, #017e84) 75%, black);
+    text-decoration: underline;
+    background: rgb(var(--erp-accent-rgb, 1 126 132) / 8%);
+  }
+}
+
+.role-subbar__item--active {
+  font-weight: 700;
+  color: color-mix(in srgb, var(--erp-accent, #017e84) 80%, black);
+  text-decoration: underline;
+  background: rgb(var(--erp-accent-rgb, 1 126 132) / 10%);
+}
+
+.role-subbar__caret {
+  font-size: 0.65em;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.role-subbar__arrow {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--erp-radius-sm, 4px);
+  background: none;
+  color: var(--erp-ink-muted, #6c757d);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--erp-hover, rgba(0, 0, 0, 0.04));
+    color: var(--erp-ink, #1f2328);
+  }
+}
+
+.role-subbar__arrow--hidden {
   visibility: hidden;
 }
 

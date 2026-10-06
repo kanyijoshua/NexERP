@@ -69,6 +69,8 @@ import { PensionEntities } from './pension-entities';
 import { AcademicEntities } from './academic-entities';
 import { PaymentVoucherEntities } from './payment-voucher-entities';
 import { PensionPayrollEntities } from './pension-payroll-entities';
+import { PensionAdministrationEntities } from './pension-administration-entities';
+import { PensionSetupEntities } from './pension-setup-entities';
 import { StudentAccountEntities } from './student-account-entities';
 import { CampusEntities } from './campus-entities';
 import { PayrollEntities } from './payroll-entities';
@@ -176,6 +178,8 @@ export class MasterDataEntities {
   private readonly academics = inject(AcademicEntities);
   private readonly studentAccounts = inject(StudentAccountEntities);
   private readonly pensionPayroll = inject(PensionPayrollEntities);
+  private readonly pensionAdministration = inject(PensionAdministrationEntities);
+  private readonly pensionSetup = inject(PensionSetupEntities);
   private readonly campus = inject(CampusEntities);
   private readonly payroll = inject(PayrollEntities);
   private readonly paymentVouchers = inject(PaymentVoucherEntities);
@@ -875,6 +879,8 @@ export class MasterDataEntities {
       ...this.academics.all,
       ...this.studentAccounts.all,
       ...this.pensionPayroll.all,
+      ...this.pensionAdministration.all,
+      ...this.pensionSetup.all,
       ...this.campus.all,
       ...this.payroll.all,
       ...this.paymentVouchers.all,

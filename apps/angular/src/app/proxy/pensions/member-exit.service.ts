@@ -1,4 +1,4 @@
-import type { CreateUpdateMemberExitDto, GetMemberExitListInput, MemberExitDto, PostMemberExitInput } from './models';
+import type { CopyExitDocumentsResultDto, CreateUpdateMemberExitDto, GetMemberExitListInput, MemberExitDto, PostMemberExitInput } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -15,6 +15,14 @@ export class MemberExitService {
       method: 'POST',
       url: '/api/erp/member-exit',
       body: input,
+    },
+    { apiName: this.apiName,...config });
+
+
+  copyRequiredDocuments = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CopyExitDocumentsResultDto>({
+      method: 'POST',
+      url: `/api/erp/member-exit/${id}/copy-required-documents`,
     },
     { apiName: this.apiName,...config });
 

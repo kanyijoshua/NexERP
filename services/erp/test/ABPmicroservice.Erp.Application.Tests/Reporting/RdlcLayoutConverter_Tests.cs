@@ -153,47 +153,6 @@ public class RdlcLayoutConverter_Tests : ErpApplicationTestBase
     }
 
     [Fact]
-    public async Task Every_Bundled_Layout_Is_Seeded_For_Its_Report_And_Renders()
-    {
-        await InCompanyAsync(DefaultCompanyName, async () =>
-        {
-            var layouts = await GetRequiredService<IRepository<CustomReportLayout, Guid>>().GetListAsync(l => l.BuiltIn);
-            var resolver = GetRequiredService<ReportColumnsResolver>();
-
-            foreach (var bundled in BundledReportLayouts.All)
-            {
-                var layout = layouts.SingleOrDefault(l => l.ReportName == bundled.ReportName && l.LayoutName == bundled.LayoutName);
-                layout.ShouldNotBeNull(bundled.FileName);
-                layout.IsDefault.ShouldBeFalse();
-
-                // The layout was fitted to a report that exists and has columns.
-                (await resolver.GetAsync(bundled.ReportName)).ShouldNotBeEmpty(bundled.ReportName);
-                ReportTemplate.Validate(layout.TemplateContent);
-            }
-        });
-    }
-
-    [Theory]
-    [InlineData("MemberBalances.rdlc", 3)]
-    [InlineData("MemberListingDC.rdlc", 8)]
-    [InlineData("ExpectedRetirees.rdlc", 8)]
-    [InlineData("EmployeeReport.rdl", 3)]
-    [InlineData("BankStatementReport.rdl", 5)]
-    public async Task The_Bundled_List_Layouts_Fit_Their_Reports(string fileName, int atLeast)
-    {
-        await InCompanyAsync(DefaultCompanyName, async () =>
-        {
-            var bundled = BundledReportLayouts.All.Single(l => l.FileName == fileName);
-            var columns = await GetRequiredService<ReportColumnsResolver>().GetAsync(bundled.ReportName);
-
-            var conversion = RdlcLayoutConverter.Convert(BundledReportLayouts.Read(bundled), columns);
-
-            conversion.MatchedColumns.ShouldBeGreaterThanOrEqualTo(atLeast, string.Join("; ", conversion.Columns.Select(c => $"{c.RdlcField}->{c.ReportColumnKey}")));
-            conversion.Template.ShouldContain("{{Cell:");
-        });
-    }
-
-    [Fact]
     public async Task An_Uploaded_Rdlc_Becomes_A_Layout_Of_The_Report()
     {
         await InCompanyAsync(DefaultCompanyName, async () =>

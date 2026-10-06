@@ -78,6 +78,13 @@ public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
         await _seriesValidator.EnsureExistAsync(input.BenefitCalculationNos);
         setup.SetBenefitCalculationNumbering(input.BenefitCalculationNos);
 
+        await _seriesValidator.EnsureExistAsync(input.IncrementNos);
+        await _relations.EnsureGLAccountsExistAsync(input.TransfersInAccountNo);
+        setup.SetMemberAdministration(input.TransfersInAccountNo, input.ExcessContributionAllocation, input.LifeCertificateFrequencyMonths, input.IncrementNos);
+
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<PensionerPayMode>(input.DefaultPayModeCode);
+        setup.SetPensionerDefaults(input.DefaultPayModeCode, input.TrivialPensionLimit);
+
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<PensionSetup, PensionSetupDto>(setup);
     }
@@ -138,6 +145,7 @@ public class PensionSchemeAppService
             input.CommutationFactor,
             input.EarlyRetirementReductionPct
         );
+        entity.SetPensionableSalary(input.PensionableSalaryBasis, input.SalaryAveragingYears);
         return Task.CompletedTask;
     }
 
@@ -200,6 +208,7 @@ public class ExitReasonAppService
     {
         await CodeTableChecker.EnsureExistsAsync<LumpsumTaxTable>(input.TaxTableCode);
         entity.Set(input.PaymentOption, input.EmployerPortionPct, input.TaxTableCode, input.LumpsumTaxFree, input.StatusAfterExit);
+        entity.SetVesting(input.ApplyVestingScale);
     }
 }
 

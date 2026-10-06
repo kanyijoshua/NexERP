@@ -106,6 +106,58 @@ public class PensionSetup : CompanyEntity
         BenefitCalculationNos = Series(benefitCalculationNos, nameof(benefitCalculationNos));
     }
 
+    /// <summary>
+    /// What a transfer from another scheme is due from until the other scheme pays it: debited when
+    /// a transfer-in schedule is posted, in place of the sponsor.
+    /// </summary>
+    public string TransfersInAccountNo { get; private set; }
+
+    /// <summary>How contributions above the monthly tax relief limit are shared between employee and employer.</summary>
+    public ExcessContributionAllocation ExcessContributionAllocation { get; private set; }
+
+    /// <summary>How often a pensioner must prove they are alive; zero never asks.</summary>
+    public int LifeCertificateFrequencyMonths { get; private set; } = 12;
+
+    public string IncrementNos { get; private set; }
+
+    public void SetMemberAdministration(
+        string transfersInAccountNo,
+        ExcessContributionAllocation excessContributionAllocation,
+        int lifeCertificateFrequencyMonths,
+        string incrementNos
+    )
+    {
+        if (lifeCertificateFrequencyMonths is < 0 or > 120)
+        {
+            throw new BusinessException(ErpErrorCodes.Pensions.NegativeAmount).WithData("field", "Life Certificate Frequency (Months)");
+        }
+
+        TransfersInAccountNo = Account(transfersInAccountNo, nameof(transfersInAccountNo));
+        ExcessContributionAllocation = excessContributionAllocation;
+        LifeCertificateFrequencyMonths = lifeCertificateFrequencyMonths;
+        IncrementNos = Series(incrementNos, nameof(incrementNos));
+    }
+
+    /// <summary>The pay mode a new pensioner is given when none is chosen.</summary>
+    public string DefaultPayModeCode { get; private set; }
+
+    /// <summary>
+    /// A monthly pension below this is too small to be worth paying: a defined benefit calculation
+    /// commutes all of it to a lump sum instead. Zero commutes none.
+    /// </summary>
+    public decimal TrivialPensionLimit { get; private set; }
+
+    public void SetPensionerDefaults(string defaultPayModeCode, decimal trivialPensionLimit)
+    {
+        if (trivialPensionLimit < 0)
+        {
+            throw new BusinessException(ErpErrorCodes.Pensions.NegativeAmount).WithData("field", "Trivial Pension Limit");
+        }
+
+        DefaultPayModeCode = CodeTableEntity.NormalizeCode(Check.Length(defaultPayModeCode, nameof(defaultPayModeCode), ErpDomainConsts.MaxCodeLength));
+        TrivialPensionLimit = trivialPensionLimit;
+    }
+
     public void SetOptions(bool allowContributionDuplication, int noOfDaysInAYear)
     {
         AllowContributionDuplication = allowContributionDuplication;
@@ -240,6 +292,23 @@ public class PensionScheme : CodeTableEntity
         MaxCommutationPct = maxCommutationPct;
         CommutationFactor = commutationFactor;
         EarlyRetirementReductionPct = earlyRetirementReductionPct;
+    }
+
+    /// <summary>The salary a pension is based on when the calculation has none keyed in.</summary>
+    public PensionableSalaryBasis PensionableSalaryBasis { get; private set; }
+
+    /// <summary>How many years before retirement the salary history is read over, for an average or highest salary.</summary>
+    public int SalaryAveragingYears { get; private set; } = 3;
+
+    public void SetPensionableSalary(PensionableSalaryBasis basis, int salaryAveragingYears)
+    {
+        if (salaryAveragingYears is < 0 or > 50)
+        {
+            throw new BusinessException(ErpErrorCodes.Pensions.NegativeAmount).WithData("field", "Salary Averaging Years");
+        }
+
+        PensionableSalaryBasis = basis;
+        SalaryAveragingYears = salaryAveragingYears == 0 ? 3 : salaryAveragingYears;
     }
 
     /// <summary>Whether the scheme promises pensions by formula, alone or alongside a contribution pot.</summary>

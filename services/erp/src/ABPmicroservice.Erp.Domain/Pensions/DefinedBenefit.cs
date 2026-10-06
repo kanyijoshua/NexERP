@@ -46,6 +46,15 @@ public class PensionBenefitCalculation : CompanyEntity, IHasNo
     public decimal CommutationFactor { get; private set; }
     public decimal EarlyReductionPct { get; private set; }
 
+    /// <summary>
+    /// What the scheme's early or late retirement factor for the member's age multiplies the
+    /// pension by; 1 when the scheme has no factor for that age.
+    /// </summary>
+    public decimal AgeFactor { get; private set; } = 1m;
+
+    /// <summary>The pension was below the trivial pension limit, so all of it was commuted to a lump sum.</summary>
+    public bool Trivial { get; private set; }
+
     /// <summary>What the formula gives before any early retirement cut.</summary>
     public decimal FullAnnualPension { get; private set; }
 
@@ -107,8 +116,8 @@ public class PensionBenefitCalculation : CompanyEntity, IHasNo
     public static decimal YearsBetween(DateTime from, DateTime to) =>
         Math.Max(0m, Math.Round((decimal)(to.Date - from.Date).TotalDays / 365.25m, 2, MidpointRounding.AwayFromZero));
 
-    /// <summary>Works the pension out from the member and the scheme's formula.</summary>
-    internal void Calculate(PensionMember member, PensionScheme scheme)
+    /// <summary>Works the pension out from the member, the scheme's formula and the scheme's factors for the member's age.</summary>
+    internal void Calculate(PensionMember member, PensionScheme scheme, DefinedBenefitTerms terms)
     {
         EnsureOpen();
 
@@ -123,7 +132,7 @@ public class PensionBenefitCalculation : CompanyEntity, IHasNo
         }
 
         var joined = member.JoinSchemeDate ?? member.DateOfEmployment ?? throw MissingData(member, "Join Scheme Date");
-        var salary = FinalPensionableSalary > 0m ? FinalPensionableSalary : member.CurrentSalary * 12m;
+        var salary = FinalPensionableSalary > 0m ? FinalPensionableSalary : terms.HistorySalary ?? member.CurrentSalary * 12m;
         if (salary <= 0m)
         {
             throw MissingData(member, "Current Salary");
@@ -138,25 +147,40 @@ public class PensionBenefitCalculation : CompanyEntity, IHasNo
                 .WithData("minimum", scheme.MinimumRetirementAge);
         }
 
-        if (CommutationPct > scheme.MaxCommutationPct)
+        var service = YearsBetween(joined, RetirementDate);
+        PensionableServiceYears = scheme.MaxPensionableServiceYears > 0 ? Math.Min(service, scheme.MaxPensionableServiceYears) : service;
+
+        AccrualRatePct = scheme.AccrualRatePct;
+        CommutationFactor = terms.CommutationFactor?.For(member.Gender) ?? scheme.CommutationFactor;
+
+        // A factor table for the age replaces the flat cut per year early; a late retirement factor raises the pension.
+        var early = AgeAtRetirement < scheme.NormalRetirementAge;
+        var factor = early ? terms.EarlyRetirementFactor : AgeAtRetirement > scheme.NormalRetirementAge ? terms.LateRetirementFactor : null;
+        if (factor != null)
+        {
+            AgeFactor = factor.For(member.Gender);
+            EarlyReductionPct = early ? Math.Max(0m, Math.Round((1m - AgeFactor) * 100m, 4, MidpointRounding.AwayFromZero)) : 0m;
+        }
+        else
+        {
+            var yearsEarly = Math.Max(0m, scheme.NormalRetirementAge - AgeAtRetirement);
+            EarlyReductionPct = Math.Min(100m, Math.Round(yearsEarly * scheme.EarlyRetirementReductionPct, 4, MidpointRounding.AwayFromZero));
+            AgeFactor = (100m - EarlyReductionPct) / 100m;
+        }
+
+        FullAnnualPension = Round(salary * PensionableServiceYears * AccrualRatePct / 100m);
+        ReducedAnnualPension = Round(FullAnnualPension * AgeFactor);
+
+        // A pension too small to be worth paying monthly is paid as a lump sum, whatever the maximum commutation.
+        Trivial = terms.TrivialPensionLimit > 0m && ReducedAnnualPension > 0m && ReducedAnnualPension / 12m < terms.TrivialPensionLimit;
+        if (!Trivial && CommutationPct > scheme.MaxCommutationPct)
         {
             throw new BusinessException(ErpErrorCodes.Pensions.CommutationAboveMaximum)
                 .WithData("pct", CommutationPct)
                 .WithData("maximum", scheme.MaxCommutationPct);
         }
 
-        var service = YearsBetween(joined, RetirementDate);
-        PensionableServiceYears = scheme.MaxPensionableServiceYears > 0 ? Math.Min(service, scheme.MaxPensionableServiceYears) : service;
-
-        AccrualRatePct = scheme.AccrualRatePct;
-        CommutationFactor = scheme.CommutationFactor;
-
-        var yearsEarly = Math.Max(0m, scheme.NormalRetirementAge - AgeAtRetirement);
-        EarlyReductionPct = Math.Min(100m, Math.Round(yearsEarly * scheme.EarlyRetirementReductionPct, 4, MidpointRounding.AwayFromZero));
-
-        FullAnnualPension = Round(salary * PensionableServiceYears * AccrualRatePct / 100m);
-        ReducedAnnualPension = Round(FullAnnualPension * (100m - EarlyReductionPct) / 100m);
-        CommutedAnnualPension = Round(ReducedAnnualPension * CommutationPct / 100m);
+        CommutedAnnualPension = Trivial ? ReducedAnnualPension : Round(ReducedAnnualPension * CommutationPct / 100m);
         LumpSum = Round(CommutedAnnualPension * CommutationFactor);
         AnnualPension = ReducedAnnualPension - CommutedAnnualPension;
         MonthlyPension = Round(AnnualPension / 12m);
@@ -190,6 +214,20 @@ public class PensionBenefitCalculation : CompanyEntity, IHasNo
         new BusinessException(ErpErrorCodes.Pensions.MemberDataMissing).WithData("memberNo", member.No).WithData("field", field);
 }
 
+/// <summary>What a defined benefit calculation takes from outside the scheme's formula. Anything left out falls back to the formula.</summary>
+public class DefinedBenefitTerms
+{
+    /// <summary>The yearly salary from the member's salary history, by the scheme's basis.</summary>
+    public decimal? HistorySalary { get; init; }
+
+    public PensionAgeFactor EarlyRetirementFactor { get; init; }
+    public PensionAgeFactor LateRetirementFactor { get; init; }
+    public PensionAgeFactor CommutationFactor { get; init; }
+
+    /// <summary>The monthly pension below which all of it is commuted; zero commutes none.</summary>
+    public decimal TrivialPensionLimit { get; init; }
+}
+
 /// <summary>Calculates defined benefit pensions and retires members onto them.</summary>
 public class DefinedBenefitCalculator : DomainService
 {
@@ -202,6 +240,8 @@ public class DefinedBenefitCalculator : DomainService
     private readonly PensionSetupManager _setupManager;
     private readonly NoSeriesManager _noSeriesManager;
     private readonly PaymentVoucherFactory _voucherFactory;
+    private readonly MemberHistoryRecorder _history;
+    private readonly DefinedBenefitTermsManager _termsManager;
     private readonly ICurrentUser _currentUser;
 
     public DefinedBenefitCalculator(
@@ -212,9 +252,13 @@ public class DefinedBenefitCalculator : DomainService
         PensionSetupManager setupManager,
         NoSeriesManager noSeriesManager,
         PaymentVoucherFactory voucherFactory,
+        MemberHistoryRecorder history,
+        DefinedBenefitTermsManager termsManager,
         ICurrentUser currentUser
     )
     {
+        _history = history;
+        _termsManager = termsManager;
         _calculations = calculations;
         _members = members;
         _pensioners = pensioners;
@@ -228,7 +272,8 @@ public class DefinedBenefitCalculator : DomainService
     public async Task CalculateAsync(PensionBenefitCalculation calculation)
     {
         var member = await GetMemberAsync(calculation.MemberNo);
-        calculation.Calculate(member, await _schemeManager.GetAsync(member.SchemeCode));
+        var scheme = await _schemeManager.GetAsync(member.SchemeCode);
+        calculation.Calculate(member, scheme, await GetTermsAsync(member, scheme, calculation.RetirementDate));
         await _calculations.UpdateAsync(calculation, autoSave: true);
     }
 
@@ -240,7 +285,7 @@ public class DefinedBenefitCalculator : DomainService
     {
         var member = await GetMemberAsync(calculation.MemberNo);
         var scheme = await _schemeManager.GetAsync(member.SchemeCode);
-        calculation.Calculate(member, scheme);
+        calculation.Calculate(member, scheme, await GetTermsAsync(member, scheme, calculation.RetirementDate));
 
         if (calculation.MonthlyPension <= 0m && calculation.LumpSum <= 0m)
         {
@@ -274,14 +319,33 @@ public class DefinedBenefitCalculator : DomainService
             pensioner.Set(member.SchemeCode, member.No, member.FullName, member.NationalId, member.TaxPinNo, member.DateOfBirth);
             pensioner.SetPension(calculation.MonthlyPension, firstMonth, null, PensionerStatus.Active);
             pensioner.SetContact(member.PhoneNo, member.Email, member.BankName, member.BankBranch, member.BankAccountNo);
+            pensioner.SetPayment(setup.DefaultPayModeCode, null, null);
             await _pensioners.InsertAsync(pensioner, autoSave: true);
         }
 
+        var before = member.Status;
         member.Exit(MemberStatus.Inactive, calculation.RetirementDate);
         await _members.UpdateAsync(member, autoSave: true);
+        await _history.RecordStatusAsync(member, before, calculation.RetirementDate, calculation.No);
 
         calculation.MarkApproved(pensionerNo, voucherNo, Clock.Now, _currentUser.UserName);
         await _calculations.UpdateAsync(calculation, autoSave: true);
+    }
+
+    /// <summary>The scheme's factors for the member's age at retirement, the salary history and the trivial pension limit.</summary>
+    private async Task<DefinedBenefitTerms> GetTermsAsync(PensionMember member, PensionScheme scheme, DateTime retirementDate)
+    {
+        var setup = await _setupManager.GetAsync();
+        var age = member.DateOfBirth.HasValue ? PensionBenefitCalculation.YearsBetween(member.DateOfBirth.Value, retirementDate) : 0m;
+
+        return new DefinedBenefitTerms
+        {
+            HistorySalary = await _termsManager.GetPensionableSalaryAsync(scheme, member.No, retirementDate),
+            EarlyRetirementFactor = await _termsManager.FindFactorAsync(scheme.Code, PensionFactorType.EarlyRetirement, age),
+            LateRetirementFactor = await _termsManager.FindFactorAsync(scheme.Code, PensionFactorType.LateRetirement, age),
+            CommutationFactor = await _termsManager.FindFactorAsync(scheme.Code, PensionFactorType.Commutation, age),
+            TrivialPensionLimit = setup.TrivialPensionLimit,
+        };
     }
 
     private async Task<PensionMember> GetMemberAsync(string memberNo)

@@ -147,7 +147,7 @@ import {
   WorkflowUserGroupService,
   approvalDocumentTypeOptions,
 } from '@proxy/workflows';
-import { EMPTY } from 'rxjs';
+import { EMPTY, map } from 'rxjs';
 import { RecordEntity } from '../erp-shared';
 import { codeField, codeTableEntity, enumOptions } from './entity-helpers';
 
@@ -842,6 +842,15 @@ export class BaseTableEntities {
     icon: 'fas fa-scale-balanced',
     permission: 'Erp.BankReconciliations',
     listRoute: ['/erp/bank-acc-reconciliations'],
+    parts: [
+      {
+        entity: 'bankAccReconciliationLine',
+        lines: dto => this.bankAccReconciliationLineService.getList({ bankAccountNo: dto.bankAccountNo, statementNo: dto.statementNo, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ statementType: dto.statementType, bankAccountNo: dto.bankAccountNo, statementNo: dto.statementNo }),
+        columns: ['statementLineNo', 'transactionDate', 'documentNo', 'description', 'statementAmount', 'appliedAmount', 'difference'],
+        totals: ['statementAmount', 'difference'],
+      },
+    ],
     columns: [
       { field: 'statementType', labelKey: 'Erp::StatementType', type: 'select', options: enumOptions(bankAccRecStmtTypeOptions, 'BankAccRecStmtType') },
       { field: 'bankAccountNo', labelKey: 'Erp::BankAccountNo' },
@@ -936,6 +945,13 @@ export class BaseTableEntities {
     icon: 'fas fa-file-invoice',
     permission: 'Erp.BankReconciliations',
     listRoute: ['/erp/bank-account-statements'],
+    parts: [
+      {
+        entity: 'bankAccountStatementLine',
+        lines: dto => this.bankAccountStatementLineService.getList({ bankAccountNo: dto.bankAccountNo, statementNo: dto.statementNo, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ bankAccountNo: dto.bankAccountNo, statementNo: dto.statementNo }),
+      },
+    ],
     readOnly: true,
     columns: [
       { field: 'bankAccountNo', labelKey: 'Erp::BankAccountNo' },

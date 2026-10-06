@@ -188,6 +188,15 @@ export class PayrollEntities {
     icon: 'fas fa-money-check-dollar',
     permission: PERMISSION,
     listRoute: ['/erp/payroll-runs'],
+    // The payslips the run calculated; opening one shows its earnings and deductions.
+    parts: [
+      {
+        entity: 'payslip',
+        lines: dto => this.payslips.getList({ payrollRunNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ payrollRunNo: dto.no }),
+        totals: ['grossPay', 'incomeTax', 'netPay'],
+      },
+    ],
     attachmentEntityType: 'PayrollRun',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -273,6 +282,13 @@ export class PayrollEntities {
     icon: 'fas fa-file-invoice',
     permission: PERMISSION,
     listRoute: ['/erp/payslips'],
+    parts: [
+      {
+        entity: 'payslipLine',
+        lines: dto => this.payslipLines.getList({ payrollRunNo: dto.payrollRunNo, employeeNo: dto.employeeNo, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ payrollRunNo: dto.payrollRunNo, employeeNo: dto.employeeNo }),
+      },
+    ],
     readOnly: true,
     columns: [
       { field: 'payrollRunNo', labelKey: 'Erp::PayrollRunNo', width: 120 },

@@ -328,6 +328,16 @@ public static class ErpErrorCodes
         public const string MemberDataMissing = Prefix + ":Pensions:00028";
         public const string RetirementTooEarly = Prefix + ":Pensions:00029";
         public const string CommutationAboveMaximum = Prefix + ":Pensions:00030";
+        public const string BeneficiaryShareExceeded = Prefix + ":Pensions:00031";
+        public const string BeneficiarySharesIncomplete = Prefix + ":Pensions:00032";
+        public const string ContributionRatePeriodOverlaps = Prefix + ":Pensions:00033";
+        public const string PensionerNotSuspended = Prefix + ":Pensions:00034";
+        public const string PensionerNotActive = Prefix + ":Pensions:00035";
+        public const string IncrementAlreadyApplied = Prefix + ":Pensions:00036";
+        public const string ExitDocumentsOutstanding = Prefix + ":Pensions:00037";
+        public const string DeductionsExceedPension = Prefix + ":Pensions:00038";
+        public const string BankBranchNotFound = Prefix + ":Pensions:00039";
+        public const string PayItemInUse = Prefix + ":Pensions:00040";
     }
 
     public static class Academics

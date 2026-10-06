@@ -177,6 +177,7 @@ public class PensionMemberAppService
         Apply(member, input, scheme);
 
         await Repository.InsertAsync(member, autoSave: true);
+        await History.RecordStatusAsync(member, MemberStatus.None, member.JoinSchemeDate ?? Clock.Now.Date);
         return await MapToGetOutputDtoAsync(member);
     }
 
@@ -195,10 +196,12 @@ public class PensionMemberAppService
         }
 
         var scheme = await _schemeManager.GetAsync(sponsor.SchemeCode);
+        var before = member.Status;
         member.SetScheme(sponsor.SchemeCode, sponsor.No);
         Apply(member, input, scheme);
 
         await Repository.UpdateAsync(member, autoSave: true);
+        await History.RecordStatusAsync(member, before, Clock.Now.Date);
         return await MapToGetOutputDtoAsync(member);
     }
 
@@ -261,6 +264,8 @@ public class PensionMemberAppService
     }
 
     protected override IQueryable<PensionMember> ApplyDefaultSorting(IQueryable<PensionMember> query) => query.OrderBy(x => x.No);
+
+    private MemberHistoryRecorder History => LazyServiceProvider.LazyGetRequiredService<MemberHistoryRecorder>();
 
     private async Task<PensionSponsor> GetSponsorAsync(string sponsorNo)
     {
@@ -383,6 +388,8 @@ public class PensionContributionAppService
             input.ContributionPeriod == default ? postingDate : input.ContributionPeriod
         );
         header.SetDetails(input.Description, input.ContributionMode);
+        await CodeTableChecker.EnsureExistsAsync<OtherPensionScheme>(input.TransferSchemeCode);
+        header.SetTransferScheme(input.TransferSchemeCode);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -404,6 +411,8 @@ public class PensionContributionAppService
         header.SetSponsor(sponsor);
         header.SetDates(input.PostingDate, input.ContributionPeriod);
         header.SetDetails(input.Description, input.ContributionMode);
+        await CodeTableChecker.EnsureExistsAsync<OtherPensionScheme>(input.TransferSchemeCode);
+        header.SetTransferScheme(input.TransferSchemeCode);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -452,6 +461,14 @@ public class PensionContributionAppService
     {
         var header = await GetEntityByIdAsync(id);
         await _engine.PostAsync(header);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<PensionContributionHeaderDto> SplitLinesAsync(Guid id)
+    {
+        var header = await GetEntityByIdAsync(id);
+        await _engine.SplitLinesAsync(header);
         return await MapToGetOutputDtoAsync(header);
     }
 
@@ -668,6 +685,7 @@ public class MemberExitAppService
         exit.Set(member, input.ReasonCode, input.WithdrawalType, exitDate, input.DateOfCalculation, input.Comment);
 
         await Repository.InsertAsync(exit, autoSave: true);
+        await Documents.CopyFromReasonAsync(exit);
         await _engine.CalculateAsync(exit);
         return await MapToGetOutputDtoAsync(exit);
     }
@@ -679,9 +697,15 @@ public class MemberExitAppService
 
         var exit = await GetEntityByIdAsync(id);
         var member = await GetMemberAsync(input.MemberNo);
+        var reasonBefore = exit.ReasonCode;
         exit.Set(member, input.ReasonCode, input.WithdrawalType, input.ExitDate, input.DateOfCalculation, input.Comment);
 
         await Repository.UpdateAsync(exit, autoSave: true);
+        if (exit.ReasonCode != reasonBefore)
+        {
+            await Documents.CopyFromReasonAsync(exit);
+        }
+
         await _engine.CalculateAsync(exit);
         return await MapToGetOutputDtoAsync(exit);
     }
@@ -697,8 +721,19 @@ public class MemberExitAppService
             throw new BusinessException(ErpErrorCodes.Pensions.DocumentNotOpen).WithData("documentNo", exit.No);
         }
 
+        await Documents.DeleteForAsync(exit.No);
         await Repository.DeleteAsync(id, autoSave: true);
     }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<CopyExitDocumentsResultDto> CopyRequiredDocumentsAsync(Guid id)
+    {
+        var exit = await GetEntityByIdAsync(id);
+        exit.EnsureOpen();
+        return new CopyExitDocumentsResultDto { NoOfDocuments = await Documents.CopyFromReasonAsync(exit) };
+    }
+
+    private ExitDocumentManager Documents => LazyServiceProvider.LazyGetRequiredService<ExitDocumentManager>();
 
     [Authorize(ErpPermissions.Pensions.Update)]
     public async Task<MemberExitDto> CalculateAsync(Guid id)
@@ -714,10 +749,7 @@ public class MemberExitAppService
         var exit = await GetEntityByIdAsync(id);
 
         // Approved on the figures as they stand now, not as they stood when the exit was keyed in.
-        await _engine.CalculateAsync(exit);
-        exit.Approve();
-
-        await Repository.UpdateAsync(exit, autoSave: true);
+        await _engine.ApproveAsync(exit);
         return await MapToGetOutputDtoAsync(exit);
     }
 

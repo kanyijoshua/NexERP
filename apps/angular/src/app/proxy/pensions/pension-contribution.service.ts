@@ -77,6 +77,14 @@ export class PensionContributionService {
     { apiName: this.apiName,...config });
 
 
+  splitLines = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PensionContributionHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/pension-contribution/${id}/split-lines`,
+    },
+    { apiName: this.apiName,...config });
+
+
   suggestLines = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PensionContributionHeaderDto>({
       method: 'POST',

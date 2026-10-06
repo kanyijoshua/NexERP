@@ -12,7 +12,7 @@
             {{ column.labelKey | abpLocalization }}
           </th>
         }
-        @if (!readonly) {
+        @if (hasActions) {
           <th scope="col" class="erp-line-grid__actions"></th>
         }
       </tr>
@@ -30,8 +30,12 @@
               [class.text-end]="isNumeric(column)"
               >
               @if (row.get(column.field)) {
-                @if (readonly || column.type === 'readonly') {
-                  @if (column.type === 'select') {
+                @if (isReadonly(column)) {
+                  @if (column.type === 'checkbox') {
+                    @if (row.get(column.field)?.value) {
+                      <i class="fas fa-check text-success"></i>
+                    }
+                  } @else if (column.type === 'select') {
                     <span>{{
                       displayText(row, column) | abpLocalization
                     }}</span>
@@ -92,6 +96,15 @@
                         }
                       </select>
                     }
+                    @case ('checkbox') {
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [formControlName]="column.field"
+                        [attr.aria-label]="column.labelKey | abpLocalization"
+                        (change)="onCellChange(i, column.field)"
+                        />
+                    }
                     @case ('lookup') {
                       <erp-lookup
                         inputClass="form-control-sm"
@@ -108,18 +121,32 @@
               }
             </td>
           }
-          @if (!readonly) {
-            <td class="text-end erp-line-grid__actions">
-              <button
-                type="button"
-                class="btn btn-sm btn-link text-danger p-0"
-                tabindex="-1"
-                [attr.aria-label]="'Erp::RemoveLine' | abpLocalization"
-                [title]="'Erp::RemoveLine' | abpLocalization"
-                (click)="removeLine.emit(i)"
-                >
-                <i class="fas fa-trash-alt"></i>
-              </button>
+          @if (hasActions) {
+            <td class="text-end erp-line-grid__actions text-nowrap">
+              @if (openable) {
+                <button
+                  type="button"
+                  class="btn btn-sm btn-link p-0 me-2"
+                  tabindex="-1"
+                  [attr.aria-label]="'Erp::OpenLine' | abpLocalization"
+                  [title]="'Erp::OpenLine' | abpLocalization"
+                  (click)="openLine.emit(i)"
+                  >
+                  <i class="fas fa-up-right-from-square"></i>
+                </button>
+              }
+              @if (!readonly && allowRemove) {
+                <button
+                  type="button"
+                  class="btn btn-sm btn-link text-danger p-0"
+                  tabindex="-1"
+                  [attr.aria-label]="'Erp::RemoveLine' | abpLocalization"
+                  [title]="'Erp::RemoveLine' | abpLocalization"
+                  (click)="removeLine.emit(i)"
+                  >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              }
             </td>
           }
         </tr>
@@ -127,7 +154,7 @@
 
       @if (rows.length === 0) {
         <tr>
-          <td [attr.colspan]="columns.length + (readonly ? 1 : 2)" class="text-center text-muted py-3">
+          <td [attr.colspan]="columns.length + (hasActions ? 2 : 1)" class="text-center text-muted py-3">
             {{ emptyKey | abpLocalization }}
           </td>
         </tr>
@@ -136,7 +163,7 @@
   </table>
 </div>
 
-@if (!readonly) {
+@if (!readonly && allowAdd && showAddButton) {
   <button
     type="button"
     class="btn btn-sm btn-link text-decoration-none mt-1"

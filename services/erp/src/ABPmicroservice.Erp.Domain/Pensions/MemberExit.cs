@@ -50,6 +50,18 @@ public class ExitReason : CodeTableEntity
         LumpsumTaxFree = lumpsumTaxFree;
         StatusAfterExit = statusAfterExit is MemberStatus.None or MemberStatus.Active ? MemberStatus.Inactive : statusAfterExit;
     }
+
+    /// <summary>
+    /// Vests the employer's money by the sponsor's vesting scale (years of service) instead of the
+    /// employer portion above, for sponsors that have a scale. Usual for withdrawals, not for
+    /// retirement or death, which vest in full.
+    /// </summary>
+    public bool ApplyVestingScale { get; private set; }
+
+    public void SetVesting(bool applyVestingScale) => ApplyVestingScale = applyVestingScale;
+
+    /// <summary>A death exit pays the member's beneficiaries, whose shares must then add up to 100%.</summary>
+    public bool IsDeath => StatusAfterExit is MemberStatus.DeathInService or MemberStatus.DeathInDeferment or MemberStatus.Deceased;
 }
 
 /// <summary>A lump sum tax table: how much of a lump sum is free of tax. Its bands say how the rest is taxed.</summary>
@@ -312,6 +324,9 @@ public class MemberExitEngine : DomainService
     private readonly GenJnlPostLine _genJnlPostLine;
     private readonly GLRegisterManager _registerManager;
     private readonly GeneralLedgerSetupManager _glSetupManager;
+    private readonly SponsorTermsManager _termsManager;
+    private readonly PensionBeneficiaryManager _beneficiaryManager;
+    private readonly MemberHistoryRecorder _history;
     private readonly ICurrentUser _currentUser;
 
     public MemberExitEngine(
@@ -326,9 +341,15 @@ public class MemberExitEngine : DomainService
         GenJnlPostLine genJnlPostLine,
         GLRegisterManager registerManager,
         GeneralLedgerSetupManager glSetupManager,
+        SponsorTermsManager termsManager,
+        PensionBeneficiaryManager beneficiaryManager,
+        MemberHistoryRecorder history,
         ICurrentUser currentUser
     )
     {
+        _termsManager = termsManager;
+        _beneficiaryManager = beneficiaryManager;
+        _history = history;
         _exits = exits;
         _members = members;
         _reasons = reasons;
@@ -343,15 +364,49 @@ public class MemberExitEngine : DomainService
         _currentUser = currentUser;
     }
 
-    /// <summary>The share of a money type an exit reason pays out, between 0 and 1.</summary>
-    public static decimal PayableShare(ExitReason reason, MoneyType moneyType)
+    /// <summary>The share of a money type an exit reason pays out, between 0 and 1, at the reason's own employer portion.</summary>
+    public static decimal PayableShare(ExitReason reason, MoneyType moneyType) => PayableShare(reason, moneyType, reason.EmployerPortionPct);
+
+    /// <summary>The share of a money type an exit pays out, between 0 and 1, with <paramref name="employerVestedPct"/> of the employer's money vested.</summary>
+    public static decimal PayableShare(ExitReason reason, MoneyType moneyType, decimal employerVestedPct)
     {
         if (moneyType.IsEmployee)
         {
             return 1m;
         }
 
-        return reason.PaymentOption == ExitPaymentOption.PayEmployeeAndEmployer ? reason.EmployerPortionPct / 100m : 0m;
+        return reason.PaymentOption == ExitPaymentOption.PayEmployeeAndEmployer ? employerVestedPct / 100m : 0m;
+    }
+
+    /// <summary>
+    /// How much of the employer's money has vested: by the sponsor's vesting scale for a reason that
+    /// uses it and a sponsor that has one, otherwise the reason's employer portion.
+    /// </summary>
+    public async Task<decimal> GetEmployerVestedPctAsync(ExitReason reason, PensionMember member, decimal serviceYears)
+    {
+        var scale = reason.ApplyVestingScale ? await _termsManager.GetEmployerVestedPctAsync(member.SponsorNo, serviceYears) : null;
+        return scale ?? reason.EmployerPortionPct;
+    }
+
+    /// <summary>
+    /// Approves the exit on its figures as they stand now. A death benefit is paid to the member's
+    /// beneficiaries, so it is approved only once their shares add up to 100%. Every mandatory
+    /// document the exit needs must have been received.
+    /// </summary>
+    public async Task ApproveAsync(MemberExit exit)
+    {
+        await CalculateAsync(exit);
+
+        var reason = await GetReasonAsync(exit.ReasonCode);
+        if (reason.IsDeath && exit.WithdrawalType == MemberWithdrawalType.Actual)
+        {
+            await _beneficiaryManager.GetCompleteAsync(exit.MemberNo);
+        }
+
+        await LazyServiceProvider.LazyGetRequiredService<ExitDocumentManager>().EnsureCompleteAsync(exit);
+
+        exit.Approve();
+        await _exits.UpdateAsync(exit, autoSave: true);
     }
 
     /// <summary>Works the benefit out from the member's fund as at the date of calculation and stores it on the exit.</summary>
@@ -363,11 +418,12 @@ public class MemberExitEngine : DomainService
         var reason = await GetReasonAsync(exit.ReasonCode);
         var balances = await _memberLedger.GetBalancesAsync(member.No, exit.DateOfCalculation);
 
-        var payable = balances.ByMoneyType.ToDictionary(kv => kv.Key, kv => Round(Math.Max(0m, kv.Value) * PayableShare(reason, kv.Key)));
-        var registeredPayable = payable.Where(kv => kv.Key.IsRegistered).Sum(kv => kv.Value);
-
         var age = YearsBetween(member.DateOfBirth, exit.ExitDate);
         var service = YearsBetween(member.JoinSchemeDate ?? member.DateOfEmployment, exit.ExitDate);
+        var vested = await GetEmployerVestedPctAsync(reason, member, service);
+
+        var payable = balances.ByMoneyType.ToDictionary(kv => kv.Key, kv => Round(Math.Max(0m, kv.Value) * PayableShare(reason, kv.Key, vested)));
+        var registeredPayable = payable.Where(kv => kv.Key.IsRegistered).Sum(kv => kv.Value);
 
         var taxFree = 0m;
         var tax = 0m;
@@ -433,7 +489,8 @@ public class MemberExitEngine : DomainService
 
         // The fund is read again: what is posted must be what the member has now, and an exit
         // approved before a later contribution was posted has to be calculated again.
-        var payable = balances.ByMoneyType.ToDictionary(kv => kv.Key, kv => Round(Math.Max(0m, kv.Value) * PayableShare(reason, kv.Key)));
+        var vested = await GetEmployerVestedPctAsync(reason, member, YearsBetween(member.JoinSchemeDate ?? member.DateOfEmployment, exit.ExitDate));
+        var payable = balances.ByMoneyType.ToDictionary(kv => kv.Key, kv => Round(Math.Max(0m, kv.Value) * PayableShare(reason, kv.Key, vested)));
         var gross = payable.Values.Sum();
         if (gross != exit.GrossLumpsum)
         {
@@ -474,8 +531,10 @@ public class MemberExitEngine : DomainService
         await _registerManager.CloseAsync(register);
 
         // A member whose money partly stays in the scheme is deferred, whatever the reason says.
+        var before = member.Status;
         member.Exit(exit.DeferredAmount > 0m && reason.StatusAfterExit == MemberStatus.Inactive ? MemberStatus.Deferred : reason.StatusAfterExit, exit.ExitDate);
         await _members.UpdateAsync(member);
+        await _history.RecordStatusAsync(member, before, exit.ExitDate, exit.No);
 
         exit.MarkPosted(Clock.Now, _currentUser.UserName);
         await _exits.UpdateAsync(exit, autoSave: true);

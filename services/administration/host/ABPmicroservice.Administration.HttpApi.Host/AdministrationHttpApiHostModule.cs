@@ -42,11 +42,13 @@ public class AdministrationHttpApiHostModule : AbpModule
 
         context.ConfigureMicroservice(ABPmicroserviceNames.AdministrationApi);
 
-        // Every service saves its permission definitions to the shared store at startup; read them
-        // back so the permission dialog also lists services this host does not reference (ERP, Projects).
+        // Dynamic permission store queries the database table (AbpPermissionDefinitionRecords),
+        // which omits newly added static permissions or permissions not synced to the DB.
+        // Since this host directly references contracts (ErpApplicationContractsModule, ProjectsApplicationContractsModule, etc.),
+        // disable dynamic store so all static permissions are reliably available in the permission dialog.
         Configure<PermissionManagementOptions>(options =>
         {
-            options.IsDynamicPermissionStoreEnabled = true;
+            options.IsDynamicPermissionStoreEnabled = false;
         });
 
         if (hostingEnvironment.IsDevelopment())

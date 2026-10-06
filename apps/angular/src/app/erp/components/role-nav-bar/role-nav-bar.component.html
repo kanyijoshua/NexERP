@@ -1,126 +1,197 @@
-<nav class="role-bar" [attr.aria-label]="'Erp::RoleNavigation' | abpLocalization">
-  <div class="role-bar__company">
-    <app-company-menu variant="bar" />
-  </div>
+<nav class="role-nav-container" [attr.aria-label]="'Erp::RoleNavigation' | abpLocalization">
+  <div class="role-bar" [class.role-bar--standalone]="sublinks().length === 0">
+    <div class="role-bar__company">
+      <app-company-menu variant="bar" />
+    </div>
 
-  <span class="role-bar__rule" aria-hidden="true"></span>
+    <span class="role-bar__rule" aria-hidden="true"></span>
 
-  <button
-    type="button"
-    class="role-bar__arrow"
-    [class.role-bar__arrow--hidden]="!canScrollBack()"
-    [attr.aria-label]="'Erp::ScrollLeft' | abpLocalization"
-    [attr.tabindex]="canScrollBack() ? 0 : -1"
-    (click)="scroll(-1)"
-  >
-    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-  </button>
-
-  <div #scroller class="role-bar__items" (scroll)="updateArrows()">
-    @for (item of items(); track item.key) {
-      @if (isMenu(item)) {
-        <button
-          type="button"
-          class="role-bar__item"
-          [class.role-bar__item--active]="isMenuActive(item)"
-          [matMenuTriggerFor]="menu"
-        >
-          {{ item.displayName }}
-          <i class="fas fa-chevron-down role-bar__caret" aria-hidden="true"></i>
-        </button>
-        <mat-menu #menu="matMenu" class="role-bar__panel">
-          @for (link of item.children; track link.key) {
-            <a mat-menu-item [routerLink]="link.route" routerLinkActive="role-bar__link--active">
-              {{ link.displayName }}
-            </a>
-          }
-        </mat-menu>
-      } @else {
-        <a
-          class="role-bar__item"
-          [routerLink]="item.route"
-          routerLinkActive="role-bar__item--active"
-        >
-          {{ item.displayName }}
-        </a>
-      }
-    }
-  </div>
-
-  <button
-    type="button"
-    class="role-bar__arrow"
-    [class.role-bar__arrow--hidden]="!canScrollOn()"
-    [attr.aria-label]="'Erp::ScrollRight' | abpLocalization"
-    [attr.tabindex]="canScrollOn() ? 0 : -1"
-    (click)="scroll(1)"
-  >
-    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-  </button>
-
-  <span class="role-bar__rule" aria-hidden="true"></span>
-
-  @if (profile(); as current) {
     <button
       type="button"
-      class="role-bar__role"
-      [matMenuTriggerFor]="roleMenu"
-      [matTooltip]="'Erp::ChangeRole' | abpLocalization"
-      matTooltipShowDelay="500"
-      [disabled]="busy()"
+      class="role-bar__arrow"
+      [class.role-bar__arrow--hidden]="!canScrollBack()"
+      [attr.aria-label]="'Erp::ScrollLeft' | abpLocalization"
+      [attr.tabindex]="canScrollBack() ? 0 : -1"
+      (click)="scroll(-1)"
     >
-      <i class="fas fa-user-tie" aria-hidden="true"></i>
-      <span class="role-bar__role-name">{{ current.displayName }}</span>
-      <i class="fas fa-chevron-down role-bar__caret" aria-hidden="true"></i>
+      <i class="fas fa-chevron-left" aria-hidden="true"></i>
     </button>
 
-    <mat-menu #roleMenu="matMenu" class="role-bar__panel role-bar__panel--roles" xPosition="before">
-      <div class="role-bar__label">
-        {{ 'Erp::MyRole' | abpLocalization }}
-        <span class="role-bar__source">· {{ sourceText() }}</span>
-      </div>
-      @for (option of current.profiles; track option.id) {
-        <button
-          mat-menu-item
-          type="button"
-          class="role-bar__role-option"
-          [class.role-bar__role-option--active]="option.id === current.profileId"
-          (click)="changeRole(option.id ?? null)"
-        >
-          <span class="role-bar__option">
-            <i class="fas role-bar__check" [class.fa-check]="option.id === current.profileId" aria-hidden="true"></i>
-            <span class="role-bar__role-text">
-              <span>{{ option.displayName }}</span>
-              <small>{{ option.description }}</small>
+    <div #scroller class="role-bar__items" (scroll)="updateArrows()">
+      @for (item of items(); track item.key) {
+        @if (isMenu(item)) {
+          <button
+            type="button"
+            class="role-bar__item"
+            [class.role-bar__item--active]="isItemActive(item)"
+            (click)="selectGroup(item)"
+          >
+            <span>{{ item.displayName }}</span>
+            <span
+              class="role-bar__caret-btn"
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation(); selectGroup(item)"
+              [attr.aria-label]="item.displayName"
+            >
+              <i class="fas fa-chevron-down role-bar__caret" aria-hidden="true"></i>
             </span>
-          </span>
-        </button>
+          </button>
+          <mat-menu #menu="matMenu" class="role-bar__panel">
+            @for (link of item.children; track link.key) {
+              <a mat-menu-item [routerLink]="link.route" routerLinkActive="role-bar__link--active">
+                {{ link.displayName }}
+              </a>
+            }
+          </mat-menu>
+        } @else {
+          <a
+            class="role-bar__item"
+            [routerLink]="item.route"
+            routerLinkActive="role-bar__item--active"
+          >
+            {{ item.displayName }}
+          </a>
+        }
       }
-      @if (current.source === ProfileSource.User) {
-        <mat-divider />
-        <button mat-menu-item type="button" (click)="changeRole(null)">
-          <i class="fas fa-rotate-left role-bar__check" aria-hidden="true"></i>
-          <span>{{ 'Erp::UseRoleDefault' | abpLocalization }}</span>
-        </button>
-      }
-      <ng-container *abpPermission="'Erp.Profiles'">
-        <mat-divider />
-        <a mat-menu-item routerLink="/erp/setup/profiles">
-          <i class="fas fa-users-gear role-bar__check" aria-hidden="true"></i>
-          <span>{{ 'Erp::Menu:Profiles' | abpLocalization }}…</span>
-        </a>
-      </ng-container>
-    </mat-menu>
-  }
+    </div>
 
-  <button
-    type="button"
-    class="role-bar__icon"
-    [matTooltip]="'Erp::ExploreMenu' | abpLocalization"
-    matTooltipShowDelay="500"
-    [attr.aria-label]="'Erp::ExploreMenu' | abpLocalization"
-    (click)="openMenuSuite()"
-  >
-    <i class="fas fa-bars" aria-hidden="true"></i>
-  </button>
+    <button
+      type="button"
+      class="role-bar__arrow"
+      [class.role-bar__arrow--hidden]="!canScrollOn()"
+      [attr.aria-label]="'Erp::ScrollRight' | abpLocalization"
+      [attr.tabindex]="canScrollOn() ? 0 : -1"
+      (click)="scroll(1)"
+    >
+      <i class="fas fa-chevron-right" aria-hidden="true"></i>
+    </button>
+
+    <span class="role-bar__rule" aria-hidden="true"></span>
+
+    @if (profile(); as current) {
+      <button
+        type="button"
+        class="role-bar__role"
+        [matMenuTriggerFor]="roleMenu"
+        [matTooltip]="'Erp::ChangeRole' | abpLocalization"
+        matTooltipShowDelay="500"
+        [disabled]="busy()"
+      >
+        <i class="fas fa-user-tie" aria-hidden="true"></i>
+        <span class="role-bar__role-name">{{ current.displayName }}</span>
+        <i class="fas fa-chevron-down role-bar__caret" aria-hidden="true"></i>
+      </button>
+
+      <mat-menu #roleMenu="matMenu" class="role-bar__panel role-bar__panel--roles" xPosition="before">
+        <div class="role-bar__label">
+          {{ 'Erp::MyRole' | abpLocalization }}
+          <span class="role-bar__source">· {{ sourceText() }}</span>
+        </div>
+        @for (option of current.profiles; track option.id) {
+          <button
+            mat-menu-item
+            type="button"
+            class="role-bar__role-option"
+            [class.role-bar__role-option--active]="option.id === current.profileId"
+            (click)="changeRole(option.id ?? null)"
+          >
+            <span class="role-bar__option">
+              <i class="fas role-bar__check" [class.fa-check]="option.id === current.profileId" aria-hidden="true"></i>
+              <span class="role-bar__role-text">
+                <span>{{ option.displayName }}</span>
+                <small>{{ option.description }}</small>
+              </span>
+            </span>
+          </button>
+        }
+        @if (current.source === ProfileSource.User) {
+          <mat-divider />
+          <button mat-menu-item type="button" (click)="changeRole(null)">
+            <i class="fas fa-rotate-left role-bar__check" aria-hidden="true"></i>
+            <span>{{ 'Erp::UseRoleDefault' | abpLocalization }}</span>
+          </button>
+        }
+        <ng-container *abpPermission="'Erp.Profiles'">
+          <mat-divider />
+          <a mat-menu-item routerLink="/erp/setup/profiles">
+            <i class="fas fa-users-gear role-bar__check" aria-hidden="true"></i>
+            <span>{{ 'Erp::Menu:Profiles' | abpLocalization }}…</span>
+          </a>
+        </ng-container>
+      </mat-menu>
+    }
+
+    <button
+      type="button"
+      class="role-bar__icon"
+      [matTooltip]="'Erp::ExploreMenu' | abpLocalization"
+      matTooltipShowDelay="500"
+      [attr.aria-label]="'Erp::ExploreMenu' | abpLocalization"
+      (click)="openMenuSuite()"
+    >
+      <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  @if (sublinks().length > 0) {
+    <div class="role-subbar" [attr.aria-label]="'Erp::SubNavigation' | abpLocalization">
+      <button
+        type="button"
+        class="role-subbar__arrow"
+        [class.role-subbar__arrow--hidden]="!canScrollSubBack()"
+        [attr.aria-label]="'Erp::ScrollLeft' | abpLocalization"
+        [attr.tabindex]="canScrollSubBack() ? 0 : -1"
+        (click)="scrollSub(-1)"
+      >
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+      </button>
+
+      <div #subScroller class="role-subbar__items" (scroll)="updateSubArrows()">
+        @for (link of sublinks(); track link.key) {
+          @if (isMenu(link)) {
+            <button
+              type="button"
+              class="role-subbar__item"
+              [class.role-subbar__item--active]="isSublinkActive(link)"
+              [matMenuTriggerFor]="subDropdown"
+            >
+              <span>{{ link.displayName }}</span>
+              <i class="fas fa-chevron-down role-subbar__caret" aria-hidden="true"></i>
+            </button>
+            <mat-menu #subDropdown="matMenu" class="role-bar__panel">
+              @for (child of link.children; track child.key) {
+                <a
+                  mat-menu-item
+                  [routerLink]="child.route"
+                  routerLinkActive="role-bar__link--active"
+                >
+                  {{ child.displayName }}
+                </a>
+              }
+            </mat-menu>
+          } @else {
+            <a
+              class="role-subbar__item"
+              [routerLink]="link.route"
+              routerLinkActive="role-subbar__item--active"
+              [class.role-subbar__item--active]="isSublinkActive(link)"
+            >
+              <span>{{ link.displayName }}</span>
+            </a>
+          }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="role-subbar__arrow"
+        [class.role-subbar__arrow--hidden]="!canScrollSubOn()"
+        [attr.aria-label]="'Erp::ScrollRight' | abpLocalization"
+        [attr.tabindex]="canScrollSubOn() ? 0 : -1"
+        (click)="scrollSub(1)"
+      >
+        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  }
 </nav>

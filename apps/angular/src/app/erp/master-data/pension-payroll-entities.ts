@@ -13,8 +13,11 @@ import {
   PensionPayrollLineDto,
   PensionPayrollLineService,
   PensionPayrollService,
+  PensionerChangeEntryService,
   PensionerDto,
   PensionerService,
+  PensionerPayItemAssignmentService,
+  PensionPayrollLineItemService,
   PensionerStatus,
   pensionDocumentStatusOptions,
   pensionerStatusOptions,
@@ -41,6 +44,9 @@ export class PensionPayrollEntities {
   private readonly payrolls = inject(PensionPayrollService);
   private readonly payrollLines = inject(PensionPayrollLineService);
   private readonly calculations = inject(PensionBenefitCalculationService);
+  private readonly changes = inject(PensionerChangeEntryService);
+  private readonly payItems = inject(PensionerPayItemAssignmentService);
+  private readonly lineItems = inject(PensionPayrollLineItemService);
 
   readonly pensioner: RecordEntity<PensionerDto, CreateUpdatePensionerDto> = {
     key: 'pensioner',
@@ -59,9 +65,12 @@ export class PensionPayrollEntities {
       { field: 'startDate', labelKey: 'Erp::StartDate', type: 'date' },
       { field: 'status', labelKey: 'Erp::Status', type: 'select', options: enumOptions(pensionerStatusOptions, 'PensionerStatus') },
       { field: 'lastPaidPeriod', labelKey: 'Erp::LastPaidPeriod', type: 'date' },
+      { field: 'lifeCertificateDueDate', labelKey: 'Erp::LifeCertificateDueDate', type: 'date' },
+      { field: 'arrearsAmount', labelKey: 'Erp::ArrearsAmount', type: 'currency' },
     ],
     sections: [
       { key: 'general', labelKey: 'Erp::General' },
+      { key: 'administration', labelKey: 'Erp::PensionAdministration' },
       { key: 'personal', labelKey: 'Erp::Personal', collapsed: true },
       { key: 'payments', labelKey: 'Erp::Payments', collapsed: true },
     ],
@@ -74,12 +83,22 @@ export class PensionPayrollEntities {
       { field: 'startDate', labelKey: 'Erp::StartDate', type: 'date', required: true },
       { field: 'endDate', labelKey: 'Erp::EndDate', type: 'date', cardOnly: true },
       { field: 'status', labelKey: 'Erp::Status', type: 'select', options: enumOptions(pensionerStatusOptions, 'PensionerStatus') },
+      { field: 'taxExempt', labelKey: 'Erp::TaxExempt', type: 'checkbox', cardOnly: true },
       figure('lastPaidPeriod', 'Erp::LastPaidPeriod', 'general'),
+      figure('suspensionReasonCode', 'Erp::SuspensionReasonCode', 'administration'),
+      figure('suspensionReason', 'Erp::SuspensionReason', 'administration'),
+      figure('arrearsAmount', 'Erp::ArrearsAmount', 'administration'),
+      figure('arrearsMonths', 'Erp::ArrearsMonths', 'administration'),
+      figure('lastLifeCertificateDate', 'Erp::LastLifeCertificateDate', 'administration'),
+      figure('lifeCertificateDueDate', 'Erp::LifeCertificateDueDate', 'administration'),
       { field: 'nationalId', labelKey: 'Erp::NationalId', type: 'text', maxLength: 40, section: 'personal', cardOnly: true },
       { field: 'taxPinNo', labelKey: 'Erp::TaxPinNo', type: 'text', maxLength: 20, section: 'personal', cardOnly: true },
       { field: 'dateOfBirth', labelKey: 'Erp::DateOfBirth', type: 'date', section: 'personal', cardOnly: true },
       { field: 'phoneNo', labelKey: 'Erp::PhoneNo', type: 'text', maxLength: 30, section: 'personal', cardOnly: true },
       { field: 'email', labelKey: 'Erp::Email', type: 'email', maxLength: 80, section: 'personal', cardOnly: true },
+      codeField('payModeCode', 'Erp::PayModeCode', 'pensionerPayMode', 'payments', { cardOnly: true, helpKey: 'Erp::PayModeCodeHelp' }),
+      codeField('bankCode', 'Erp::BankCode', 'pensionBank', 'payments', { cardOnly: true, helpKey: 'Erp::PensionerBankCodeHelp' }),
+      codeField('bankBranchCode', 'Erp::BranchCode', 'pensionBankBranch', 'payments', { cardOnly: true }),
       { field: 'bankName', labelKey: 'Erp::BankName', type: 'text', maxLength: 100, section: 'payments', cardOnly: true },
       { field: 'bankBranch', labelKey: 'Erp::BankBranch', type: 'text', maxLength: 100, section: 'payments', cardOnly: true },
       { field: 'bankAccountNo', labelKey: 'Erp::BankAccountNo', type: 'text', maxLength: 30, section: 'payments', cardOnly: true },
@@ -90,7 +109,56 @@ export class PensionPayrollEntities {
     update: (id, input) => this.pensioners.update(id, input),
     delete: id => this.pensioners.delete(id),
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.name ?? undefined }),
-    newRecord: term => ({ name: term ?? '', monthlyPension: 0, startDate: today(), status: PensionerStatus.Active }),
+    newRecord: term => ({ name: term ?? '', monthlyPension: 0, startDate: today(), status: PensionerStatus.Active, taxExempt: false }),
+    facts: dto => [
+      { labelKey: 'Erp::Status', value: dto.status === PensionerStatus.Suspended ? `${PensionerStatus[dto.status]}: ${dto.suspensionReason ?? ''}` : PensionerStatus[dto.status] },
+      { labelKey: 'Erp::MonthlyPension', value: dto.monthlyPension, type: 'currency' },
+      { labelKey: 'Erp::ArrearsAmount', value: dto.arrearsAmount, type: 'currency' },
+    ],
+    actions: [
+      {
+        key: 'lifeCertificate',
+        labelKey: 'Erp::RecordLifeCertificate',
+        icon: 'fas fa-file-signature',
+        permission: `${PERMISSION}.Update`,
+        visible: dto => dto.status !== PensionerStatus.Ceased,
+        confirmKey: 'Erp::RecordLifeCertificateConfirmation',
+        run: dto => this.pensioners.recordLifeCertificate(dto.id!, {}),
+      },
+      {
+        key: 'suspend',
+        labelKey: 'Erp::SuspendPension',
+        icon: 'fas fa-pause',
+        permission: `${PERMISSION}.Update`,
+        visible: dto => dto.status === PensionerStatus.Active,
+        confirmKey: 'Erp::SuspendPensionConfirmation',
+        run: dto => this.pensioners.suspend(dto.id!, {}),
+      },
+      {
+        key: 'reinstate',
+        labelKey: 'Erp::ReinstatePension',
+        icon: 'fas fa-play',
+        permission: `${PERMISSION}.Update`,
+        visible: dto => dto.status === PensionerStatus.Suspended,
+        confirmKey: 'Erp::ReinstatePensionConfirmation',
+        run: dto => this.pensioners.reinstate(dto.id!, {}),
+      },
+    ],
+    parts: [
+      {
+        // Paid or taken with every payroll for a month between the dates.
+        entity: 'pensionerPayItemAssignment',
+        lines: dto => this.payItems.getList({ pensionerNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ pensionerNo: dto.no }),
+        columns: ['payItemCode', 'payItemDescription', 'itemType', 'amount', 'startDate', 'endDate'],
+      },
+      {
+        entity: 'pensionerChangeEntry',
+        lines: dto => this.changes.getList({ pensionerNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        columns: ['effectiveDate', 'changeType', 'oldMonthlyPension', 'newMonthlyPension', 'amount', 'description'],
+        editable: () => false,
+      },
+    ],
     related: dto =>
       this.payrollLines.getList({ pensionerNo: dto.no, maxResultCount: 1, skipCount: 0 }).pipe(
         map(lines => [
@@ -113,6 +181,16 @@ export class PensionPayrollEntities {
     icon: 'fas fa-money-bill-wave',
     permission: PERMISSION,
     listRoute: ['/erp/pension-payrolls'],
+    parts: [
+      {
+        entity: 'pensionPayrollLine',
+        lines: dto => this.payrollLines.getList({ documentNo: dto.no, sorting: 'lineNo', maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        columns: ['pensionerNo', 'pensionerName', 'monthlyPension', 'arrearsAmount', 'otherEarnings', 'grossPension', 'taxAmount', 'deductions', 'netPension'],
+        totals: ['grossPension', 'taxAmount', 'deductions', 'netPension'],
+        editable: dto => dto.status === PensionDocumentStatus.Open,
+      },
+    ],
     attachmentEntityType: 'PensionPayrollHeader',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -123,6 +201,7 @@ export class PensionPayrollEntities {
       { field: 'noOfPensioners', labelKey: 'Erp::NoOfPensioners', type: 'number' },
       { field: 'totalGross', labelKey: 'Erp::TotalGross', type: 'currency' },
       { field: 'totalTax', labelKey: 'Erp::TotalTax', type: 'currency' },
+      { field: 'totalDeductions', labelKey: 'Erp::TotalDeductions', type: 'currency' },
       { field: 'totalNet', labelKey: 'Erp::TotalNet', type: 'currency' },
       { field: 'paymentVoucherNo', labelKey: 'Erp::PaymentVoucherNo' },
     ],
@@ -134,6 +213,8 @@ export class PensionPayrollEntities {
       { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
       { field: 'taxRatePct', labelKey: 'Erp::TaxRatePct', type: 'number', min: 0, helpKey: 'Erp::PayrollTaxHelp' },
       { field: 'taxFreeAmount', labelKey: 'Erp::TaxFreeAmount', type: 'currency', min: 0 },
+      codeField('taxTableCode', 'Erp::TaxTableCode', 'lumpsumTaxTable', undefined, { helpKey: 'Erp::PayrollTaxTableHelp', cardOnly: true }),
+      { field: 'personalRelief', labelKey: 'Erp::PersonalRelief', type: 'currency', min: 0, cardOnly: true },
       { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250, wide: true },
       figure('paymentVoucherNo', 'Erp::PaymentVoucherNo', 'general'),
       figure('postedBy', 'Erp::PostedBy', 'general'),
@@ -144,12 +225,13 @@ export class PensionPayrollEntities {
     update: (id, input) => this.payrolls.update(id, input),
     delete: id => this.payrolls.delete(id),
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: `${dto.schemeCode ?? ''} ${dto.payPeriod?.substring(0, 7) ?? ''}`.trim() }),
-    newRecord: () => ({ payPeriod: today(), postingDate: today(), taxRatePct: 0, taxFreeAmount: 0 }),
+    newRecord: () => ({ payPeriod: today(), postingDate: today(), taxRatePct: 0, taxFreeAmount: 0, personalRelief: 0 }),
     facts: dto => [
       { labelKey: 'Erp::Status', value: PensionDocumentStatus[dto.status] },
       { labelKey: 'Erp::NoOfPensioners', value: dto.noOfPensioners, type: 'number' },
       { labelKey: 'Erp::TotalGross', value: dto.totalGross, type: 'currency' },
       { labelKey: 'Erp::TotalTax', value: dto.totalTax, type: 'currency' },
+      { labelKey: 'Erp::TotalDeductions', value: dto.totalDeductions, type: 'currency' },
       { labelKey: 'Erp::TotalNet', value: dto.totalNet, type: 'currency' },
     ],
     actions: [
@@ -233,17 +315,28 @@ export class PensionPayrollEntities {
       { field: 'documentNo', labelKey: 'Erp::DocumentNo', width: 120 },
       { field: 'pensionerNo', labelKey: 'Erp::PensionerNo' },
       { field: 'pensionerName', labelKey: 'Erp::PensionerName', width: 220 },
+      { field: 'monthlyPension', labelKey: 'Erp::MonthlyPension', type: 'currency' },
+      { field: 'arrearsAmount', labelKey: 'Erp::ArrearsAmount', type: 'currency' },
+      { field: 'otherEarnings', labelKey: 'Erp::OtherEarnings', type: 'currency' },
       { field: 'grossPension', labelKey: 'Erp::GrossPension', type: 'currency' },
       { field: 'taxAmount', labelKey: 'Erp::TaxAmount', type: 'currency' },
+      { field: 'deductions', labelKey: 'Erp::Deductions', type: 'currency' },
       { field: 'netPension', labelKey: 'Erp::NetPension', type: 'currency' },
+      { field: 'payModeCode', labelKey: 'Erp::PayModeCode' },
     ],
     sections: [{ key: 'general', labelKey: 'Erp::General' }],
     fields: [
       codeField('documentNo', 'Erp::DocumentNo', 'pensionPayroll', undefined, { required: true, createOnly: true }),
       codeField('pensionerNo', 'Erp::PensionerNo', 'pensioner', undefined, { required: true }),
-      { field: 'grossPension', labelKey: 'Erp::GrossPension', type: 'currency', min: 0 },
+      { field: 'monthlyPension', labelKey: 'Erp::MonthlyPension', type: 'currency', min: 0, helpKey: 'Erp::PayrollLineMonthlyPensionHelp' },
       { field: 'taxAmount', labelKey: 'Erp::TaxAmount', type: 'currency', min: 0 },
+      figure('arrearsAmount', 'Erp::ArrearsAmount', 'general'),
+      figure('arrearsMonths', 'Erp::ArrearsMonths', 'general'),
+      figure('otherEarnings', 'Erp::OtherEarnings', 'general'),
+      figure('grossPension', 'Erp::GrossPension', 'general'),
+      figure('deductions', 'Erp::Deductions', 'general'),
       figure('netPension', 'Erp::NetPension', 'general'),
+      figure('payModeCode', 'Erp::PayModeCode', 'general'),
     ],
     getList: query => this.payrollLines.getList(query),
     get: id => this.payrollLines.get(id),
@@ -254,7 +347,17 @@ export class PensionPayrollEntities {
     toInput: value =>
       Object.fromEntries(Object.entries(value).map(([key, v]) => [key, v === '' || v === null ? undefined : v])) as unknown as CreateUpdatePensionPayrollLineDto,
     toItem: dto => ({ id: dto.id, code: `${dto.documentNo ?? ''} ${dto.pensionerNo ?? ''}`.trim(), name: dto.pensionerName ?? undefined }),
-    newRecord: () => ({}),
+    // Blank, not zero: the server works the pension and its tax out.
+    newRecord: () => ({ monthlyPension: null, taxAmount: null }) as Partial<PensionPayrollLineDto>,
+    // The earnings and deductions the line was worked out with.
+    parts: [
+      {
+        entity: 'pensionPayrollLineItem',
+        lines: dto =>
+          this.lineItems.getList({ documentNo: dto.documentNo, lineNo: dto.lineNo, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        columns: ['payItemCode', 'description', 'itemType', 'taxable', 'amount'],
+      },
+    ],
   };
 
   readonly pensionBenefitCalculation: RecordEntity<PensionBenefitCalculationDto, CreateUpdatePensionBenefitCalculationDto> = {
@@ -291,6 +394,8 @@ export class PensionPayrollEntities {
       figure('pensionableServiceYears', 'Erp::PensionableServiceYears', 'result'),
       figure('accrualRatePct', 'Erp::AccrualRatePct', 'result'),
       figure('earlyReductionPct', 'Erp::EarlyReductionPct', 'result'),
+      figure('ageFactor', 'Erp::AgeFactor', 'result'),
+      figure('trivial', 'Erp::TrivialPension', 'result'),
       figure('fullAnnualPension', 'Erp::FullAnnualPension', 'result'),
       figure('reducedAnnualPension', 'Erp::ReducedAnnualPension', 'result'),
       figure('commutedAnnualPension', 'Erp::CommutedAnnualPension', 'result'),

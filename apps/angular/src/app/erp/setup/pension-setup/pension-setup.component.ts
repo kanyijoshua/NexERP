@@ -4,7 +4,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder } from '@angular/forms';
 import { DimensionDto, DimensionService } from '@proxy/dimensions';
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
-import { PensionSetupDto, PensionSetupService } from '@proxy/pensions';
+import {
+  ExcessContributionAllocation,
+  PensionSetupDto,
+  PensionSetupService,
+  PensionerPayModeDto,
+  PensionerPayModeService,
+  excessContributionAllocationOptions,
+} from '@proxy/pensions';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
@@ -22,14 +29,17 @@ export class PensionSetupComponent implements OnInit {
   private readonly setupService = inject(PensionSetupService);
   private readonly noSeriesService = inject(NoSeriesService);
   private readonly dimensionService = inject(DimensionService);
+  private readonly payModeService = inject(PensionerPayModeService);
   private readonly companyService = inject(CompanyService);
   private readonly toaster = inject(ToasterService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly series = signal<NoSeriesDto[]>([]);
   readonly dimensions = signal<DimensionDto[]>([]);
+  readonly payModes = signal<PensionerPayModeDto[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
+  readonly allocationOptions = excessContributionAllocationOptions;
 
   /** The number series fields, in the order the page lists them. */
   readonly seriesFields = [
@@ -41,6 +51,7 @@ export class PensionSetupComponent implements OnInit {
     { control: 'pensionerNos', labelKey: 'Erp::PensionerNos' },
     { control: 'payrollNos', labelKey: 'Erp::PayrollNos' },
     { control: 'benefitCalculationNos', labelKey: 'Erp::BenefitCalculationNos' },
+    { control: 'incrementNos', labelKey: 'Erp::IncrementNos' },
   ] as const;
 
   /** The posting accounts, in the order the page lists them. */
@@ -51,6 +62,7 @@ export class PensionSetupComponent implements OnInit {
     { control: 'benefitsPayableAccountNo', labelKey: 'Erp::BenefitsPayableAccountNo' },
     { control: 'taxAccountNo', labelKey: 'Erp::TaxAccountNo' },
     { control: 'pensionsPaidAccountNo', labelKey: 'Erp::PensionsPaidAccountNo' },
+    { control: 'transfersInAccountNo', labelKey: 'Erp::TransfersInAccountNo' },
   ] as const;
 
   readonly form = this.fb.group({
@@ -71,6 +83,12 @@ export class PensionSetupComponent implements OnInit {
     pensionsPaidAccountNo: this.fb.control<string | null>(null),
     allowContributionDuplication: this.fb.nonNullable.control(false),
     noOfDaysInAYear: this.fb.nonNullable.control(365),
+    incrementNos: this.fb.control<string | null>(null),
+    transfersInAccountNo: this.fb.control<string | null>(null),
+    excessContributionAllocation: this.fb.nonNullable.control<ExcessContributionAllocation>(ExcessContributionAllocation.EmployeePriority),
+    lifeCertificateFrequencyMonths: this.fb.nonNullable.control(12),
+    defaultPayModeCode: this.fb.control<string | null>(null),
+    trivialPensionLimit: this.fb.nonNullable.control(0),
   });
 
   ngOnInit(): void {
@@ -98,6 +116,12 @@ export class PensionSetupComponent implements OnInit {
       pensionsPaidAccountNo: value.pensionsPaidAccountNo || undefined,
       allowContributionDuplication: value.allowContributionDuplication,
       noOfDaysInAYear: Number(value.noOfDaysInAYear),
+      incrementNos: value.incrementNos || undefined,
+      transfersInAccountNo: value.transfersInAccountNo || undefined,
+      excessContributionAllocation: Number(value.excessContributionAllocation),
+      lifeCertificateFrequencyMonths: Number(value.lifeCertificateFrequencyMonths) || 0,
+      defaultPayModeCode: value.defaultPayModeCode || undefined,
+      trivialPensionLimit: Number(value.trivialPensionLimit) || 0,
     };
 
     this.saving.set(true);
@@ -119,14 +143,16 @@ export class PensionSetupComponent implements OnInit {
       setup: this.setupService.get(),
       series: this.noSeriesService.getList({ maxResultCount: 1000, skipCount: 0 } as never),
       dimensions: this.dimensionService.getList(),
+      payModes: this.payModeService.getList({ maxResultCount: 1000, skipCount: 0 }),
     })
       .pipe(
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(({ setup, series, dimensions }) => {
+      .subscribe(({ setup, series, dimensions, payModes }) => {
         this.series.set(series.items ?? []);
         this.dimensions.set(dimensions.items ?? []);
+        this.payModes.set(payModes.items ?? []);
         this.show(setup);
       });
   }
@@ -150,6 +176,12 @@ export class PensionSetupComponent implements OnInit {
       pensionsPaidAccountNo: setup.pensionsPaidAccountNo ?? null,
       allowContributionDuplication: setup.allowContributionDuplication,
       noOfDaysInAYear: setup.noOfDaysInAYear || 365,
+      incrementNos: setup.incrementNos ?? null,
+      transfersInAccountNo: setup.transfersInAccountNo ?? null,
+      excessContributionAllocation: setup.excessContributionAllocation ?? ExcessContributionAllocation.EmployeePriority,
+      lifeCertificateFrequencyMonths: setup.lifeCertificateFrequencyMonths ?? 12,
+      defaultPayModeCode: setup.defaultPayModeCode ?? null,
+      trivialPensionLimit: setup.trivialPensionLimit ?? 0,
     });
   }
 }

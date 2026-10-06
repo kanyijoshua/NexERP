@@ -72,6 +72,17 @@ public class PensionContributionHeader : CompanyEntity, IHasNo
         ContributionMode = contributionMode == PensionContributionMode.None ? PensionContributionMode.Normal : contributionMode;
     }
 
+    /// <summary>The scheme a transfer-in schedule brings members' money from; only a transfer in has one.</summary>
+    public string TransferSchemeCode { get; private set; }
+
+    public void SetTransferScheme(string transferSchemeCode)
+    {
+        EnsureOpen();
+        TransferSchemeCode = ContributionMode == PensionContributionMode.TransferIn
+            ? CodeTableEntity.NormalizeCode(Check.Length(transferSchemeCode, nameof(transferSchemeCode), ErpDomainConsts.MaxCodeLength))
+            : null;
+    }
+
     public void Release()
     {
         EnsureOpen();
@@ -204,6 +215,9 @@ public class PensionContributionEngine : DomainService
     private readonly GenJnlPostLine _genJnlPostLine;
     private readonly GLRegisterManager _registerManager;
     private readonly GeneralLedgerSetupManager _glSetupManager;
+    private readonly SponsorTermsManager _termsManager;
+    private readonly TaxReliefLimitManager _limitManager;
+    private readonly MemberHistoryRecorder _history;
     private readonly ICurrentUser _currentUser;
 
     public PensionContributionEngine(
@@ -218,9 +232,15 @@ public class PensionContributionEngine : DomainService
         GenJnlPostLine genJnlPostLine,
         GLRegisterManager registerManager,
         GeneralLedgerSetupManager glSetupManager,
+        SponsorTermsManager termsManager,
+        TaxReliefLimitManager limitManager,
+        MemberHistoryRecorder history,
         ICurrentUser currentUser
     )
     {
+        _termsManager = termsManager;
+        _limitManager = limitManager;
+        _history = history;
         _headers = headers;
         _lines = lines;
         _members = members;
@@ -245,9 +265,10 @@ public class PensionContributionEngine : DomainService
     }
 
     /// <summary>
-    /// Fills the schedule with every contributing member of the sponsor, at the sponsor's rates on
-    /// each member's current salary, as registered contributions. Members already on the schedule
-    /// are left as they are. Returns the number of lines added.
+    /// Fills the schedule with every contributing member of the sponsor, at the rates in force for
+    /// the contribution period on each member's current salary, split into registered and
+    /// unregistered money by the tax relief limit. Members already on the schedule are left as they
+    /// are. Returns the number of lines added.
     /// </summary>
     public async Task<int> SuggestLinesAsync(PensionContributionHeader header)
     {
@@ -257,26 +278,81 @@ public class PensionContributionEngine : DomainService
         var existing = await _lines.GetListAsync(l => l.DocumentNo == header.No);
         var onSchedule = existing.Select(l => l.MemberNo).ToHashSet(StringComparer.Ordinal);
         var lineNo = existing.Count == 0 ? 0 : existing.Max(l => l.LineNo);
-        var added = 0;
+        var (employeeRate, employerRate) = await _termsManager.GetRatesAsync(sponsor, header.ContributionPeriod);
+        var split = await GetSplitterAsync(header, employeeRate, employerRate);
 
         var members = (await _members.GetListAsync(m => m.SponsorNo == sponsor.No && m.SchemeCode == sponsor.SchemeCode))
             .Where(m => m.IsContributing && !onSchedule.Contains(m.No))
-            .OrderBy(m => m.No, StringComparer.Ordinal);
+            .OrderBy(m => m.No, StringComparer.Ordinal)
+            .ToList();
+        var used = await _limitManager.GetUsedAsync(members.Select(m => m.No).ToList(), header.ContributionPeriod);
 
         foreach (var member in members)
         {
-            var employee = Math.Round(member.CurrentSalary * sponsor.EmployeeRatePct / 100m, 2, MidpointRounding.AwayFromZero);
-            var employer = Math.Round(member.CurrentSalary * sponsor.EmployerRatePct / 100m, 2, MidpointRounding.AwayFromZero);
+            var employee = Math.Round(member.CurrentSalary * employeeRate / 100m, 2, MidpointRounding.AwayFromZero);
+            var employer = Math.Round(member.CurrentSalary * employerRate / 100m, 2, MidpointRounding.AwayFromZero);
 
             lineNo += 10000;
             var line = new PensionContributionLine(GuidGenerator.Create(), header.No, lineNo, member);
-            line.SetAmounts(member.CurrentSalary, [employee, 0m, 0m, 0m, employer, 0m, 0m, 0m]);
+            line.SetAmounts(member.CurrentSalary, split(new ContributionAmounts(employee, 0m, employer, 0m), used.GetValueOrDefault(member.No)));
             await _lines.InsertAsync(line, autoSave: true);
-            added++;
         }
 
         await UpdateTotalsAsync(header);
-        return added;
+        return members.Count;
+    }
+
+    /// <summary>
+    /// Splits every line of the schedule again into registered and unregistered money by the tax
+    /// relief limit of its period, keeping what each line contributes by employee, employer and
+    /// voluntary contributions. Returns the number of lines whose split changed.
+    /// </summary>
+    public async Task<int> SplitLinesAsync(PensionContributionHeader header)
+    {
+        header.EnsureOpen();
+
+        var sponsor = await GetSponsorAsync(header.SponsorNo);
+        var (employeeRate, employerRate) = await _termsManager.GetRatesAsync(sponsor, header.ContributionPeriod);
+        var split = await GetSplitterAsync(header, employeeRate, employerRate);
+        var lines = await _lines.GetListAsync(l => l.DocumentNo == header.No);
+        var used = await _limitManager.GetUsedAsync(lines.Select(l => l.MemberNo).ToList(), header.ContributionPeriod);
+        var changed = 0;
+
+        foreach (var line in lines)
+        {
+            var before = line.Amounts();
+            var after = split(ContributionAmounts.Of(before), used.GetValueOrDefault(line.MemberNo));
+            if (before.SequenceEqual(after))
+            {
+                continue;
+            }
+
+            line.SetAmounts(line.BasicSalary, after);
+            await _lines.UpdateAsync(line, autoSave: true);
+            changed++;
+        }
+
+        await UpdateTotalsAsync(header);
+        return changed;
+    }
+
+    /// <summary>
+    /// How the schedule's contributions are split: by the limit in force for its period, less what
+    /// the member has already had registered for that month. A transfer from another scheme keeps
+    /// the split it arrives with, so it is taken as registered here.
+    /// </summary>
+    private async Task<Func<ContributionAmounts, decimal, decimal[]>> GetSplitterAsync(PensionContributionHeader header, decimal employeeRate, decimal employerRate)
+    {
+        var setup = await _setupManager.GetAsync();
+        var limit = header.ContributionMode == PensionContributionMode.TransferIn ? null : await _limitManager.GetLimitAsync(header.ContributionPeriod);
+
+        return (amounts, alreadyUsed) => ContributionSplitter.Split(
+            amounts,
+            limit.HasValue ? limit.Value - alreadyUsed : null,
+            setup.ExcessContributionAllocation,
+            employeeRate,
+            employerRate
+        );
     }
 
     /// <summary>Releases the schedule after checking that it can be posted as it stands.</summary>
@@ -334,7 +410,10 @@ public class PensionContributionEngine : DomainService
             {
                 member.Reactivate();
                 await _members.UpdateAsync(member);
+                await _history.RecordStatusAsync(member, MemberStatus.Dormant, header.PostingDate, header.No);
             }
+
+            await _history.RecordSalaryAsync(member, header.ContributionPeriod, line.BasicSalary, header.No);
         }
 
         var total = lines.Sum(l => l.TotalAmount);
@@ -352,8 +431,22 @@ public class PensionContributionEngine : DomainService
             context
         );
 
-        // ...and the sponsor owes the fund the same.
-        if (sponsor.CustomerNo.IsNullOrWhiteSpace())
+        // ...and the sponsor owes the fund the same; a transfer is owed by the scheme it comes from.
+        if (header.ContributionMode == PensionContributionMode.TransferIn)
+        {
+            await _genJnlPostLine.PostGLDirectAsync(
+                setup.Require(setup.TransfersInAccountNo, "Transfers In Account No."),
+                header.PostingDate,
+                GLEntryDocumentType.None,
+                header.No,
+                description,
+                total,
+                sponsor.No,
+                dimensionSetId,
+                context
+            );
+        }
+        else if (sponsor.CustomerNo.IsNullOrWhiteSpace())
         {
             await _genJnlPostLine.PostGLDirectAsync(
                 setup.Require(setup.ContributionAccrualAccountNo, "Contribution Accrual Account No."),

@@ -209,6 +209,28 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<PensionPayrollHeader, PensionPayrollHeaderDto>();
         CreateMap<PensionPayrollLine, PensionPayrollLineDto>();
         CreateMap<PensionBenefitCalculation, PensionBenefitCalculationDto>();
+        CreateMap<PensionBeneficiary, PensionBeneficiaryDto>();
+        CreateMap<PensionContributionRate, PensionContributionRateDto>();
+        CreateMap<PensionVestingScale, PensionVestingScaleDto>();
+        CreateMap<PensionTaxReliefLimit, PensionTaxReliefLimitDto>();
+        CreateMap<MemberStatusEntry, MemberStatusEntryDto>();
+        CreateMap<MemberSalaryEntry, MemberSalaryEntryDto>();
+        CreateMap<PensionIncrement, PensionIncrementDto>();
+        CreateMap<PensionerChangeEntry, PensionerChangeEntryDto>();
+        CreateMap<PensionBank, PensionBankDto>();
+        CreateMap<PensionBankBranch, PensionBankBranchDto>();
+        CreateMap<PensionerPayMode, PensionerPayModeDto>();
+        CreateMap<PensionerSuspensionReason, PensionerSuspensionReasonDto>();
+        CreateMap<PensionRevisionReason, CodeTableDto>();
+        CreateMap<OtherPensionScheme, OtherPensionSchemeDto>();
+        CreateMap<PensionerPayItem, PensionerPayItemDto>();
+        CreateMap<PensionerPayItemAssignment, PensionerPayItemAssignmentDto>()
+            .ForMember(d => d.PayItemDescription, o => o.Ignore())
+            .ForMember(d => d.ItemType, o => o.Ignore());
+        CreateMap<PensionPayrollLineItem, PensionPayrollLineItemDto>();
+        CreateMap<ExitReasonDocument, ExitReasonDocumentDto>();
+        CreateMap<MemberExitDocument, MemberExitDocumentDto>();
+        CreateMap<PensionAgeFactor, PensionAgeFactorDto>();
 
         // Payroll
         CreateMap<PayrollSetup, PayrollSetupDto>();

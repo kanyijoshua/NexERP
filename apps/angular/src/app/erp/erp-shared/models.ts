@@ -19,7 +19,7 @@ export interface DocumentLineOption {
 }
 
 export type DocumentLineColumnType =
-  'text' | 'number' | 'date' | 'select' | 'lookup' | 'readonly' | 'currency';
+  'text' | 'number' | 'date' | 'select' | 'lookup' | 'readonly' | 'currency' | 'checkbox';
 
 /** Describes one editable cell of a document / journal line. */
 export interface DocumentLineColumn {
@@ -44,6 +44,8 @@ export interface DocumentLineColumn {
   lookupEntity?: string | ((row: FormGroup) => string | null);
   /** `number` / `currency` only. */
   step?: number;
+  /** Shown but never edited, e.g. a name the server fills in from the code next to it. */
+  readonly?: boolean;
 }
 
 export interface DocumentLineChange {

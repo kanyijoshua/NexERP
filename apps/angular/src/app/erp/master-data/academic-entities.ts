@@ -692,6 +692,16 @@ export class AcademicEntities {
     icon: 'fas fa-clipboard-list',
     permission: PERMISSION,
     listRoute: ['/erp/semester-registrations'],
+    // The units the student takes this semester, typed in under the registration.
+    parts: [
+      {
+        entity: 'studentUnit',
+        lines: dto => this.studentUnits.getList({ registrationNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ registrationNo: dto.no }),
+        columns: ['unitCode', 'unitDescription', 'catMark', 'examMark', 'finalScore', 'grade', 'passed'],
+        editable: dto => dto.status === RegistrationStatus.Open,
+      },
+    ],
     attachmentEntityType: 'SemesterRegistration',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -839,6 +849,15 @@ export class AcademicEntities {
     icon: 'fas fa-file-invoice-dollar',
     permission: PERMISSION,
     listRoute: ['/erp/student-bills'],
+    parts: [
+      {
+        entity: 'studentBillLine',
+        lines: dto => this.billLines.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        totals: ['amount'],
+        editable: dto => dto.status === AcademicDocumentStatus.Open,
+      },
+    ],
     attachmentEntityType: 'StudentBillHeader',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -946,6 +965,14 @@ export class AcademicEntities {
     icon: 'fas fa-square-poll-vertical',
     permission: PERMISSION,
     listRoute: ['/erp/exam-results'],
+    parts: [
+      {
+        entity: 'examResultLine',
+        lines: dto => this.examResultLines.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        editable: dto => dto.status === AcademicDocumentStatus.Open,
+      },
+    ],
     attachmentEntityType: 'ExamResultHeader',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },

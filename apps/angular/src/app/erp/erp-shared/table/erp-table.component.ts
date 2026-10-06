@@ -126,6 +126,7 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
   @Output() readonly rowClick = new EventEmitter<T>();
   @Output() readonly rowDblClick = new EventEmitter<T>();
   @Output() readonly codeClick = new EventEmitter<T>();
+  @Output() readonly sublinkClick = new EventEmitter<{ row: T; column: ErpTableColumn<T>; value: any }>();
   @Output() readonly selectedChange = new EventEmitter<T[]>();
   @Output() readonly switchChange = new EventEmitter<ErpTableSwitchEvent<T>>();
   @Output() readonly filterChange = new EventEmitter<ErpFilterState>();
@@ -812,6 +813,22 @@ export class ErpTableComponent<T = any> implements OnInit, OnChanges, AfterConte
   onCodeColumnClick(row: T, event: MouseEvent): void {
     event.stopPropagation();
     this.codeClick.emit(row);
+  }
+
+  getSublink(col: ErpTableColumn<T>, row: T): string | null {
+    if (col.sublinkFormat) {
+      return col.sublinkFormat(row) ?? null;
+    }
+    if (col.sublinkField && row) {
+      return (row as any)[col.sublinkField] ?? null;
+    }
+    return null;
+  }
+
+  onSublinkClick(col: ErpTableColumn<T>, row: T, event: MouseEvent): void {
+    event.stopPropagation();
+    const value = this.getSublink(col, row);
+    this.sublinkClick.emit({ row, column: col, value });
   }
 
   onSwitchToggle(col: ErpTableColumn<T>, row: T, event: Event): void {

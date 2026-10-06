@@ -60,6 +60,24 @@ public class PensionSetupDto
 
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
     public string BenefitCalculationNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string TransfersInAccountNo { get; set; }
+
+    public ExcessContributionAllocation ExcessContributionAllocation { get; set; }
+
+    [Range(0, 120)]
+    public int LifeCertificateFrequencyMonths { get; set; } = 12;
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string IncrementNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string DefaultPayModeCode { get; set; }
+
+    /// <summary>A monthly pension below this is commuted in full; zero commutes none.</summary>
+    [Range(0, double.MaxValue)]
+    public decimal TrivialPensionLimit { get; set; }
 }
 
 public interface IPensionSetupAppService : IApplicationService
@@ -87,6 +105,8 @@ public class PensionSchemeDto : CodeTableDto
     public decimal MaxCommutationPct { get; set; }
     public decimal CommutationFactor { get; set; }
     public decimal EarlyRetirementReductionPct { get; set; }
+    public PensionableSalaryBasis PensionableSalaryBasis { get; set; }
+    public int SalaryAveragingYears { get; set; }
 }
 
 public class CreateUpdatePensionSchemeDto : CreateUpdateCodeTableDto
@@ -124,6 +144,12 @@ public class CreateUpdatePensionSchemeDto : CreateUpdateCodeTableDto
 
     [Range(0, 100)]
     public decimal EarlyRetirementReductionPct { get; set; }
+
+    public PensionableSalaryBasis PensionableSalaryBasis { get; set; }
+
+    /// <summary>The years of salary history an average or highest salary is taken over; zero is 3.</summary>
+    [Range(0, 50)]
+    public int SalaryAveragingYears { get; set; } = 3;
 }
 
 public interface IPensionSchemeAppService
@@ -381,6 +407,7 @@ public class PensionContributionHeaderDto : FullAuditedEntityDto<Guid>
     public DateTime ContributionPeriod { get; set; }
     public string Description { get; set; }
     public PensionContributionMode ContributionMode { get; set; }
+    public string TransferSchemeCode { get; set; }
     public PensionDocumentStatus Status { get; set; }
     public DateTime? PostedDate { get; set; }
     public string PostedBy { get; set; }
@@ -407,6 +434,10 @@ public class CreateUpdatePensionContributionHeaderDto
     public string Description { get; set; }
 
     public PensionContributionMode ContributionMode { get; set; } = PensionContributionMode.Normal;
+
+    /// <summary>Transfer in only: the other scheme the money comes from.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string TransferSchemeCode { get; set; }
 }
 
 public class GetPensionContributionListInput : ErpPagedListInput
@@ -493,6 +524,12 @@ public interface IPensionContributionAppService
 
     /// <summary>Routed as POST /api/erp/pension-contribution/{id}/run-posting.</summary>
     Task<PensionContributionHeaderDto> RunPostingAsync(Guid id);
+
+    /// <summary>
+    /// Splits every line again into registered and unregistered money by the tax relief limit.
+    /// Routed as POST /api/erp/pension-contribution/{id}/split-lines.
+    /// </summary>
+    Task<PensionContributionHeaderDto> SplitLinesAsync(Guid id);
 }
 
 public interface IPensionContributionLineAppService
@@ -586,6 +623,7 @@ public class ExitReasonDto : CodeTableDto
     public string TaxTableCode { get; set; }
     public bool LumpsumTaxFree { get; set; }
     public MemberStatus StatusAfterExit { get; set; }
+    public bool ApplyVestingScale { get; set; }
 }
 
 public class CreateUpdateExitReasonDto : CreateUpdateCodeTableDto
@@ -601,6 +639,9 @@ public class CreateUpdateExitReasonDto : CreateUpdateCodeTableDto
     public bool LumpsumTaxFree { get; set; }
 
     public MemberStatus StatusAfterExit { get; set; } = MemberStatus.Inactive;
+
+    /// <summary>Vests the employer's money by the sponsor's vesting scale, for sponsors that have one.</summary>
+    public bool ApplyVestingScale { get; set; }
 }
 
 public interface IExitReasonAppService
@@ -747,6 +788,9 @@ public interface IMemberExitAppService
 
     /// <summary>Raises the payment voucher that pays the net benefit. Routed as POST /api/erp/member-exit/{id}/raise-payment-voucher.</summary>
     Task<MemberExitDto> RaisePaymentVoucherAsync(Guid id);
+
+    /// <summary>Adds the documents the exit's reason needs. Routed as POST /api/erp/member-exit/{id}/copy-required-documents.</summary>
+    Task<CopyExitDocumentsResultDto> CopyRequiredDocumentsAsync(Guid id);
 }
 
 // ---------------------------------------------------------------------------- Pensioners and pension payroll
@@ -770,6 +814,16 @@ public class PensionerDto : FullAuditedEntityDto<Guid>
     public string BankBranch { get; set; }
     public string BankAccountNo { get; set; }
     public DateTime? LastPaidPeriod { get; set; }
+    public bool TaxExempt { get; set; }
+    public decimal ArrearsAmount { get; set; }
+    public int ArrearsMonths { get; set; }
+    public string SuspensionReason { get; set; }
+    public DateTime? LastLifeCertificateDate { get; set; }
+    public DateTime? LifeCertificateDueDate { get; set; }
+    public string PayModeCode { get; set; }
+    public string BankCode { get; set; }
+    public string BankBranchCode { get; set; }
+    public string SuspensionReasonCode { get; set; }
 }
 
 public class CreateUpdatePensionerDto
@@ -818,6 +872,19 @@ public class CreateUpdatePensionerDto
 
     [StringLength(ErpDomainConsts.MaxBankAccountNoLength)]
     public string BankAccountNo { get; set; }
+
+    public bool TaxExempt { get; set; }
+
+    /// <summary>Blank takes the Pension Setup's default pay mode.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string PayModeCode { get; set; }
+
+    /// <summary>A bank set up for pensions; its name and the branch's name replace the bank name and branch given.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string BankCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string BankBranchCode { get; set; }
 }
 
 public class GetPensionerListInput : ErpPagedListInput
@@ -828,8 +895,53 @@ public class GetPensionerListInput : ErpPagedListInput
     public PensionerStatus? Status { get; set; }
 }
 
+/// <summary>When a pensioner action takes effect; blank is today.</summary>
+public class PensionerActionInput
+{
+    public DateTime? Date { get; set; }
+
+    /// <summary>Suspension only: the suspension reason.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string ReasonCode { get; set; }
+
+    /// <summary>Suspension only: why the pension is stopped, in words, added to the reason.</summary>
+    [StringLength(ErpDomainConsts.MaxDescriptionLength)]
+    public string Reason { get; set; }
+}
+
 public interface IPensionerAppService
-    : ICrudAppService<PensionerDto, Guid, GetPensionerListInput, CreateUpdatePensionerDto, CreateUpdatePensionerDto> { }
+    : ICrudAppService<PensionerDto, Guid, GetPensionerListInput, CreateUpdatePensionerDto, CreateUpdatePensionerDto>
+{
+    /// <summary>Stops the pension. Routed as POST /api/erp/pensioner/{id}/suspend.</summary>
+    Task<PensionerDto> SuspendAsync(Guid id, PensionerActionInput input);
+
+    /// <summary>Pays the pension again, owing the months missed as arrears. Routed as POST /api/erp/pensioner/{id}/reinstate.</summary>
+    Task<PensionerDto> ReinstateAsync(Guid id, PensionerActionInput input);
+
+    /// <summary>Records proof the pensioner is alive. Routed as POST /api/erp/pensioner/{id}/record-life-certificate.</summary>
+    Task<PensionerDto> RecordLifeCertificateAsync(Guid id, PensionerActionInput input);
+
+    /// <summary>
+    /// Suspends the scheme's pensioners whose life certificate is overdue. Routed as POST
+    /// /api/erp/pensioner/suspend-overdue.
+    /// </summary>
+    Task<SuspendOverduePensionersResultDto> SuspendOverdueAsync(SuspendOverduePensionersInput input);
+}
+
+public class SuspendOverduePensionersInput
+{
+    [Required]
+    [StringLength(ErpDomainConsts.MaxDimensionValueCodeLength)]
+    public string SchemeCode { get; set; }
+
+    /// <summary>Certificates due before this date are overdue; blank is today.</summary>
+    public DateTime? AsOfDate { get; set; }
+}
+
+public class SuspendOverduePensionersResultDto
+{
+    public int NoOfPensioners { get; set; }
+}
 
 public class PensionPayrollHeaderDto : FullAuditedEntityDto<Guid>
 {
@@ -845,9 +957,12 @@ public class PensionPayrollHeaderDto : FullAuditedEntityDto<Guid>
     public string PostedBy { get; set; }
     public decimal TotalGross { get; set; }
     public decimal TotalTax { get; set; }
+    public decimal TotalDeductions { get; set; }
     public decimal TotalNet { get; set; }
     public int NoOfPensioners { get; set; }
     public string PaymentVoucherNo { get; set; }
+    public string TaxTableCode { get; set; }
+    public decimal PersonalRelief { get; set; }
 }
 
 public class CreateUpdatePensionPayrollHeaderDto
@@ -873,6 +988,13 @@ public class CreateUpdatePensionPayrollHeaderDto
 
     [Range(0, double.MaxValue)]
     public decimal TaxFreeAmount { get; set; }
+
+    /// <summary>A lump sum tax table whose bands tax each pension; blank taxes at the flat rate.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string TaxTableCode { get; set; }
+
+    [Range(0, double.MaxValue)]
+    public decimal PersonalRelief { get; set; }
 }
 
 public class GetPensionPayrollListInput : ErpPagedListInput
@@ -906,9 +1028,15 @@ public class PensionPayrollLineDto : FullAuditedEntityDto<Guid>
     public int LineNo { get; set; }
     public string PensionerNo { get; set; }
     public string PensionerName { get; set; }
+    public decimal MonthlyPension { get; set; }
+    public decimal OtherEarnings { get; set; }
     public decimal GrossPension { get; set; }
     public decimal TaxAmount { get; set; }
+    public decimal Deductions { get; set; }
     public decimal NetPension { get; set; }
+    public decimal ArrearsAmount { get; set; }
+    public int ArrearsMonths { get; set; }
+    public string PayModeCode { get; set; }
 }
 
 public class CreateUpdatePensionPayrollLineDto
@@ -924,11 +1052,11 @@ public class CreateUpdatePensionPayrollLineDto
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string PensionerNo { get; set; }
 
-    /// <summary>Left out, the pensioner's monthly pension.</summary>
+    /// <summary>The pension for the month, without arrears or earnings; left out, the pensioner's monthly pension.</summary>
     [Range(0, double.MaxValue)]
-    public decimal? GrossPension { get; set; }
+    public decimal? MonthlyPension { get; set; }
 
-    /// <summary>Left out, the payroll's tax on the gross pension.</summary>
+    /// <summary>Left out, the payroll's tax on the line.</summary>
     [Range(0, double.MaxValue)]
     public decimal? TaxAmount { get; set; }
 }
@@ -962,6 +1090,8 @@ public class PensionBenefitCalculationDto : FullAuditedEntityDto<Guid>
     public decimal AccrualRatePct { get; set; }
     public decimal CommutationFactor { get; set; }
     public decimal EarlyReductionPct { get; set; }
+    public decimal AgeFactor { get; set; }
+    public bool Trivial { get; set; }
     public decimal FullAnnualPension { get; set; }
     public decimal ReducedAnnualPension { get; set; }
     public decimal CommutedAnnualPension { get; set; }

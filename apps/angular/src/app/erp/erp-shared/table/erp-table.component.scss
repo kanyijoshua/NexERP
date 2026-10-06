@@ -345,6 +345,70 @@
   }
 }
 
+/* Business Central (BC) Sublink Styling */
+.erp-sublink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--erp-primary, var(--bs-primary, #005a9e));
+  background-color: rgb(var(--erp-accent-rgb, 1 126 132) / 8%);
+  border: 1px solid rgb(var(--erp-accent-rgb, 1 126 132) / 22%);
+  border-radius: 3px;
+  padding: 0.1rem 0.45rem;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .erp-sublink__icon {
+    font-size: 0.65rem;
+    opacity: 0.85;
+    transition: transform 0.15s ease;
+  }
+
+  .erp-sublink__text {
+    letter-spacing: 0.01em;
+  }
+
+  &:hover {
+    color: color-mix(in srgb, var(--erp-primary, var(--bs-primary, #005a9e)) 85%, black);
+    background-color: rgb(var(--erp-accent-rgb, 1 126 132) / 16%);
+    border-color: var(--erp-primary, var(--bs-primary, #005a9e));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+    .erp-sublink__icon {
+      transform: translateX(1px);
+    }
+
+    .erp-sublink__text {
+      text-decoration: underline;
+    }
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--erp-accent-rgb, 1 126 132) / 35%);
+  }
+
+  &--subtle {
+    background: transparent;
+    border-color: transparent;
+    padding: 0 0.15rem;
+    color: var(--bs-secondary-color, #64748b);
+
+    &:hover {
+      background: transparent;
+      border-color: transparent;
+      color: var(--erp-primary, var(--bs-primary, #005a9e));
+      box-shadow: none;
+    }
+  }
+}
+
 .erp-action-btn {
   width: 28px;
   height: 28px;

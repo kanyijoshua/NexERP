@@ -34,6 +34,42 @@
           </select>
         </div>
       </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="ps-allocation">{{ 'Erp::ExcessContributionAllocation' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="ps-allocation" class="form-select form-select-sm" formControlName="excessContributionAllocation">
+            @for (o of allocationOptions; track o.value) {
+              <option [ngValue]="o.value">{{ 'Erp::Enum:ExcessContributionAllocation.' + o.key | abpLocalization }}</option>
+            }
+          </select>
+          <div class="form-text">{{ 'Erp::ExcessContributionAllocationHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="ps-life">{{ 'Erp::LifeCertificateFrequencyMonths' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="ps-life" type="number" min="0" max="120" class="form-control form-control-sm" formControlName="lifeCertificateFrequencyMonths" />
+          <div class="form-text">{{ 'Erp::LifeCertificateFrequencyHelp' | abpLocalization }}</div>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="ps-paymode">{{ 'Erp::DefaultPayModeCode' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="ps-paymode" class="form-select form-select-sm" formControlName="defaultPayModeCode">
+            <option [ngValue]="null"></option>
+            @for (mode of payModes(); track mode.id) {
+              <option [ngValue]="mode.code">{{ mode.code }} {{ mode.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="ps-trivial">{{ 'Erp::TrivialPensionLimit' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="ps-trivial" type="number" min="0" class="form-control form-control-sm" formControlName="trivialPensionLimit" />
+          <div class="form-text">{{ 'Erp::TrivialPensionLimitHelp' | abpLocalization }}</div>
+        </div>
+      </div>
       <div class="form-check form-switch">
         <input id="ps-duplicates" type="checkbox" class="form-check-input" formControlName="allowContributionDuplication" />
         <label class="form-check-label" for="ps-duplicates">{{ 'Erp::AllowContributionDuplication' | abpLocalization }}</label>

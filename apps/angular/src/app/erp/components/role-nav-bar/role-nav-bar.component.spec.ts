@@ -111,4 +111,42 @@ describe('RoleNavBarComponent', () => {
 
     expect(menuSuite.open).toHaveBeenCalled();
   });
+
+  it('shows sublinks in the BC-style sublink bar for the active group', () => {
+    const sublinks = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.role-subbar__item'));
+
+    expect(sublinks.map(i => i.textContent?.trim())).toEqual(['General Journals']);
+    expect(sublinks[0].tagName).toBe('A');
+    expect(sublinks[0].getAttribute('href')).toBe('/erp/finance/general-journal');
+  });
+
+  it('updates sublinks when clicking another top-level menu group', () => {
+    navigation.profile.set({
+      ...ACCOUNTANT,
+      navigation: [
+        {
+          key: 'group1',
+          displayName: 'Group 1',
+          children: [{ key: 'g1-1', displayName: 'Link 1A', route: '/erp/g1-1', children: [] }],
+        },
+        {
+          key: 'group2',
+          displayName: 'Group 2',
+          children: [{ key: 'g2-1', displayName: 'Link 2A', route: '/erp/g2-1', children: [] }],
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const topButtons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.role-bar__item')
+    );
+    expect(topButtons.length).toBe(2);
+
+    topButtons[1].click();
+    fixture.detectChanges();
+
+    const sublinks = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.role-subbar__item'));
+    expect(sublinks.map(s => s.textContent?.trim())).toEqual(['Link 2A']);
+  });
 });

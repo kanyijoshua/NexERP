@@ -54,6 +54,7 @@ public class PensionerAppService
 
         var pensioner = new Pensioner(GuidGenerator.Create(), no, scheme, name, startDate);
         Apply(pensioner, input, scheme, name, member, startDate);
+        await ApplyPaymentAsync(pensioner, input, input.PayModeCode.IsNullOrWhiteSpace() ? setup.DefaultPayModeCode : input.PayModeCode);
 
         await Repository.InsertAsync(pensioner, autoSave: true);
         return await MapToGetOutputDtoAsync(pensioner);
@@ -73,6 +74,7 @@ public class PensionerAppService
         }
 
         Apply(pensioner, input, scheme, name, member, input.StartDate == default ? pensioner.StartDate : input.StartDate);
+        await ApplyPaymentAsync(pensioner, input, input.PayModeCode);
 
         await Repository.UpdateAsync(pensioner, autoSave: true);
         return await MapToGetOutputDtoAsync(pensioner);
@@ -89,8 +91,43 @@ public class PensionerAppService
             throw new BusinessException(ErpErrorCodes.Pensions.PensionerHasPayroll).WithData("pensionerNo", pensioner.No);
         }
 
+        await LazyServiceProvider.LazyGetRequiredService<IRepository<PensionerPayItemAssignment, Guid>>().DeleteAsync(a => a.PensionerNo == pensioner.No);
         await Repository.DeleteAsync(id, autoSave: true);
     }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<PensionerDto> SuspendAsync(Guid id, PensionerActionInput input)
+    {
+        var pensioner = await GetEntityByIdAsync(id);
+        await Administrator.SuspendAsync(pensioner, input?.ReasonCode, input?.Reason, input?.Date ?? Clock.Now.Date);
+        return await MapToGetOutputDtoAsync(pensioner);
+    }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<PensionerDto> ReinstateAsync(Guid id, PensionerActionInput input)
+    {
+        var pensioner = await GetEntityByIdAsync(id);
+        await Administrator.ReinstateAsync(pensioner, input?.Date ?? Clock.Now.Date);
+        return await MapToGetOutputDtoAsync(pensioner);
+    }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<PensionerDto> RecordLifeCertificateAsync(Guid id, PensionerActionInput input)
+    {
+        var pensioner = await GetEntityByIdAsync(id);
+        await Administrator.RecordLifeCertificateAsync(pensioner, input?.Date ?? Clock.Now.Date);
+        return await MapToGetOutputDtoAsync(pensioner);
+    }
+
+    [Authorize(ErpPermissions.Pensions.Update)]
+    public async Task<SuspendOverduePensionersResultDto> SuspendOverdueAsync(SuspendOverduePensionersInput input)
+    {
+        var scheme = await _schemeManager.GetAsync(input.SchemeCode);
+        var count = await Administrator.SuspendOverdueAsync(scheme.Code, input.AsOfDate ?? Clock.Now.Date);
+        return new SuspendOverduePensionersResultDto { NoOfPensioners = count };
+    }
+
+    private PensionerAdministrator Administrator => LazyServiceProvider.LazyGetRequiredService<PensionerAdministrator>();
 
     protected override async Task<IQueryable<Pensioner>> CreateFilteredQueryAsync(GetPensionerListInput input)
     {
@@ -129,6 +166,19 @@ public class PensionerAppService
         return (scheme, Check.NotNullOrWhiteSpace(name, nameof(input.Name)), member);
     }
 
+    /// <summary>The pay mode, and the bank and branch, whose names replace the bank name and branch typed in.</summary>
+    private async Task ApplyPaymentAsync(Pensioner pensioner, CreateUpdatePensionerDto input, string payModeCode)
+    {
+        await CodeTableChecker.EnsureExistsAsync<PensionerPayMode>(payModeCode);
+        var (bankName, branchName) = await LazyServiceProvider.LazyGetRequiredService<PensionBankResolver>().ResolveAsync(input.BankCode, input.BankBranchCode);
+
+        pensioner.SetPayment(payModeCode, input.BankCode, input.BankBranchCode);
+        if (bankName != null)
+        {
+            pensioner.SetContact(pensioner.PhoneNo, pensioner.Email, bankName, branchName ?? pensioner.BankBranch, pensioner.BankAccountNo);
+        }
+    }
+
     private static void Apply(Pensioner pensioner, CreateUpdatePensionerDto input, string scheme, string name, PensionMember member, DateTime startDate)
     {
         pensioner.Set(
@@ -140,6 +190,7 @@ public class PensionerAppService
             input.DateOfBirth ?? member?.DateOfBirth
         );
         pensioner.SetPension(input.MonthlyPension, startDate, input.EndDate, input.Status);
+        pensioner.SetTaxExempt(input.TaxExempt);
         pensioner.SetContact(
             input.PhoneNo.IsNullOrWhiteSpace() ? member?.PhoneNo : input.PhoneNo,
             input.Email.IsNullOrWhiteSpace() ? member?.Email : input.Email,
@@ -198,6 +249,8 @@ public class PensionPayrollAppService
         var payPeriod = input.PayPeriod == default ? postingDate : input.PayPeriod;
         var header = new PensionPayrollHeader(GuidGenerator.Create(), no, scheme.Code, payPeriod, postingDate);
         header.Set(scheme.Code, payPeriod, postingDate, input.Description, input.TaxRatePct, input.TaxFreeAmount);
+        await CodeTableChecker.EnsureExistsAsync<LumpsumTaxTable>(input.TaxTableCode);
+        header.SetTaxTable(input.TaxTableCode, input.PersonalRelief);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -224,6 +277,8 @@ public class PensionPayrollAppService
             input.TaxRatePct,
             input.TaxFreeAmount
         );
+        await CodeTableChecker.EnsureExistsAsync<LumpsumTaxTable>(input.TaxTableCode);
+        header.SetTaxTable(input.TaxTableCode, input.PersonalRelief);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -234,11 +289,7 @@ public class PensionPayrollAppService
     {
         await CheckDeletePolicyAsync();
 
-        var header = await GetEntityByIdAsync(id);
-        header.EnsureOpen();
-
-        await _lines.DeleteAsync(l => l.DocumentNo == header.No, autoSave: true);
-        await Repository.DeleteAsync(id, autoSave: true);
+        await _engine.DeletePayrollAsync(await GetEntityByIdAsync(id));
     }
 
     [Authorize(ErpPermissions.Pensions.Update)]
@@ -343,7 +394,7 @@ public class PensionPayrollLineAppService
         }
 
         var line = new PensionPayrollLine(GuidGenerator.Create(), header.No, lineNo, pensioner);
-        SetAmounts(line, header, pensioner, input);
+        await SetAmountsAsync(line, header, pensioner, input);
 
         await Repository.InsertAsync(line, autoSave: true);
         await _engine.UpdateTotalsAsync(header);
@@ -360,7 +411,7 @@ public class PensionPayrollLineAppService
         await EnsurePensionerOnceAsync(header.No, pensioner.No, id);
 
         line.SetPensioner(pensioner);
-        SetAmounts(line, header, pensioner, input);
+        await SetAmountsAsync(line, header, pensioner, input);
 
         await Repository.UpdateAsync(line, autoSave: true);
         await _engine.UpdateTotalsAsync(header);
@@ -374,7 +425,7 @@ public class PensionPayrollLineAppService
         var line = await GetEntityByIdAsync(id);
         var header = await GetOpenHeaderAsync(line.DocumentNo);
 
-        await Repository.DeleteAsync(id, autoSave: true);
+        await _engine.DeleteLineAsync(line);
         await _engine.UpdateTotalsAsync(header);
     }
 
@@ -399,10 +450,11 @@ public class PensionPayrollLineAppService
     protected override IQueryable<PensionPayrollLine> ApplyDefaultSorting(IQueryable<PensionPayrollLine> query) =>
         query.OrderBy(x => x.DocumentNo).ThenBy(x => x.LineNo);
 
-    private static void SetAmounts(PensionPayrollLine line, PensionPayrollHeader header, Pensioner pensioner, CreateUpdatePensionPayrollLineDto input)
+    /// <summary>The month's pension given, or the pensioner's; the arrears owed and the pensioner's earnings and deductions are added.</summary>
+    private async Task SetAmountsAsync(PensionPayrollLine line, PensionPayrollHeader header, Pensioner pensioner, CreateUpdatePensionPayrollLineDto input)
     {
-        var gross = input.GrossPension ?? pensioner.MonthlyPension;
-        line.SetAmounts(gross, input.TaxAmount ?? header.TaxOn(gross));
+        var bands = await _engine.GetTaxBandsAsync(header);
+        await _engine.CalculateLineAsync(line, header, pensioner, bands, input.MonthlyPension, input.TaxAmount);
     }
 
     private async Task<PensionPayrollHeader> GetOpenHeaderAsync(string documentNo)

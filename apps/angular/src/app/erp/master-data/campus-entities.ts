@@ -180,6 +180,14 @@ export class CampusEntities {
     icon: 'fas fa-clipboard-user',
     permission: PERMISSION,
     listRoute: ['/erp/attendance-registers'],
+    parts: [
+      {
+        entity: 'attendanceLine',
+        lines: dto => this.attendanceLines.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        editable: dto => dto.status === AcademicDocumentStatus.Open,
+      },
+    ],
     attachmentEntityType: 'AttendanceRegister',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -406,6 +414,14 @@ export class CampusEntities {
     icon: 'fas fa-house-medical',
     permission: PERMISSION,
     listRoute: ['/erp/clinic-visits'],
+    parts: [
+      {
+        entity: 'clinicPrescription',
+        lines: dto => this.prescriptions.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        editable: dto => dto.status === ClinicVisitStatus.Open,
+      },
+    ],
     attachmentEntityType: 'ClinicVisit',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -533,6 +549,14 @@ export class CampusEntities {
     icon: 'fas fa-soap',
     permission: PERMISSION,
     listRoute: ['/erp/laundry-orders'],
+    parts: [
+      {
+        entity: 'laundryOrderLine',
+        lines: dto => this.laundryLines.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        editable: dto => dto.status === LaundryStatus.Received,
+      },
+    ],
     attachmentEntityType: 'LaundryOrder',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
@@ -665,6 +689,14 @@ export class CampusEntities {
     icon: 'fas fa-user-graduate',
     permission: PERMISSION,
     listRoute: ['/erp/short-course-applications'],
+    parts: [
+      {
+        entity: 'shortCourseParticipant',
+        lines: dto => this.participants.getList({ documentNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(result => result.items ?? [])),
+        newLine: dto => ({ documentNo: dto.no }),
+        editable: dto => dto.status === ShortCourseApplicationStatus.Open,
+      },
+    ],
     attachmentEntityType: 'ShortCourseApplication',
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },

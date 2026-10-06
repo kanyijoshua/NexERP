@@ -340,29 +340,57 @@
                 }
                 @switch (col.type) {
                   @case ('code') {
-                    @if (isClickable(col, row)) {
+                    <div class="d-inline-flex align-items-center flex-wrap gap-1.5">
+                      @if (isClickable(col, row)) {
+                        <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
+                          @if (getIcon(col, row)) {
+                            <i [class]="getIcon(col, row) + ' me-1'"></i>
+                          }
+                          {{ value || '—' }}
+                        </a>
+                      } @else {
+                        <span class="fw-semibold">
+                          @if (getIcon(col, row)) {
+                            <i [class]="getIcon(col, row) + ' me-1'"></i>
+                          }
+                          {{ value || '—' }}
+                        </span>
+                      }
+                      @if (getSublink(col, row); as subVal) {
+                        <a
+                          class="erp-sublink font-monospace"
+                          role="button"
+                          tabindex="0"
+                          (click)="onSublinkClick(col, row, $event)"
+                          (keydown.enter)="onSublinkClick(col, row, $any($event))"
+                        >
+                          <i class="fas fa-arrow-turn-down-right erp-sublink__icon" aria-hidden="true"></i>
+                          <span class="erp-sublink__text">{{ subVal }}</span>
+                        </a>
+                      }
+                    </div>
+                  }
+                  @case ('link') {
+                    <div class="d-inline-flex align-items-center flex-wrap gap-1.5">
                       <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
                         @if (getIcon(col, row)) {
                           <i [class]="getIcon(col, row) + ' me-1'"></i>
                         }
                         {{ value || '—' }}
                       </a>
-                    } @else {
-                      <span class="fw-semibold">
-                        @if (getIcon(col, row)) {
-                          <i [class]="getIcon(col, row) + ' me-1'"></i>
-                        }
-                        {{ value || '—' }}
-                      </span>
-                    }
-                  }
-                  @case ('link') {
-                    <a class="erp-code-link fw-semibold" role="button" tabindex="0" (click)="onCodeColumnClick(row, $event)" (keydown.enter)="onCodeColumnClick(row, $any($event))">
-                      @if (getIcon(col, row)) {
-                        <i [class]="getIcon(col, row) + ' me-1'"></i>
+                      @if (getSublink(col, row); as subVal) {
+                        <a
+                          class="erp-sublink font-monospace"
+                          role="button"
+                          tabindex="0"
+                          (click)="onSublinkClick(col, row, $event)"
+                          (keydown.enter)="onSublinkClick(col, row, $any($event))"
+                        >
+                          <i class="fas fa-arrow-turn-down-right erp-sublink__icon" aria-hidden="true"></i>
+                          <span class="erp-sublink__text">{{ subVal }}</span>
+                        </a>
                       }
-                      {{ value || '—' }}
-                    </a>
+                    </div>
                   }
                   @case ('currency') {
                     <span class="font-monospace" [class.text-danger]="value < 0">{{ col.format ? (col.format(value, row) || (value ?? 0 | erpAmount)) : (value ?? 0 | erpAmount) }}</span>

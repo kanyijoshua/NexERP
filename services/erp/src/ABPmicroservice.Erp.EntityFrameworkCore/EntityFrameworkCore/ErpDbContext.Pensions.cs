@@ -22,6 +22,26 @@ public partial class ErpDbContext
     public DbSet<PensionPayrollHeader> PensionPayrollHeaders { get; set; }
     public DbSet<PensionPayrollLine> PensionPayrollLines { get; set; }
     public DbSet<PensionBenefitCalculation> PensionBenefitCalculations { get; set; }
+    public DbSet<PensionBeneficiary> PensionBeneficiaries { get; set; }
+    public DbSet<PensionContributionRate> PensionContributionRates { get; set; }
+    public DbSet<PensionVestingScale> PensionVestingScales { get; set; }
+    public DbSet<PensionTaxReliefLimit> PensionTaxReliefLimits { get; set; }
+    public DbSet<MemberStatusEntry> MemberStatusEntries { get; set; }
+    public DbSet<MemberSalaryEntry> MemberSalaryEntries { get; set; }
+    public DbSet<PensionIncrement> PensionIncrements { get; set; }
+    public DbSet<PensionerChangeEntry> PensionerChangeEntries { get; set; }
+    public DbSet<PensionBank> PensionBanks { get; set; }
+    public DbSet<PensionBankBranch> PensionBankBranches { get; set; }
+    public DbSet<PensionerPayMode> PensionerPayModes { get; set; }
+    public DbSet<PensionerSuspensionReason> PensionerSuspensionReasons { get; set; }
+    public DbSet<PensionRevisionReason> PensionRevisionReasons { get; set; }
+    public DbSet<OtherPensionScheme> OtherPensionSchemes { get; set; }
+    public DbSet<PensionerPayItem> PensionerPayItems { get; set; }
+    public DbSet<PensionerPayItemAssignment> PensionerPayItemAssignments { get; set; }
+    public DbSet<PensionPayrollLineItem> PensionPayrollLineItems { get; set; }
+    public DbSet<ExitReasonDocument> ExitReasonDocuments { get; set; }
+    public DbSet<MemberExitDocument> MemberExitDocuments { get; set; }
+    public DbSet<PensionAgeFactor> PensionAgeFactors { get; set; }
 }
 
 public static class ErpPensionsModelCreatingExtensions
@@ -85,6 +105,7 @@ public static class ErpPensionsModelCreatingExtensions
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex("No");
             b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.TransferSchemeCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
             b.Ignore(x => x.IsOpen);
         });
 
@@ -110,6 +131,7 @@ public static class ErpPensionsModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "ExitReasons", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex("Code");
+            b.Ignore(x => x.IsDeath);
         });
 
         builder.Entity<LumpsumTaxTable>(b =>
@@ -137,6 +159,10 @@ public static class ErpPensionsModelCreatingExtensions
             b.Property(x => x.SchemeCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxDimensionValueCodeLength);
             b.Property(x => x.MemberNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
             b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.PayModeCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.BankCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.BankBranchCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.SuspensionReasonCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
         });
 
         builder.Entity<PensionPayrollHeader>(b =>
@@ -148,6 +174,7 @@ public static class ErpPensionsModelCreatingExtensions
             b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
             b.Property(x => x.SchemeCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxDimensionValueCodeLength);
             b.Property(x => x.PaymentVoucherNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.TaxTableCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
             b.Ignore(x => x.IsOpen);
         });
 
@@ -159,6 +186,82 @@ public static class ErpPensionsModelCreatingExtensions
             b.Property(x => x.DocumentNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
             b.Property(x => x.PensionerNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
             b.Property(x => x.PensionerName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.PayModeCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+        });
+
+        builder.Entity<PensionBeneficiary>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionBeneficiaries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(PensionBeneficiary.MemberNo), nameof(PensionBeneficiary.LineNo));
+            b.Property(x => x.MemberNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ErpDomainConsts.MaxNameLength);
+            b.Property(x => x.GuardianName).HasMaxLength(ErpDomainConsts.MaxNameLength);
+        });
+
+        builder.Entity<PensionContributionRate>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionContributionRates", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.SponsorNo, x.StartDate });
+            b.Property(x => x.SponsorNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+        });
+
+        builder.Entity<PensionVestingScale>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionVestingScales", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(PensionVestingScale.SponsorNo), nameof(PensionVestingScale.FromServiceYears));
+            b.Property(x => x.SponsorNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+        });
+
+        builder.Entity<PensionTaxReliefLimit>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionTaxReliefLimits", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(PensionTaxReliefLimit.EffectiveDate));
+        });
+
+        builder.Entity<MemberStatusEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "MemberStatusEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.MemberNo, x.EffectiveDate });
+            b.HasIndex(x => new { x.CompanyId, x.SchemeCode, x.EffectiveDate });
+            b.Property(x => x.MemberNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.SchemeCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxDimensionValueCodeLength);
+            b.Property(x => x.SponsorNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.DocumentNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+        });
+
+        builder.Entity<MemberSalaryEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "MemberSalaryEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex(nameof(MemberSalaryEntry.MemberNo), nameof(MemberSalaryEntry.Period));
+            b.Property(x => x.MemberNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.SponsorNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.DocumentNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+        });
+
+        builder.Entity<PensionIncrement>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionIncrements", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("No");
+            b.Property(x => x.No).IsRequired().HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.SchemeCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxDimensionValueCodeLength);
+            b.Property(x => x.ReasonCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+        });
+
+        builder.Entity<PensionerChangeEntry>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "PensionerChangeEntries", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.PensionerNo, x.EffectiveDate });
+            b.Property(x => x.PensionerNo).IsRequired().HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.SchemeCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxDimensionValueCodeLength);
+            b.Property(x => x.DocumentNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
         });
 
         builder.Entity<PensionBenefitCalculation>(b =>
@@ -175,6 +278,8 @@ public static class ErpPensionsModelCreatingExtensions
             b.Property(x => x.PaymentVoucherNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
             b.Ignore(x => x.IsOpen);
         });
+
+        builder.ConfigureErpPensionReferenceTables();
 
         builder.Entity<MemberExit>(b =>
         {

@@ -184,3 +184,102 @@ public enum ExitPaymentOption
     /// <summary>The member's own portion is paid; the employer's stays in the scheme until retirement.</summary>
     PayEmployeeEmployerDeferred = 3,
 }
+
+/// <summary>How a beneficiary is related to the member who nominated them.</summary>
+public enum BeneficiaryRelationship
+{
+    None = 0,
+    Spouse = 1,
+    Child = 2,
+    Parent = 3,
+    Sibling = 4,
+    Dependant = 5,
+    Other = 6,
+}
+
+public enum BeneficiaryStatus
+{
+    Active = 0,
+
+    /// <summary>Kept on record but given no share, e.g. a child past the age of dependency.</summary>
+    Suspended = 1,
+}
+
+/// <summary>
+/// How the part of a contribution above the monthly tax relief limit is shared out. Under employee
+/// priority the employee's money uses the limit first; under contribution rate the limit is shared in
+/// proportion to what each side pays.
+/// </summary>
+public enum ExcessContributionAllocation
+{
+    EmployeePriority = 0,
+    ContributionRate = 1,
+}
+
+/// <summary>What changed a pensioner's pension or status, as kept in the pensioner's history.</summary>
+public enum PensionerChangeType
+{
+    None = 0,
+    Increment = 1,
+    Suspension = 2,
+    Reinstatement = 3,
+    LifeCertificate = 4,
+    ArrearsPaid = 5,
+}
+
+public enum PensionIncrementStatus
+{
+    Open = 0,
+    Applied = 1,
+}
+
+/// <summary>How a pay mode reaches the pensioner.</summary>
+public enum PensionerPaymentType
+{
+    Bank = 0,
+    MobileMoney = 1,
+    Cheque = 2,
+    Cash = 3,
+}
+
+/// <summary>Whether a pensioner pay item adds to the pension or is taken off it.</summary>
+public enum PensionerPayItemType
+{
+    Earning = 0,
+    Deduction = 1,
+}
+
+/// <summary>How a pensioner pay item's amount is worked out each month.</summary>
+public enum PensionerPayItemCalculation
+{
+    FlatAmount = 0,
+
+    /// <summary>A percentage of the month's pension.</summary>
+    PercentOfPension = 1,
+}
+
+/// <summary>What an age factor of a defined benefit scheme is used for.</summary>
+public enum PensionFactorType
+{
+    /// <summary>Multiplies the pension of a member retiring before the normal retirement age (below 1).</summary>
+    EarlyRetirement = 0,
+
+    /// <summary>Multiplies the pension of a member retiring after the normal retirement age (above 1).</summary>
+    LateRetirement = 1,
+
+    /// <summary>What one unit of annual pension given up is worth as a lump sum, at the age of retirement.</summary>
+    Commutation = 2,
+}
+
+/// <summary>The salary a defined benefit pension is based on when none is keyed in.</summary>
+public enum PensionableSalaryBasis
+{
+    /// <summary>Twelve times the member's current monthly salary.</summary>
+    CurrentSalary = 0,
+
+    /// <summary>The average yearly salary over the last years of service, from the member's salary history.</summary>
+    AverageOfLastYears = 1,
+
+    /// <summary>The highest salary of any twelve months in a row within the last years of service.</summary>
+    HighestAnnualSalary = 2,
+}

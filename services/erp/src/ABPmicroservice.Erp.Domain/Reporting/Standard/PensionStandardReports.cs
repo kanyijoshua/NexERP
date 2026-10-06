@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Pensions;
@@ -101,98 +102,233 @@ public class MemberStatementReport : PensionReportBase
 }
 
 /// <summary>
-/// Member Balances: each member's fund as at a date,
-/// split into the member's and the employer's money and into registered and unregistered.
+/// Member Balances: each member's fund as at a date, split into what was contributed and the
+/// interest it earned, for the member's own money, the employer's and the voluntary contributions.
 /// </summary>
 public class MemberBalancesReport : PensionReportBase
 {
     public override StandardReportDefinition Definition { get; } =
         Define(51520141, "MemberBalances", "Member Balances", StandardReportParameters.AsOfDate | StandardReportParameters.NoFilter);
 
+    private static readonly (string Key, string Header)[] Figures =
+    [
+        ("employeeContribution", "Employee Contribution"),
+        ("employeeInterest", "Employee Interest"),
+        ("employerContribution", "Employer Contribution"),
+        ("employerInterest", "Employer Interest"),
+        ("avcContribution", "AVC Contribution"),
+        ("avcInterest", "AVC Interest"),
+        ("total", "Total Balance"),
+    ];
+
     public override async Task<ReportResult> RunAsync(StandardReportRequest request)
     {
         var result = NewResult(request);
-        Text(result, "scheme", "Scheme");
-        Text(result, "no", "Member No.");
+        Text(result, "no", "PF No.");
         Text(result, "name", "Name");
-        Text(result, "sponsorNo", "Sponsor No.");
-        Text(result, "status", "Status");
-        Number(result, "employee", "Employee");
-        Number(result, "employer", "Employer");
-        Number(result, "registered", "Registered");
-        Number(result, "unregistered", "Unregistered");
-        Number(result, "total", "Fund Value");
+        foreach (var (key, header) in Figures)
+        {
+            Number(result, key, header);
+        }
 
         var entries = await GetEntriesAsync(request);
-        var totals = new decimal[5];
+        var totals = new decimal[Figures.Length];
 
         foreach (var member in await GetMembersAsync(request))
         {
-            var balances = new MemberBalances(entries[member.No]);
-            if (balances.Total == 0m && !entries[member.No].Any())
+            var own = entries[member.No].ToList();
+            if (own.Count == 0)
             {
                 continue;
             }
 
-            Row(
-                result,
-                ("scheme", member.SchemeCode),
-                ("no", member.No),
-                ("name", member.FullName),
-                ("sponsorNo", member.SponsorNo),
-                ("status", ErpEntityFieldNames.Humanize(member.Status)),
-                ("employee", balances.Employee),
-                ("employer", balances.Employer),
-                ("registered", balances.Registered),
-                ("unregistered", balances.Unregistered),
-                ("total", balances.Total)
-            );
+            var values = new[]
+            {
+                Of(own, PensionShare.Employee, interest: false),
+                Of(own, PensionShare.Employee, interest: true),
+                Of(own, PensionShare.Employer, interest: false),
+                Of(own, PensionShare.Employer, interest: true),
+                Of(own, PensionShare.Voluntary, interest: false),
+                Of(own, PensionShare.Voluntary, interest: true),
+                own.Sum(e => e.Amount),
+            };
 
-            totals[0] += balances.Employee;
-            totals[1] += balances.Employer;
-            totals[2] += balances.Registered;
-            totals[3] += balances.Unregistered;
-            totals[4] += balances.Total;
+            var row = Row(result, ("no", member.No), ("name", member.FullName));
+            for (var i = 0; i < values.Length; i++)
+            {
+                row.Values[Figures[i].Key] = values[i];
+                totals[i] += values[i];
+            }
         }
 
-        BoldRow(
-            result,
-            ("scheme", string.Empty),
-            ("name", "Total"),
-            ("employee", totals[0]),
-            ("employer", totals[1]),
-            ("registered", totals[2]),
-            ("unregistered", totals[3]),
-            ("total", totals[4])
-        );
+        var total = BoldRow(result, ("no", string.Empty), ("name", "Total"));
+        for (var i = 0; i < totals.Length; i++)
+        {
+            total.Values[Figures[i].Key] = totals[i];
+        }
+
         return result;
     }
+
+    private static decimal Of(IEnumerable<MemberLedgerEntry> entries, PensionShare share, bool interest) =>
+        entries
+            .Where(e => PensionShares.Of(e.ContributionType) == share && PensionShares.IsInterest(e.TransactionType) == interest)
+            .Sum(e => e.Amount);
 }
 
 /// <summary>
-/// Contributions Register: what was contributed
-/// for each member in the period, by whose money it is.
+/// Contributions Register: for each member, what the period brought in and paid out of each kind of
+/// money, registered and unregistered, and the balance of each at the end of the period. Transfers
+/// from other schemes are shown apart from the contributions.
 /// </summary>
 public class ContributionsRegisterReport : PensionReportBase
 {
     public override StandardReportDefinition Definition { get; } =
         Define(51520132, "ContributionsRegister", "Contributions Register", StandardReportParameters.Period | StandardReportParameters.NoFilter);
 
+    private static readonly (string Key, string Header)[] Kinds =
+    [
+        ("Employee", "Employee"),
+        ("Employer", "Employer"),
+        ("EmployeeAvc", "Employee AVC"),
+        ("EmployerAvc", "Employer AVC"),
+        ("TransfersIn", "Transfers In"),
+    ];
+
     public override async Task<ReportResult> RunAsync(StandardReportRequest request)
     {
         var result = NewResult(request);
-        Text(result, "scheme", "Scheme");
-        Text(result, "no", "Member No.");
+        Text(result, "no", "No.");
         Text(result, "name", "Name");
-        Text(result, "sponsorNo", "Sponsor No.");
-        Number(result, "employee", "Employee");
-        Number(result, "employeeAvc", "Employee AVC");
-        Number(result, "employer", "Employer");
-        Number(result, "employerAvc", "Employer AVC");
-        Number(result, "total", "Total");
+
+        var keys = new List<string>();
+        foreach (var (prefix, label) in new[] { ("reg", "Reg."), ("unreg", "Unreg.") })
+        {
+            foreach (var (kind, header) in Kinds)
+            {
+                Number(result, prefix + kind, $"{label} {header}");
+                keys.Add(prefix + kind);
+            }
+
+            Number(result, prefix + "Withdrawals", $"{label} Withdrawals");
+            keys.Add(prefix + "Withdrawals");
+        }
+
+        foreach (var (prefix, label) in new[] { ("closingReg", "Closing Reg."), ("closingUnreg", "Closing Unreg.") })
+        {
+            foreach (var (kind, header) in Kinds)
+            {
+                Number(result, prefix + kind, $"{label} {header}");
+                keys.Add(prefix + kind);
+            }
+        }
 
         var entries = await GetEntriesAsync(request);
-        var totals = new decimal[5];
+        var totals = keys.ToDictionary(k => k, _ => 0m);
+
+        foreach (var member in await GetMembersAsync(request))
+        {
+            var own = entries[member.No].ToList();
+            var inPeriod = own.Where(e => e.PostingDate >= request.From).ToList();
+            if (inPeriod.Count == 0)
+            {
+                continue;
+            }
+
+            var values = new Dictionary<string, decimal>();
+            foreach (var (prefix, exemption) in new[] { ("reg", PensionExemptionType.TaxExempt), ("unreg", PensionExemptionType.NonTaxExempt) })
+            {
+                var movements = inPeriod.Where(e => e.ExemptionType == exemption).ToList();
+                var contributions = movements.Where(e => e.TransactionType == PensionTransactionType.Contribution).ToList();
+
+                foreach (var (kind, _) in Kinds)
+                {
+                    values[prefix + kind] = contributions.Where(e => KindOf(e) == kind).Sum(e => e.Amount);
+                }
+
+                values[prefix + "Withdrawals"] = -movements.Where(e => e.TransactionType == PensionTransactionType.Withdrawal).Sum(e => e.Amount);
+
+                var closingPrefix = prefix == "reg" ? "closingReg" : "closingUnreg";
+                foreach (var (kind, _) in Kinds)
+                {
+                    values[closingPrefix + kind] = own.Where(e => e.ExemptionType == exemption && KindOf(e) == kind).Sum(e => e.Amount);
+                }
+            }
+
+            var row = Row(result, ("no", member.No), ("name", member.FullName));
+            foreach (var key in keys)
+            {
+                row.Values[key] = values[key];
+                totals[key] += values[key];
+            }
+        }
+
+        var total = BoldRow(result, ("no", string.Empty), ("name", "Total"));
+        foreach (var key in keys)
+        {
+            total.Values[key] = totals[key];
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Which column an entry belongs to: money that came in by transfer stays with the transfers,
+    /// everything else (contributions, interest, withdrawals) with the kind of money it is.
+    /// </summary>
+    private static string KindOf(MemberLedgerEntry entry)
+    {
+        if (entry.ContributionMode == PensionContributionMode.TransferIn)
+        {
+            return "TransfersIn";
+        }
+
+        return entry.ContributionType switch
+        {
+            PensionContributionType.EmployeeAdditional => "EmployeeAvc",
+            PensionContributionType.EmployerAdditional => "EmployerAvc",
+            _ => PensionShares.Of(entry.ContributionType) == PensionShare.Employer ? "Employer" : "Employee",
+        };
+    }
+}
+
+/// <summary>
+/// Member Contributions Statement: each member's contributions month by month, registered and
+/// unregistered, for the member and the employer, with arrears apart from the contributions of the
+/// month, a subtotal for each year and a grand total.
+/// </summary>
+public class MemberContributionsStatementReport : PensionReportBase
+{
+    private IRepository<PensionSponsor, Guid> Sponsors => LazyServiceProvider.LazyGetRequiredService<IRepository<PensionSponsor, Guid>>();
+
+    public override StandardReportDefinition Definition { get; } =
+        Define(51520155, "MemberContributionsStatement", "Member Contributions Statement", StandardReportParameters.Period | StandardReportParameters.NoFilter);
+
+    private static readonly (string Key, PensionExemptionType Exemption, bool Employee, bool Arrears, string Header)[] Figures =
+    [
+        ("regEmployee", PensionExemptionType.TaxExempt, true, false, "Reg. Employee Contrib."),
+        ("regEmployeeArrears", PensionExemptionType.TaxExempt, true, true, "Reg. Employee Arrears"),
+        ("regEmployer", PensionExemptionType.TaxExempt, false, false, "Reg. Employer Contrib."),
+        ("regEmployerArrears", PensionExemptionType.TaxExempt, false, true, "Reg. Employer Arrears"),
+        ("unregEmployee", PensionExemptionType.NonTaxExempt, true, false, "Unreg. Employee Contrib."),
+        ("unregEmployeeArrears", PensionExemptionType.NonTaxExempt, true, true, "Unreg. Employee Arrears"),
+        ("unregEmployer", PensionExemptionType.NonTaxExempt, false, false, "Unreg. Employer Contrib."),
+        ("unregEmployerArrears", PensionExemptionType.NonTaxExempt, false, true, "Unreg. Employer Arrears"),
+    ];
+
+    public override async Task<ReportResult> RunAsync(StandardReportRequest request)
+    {
+        var result = NewResult(request);
+        Text(result, "period", "Period");
+        foreach (var figure in Figures)
+        {
+            Number(result, figure.Key, figure.Header);
+        }
+
+        Number(result, "total", "Total");
+
+        var sponsors = (await Sponsors.GetListAsync()).ToDictionary(s => s.No, s => s.Name, StringComparer.Ordinal);
+        var entries = await GetEntriesAsync(request);
 
         foreach (var member in await GetMembersAsync(request))
         {
@@ -204,47 +340,79 @@ public class ContributionsRegisterReport : PensionReportBase
                 continue;
             }
 
-            decimal Of(PensionContributionType type) => contributions.Where(e => e.ContributionType == type).Sum(e => e.Amount);
+            BoldRow(result, ("period", $"PF No.: {member.No}   Name: {member.FullName}"));
+            BoldRow(result, ("period", $"Sponsor: {sponsors.GetValueOrDefault(member.SponsorNo, member.SponsorNo)}   Designation: {member.Designation}"));
 
-            var values = new[]
+            var grand = new decimal[Figures.Length + 1];
+
+            foreach (var year in contributions.GroupBy(e => MonthOf(e).Year).OrderBy(g => g.Key))
             {
-                Of(PensionContributionType.EmployeeContribution),
-                Of(PensionContributionType.EmployeeAdditional),
-                Of(PensionContributionType.EmployerContribution),
-                Of(PensionContributionType.EmployerAdditional),
-                contributions.Sum(e => e.Amount),
-            };
+                BoldRow(result, ("period", year.Key.ToString(CultureInfo.InvariantCulture))).Indentation = 1;
+                var subtotal = new decimal[Figures.Length + 1];
 
-            Row(
-                result,
-                ("scheme", member.SchemeCode),
-                ("no", member.No),
-                ("name", member.FullName),
-                ("sponsorNo", member.SponsorNo),
-                ("employee", values[0]),
-                ("employeeAvc", values[1]),
-                ("employer", values[2]),
-                ("employerAvc", values[3]),
-                ("total", values[4])
-            );
+                foreach (var month in year.GroupBy(MonthOf).OrderBy(g => g.Key))
+                {
+                    var row = Row(result, ("period", month.Key.ToString("MMM yyyy", CultureInfo.InvariantCulture)));
+                    row.Indentation = 2;
+                    Fill(row, month, subtotal);
+                }
 
-            for (var i = 0; i < values.Length; i++)
-            {
-                totals[i] += values[i];
+                var sub = BoldRow(result, ("period", "Sub totals"));
+                sub.Indentation = 1;
+                Put(sub, subtotal);
+
+                for (var i = 0; i < grand.Length; i++)
+                {
+                    grand[i] += subtotal[i];
+                }
             }
+
+            Put(BoldRow(result, ("period", "Grand Totals")), grand);
         }
 
-        BoldRow(
-            result,
-            ("scheme", string.Empty),
-            ("name", "Total"),
-            ("employee", totals[0]),
-            ("employeeAvc", totals[1]),
-            ("employer", totals[2]),
-            ("employerAvc", totals[3]),
-            ("total", totals[4])
-        );
         return result;
+    }
+
+    private static DateTime MonthOf(MemberLedgerEntry entry)
+    {
+        var date = entry.ContributionPeriod ?? entry.PostingDate;
+        return new DateTime(date.Year, date.Month, 1);
+    }
+
+    private static void Fill(ReportRow row, IEnumerable<MemberLedgerEntry> entries, decimal[] subtotal)
+    {
+        var list = entries.ToList();
+        var values = new decimal[Figures.Length + 1];
+
+        for (var i = 0; i < Figures.Length; i++)
+        {
+            var figure = Figures[i];
+            values[i] = list
+                .Where(e =>
+                    e.ExemptionType == figure.Exemption
+                    && e.MoneyType.IsEmployee == figure.Employee
+                    && (e.ContributionMode == PensionContributionMode.Arrears) == figure.Arrears
+                )
+                .Sum(e => e.Amount);
+        }
+
+        values[^1] = list.Sum(e => e.Amount);
+        Put(row, values);
+
+        for (var i = 0; i < values.Length; i++)
+        {
+            subtotal[i] += values[i];
+        }
+    }
+
+    private static void Put(ReportRow row, decimal[] values)
+    {
+        for (var i = 0; i < Figures.Length; i++)
+        {
+            row.Values[Figures[i].Key] = values[i];
+        }
+
+        row.Values["total"] = values[^1];
     }
 }
 
@@ -314,7 +482,16 @@ public class ExitsWorksheetReport : PensionReportBase
     }
 }
 
-/// <summary>What the member listings share: the columns of a member, and each member's contributions to date.</summary>
+/// <summary>One column of a member listing: where its value comes from.</summary>
+public sealed record MemberListingColumn(string Key, string Header, ReportColumnKind Kind, Func<MemberListingRow, object> Value, bool Totalled = false);
+
+/// <summary>What a member listing knows about one member when it fills a row.</summary>
+public sealed record MemberListingRow(PensionMember Member, string SponsorName, MemberBalances Balances);
+
+/// <summary>
+/// What the member listings share: the members of the scheme the listing picks, one row each in
+/// the listing's own columns, and a total line counting them.
+/// </summary>
 public abstract class MemberListingReportBase : PensionReportBase
 {
     private IRepository<PensionSponsor, Guid> Sponsors => LazyServiceProvider.LazyGetRequiredService<IRepository<PensionSponsor, Guid>>();
@@ -322,66 +499,80 @@ public abstract class MemberListingReportBase : PensionReportBase
     /// <summary>Which of the scheme's members the listing shows.</summary>
     protected abstract bool Includes(PensionMember member, StandardReportRequest request);
 
+    /// <summary>The listing's columns, in order. The first text column after the first one carries the count.</summary>
+    protected abstract IReadOnlyList<MemberListingColumn> Columns { get; }
+
+    /// <summary>The column the total line writes "Total: n member(s)" in.</summary>
+    protected virtual string CountColumn => "name";
+
+    protected static MemberListingColumn No => new("no", "No.", ReportColumnKind.Text, r => r.Member.No);
+    protected static MemberListingColumn Name => new("name", "Name", ReportColumnKind.Text, r => r.Member.FullName.ToUpperInvariant());
+    protected static MemberListingColumn Sponsor => new("sponsorName", "Name of Sponsor", ReportColumnKind.Text, r => r.SponsorName?.ToUpperInvariant());
+    protected static MemberListingColumn BirthDate => new("dateOfBirth", "Date of Birth", ReportColumnKind.Date, r => r.Member.DateOfBirth);
+    protected static MemberListingColumn Gender => new("gender", "Gender", ReportColumnKind.Text, r => ErpEntityFieldNames.Humanize(r.Member.Gender));
+    protected static MemberListingColumn NationalId => new("nationalId", "National ID", ReportColumnKind.Text, r => r.Member.NationalId);
+    protected static MemberListingColumn PayrollNo => new("payrollNo", "Payroll No.", ReportColumnKind.Text, r => r.Member.PayrollNo);
+    protected static MemberListingColumn JoinSchemeDate => new("joinSchemeDate", "Join Scheme Date", ReportColumnKind.Date, r => r.Member.JoinSchemeDate);
+
     public override async Task<ReportResult> RunAsync(StandardReportRequest request)
     {
         var result = NewResult(request);
-        Text(result, "no", "No.");
-        Text(result, "name", "Name");
-        Text(result, "sponsorName", "Name of Sponsor");
-        Date(result, "dateOfBirth", "Date of Birth");
-        Text(result, "gender", "Gender");
-        Text(result, "nationalId", "National ID");
-        Text(result, "payrollNo", "Payroll No.");
-        Date(result, "joinSchemeDate", "Join Scheme Date");
-        Text(result, "maritalStatus", "Marital Status");
-        Date(result, "retirementDate", "Date of Normal Retirement");
-        Text(result, "status", "Status");
-        Number(result, "salary", "Salary");
-        Number(result, "employee", "Employee Contribution");
-        Number(result, "employer", "Employer Contribution");
+        var columns = Columns;
+        foreach (var column in columns)
+        {
+            result.Columns.Add(new ReportColumnDefinition(column.Key, column.Header, column.Kind));
+        }
 
         var sponsors = (await Sponsors.GetListAsync()).ToDictionary(s => s.No, s => s.Name, StringComparer.Ordinal);
         var entries = await GetEntriesAsync(request);
         var members = (await GetMembersAsync(request)).Where(m => Includes(m, request)).ToList();
-        var totals = new decimal[3];
+        var totals = columns.Where(c => c.Totalled).ToDictionary(c => c.Key, _ => 0m);
 
         foreach (var member in members)
         {
-            var balances = new MemberBalances(entries[member.No]);
+            var data = new MemberListingRow(member, sponsors.GetValueOrDefault(member.SponsorNo, member.SponsorNo), new MemberBalances(entries[member.No]));
+            var row = result.AddRow();
 
-            Row(
-                result,
-                ("no", member.No),
-                ("name", member.FullName),
-                ("sponsorName", sponsors.GetValueOrDefault(member.SponsorNo, member.SponsorNo)),
-                ("dateOfBirth", member.DateOfBirth),
-                ("gender", ErpEntityFieldNames.Humanize(member.Gender)),
-                ("nationalId", member.NationalId),
-                ("payrollNo", member.PayrollNo),
-                ("joinSchemeDate", member.JoinSchemeDate),
-                ("maritalStatus", ErpEntityFieldNames.Humanize(member.MaritalStatus)),
-                ("retirementDate", member.ExpectedRetirementDate),
-                ("status", ErpEntityFieldNames.Humanize(member.Status)),
-                ("salary", member.CurrentSalary),
-                ("employee", balances.Employee),
-                ("employer", balances.Employer)
-            );
-
-            totals[0] += member.CurrentSalary;
-            totals[1] += balances.Employee;
-            totals[2] += balances.Employer;
+            foreach (var column in columns)
+            {
+                var value = column.Value(data);
+                row.Values[column.Key] = value;
+                if (column.Totalled)
+                {
+                    totals[column.Key] += Convert.ToDecimal(value ?? 0m, CultureInfo.InvariantCulture);
+                }
+            }
         }
 
-        BoldRow(result, ("no", string.Empty), ("name", $"Total: {members.Count} member(s)"), ("salary", totals[0]), ("employee", totals[1]), ("employer", totals[2]));
+        var total = BoldRow(result, (columns[0].Key, string.Empty), (CountColumn, $"Total: {members.Count} member(s)"));
+        foreach (var (key, value) in totals)
+        {
+            total.Values[key] = value;
+        }
+
         return result;
     }
 }
 
-/// <summary>Member Listing: every member of the scheme.</summary>
+/// <summary>Member Listing: every member of the scheme with the salary and what the member and the employer have contributed.</summary>
 public class MemberListingReport : MemberListingReportBase
 {
     public override StandardReportDefinition Definition { get; } =
         Define(51520116, "MemberListing", "Member Listing", StandardReportParameters.AsOfDate | StandardReportParameters.NoFilter);
+
+    protected override IReadOnlyList<MemberListingColumn> Columns { get; } =
+    [
+        No,
+        Name,
+        Sponsor,
+        BirthDate,
+        Gender,
+        NationalId,
+        PayrollNo,
+        new("salary", "Salary", ReportColumnKind.Number, r => r.Member.CurrentSalary, Totalled: true),
+        new("employee", "EE", ReportColumnKind.Number, r => r.Balances.Employee, Totalled: true),
+        new("employer", "ER", ReportColumnKind.Number, r => r.Balances.Employer, Totalled: true),
+    ];
 
     protected override bool Includes(PensionMember member, StandardReportRequest request) => true;
 }
@@ -392,6 +583,17 @@ public class ActiveMembersReport : MemberListingReportBase
     public override StandardReportDefinition Definition { get; } =
         Define(51520118, "ActiveMembers", "Active Members", StandardReportParameters.AsOfDate | StandardReportParameters.NoFilter);
 
+    protected override IReadOnlyList<MemberListingColumn> Columns { get; } =
+    [
+        No,
+        new("payrollNo", "PF No", ReportColumnKind.Text, r => r.Member.PayrollNo),
+        Name,
+        BirthDate,
+        JoinSchemeDate,
+        Gender,
+        Sponsor,
+    ];
+
     protected override bool Includes(PensionMember member, StandardReportRequest request) => member.Status == MemberStatus.Active;
 }
 
@@ -401,8 +603,44 @@ public class ExpectedRetireesReport : MemberListingReportBase
     public override StandardReportDefinition Definition { get; } =
         Define(51520108, "ExpectedRetirees", "Expected Retirees", StandardReportParameters.Period | StandardReportParameters.NoFilter);
 
+    protected override IReadOnlyList<MemberListingColumn> Columns { get; } =
+    [
+        No,
+        Name,
+        Gender,
+        BirthDate,
+        NationalId,
+        Sponsor,
+        JoinSchemeDate,
+        new("maritalStatus", "Marital Status", ReportColumnKind.Text, r => ErpEntityFieldNames.Humanize(r.Member.MaritalStatus)),
+        PayrollNo,
+        new("retirementDate", "Date of Normal Retirement", ReportColumnKind.Date, r => r.Member.ExpectedRetirementDate),
+    ];
+
     protected override bool Includes(PensionMember member, StandardReportRequest request) =>
         member.ExpectedRetirementDate >= request.From && member.ExpectedRetirementDate <= request.To && member.Status is MemberStatus.Active or MemberStatus.Dormant or MemberStatus.Deferred;
+}
+
+/// <summary>Whose money a contribution type is, as the pension reports split it.</summary>
+public enum PensionShare
+{
+    Employee,
+    Employer,
+    Voluntary,
+}
+
+internal static class PensionShares
+{
+    public static PensionShare Of(PensionContributionType type) =>
+        type switch
+        {
+            PensionContributionType.EmployeeAdditional or PensionContributionType.EmployerAdditional => PensionShare.Voluntary,
+            PensionContributionType.EmployerContribution or PensionContributionType.Pre90Employer => PensionShare.Employer,
+            _ => PensionShare.Employee,
+        };
+
+    /// <summary>Interest credited, and the tax taken off it.</summary>
+    public static bool IsInterest(PensionTransactionType type) => type is PensionTransactionType.Interest or PensionTransactionType.TaxOnInterest;
 }
 
 /// <summary>Enum values as people read them: "TaxOnInterest" becomes "Tax On Interest".</summary>

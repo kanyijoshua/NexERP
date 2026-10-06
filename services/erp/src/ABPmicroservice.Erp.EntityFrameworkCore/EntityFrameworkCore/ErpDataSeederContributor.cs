@@ -174,7 +174,6 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
                     await SeedPensionsAsync();
                     await SeedAcademicsAsync();
                     await SeedPayrollAsync();
-                    await SeedBundledReportLayoutsAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {

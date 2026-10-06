@@ -1,4 +1,4 @@
-import type { CreateUpdatePensionerDto, GetPensionerListInput, PensionerDto } from './models';
+import type { CreateUpdatePensionerDto, GetPensionerListInput, PensionerActionInput, PensionerDto, SuspendOverduePensionersInput, SuspendOverduePensionersResultDto } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -43,6 +43,41 @@ export class PensionerService {
     },
     { apiName: this.apiName,...config });
 
+
+  suspend = (id: string, input: PensionerActionInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PensionerDto>({
+      method: 'POST',
+      url: `/api/erp/pensioner/${id}/suspend`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+
+  reinstate = (id: string, input: PensionerActionInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PensionerDto>({
+      method: 'POST',
+      url: `/api/erp/pensioner/${id}/reinstate`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+
+  recordLifeCertificate = (id: string, input: PensionerActionInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PensionerDto>({
+      method: 'POST',
+      url: `/api/erp/pensioner/${id}/record-life-certificate`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+
+  suspendOverdue = (input: SuspendOverduePensionersInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SuspendOverduePensionersResultDto>({
+      method: 'POST',
+      url: '/api/erp/pensioner/suspend-overdue',
+      body: input,
+    },
+    { apiName: this.apiName,...config });
 
   update = (id: string, input: CreateUpdatePensionerDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PensionerDto>({
