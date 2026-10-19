@@ -1,0 +1,202 @@
+<erp-page-toolbar
+  title="Erp::BankReconciliationWorksheet"
+  breadcrumb="Erp::Menu:CashManagement"
+  icon="fas fa-scale-balanced"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+@if (worksheet(); as w) {
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap align-items-end gap-4">
+      <div>
+        <div class="small text-secondary">{{ 'Erp::BankAccountNo' | abpLocalization }}</div>
+        <div class="fw-semibold">{{ w.bankAccountNo }}</div>
+      </div>
+      <div>
+        <div class="small text-secondary">{{ 'Erp::StatementNo' | abpLocalization }}</div>
+        <div class="fw-semibold">{{ w.statementNo }}</div>
+      </div>
+      <div>
+        <div class="small text-secondary">{{ 'Erp::StatementDate' | abpLocalization }}</div>
+        <div>{{ w.statementDate | date: 'yyyy-MM-dd' }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">{{ 'Erp::BalanceLastStatement' | abpLocalization }}</div>
+        <div class="font-monospace">{{ w.balanceLastStatement | erpAmount }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">{{ 'Erp::TotalStatementAmount' | abpLocalization }}</div>
+        <div class="font-monospace">{{ w.totalStatementAmount | erpAmount }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">{{ 'Erp::StatementEndingBalance' | abpLocalization }}</div>
+        <div class="font-monospace">{{ w.statementEndingBalance | erpAmount }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">{{ 'Erp::Difference' | abpLocalization }}</div>
+        <div class="font-monospace fw-bold" [class.text-danger]="w.difference !== 0" [class.text-success]="w.difference === 0">
+          {{ w.difference | erpAmount }}
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-white d-flex flex-wrap align-items-center gap-2">
+      <label class="btn btn-sm btn-outline-secondary mb-0" *abpPermission="'Erp.BankReconciliations.Update'">
+        <i class="fas fa-file-import me-1"></i>{{ 'Erp::ImportBankStatement' | abpLocalization }}
+        <input type="file" accept=".csv,.txt" class="d-none" (change)="importFile($event)" />
+      </label>
+      <div class="input-group input-group-sm w-auto" *abpPermission="'Erp.BankReconciliations.Update'">
+        <span class="input-group-text">{{ 'Erp::DateTolerance' | abpLocalization }}</span>
+        <input
+          type="number"
+          min="0"
+          class="form-control"
+          style="width: 5rem"
+          [ngModel]="dateTolerance()"
+          (ngModelChange)="dateTolerance.set($event)"
+          [attr.aria-label]="'Erp::DateTolerance' | abpLocalization"
+        />
+        <button type="button" class="btn btn-outline-primary" [disabled]="busy()" (click)="matchAutomatically()">
+          <i class="fas fa-wand-magic-sparkles me-1"></i>{{ 'Erp::MatchAutomatically' | abpLocalization }}
+        </button>
+      </div>
+      <button
+        *abpPermission="'Erp.BankReconciliations.Update'"
+        type="button"
+        class="btn btn-sm btn-outline-primary"
+        [disabled]="busy() || !selectedLineId() || selectedEntryIds().size === 0"
+        (click)="matchManually()"
+      >
+        <i class="fas fa-link me-1"></i>{{ 'Erp::MatchManually' | abpLocalization }}
+      </button>
+      <button
+        *abpPermission="'Erp.BankReconciliations.Post'"
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="busy()"
+        (click)="transferDifferences()"
+      >
+        <i class="fas fa-right-to-bracket me-1"></i>{{ 'Erp::PostDifferences' | abpLocalization }}
+      </button>
+      <button
+        *abpPermission="'Erp.BankReconciliations.Post'"
+        type="button"
+        class="btn btn-sm btn-primary ms-auto"
+        [disabled]="busy() || w.difference !== 0"
+        (click)="post()"
+      >
+        <i class="fas fa-paper-plane me-1"></i>{{ 'Erp::PostStatement' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-xl-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold">{{ 'Erp::StatementLines' | abpLocalization }}</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">{{ 'Erp::TransactionDate' | abpLocalization }}</th>
+                <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+                <th scope="col" class="text-end">{{ 'Erp::StatementAmount' | abpLocalization }}</th>
+                <th scope="col" class="text-end">{{ 'Erp::Difference' | abpLocalization }}</th>
+                <th scope="col"><span class="visually-hidden">{{ 'Erp::Actions' | abpLocalization }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of w.lines; track line.id) {
+                <tr
+                  role="button"
+                  tabindex="0"
+                  [class.table-primary]="selectedLineId() === line.id"
+                  (click)="selectLine(line.id!)"
+                  (keydown.enter)="selectLine(line.id!)"
+                >
+                  <td class="text-nowrap">{{ line.transactionDate | date: 'yyyy-MM-dd' }}</td>
+                  <td>
+                    {{ line.description }}
+                    @if (line.accountNo) {
+                      <span class="badge bg-light text-secondary border ms-1">{{ line.accountNo }}</span>
+                    }
+                  </td>
+                  <td class="text-end font-monospace">{{ line.statementAmount | erpAmount }}</td>
+                  <td class="text-end font-monospace" [class.text-danger]="line.difference !== 0" [class.text-success]="line.difference === 0">
+                    {{ line.difference | erpAmount }}
+                  </td>
+                  <td class="text-end">
+                    @if (line.appliedAmount !== 0) {
+                      <button
+                        type="button"
+                        class="btn btn-link btn-sm p-0"
+                        [title]="'Erp::RemoveMatch' | abpLocalization"
+                        (click)="$event.stopPropagation(); unmatch(line.id!)"
+                      >
+                        <i class="fas fa-link-slash"></i>
+                      </button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center text-secondary py-4">{{ 'Erp::NoStatementLines' | abpLocalization }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-bold d-flex justify-content-between">
+          <span>{{ 'Erp::BankAccountLedgerEntries' | abpLocalization }}</span>
+          @if (selectedEntryIds().size) {
+            <span class="font-monospace fw-normal">{{ 'Erp::Selected' | abpLocalization }}: {{ selectedTotal() | erpAmount }}</span>
+          }
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col"><span class="visually-hidden">{{ 'Erp::Select' | abpLocalization }}</span></th>
+                <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+                <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+                <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+                <th scope="col" class="text-end">{{ 'Erp::Amount' | abpLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of w.entries; track entry.id) {
+                <tr [class.table-success]="entry.statementStatus === matched">
+                  <td>
+                    @if (entry.statementStatus === matched) {
+                      <i class="fas fa-link text-success" [title]="'Erp::Matched' | abpLocalization"></i>
+                    } @else {
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [checked]="selectedEntryIds().has(entry.id!)"
+                        (change)="toggleEntry(entry.id!)"
+                        [attr.aria-label]="entry.documentNo"
+                      />
+                    }
+                  </td>
+                  <td class="text-nowrap">{{ entry.postingDate | date: 'yyyy-MM-dd' }}</td>
+                  <td>{{ entry.documentNo }}</td>
+                  <td>{{ entry.description }}</td>
+                  <td class="text-end font-monospace">{{ entry.amount | erpAmount }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center text-secondary py-4">{{ 'Erp::NoOpenBankEntries' | abpLocalization }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+}

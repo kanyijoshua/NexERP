@@ -1,9 +1,12 @@
 import { permissionGuard } from '@abp/ng.core';
 import { NgModule } from '@angular/core';
 import { Route, RouterModule, Routes } from '@angular/router';
-import { SalesInvoicesComponent } from './pages/sales-invoices/sales-invoices.component';
-import { PurchaseInvoicesComponent } from './pages/purchase-invoices/purchase-invoices.component';
+import { SalesDocumentsComponent } from './pages/sales-documents/sales-documents.component';
+import { PurchaseDocumentsComponent } from './pages/purchase-documents/purchase-documents.component';
+import { SalesDocumentType } from '@proxy/sales';
+import { PurchaseDocumentType } from '@proxy/purchasing';
 import { moduleGuard } from './services/module.guard';
+
 
 function masterData(path: string, entity: string, requiredPolicy: string, module: string): Route {
   return {
@@ -12,6 +15,24 @@ function masterData(path: string, entity: string, requiredPolicy: string, module
     canActivate: [permissionGuard, moduleGuard],
     // Component-less, so the list and card pages below inherit `entity`.
     data: { entity, requiredPolicy, module },
+  };
+}
+
+function salesDocuments(path: string, documentType: SalesDocumentType): Route {
+  return {
+    path,
+    component: SalesDocumentsComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { documentType, requiredPolicy: 'Erp.SalesDocuments', module: 'Sales' },
+  };
+}
+
+function purchaseDocuments(path: string, documentType: PurchaseDocumentType): Route {
+  return {
+    path,
+    component: PurchaseDocumentsComponent,
+    canActivate: [permissionGuard, moduleGuard],
+    data: { documentType, requiredPolicy: 'Erp.PurchaseDocuments', module: 'Purchasing' },
   };
 }
 
@@ -192,18 +213,89 @@ const routes: Routes = [
   masterData('payment-voucher-lines', 'paymentVoucherLine', 'Erp.PaymentVouchers', 'CashManagement'),
   masterData('payment-types', 'paymentType', 'Erp.PaymentVoucherSetup', 'CashManagement'),
   masterData('payment-deduction-codes', 'paymentDeductionCode', 'Erp.PaymentVoucherSetup', 'CashManagement'),
-  {
-    path: 'sales-invoices',
-    component: SalesInvoicesComponent,
-    canActivate: [permissionGuard, moduleGuard],
-    data: { requiredPolicy: 'Erp.SalesDocuments', module: 'Sales' },
-  },
-  {
-    path: 'purchase-invoices',
-    component: PurchaseInvoicesComponent,
-    canActivate: [permissionGuard, moduleGuard],
-    data: { requiredPolicy: 'Erp.PurchaseDocuments', module: 'Purchasing' },
-  },
+  // Procurement and tendering
+  masterData('procurement-plans', 'procurementPlan', 'Erp.ProcurementPlans', 'Procurement'),
+  masterData('purchase-requisitions', 'purchaseRequisition', 'Erp.PurchaseRequisitions', 'Procurement'),
+  masterData('tenders', 'tender', 'Erp.Tenders', 'Procurement'),
+  // Sales and purchase documents: one page per side, the document type from the route.
+  salesDocuments('sales-quotes', SalesDocumentType.Quote),
+  salesDocuments('sales-orders', SalesDocumentType.Order),
+  salesDocuments('sales-invoices', SalesDocumentType.Invoice),
+  salesDocuments('sales-credit-memos', SalesDocumentType.CreditMemo),
+  salesDocuments('sales-blanket-orders', SalesDocumentType.BlanketOrder),
+  salesDocuments('sales-return-orders', SalesDocumentType.ReturnOrder),
+  purchaseDocuments('purchase-quotes', PurchaseDocumentType.Quote),
+  purchaseDocuments('purchase-orders', PurchaseDocumentType.Order),
+  purchaseDocuments('purchase-invoices', PurchaseDocumentType.Invoice),
+  purchaseDocuments('purchase-credit-memos', PurchaseDocumentType.CreditMemo),
+  purchaseDocuments('purchase-blanket-orders', PurchaseDocumentType.BlanketOrder),
+  purchaseDocuments('purchase-return-orders', PurchaseDocumentType.ReturnOrder),
+  // Warehouse: item journals, transfers, tracking
+  masterData('item-journals', 'itemJournalBatch', 'Erp.ItemJournals', 'Inventory'),
+  masterData('transfer-orders', 'transferOrder', 'Erp.TransferOrders', 'Inventory'),
+  masterData('posted-transfers', 'postedTransfer', 'Erp.TransferOrders', 'Inventory'),
+  masterData('item-ledger-entries', 'itemLedgerEntry', 'Erp.Items', 'Inventory'),
+  masterData('item-variants', 'itemVariant', 'Erp.Items', 'Inventory'),
+  masterData('item-tracking-codes', 'itemTrackingCode', 'Erp.InventorySetup', 'Inventory'),
+  masterData('lot-no-information', 'lotNoInformation', 'Erp.Items', 'Inventory'),
+  masterData('serial-no-information', 'serialNoInformation', 'Erp.Items', 'Inventory'),
+  masterData('item-journal-templates', 'itemJournalTemplate', 'Erp.ItemJournals', 'Inventory'),
+  masterData('item-units-of-measure', 'itemUnitOfMeasure', 'Erp.Items', 'Inventory'),
+  masterData('item-tracking-lines', 'itemTrackingLine', 'Erp.Items', 'Inventory'),
+  // Posted documents and pricing
+  masterData('posted-sales-shipments', 'postedSalesShipment', 'Erp.SalesDocuments', 'Sales'),
+  masterData('posted-sales-invoices', 'postedSalesInvoice', 'Erp.SalesDocuments', 'Sales'),
+  masterData('posted-purchase-receipts', 'postedPurchaseReceipt', 'Erp.PurchaseDocuments', 'Purchasing'),
+  masterData('posted-purchase-invoices', 'postedPurchaseInvoice', 'Erp.PurchaseDocuments', 'Purchasing'),
+  masterData('price-lists', 'priceList', 'Erp.PriceLists', 'Inventory'),
+  masterData('price-list-lines', 'priceListLine', 'Erp.PriceLists', 'Inventory'),
+  masterData('customer-price-groups', 'customerPriceGroup', 'Erp.PriceLists', 'Inventory'),
+  // Collections, deferrals and cash flow
+  masterData('fa-journals', 'faJournalBatch', 'Erp.FAJournals', 'FixedAssets'),
+  // Service management
+  masterData('service-orders', 'serviceOrder', 'Erp.Service', 'Service'),
+  masterData('service-contracts', 'serviceContract', 'Erp.Service', 'Service'),
+  masterData('service-items', 'serviceItem', 'Erp.Service', 'Service'),
+  masterData('service-ledger-entries', 'serviceLedgerEntry', 'Erp.Service', 'Service'),
+  masterData('warranty-ledger-entries', 'warrantyLedgerEntry', 'Erp.Service', 'Service'),
+  masterData('service-order-types', 'serviceOrderType', 'Erp.ServiceSetup', 'Service'),
+  masterData('fault-codes', 'faultCode', 'Erp.ServiceSetup', 'Service'),
+  masterData('resolution-codes', 'resolutionCode', 'Erp.ServiceSetup', 'Service'),
+  // Manufacturing
+  masterData('production-orders', 'productionOrder', 'Erp.Manufacturing', 'Manufacturing'),
+  masterData('production-boms', 'productionBom', 'Erp.Manufacturing', 'Manufacturing'),
+  masterData('routings', 'routing', 'Erp.Manufacturing', 'Manufacturing'),
+  masterData('planning-worksheet', 'planningLine', 'Erp.Manufacturing', 'Manufacturing'),
+  masterData('capacity-ledger-entries', 'capacityLedgerEntry', 'Erp.Manufacturing', 'Manufacturing'),
+  masterData('work-centers', 'workCenter', 'Erp.ManufacturingSetup', 'Manufacturing'),
+  masterData('machine-centers', 'machineCenter', 'Erp.ManufacturingSetup', 'Manufacturing'),
+  // Projects
+  masterData('projects', 'project', 'Erp.Projects', 'Projects'),
+  masterData('resources', 'resource', 'Erp.ProjectsSetup', 'Projects'),
+  masterData('project-posting-groups', 'projectPostingGroup', 'Erp.ProjectsSetup', 'Projects'),
+  masterData('project-journals', 'projectJournalBatch', 'Erp.Projects', 'Projects'),
+  masterData('project-ledger-entries', 'projectLedgerEntry', 'Erp.Projects', 'Projects'),
+  masterData('resource-ledger-entries', 'resourceLedgerEntry', 'Erp.Projects', 'Projects'),
+  masterData('time-sheets', 'timeSheet', 'Erp.TimeSheets', 'Projects'),
+  // Customer relationships
+  masterData('contacts', 'contact', 'Erp.Crm', 'Crm'),
+  masterData('opportunities', 'opportunity', 'Erp.Crm', 'Crm'),
+  masterData('campaigns', 'campaign', 'Erp.Crm', 'Crm'),
+  masterData('interaction-log-entries', 'interactionLogEntry', 'Erp.Crm', 'Crm'),
+  masterData('close-opportunity-codes', 'closeOpportunityCode', 'Erp.CrmSetup', 'Crm'),
+  masterData('activity-types', 'activityType', 'Erp.CrmSetup', 'Crm'),
+  masterData('pipeline-stages', 'pipelineStage', 'Erp.CrmSetup', 'Crm'),
+  masterData('reminders', 'reminder', 'Erp.Reminders', 'Finance'),
+  masterData('finance-charge-memos', 'financeChargeMemo', 'Erp.FinanceChargeMemos', 'Finance'),
+  masterData('reminder-terms', 'reminderTerms', 'Erp.CollectionSetup', 'Finance'),
+  masterData('finance-charge-terms', 'financeChargeTerms', 'Erp.CollectionSetup', 'Finance'),
+  masterData('deferral-templates', 'deferralTemplate', 'Erp.Deferrals', 'Finance'),
+  masterData('posted-deferrals', 'postedDeferral', 'Erp.Deferrals', 'Finance'),
+  masterData('cash-flow-forecasts', 'cashFlowForecast', 'Erp.CashFlow', 'Finance'),
+  masterData('cash-flow-worksheet', 'cashFlowWorksheetLine', 'Erp.CashFlow', 'Finance'),
+  masterData('cash-flow-manual-entries', 'cashFlowManualEntry', 'Erp.CashFlow', 'Finance'),
+  masterData('cash-flow-forecast-entries', 'cashFlowForecastEntry', 'Erp.CashFlow', 'Finance'),
+
   // The old single-report page has been replaced by the report viewer under /reports.
   { path: 'financial-reports', redirectTo: 'reports/financial', pathMatch: 'full' },
   {
@@ -211,6 +303,24 @@ const routes: Routes = [
     loadChildren: () => import('./approvals/approvals.module').then(m => m.ApprovalsModule),
     canActivate: [permissionGuard, moduleGuard],
     data: { requiredPolicy: 'Erp.Workflows', module: 'Approvals' },
+  },
+  {
+    path: 'project-work',
+    loadChildren: () => import('./project-work/project-work.module').then(m => m.ProjectWorkModule),
+    canActivate: [moduleGuard],
+    data: { module: 'Projects' },
+  },
+  {
+    path: 'service',
+    loadChildren: () => import('./service/service.module').then(m => m.ServiceModule),
+    canActivate: [moduleGuard],
+    data: { module: 'Service' },
+  },
+  {
+    path: 'crm',
+    loadChildren: () => import('./crm/crm.module').then(m => m.CrmModule),
+    canActivate: [moduleGuard],
+    data: { module: 'Crm' },
   },
   {
     path: 'finance',

@@ -82,6 +82,42 @@ public class PurchaseLine : Entity<Guid>
 
     public string GenProdPostingGroup { get; private set; }
 
+    /// <summary>Set on an invoice line made from a posted receipt line: the goods are in already.</summary>
+    public Guid? ReceiptLineId { get; private set; }
+
+    public string ReceiptNo { get; private set; }
+
+    public int? ReceiptLineNo { get; private set; }
+
+    /// <summary>The blanket order line an order line draws its quantity from.</summary>
+    public string BlanketOrderNo { get; private set; }
+
+    public int? BlanketOrderLineNo { get; private set; }
+
+    /// <summary>The variant of the item; blank is the item itself.</summary>
+    public string VariantCode { get; private set; }
+
+    /// <summary>Base units in one unit of the line's unit of measure.</summary>
+    public decimal QtyPerUnitOfMeasure { get; private set; } = 1m;
+
+    public void SetVariant(string variantCode)
+    {
+        VariantCode = CodeTableEntity.NormalizeCode(Check.Length(variantCode, nameof(variantCode), ErpDomainConsts.MaxCodeLength));
+    }
+
+    public void SetQtyPerUnitOfMeasure(decimal qtyPerUnitOfMeasure)
+    {
+        QtyPerUnitOfMeasure = qtyPerUnitOfMeasure > 0m ? qtyPerUnitOfMeasure : 1m;
+    }
+
+    public decimal OutstandingQuantity => Quantity - QuantityReceived;
+
+    public decimal QtyReceivedNotInvoiced => QuantityReceived - QuantityInvoiced;
+
+    public bool HasPostedQuantity => QuantityReceived != 0m || QuantityInvoiced != 0m;
+
+    public bool IsFromReceipt => ReceiptLineId.HasValue;
+
     protected PurchaseLine() { }
 
     public PurchaseLine(
@@ -120,16 +156,137 @@ public class PurchaseLine : Entity<Guid>
         Quantity = quantity;
         DirectUnitCost = directUnitCost;
         LineDiscountPercent = lineDiscountPercent;
-        if (QuantityReceived == 0m)
-        {
-            QtyToReceive = quantity;
-        }
-        if (QuantityInvoiced == 0m)
-        {
-            QtyToInvoice = quantity;
-        }
+        ResetQuantitiesToPost();
         RecalculateAmounts();
     }
+
+    /// <summary>
+    /// Changes the line in place. Once part of it has been received or invoiced it keeps its item or
+    /// account, cannot go below what has been posted, and once invoicing has started its cost is fixed.
+    /// </summary>
+    public void Update(
+        string documentNo,
+        DocumentLineType type,
+        string no,
+        string description,
+        decimal quantity,
+        decimal directUnitCost,
+        decimal lineDiscountPercent,
+        string unitOfMeasureCode
+    )
+    {
+        if (HasPostedQuantity)
+        {
+            // A line taken from a receipt invoices exactly that receipt line.
+            if (type != Type || !string.Equals(no, No, StringComparison.OrdinalIgnoreCase)
+                || (IsFromReceipt && quantity != Quantity)
+                || (QuantityInvoiced != 0m && (directUnitCost != DirectUnitCost || lineDiscountPercent != LineDiscountPercent)))
+            {
+                throw new BusinessException(ErpErrorCodes.Documents.LineAlreadyPosted)
+                    .WithData("documentNo", documentNo)
+                    .WithData("lineNo", LineNo);
+            }
+
+            var posted = Math.Max(Math.Abs(QuantityReceived), Math.Abs(QuantityInvoiced));
+            if (Math.Abs(quantity) < posted)
+            {
+                throw new BusinessException(ErpErrorCodes.Documents.QuantityBelowPosted)
+                    .WithData("documentNo", documentNo)
+                    .WithData("lineNo", LineNo)
+                    .WithData("quantity", posted);
+            }
+        }
+
+        Type = type;
+        No = Check.Length(no, nameof(no), ErpDomainConsts.MaxNoLength);
+        Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
+        UnitOfMeasureCode = Check.Length(unitOfMeasureCode, nameof(unitOfMeasureCode), ErpDomainConsts.MaxUnitOfMeasureCodeLength);
+        SetAmounts(quantity, directUnitCost, lineDiscountPercent);
+    }
+
+    /// <summary>
+    /// What the next posting receives and invoices. Receiving cannot go beyond the outstanding
+    /// quantity, and invoicing not beyond what has been or is being received.
+    /// </summary>
+    public void SetQuantitiesToPost(string documentNo, decimal qtyToReceive, decimal qtyToInvoice)
+    {
+        if (qtyToReceive < 0m || qtyToInvoice < 0m)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.NegativeQuantityToPost)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo);
+        }
+
+        if (IsFromReceipt)
+        {
+            qtyToReceive = 0m;
+        }
+        else if (qtyToReceive > OutstandingQuantity)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.QtyToShipTooLarge)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo)
+                .WithData("quantity", qtyToReceive)
+                .WithData("outstanding", OutstandingQuantity);
+        }
+
+        var available = IsFromReceipt ? Quantity - QuantityInvoiced : QtyReceivedNotInvoiced + qtyToReceive;
+        if (qtyToInvoice > available)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.QtyToInvoiceTooLarge)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo)
+                .WithData("quantity", qtyToInvoice)
+                .WithData("available", available);
+        }
+
+        QtyToReceive = qtyToReceive;
+        QtyToInvoice = qtyToInvoice;
+    }
+
+    /// <summary>Receive whatever is outstanding and invoice everything not invoiced yet.</summary>
+    public void ResetQuantitiesToPost()
+    {
+        QtyToReceive = IsFromReceipt ? 0m : Quantity - QuantityReceived;
+        QtyToInvoice = Quantity - QuantityInvoiced;
+    }
+
+    public void LinkToReceiptLine(Guid receiptLineId, string receiptNo, int receiptLineNo)
+    {
+        ReceiptLineId = receiptLineId;
+        ReceiptNo = Check.Length(receiptNo, nameof(receiptNo), ErpDomainConsts.MaxDocumentNoLength);
+        ReceiptLineNo = receiptLineNo;
+        // The goods are in already; only the invoice is outstanding.
+        QuantityReceived = Quantity;
+        ResetQuantitiesToPost();
+    }
+
+    public void LinkToBlanketOrder(string blanketOrderNo, int blanketOrderLineNo)
+    {
+        BlanketOrderNo = Check.Length(blanketOrderNo, nameof(blanketOrderNo), ErpDomainConsts.MaxDocumentNoLength);
+        BlanketOrderLineNo = blanketOrderLineNo;
+    }
+
+    internal void RecordReceived(decimal quantity)
+    {
+        QuantityReceived += quantity;
+    }
+
+    internal void RecordInvoiced(decimal quantity)
+    {
+        QuantityInvoiced += quantity;
+    }
+
+    /// <summary>Takes back a receipt that was undone.</summary>
+    internal void RecordReceiptUndone(decimal quantity)
+    {
+        QuantityReceived -= quantity;
+        ResetQuantitiesToPost();
+    }
+
+    /// <summary>The part of the line amount the quantity to invoice stands for.</summary>
+    public decimal AmountToInvoice(decimal quantity) =>
+        DocumentAmounts.Portion(LineAmount, Quantity, QuantityInvoiced, quantity);
 
     public void SetLocation(string locationCode)
     {
@@ -165,17 +322,20 @@ public class PurchaseLine : Entity<Guid>
         TaxGroupCode = CodeTableEntity.NormalizeCode(Check.Length(taxGroupCode, nameof(taxGroupCode), ErpDomainConsts.MaxTaxGroupCodeLength));
     }
 
+    /// <summary>The project task the purchase is used on; posting writes a project usage.</summary>
+    public string ProjectNo { get; private set; }
+
+    public string ProjectTaskNo { get; private set; }
+
+    public void SetProject(string projectNo, string projectTaskNo)
+    {
+        ProjectNo = CodeTableEntity.NormalizeCode(Check.Length(projectNo, nameof(projectNo), ErpDomainConsts.MaxNoLength));
+        ProjectTaskNo = ProjectNo == null ? null : CodeTableEntity.NormalizeCode(Check.Length(projectTaskNo, nameof(projectTaskNo), ErpDomainConsts.MaxNoLength));
+    }
+
     public void SetDeferralCode(string deferralCode)
     {
         DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxDeferralTemplateCodeLength));
-    }
-
-    public void SetQuantities(decimal qtyToReceive, decimal quantityReceived, decimal qtyToInvoice, decimal quantityInvoiced)
-    {
-        QtyToReceive = qtyToReceive;
-        QuantityReceived = quantityReceived;
-        QtyToInvoice = qtyToInvoice;
-        QuantityInvoiced = quantityInvoiced;
     }
 
     /// <summary>Takes the rate and groups of a VAT Posting Setup, or none with a null setup.</summary>

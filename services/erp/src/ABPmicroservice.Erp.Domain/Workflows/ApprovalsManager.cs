@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Documents;
+using ABPmicroservice.Erp.Procurement;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Sales;
 using Volo.Abp;
@@ -362,6 +363,8 @@ public class ApprovalsManager : DomainService
         {
             ApprovalDocumentKind.SalesDocument => await _salesHeaderRepository.GetAsync(documentId),
             ApprovalDocumentKind.PaymentVoucher => await _paymentVoucherRepository.GetAsync(documentId),
+            ApprovalDocumentKind.PurchaseRequisition => await LazyServiceProvider.LazyGetRequiredService<IRepository<PurchaseRequisition, Guid>>().GetAsync(documentId),
+            ApprovalDocumentKind.Tender => await LazyServiceProvider.LazyGetRequiredService<IRepository<TenderHeader, Guid>>().GetAsync(documentId),
             _ => await _purchaseHeaderRepository.GetAsync(documentId),
         };
     }
@@ -376,6 +379,14 @@ public class ApprovalsManager : DomainService
 
             case ApprovalDocumentKind.PaymentVoucher:
                 await _paymentVoucherRepository.UpdateAsync((PaymentVoucherHeader)document);
+                break;
+
+            case ApprovalDocumentKind.PurchaseRequisition:
+                await LazyServiceProvider.LazyGetRequiredService<IRepository<PurchaseRequisition, Guid>>().UpdateAsync((PurchaseRequisition)document);
+                break;
+
+            case ApprovalDocumentKind.Tender:
+                await LazyServiceProvider.LazyGetRequiredService<IRepository<TenderHeader, Guid>>().UpdateAsync((TenderHeader)document);
                 break;
 
             default:
@@ -393,6 +404,8 @@ public class ApprovalsManager : DomainService
             {
                 ApprovalDocumentKind.SalesDocument => nameof(SalesHeader),
                 ApprovalDocumentKind.PaymentVoucher => nameof(PaymentVoucherHeader),
+                ApprovalDocumentKind.PurchaseRequisition => nameof(PurchaseRequisition),
+                ApprovalDocumentKind.Tender => nameof(TenderHeader),
                 _ => nameof(PurchaseHeader),
             },
             document.Id,

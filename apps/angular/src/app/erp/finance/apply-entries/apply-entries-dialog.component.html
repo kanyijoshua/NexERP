@@ -1,0 +1,131 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    <i class="fas fa-link text-primary me-2"></i>{{ 'Erp::ApplyEntries' | abpLocalization }}
+    <span class="badge bg-light text-secondary border fw-normal ms-2">{{ applying.documentNo }} · {{ applying.remainingAmount | erpAmount }}</span>
+  </h5>
+  <button type="button" class="btn-close" [attr.aria-label]="'AbpUi::Close' | abpLocalization" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="tab() === 'apply'" (click)="tab.set('apply')">{{ 'Erp::ApplyEntries' | abpLocalization }}</button>
+    </li>
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="tab() === 'details'" (click)="tab.set('details')">
+        {{ 'Erp::DetailedLedgerEntries' | abpLocalization }}
+      </button>
+    </li>
+  </ul>
+
+  <div class="d-flex align-items-end gap-3 mb-3">
+    <div>
+      <label class="form-label small mb-1" for="ae-date">{{ 'Erp::PostingDate' | abpLocalization }}</label>
+      <input id="ae-date" type="date" class="form-control form-control-sm" [(ngModel)]="postingDate" />
+    </div>
+    @if (tab() === 'apply') {
+      <div class="ms-auto text-end">
+        <div class="small text-secondary">{{ 'Erp::AppliedAmount' | abpLocalization }}</div>
+        <div class="font-monospace fw-semibold">{{ appliedTotal() | erpAmount }}</div>
+      </div>
+    }
+  </div>
+
+  @if (tab() === 'apply') {
+    <div class="table-responsive" style="max-height: 50vh">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th scope="col"><span class="visually-hidden">{{ 'Erp::Select' | abpLocalization }}</span></th>
+            <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::DocumentType' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::DueDate' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::RemainingAmount' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::PmtDiscPossible' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::AmountToApply' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.entry.id) {
+            <tr [class.table-primary]="row.selected">
+              <td>
+                <input type="checkbox" class="form-check-input" [checked]="row.selected" (change)="toggle(row)" [attr.aria-label]="row.entry.documentNo" />
+              </td>
+              <td class="text-nowrap">{{ row.entry.postingDate | date: 'yyyy-MM-dd' }}</td>
+              <td>{{ row.entry.documentType }}</td>
+              <td>{{ row.entry.documentNo }}</td>
+              <td class="text-nowrap">{{ row.entry.dueDate | date: 'yyyy-MM-dd' }}</td>
+              <td class="text-end font-monospace">{{ row.entry.remainingAmount | erpAmount }}</td>
+              <td class="text-end font-monospace text-secondary">
+                @if (row.entry.remainingPmtDiscPossible) {
+                  {{ row.entry.remainingPmtDiscPossible | erpAmount }}
+                  <div class="small">{{ row.entry.pmtDiscountDate | date: 'yyyy-MM-dd' }}</div>
+                }
+              </td>
+              <td class="text-end" style="width: 9rem">
+                <input
+                  type="number"
+                  class="form-control form-control-sm text-end font-monospace"
+                  [disabled]="!row.selected"
+                  [value]="row.amountToApply"
+                  (change)="setAmount(row, $any($event.target).value)"
+                  [attr.aria-label]="'Erp::AmountToApply' | abpLocalization"
+                />
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="text-center text-secondary py-4">{{ 'Erp::NoApplicableEntries' | abpLocalization }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="table-responsive" style="max-height: 50vh">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light sticky-top">
+          <tr>
+            <th scope="col">{{ 'Erp::EntryNo' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::EntryType' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::PostingDate' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Amount' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::AmountLcy' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Unapplied' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (detail of details(); track detail.id) {
+            <tr [class.text-decoration-line-through]="detail.unapplied">
+              <td class="font-monospace small">{{ detail.entryNo }}</td>
+              <td>{{ 'Erp::Enum:DetailedCVLedgerEntryType.' + detailType[detail.entryType] | abpLocalization }}</td>
+              <td class="text-nowrap">{{ detail.postingDate | date: 'yyyy-MM-dd' }}</td>
+              <td>{{ detail.documentNo }}</td>
+              <td class="text-end font-monospace">{{ detail.amount | erpAmount }}</td>
+              <td class="text-end font-monospace text-secondary">{{ detail.amountLcy | erpAmount }}</td>
+              <td>
+                @if (detail.unapplied) {
+                  <i class="fas fa-rotate-left text-muted"></i>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<div class="modal-footer">
+  @if (hasApplication()) {
+    <button *abpPermission="'Erp.EntryApplication.Unapply'" type="button" class="btn btn-outline-danger me-auto" [disabled]="busy()" (click)="unapply()">
+      <i class="fas fa-link-slash me-1"></i>{{ 'Erp::UnapplyEntries' | abpLocalization }}
+    </button>
+  }
+  <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+  <button type="button" class="btn btn-primary" [disabled]="busy() || appliedTotal() === 0" (click)="apply()">
+    <i class="fas fa-link me-1"></i>{{ 'Erp::PostApplication' | abpLocalization }}
+  </button>
+</div>

@@ -277,6 +277,12 @@ public static class ErpDbContextModelCreatingExtensions
             b.Property(x => x.AppliesToDocNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
             b.Property(x => x.AppliesToId).HasMaxLength(ErpDomainConsts.MaxNoLength);
             b.Property(x => x.TaxAreaCode).HasMaxLength(ErpDomainConsts.MaxTaxAreaCodeLength);
+            b.Property(x => x.RequisitionNo).HasMaxLength(30);
+            b.Property(x => x.TenderNo).HasMaxLength(30);
+            b.Property(x => x.ClosedBy).HasMaxLength(50);
+            b.Property(x => x.CloseComments).HasMaxLength(500);
+            b.Property(x => x.CancelledBy).HasMaxLength(50);
+            b.Property(x => x.CancelComments).HasMaxLength(500);
         });
 
         builder.Entity<PurchaseLine>(b =>
@@ -1020,5 +1026,14 @@ public static class ErpDbContextModelCreatingExtensions
         builder.ConfigureErpAcademics();
         builder.ConfigureErpPayroll();
         builder.ConfigureErpPaymentVouchers();
+        builder.ConfigureErpProcurement();
+        builder.ConfigureErpOrders();
+        builder.ConfigureErpInventory();
+        builder.ConfigureErpFinanceOperations();
+        builder.ConfigureErpFixedAssetPosting();
+        builder.ConfigureErpCrm();
+        builder.ConfigureErpProjects();
+        builder.ConfigureErpManufacturing();
+        builder.ConfigureErpServiceManagement();
     }
 }

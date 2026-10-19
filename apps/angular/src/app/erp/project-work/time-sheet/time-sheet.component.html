@@ -1,0 +1,105 @@
+<erp-page-toolbar title="Erp::TimeSheet" breadcrumb="Erp::Menu:Projects" icon="fas fa-calendar-week" [showSearch]="false" [showCreate]="false"></erp-page-toolbar>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body d-flex flex-wrap align-items-end gap-4">
+    @if (sheet(); as s) {
+      <div>
+        <div class="small text-secondary">{{ 'Erp::No' | abpLocalization }}</div>
+        <div class="fw-semibold">{{ s.no }}</div>
+      </div>
+      <div>
+        <div class="small text-secondary">{{ 'Erp::Resource' | abpLocalization }}</div>
+        <div>{{ s.resourceNo }} <span class="text-secondary">{{ s.resourceName }}</span></div>
+      </div>
+      <div>
+        <div class="small text-secondary">{{ 'Erp::Week' | abpLocalization }}</div>
+        <div>{{ s.startingDate | date: 'yyyy-MM-dd' }} – {{ s.endingDate | date: 'yyyy-MM-dd' }}</div>
+      </div>
+      <div>
+        <div class="small text-secondary">{{ 'Erp::Status' | abpLocalization }}</div>
+        <span class="badge" [class.bg-success]="s.status === status.Approved" [class.bg-warning]="s.status === status.Submitted" [class.bg-danger]="s.status === status.Rejected" [class.bg-secondary]="s.status === status.Open">
+          {{ 'Erp::Enum:TimeSheetStatus.' + status[s.status] | abpLocalization }}
+        </span>
+        @if (s.approverComment) {
+          <div class="small text-danger">{{ s.approverComment }}</div>
+        }
+      </div>
+    } @else {
+      <div>
+        <label class="form-label small mb-1" for="ts-resource">{{ 'Erp::Resource' | abpLocalization }} *</label>
+        <erp-lookup id="ts-resource" entity="resource" [(ngModel)]="resourceNo"></erp-lookup>
+      </div>
+      <div>
+        <label class="form-label small mb-1" for="ts-week">{{ 'Erp::Week' | abpLocalization }}</label>
+        <input id="ts-week" type="date" class="form-control form-control-sm" [(ngModel)]="startingDate" />
+      </div>
+    }
+  </div>
+  <div class="card-footer bg-white d-flex flex-wrap gap-2 align-items-center">
+    @if (editable()) {
+      <button type="button" class="btn btn-sm btn-primary" [disabled]="busy() || (!sheet() && !resourceNo)" (click)="save()">
+        <i class="fas fa-floppy-disk me-1"></i>{{ 'AbpUi::Save' | abpLocalization }}
+      </button>
+      @if (sheet() && !dirty()) {
+        <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()" (click)="submit()">
+          <i class="fas fa-paper-plane me-1"></i>{{ 'Erp::Submit' | abpLocalization }}
+        </button>
+      }
+    }
+    @if (sheet()?.status === status.Submitted) {
+      <ng-container *abpPermission="'Erp.TimeSheets.Approve'">
+        <button type="button" class="btn btn-sm btn-success" [disabled]="busy()" (click)="approve()"><i class="fas fa-check me-1"></i>{{ 'Erp::Approve' | abpLocalization }}</button>
+        <input type="text" class="form-control form-control-sm w-auto" [placeholder]="'Erp::Comment' | abpLocalization" [(ngModel)]="rejectComment" [attr.aria-label]="'Erp::Comment' | abpLocalization" />
+        <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy()" (click)="reject()"><i class="fas fa-xmark me-1"></i>{{ 'Erp::Reject' | abpLocalization }}</button>
+      </ng-container>
+    }
+    @if (sheet() && sheet()!.status !== status.Open) {
+      <button *abpPermission="'Erp.TimeSheets.Approve'" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy()" (click)="reopen()">
+        <i class="fas fa-lock-open me-1"></i>{{ 'Erp::Reopen' | abpLocalization }}
+      </button>
+    }
+    @if (sheet()?.status === status.Approved) {
+      <div class="input-group input-group-sm w-auto ms-auto" *abpPermission="'Erp.Projects.Post'">
+        <span class="input-group-text">{{ 'Erp::ProjectJournalBatch' | abpLocalization }}</span>
+        <input type="text" class="form-control" style="width: 8rem" [(ngModel)]="batchName" [attr.aria-label]="'Erp::ProjectJournalBatch' | abpLocalization" />
+        <button type="button" class="btn btn-outline-primary" [disabled]="busy()" (click)="transfer()">
+          <i class="fas fa-right-to-bracket me-1"></i>{{ 'Erp::TransferToJournal' | abpLocalization }}
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <erp-week-grid [startDate]="(sheet()?.startingDate ?? startingDate).substring(0, 10)" [rows]="rows()" [readonly]="!editable()" (valueChange)="onCellChanged()"></erp-week-grid>
+  @if (editable()) {
+    <div class="card-footer bg-white d-flex flex-wrap align-items-end gap-2">
+      <div>
+        <label class="form-label small mb-1" for="ts-project">{{ 'Erp::ProjectNo' | abpLocalization }}</label>
+        <erp-lookup id="ts-project" entity="project" [(ngModel)]="newProjectNo"></erp-lookup>
+      </div>
+      <div>
+        <label class="form-label small mb-1" for="ts-task">{{ 'Erp::TaskNo' | abpLocalization }}</label>
+        <input id="ts-task" type="text" class="form-control form-control-sm" style="width: 7rem" [(ngModel)]="newTaskNo" />
+      </div>
+      <div class="flex-fill">
+        <label class="form-label small mb-1" for="ts-description">{{ 'Erp::Description' | abpLocalization }}</label>
+        <input id="ts-description" type="text" class="form-control form-control-sm" [(ngModel)]="newDescription" />
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="!newProjectNo || !newTaskNo" (click)="addLine()">
+        <i class="fas fa-plus me-1"></i>{{ 'Erp::AddLine' | abpLocalization }}
+      </button>
+    </div>
+    @if (lines().length) {
+      <div class="card-footer bg-white small">
+        @for (line of lines(); track $index; let i = $index) {
+          @if (!line.posted) {
+            <button type="button" class="btn btn-link btn-sm text-danger p-0 me-3" (click)="removeLine(i)">
+              <i class="fas fa-trash me-1"></i>{{ line.projectNo }} / {{ line.taskNo }}
+            </button>
+          }
+        }
+      </div>
+    }
+  }
+</div>

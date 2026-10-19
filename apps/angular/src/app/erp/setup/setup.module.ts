@@ -10,6 +10,8 @@ import { DataExportComponent } from './data-export/data-export.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
 import { GeneralLedgerSetupComponent } from './general-ledger-setup/general-ledger-setup.component';
 import { FaSetupComponent } from './fa-setup/fa-setup.component';
+import { ManufacturingSetupComponent } from './manufacturing-setup/manufacturing-setup.component';
+import { ServiceSetupComponent } from './service-setup/service-setup.component';
 import { PensionSetupComponent } from './pension-setup/pension-setup.component';
 import { AcademicSetupComponent } from './academic-setup/academic-setup.component';
 import { CashManagementSetupComponent } from './cash-management-setup/cash-management-setup.component';
@@ -56,6 +58,18 @@ const routes: Routes = [
     component: FaSetupComponent,
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.FixedAssetSetup' },
+  },
+  {
+    path: 'service-setup',
+    component: ServiceSetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.ServiceSetup' },
+  },
+  {
+    path: 'manufacturing-setup',
+    component: ManufacturingSetupComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.ManufacturingSetup' },
   },
   {
     path: 'pension-setup',
@@ -154,6 +168,8 @@ const routes: Routes = [
     InventorySetupComponent,
     HumanResourcesSetupComponent,
     FaSetupComponent,
+    ManufacturingSetupComponent,
+    ServiceSetupComponent,
     PensionSetupComponent,
     AcademicSetupComponent,
     CashManagementSetupComponent,

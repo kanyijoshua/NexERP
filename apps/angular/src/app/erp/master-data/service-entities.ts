@@ -1,0 +1,527 @@
+import { Injectable, inject } from '@angular/core';
+import {
+  CreateUpdateFaultCodeDto,
+  CreateUpdateResolutionCodeDto,
+  CreateUpdateServiceContractDto,
+  CreateUpdateServiceContractLineDto,
+  CreateUpdateServiceItemDto,
+  CreateUpdateServiceItemLineDto,
+  CreateUpdateServiceLineDto,
+  CreateUpdateServiceOrderDto,
+  CreateUpdateServiceOrderTypeDto,
+  FaultCodeDto,
+  FaultCodeService,
+  ResolutionCodeDto,
+  ResolutionCodeService,
+  ServiceContractDto,
+  ServiceContractLineDto,
+  ServiceContractLineService,
+  ServiceContractService,
+  ServiceContractStatus,
+  ServiceInvoicePeriod,
+  ServiceItemDto,
+  ServiceItemLineDto,
+  ServiceItemLineService,
+  ServiceItemService,
+  ServiceLedgerEntryDto,
+  ServiceLedgerEntryService,
+  ServiceLineDto,
+  ServiceLineService,
+  ServiceLineType,
+  ServiceOrderDto,
+  ServiceOrderService,
+  ServiceOrderStatus,
+  ServiceOrderTypeDto,
+  ServiceOrderTypeService,
+  ServicePriority,
+  WarrantyLedgerEntryDto,
+  WarrantyLedgerEntryService,
+  serviceContractStatusOptions,
+  serviceInvoicePeriodOptions,
+  serviceLedgerEntryTypeOptions,
+  serviceLineTypeOptions,
+  serviceOrderStatusOptions,
+  servicePriorityOptions,
+} from '@proxy/service-management';
+import { EMPTY, map } from 'rxjs';
+import { RecordEntity, RecordField } from '../erp-shared';
+import { codeField, codeTableEntity, enumOptions } from './entity-helpers';
+
+const SERVICE = 'Erp.Service';
+const SETUP = 'Erp.ServiceSetup';
+const today = () => new Date().toISOString().substring(0, 10);
+
+function readonly(field: string, labelKey: string, section?: string): RecordField {
+  return { field, labelKey, type: 'readonly', section };
+}
+
+/** Service items, contracts and orders, the service and warranty ledgers and the service code tables. */
+@Injectable({ providedIn: 'root' })
+export class ServiceEntities {
+  private readonly orderTypes = inject(ServiceOrderTypeService);
+  private readonly faultCodes = inject(FaultCodeService);
+  private readonly resolutionCodes = inject(ResolutionCodeService);
+  private readonly items = inject(ServiceItemService);
+  private readonly contracts = inject(ServiceContractService);
+  private readonly contractLines = inject(ServiceContractLineService);
+  private readonly orders = inject(ServiceOrderService);
+  private readonly itemLines = inject(ServiceItemLineService);
+  private readonly lines = inject(ServiceLineService);
+  private readonly serviceLedger = inject(ServiceLedgerEntryService);
+  private readonly warrantyLedger = inject(WarrantyLedgerEntryService);
+
+  readonly serviceOrderType = codeTableEntity<ServiceOrderTypeDto, CreateUpdateServiceOrderTypeDto>(this.orderTypes, {
+    key: 'serviceOrderType',
+    titleKey: 'Erp::ServiceOrderType',
+    pluralKey: 'Erp::ServiceOrderTypes',
+    icon: 'fas fa-tags',
+    permission: SETUP,
+    route: '/erp/service-order-types',
+  });
+
+  readonly faultCode = codeTableEntity<FaultCodeDto, CreateUpdateFaultCodeDto>(this.faultCodes, {
+    key: 'faultCode',
+    titleKey: 'Erp::FaultCode',
+    pluralKey: 'Erp::FaultCodes',
+    icon: 'fas fa-triangle-exclamation',
+    permission: SETUP,
+    route: '/erp/fault-codes',
+  });
+
+  readonly resolutionCode = codeTableEntity<ResolutionCodeDto, CreateUpdateResolutionCodeDto>(this.resolutionCodes, {
+    key: 'resolutionCode',
+    titleKey: 'Erp::ResolutionCode',
+    pluralKey: 'Erp::ResolutionCodes',
+    icon: 'fas fa-circle-check',
+    permission: SETUP,
+    route: '/erp/resolution-codes',
+  });
+
+  readonly serviceItem: RecordEntity<ServiceItemDto, CreateUpdateServiceItemDto> = {
+    key: 'serviceItem',
+    titleKey: 'Erp::ServiceItem',
+    pluralKey: 'Erp::ServiceItems',
+    icon: 'fas fa-screwdriver-wrench',
+    permission: SERVICE,
+    listRoute: ['/erp/service-items'],
+    chatterEntityType: 'ServiceItem',
+    columns: [
+      { field: 'no', labelKey: 'Erp::No', width: 120 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'customerNo', labelKey: 'Erp::CustomerNo', width: 120 },
+      { field: 'customerName', labelKey: 'Erp::CustomerName', width: 180 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 110 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 130 },
+      { field: 'warrantyEndingDate', labelKey: 'Erp::WarrantyEndingDate', type: 'date', width: 130 },
+    ],
+    sections: [
+      { key: 'general', labelKey: 'Erp::General' },
+      { key: 'warranty', labelKey: 'Erp::Warranty' },
+    ],
+    fields: [
+      { field: 'no', labelKey: 'Erp::No', type: 'text', maxLength: 20, createOnly: true, placeholderKey: 'Erp::NextFromSeries' },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250, wide: true },
+      codeField('customerNo', 'Erp::CustomerNo', 'customer', 'general', { required: true }),
+      codeField('itemNo', 'Erp::ItemNo', 'item'),
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', type: 'text', maxLength: 50 },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'checkbox' },
+      { field: 'installationDate', labelKey: 'Erp::InstallationDate', type: 'date', section: 'warranty' },
+      { field: 'warrantyStartingDate', labelKey: 'Erp::WarrantyStartingDate', type: 'date', section: 'warranty' },
+      { field: 'warrantyEndingDate', labelKey: 'Erp::WarrantyEndingDate', type: 'date', section: 'warranty' },
+    ],
+    getList: query => this.items.getList(query),
+    get: id => this.items.get(id),
+    create: input => this.items.create(input),
+    update: (id, input) => this.items.update(id, input),
+    delete: id => this.items.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ blocked: false }),
+    facts: dto => [
+      { labelKey: 'Erp::CustomerName', value: dto.customerName },
+      { labelKey: 'Erp::WarrantyEndingDate', value: dto.warrantyEndingDate },
+    ],
+  };
+
+  readonly serviceContract: RecordEntity<ServiceContractDto, CreateUpdateServiceContractDto> = {
+    key: 'serviceContract',
+    titleKey: 'Erp::ServiceContract',
+    pluralKey: 'Erp::ServiceContracts',
+    icon: 'fas fa-file-signature',
+    permission: SERVICE,
+    listRoute: ['/erp/service-contracts'],
+    chatterEntityType: 'ServiceContract',
+    columns: [
+      { field: 'no', labelKey: 'Erp::No', width: 120 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'customerNo', labelKey: 'Erp::CustomerNo', width: 120 },
+      { field: 'customerName', labelKey: 'Erp::CustomerName', width: 180 },
+      { field: 'status', labelKey: 'Erp::Status', type: 'select', options: enumOptions(serviceContractStatusOptions, 'ServiceContractStatus'), width: 110 },
+      { field: 'invoicePeriod', labelKey: 'Erp::InvoicePeriod', type: 'select', options: enumOptions(serviceInvoicePeriodOptions, 'ServiceInvoicePeriod'), width: 120 },
+      { field: 'nextInvoiceDate', labelKey: 'Erp::NextInvoiceDate', type: 'date', width: 130 },
+      { field: 'annualAmount', labelKey: 'Erp::AnnualAmount', type: 'currency', width: 130 },
+    ],
+    sections: [
+      { key: 'general', labelKey: 'Erp::General' },
+      { key: 'invoicing', labelKey: 'Erp::Invoicing' },
+    ],
+    fields: [
+      { field: 'no', labelKey: 'Erp::No', type: 'text', maxLength: 20, createOnly: true, placeholderKey: 'Erp::NextFromSeries' },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250, wide: true },
+      codeField('customerNo', 'Erp::CustomerNo', 'customer', 'general', { required: true }),
+      { field: 'startingDate', labelKey: 'Erp::StartingDate', type: 'date', required: true },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date' },
+      {
+        field: 'invoicePeriod',
+        labelKey: 'Erp::InvoicePeriod',
+        type: 'select',
+        options: enumOptions(serviceInvoicePeriodOptions, 'ServiceInvoicePeriod'),
+        section: 'invoicing',
+      },
+      readonly('nextInvoiceDate', 'Erp::NextInvoiceDate', 'invoicing'),
+      readonly('lastInvoiceDate', 'Erp::LastInvoiceDate', 'invoicing'),
+      readonly('lastInvoiceNo', 'Erp::LastInvoiceNo', 'invoicing'),
+      readonly('annualAmount', 'Erp::AnnualAmount', 'invoicing'),
+      readonly('periodAmount', 'Erp::PeriodAmount', 'invoicing'),
+    ],
+    getList: query => this.contracts.getList(query),
+    get: id => this.contracts.get(id),
+    create: input => this.contracts.create(input),
+    update: (id, input) => this.contracts.update(id, input),
+    delete: id => this.contracts.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ startingDate: today(), invoicePeriod: ServiceInvoicePeriod.Month }),
+    facts: dto => [
+      { labelKey: 'Erp::Status', value: ServiceContractStatus[dto.status] },
+      { labelKey: 'Erp::AnnualAmount', value: dto.annualAmount, type: 'currency' },
+      { labelKey: 'Erp::PeriodAmount', value: dto.periodAmount, type: 'currency' },
+      { labelKey: 'Erp::NextInvoiceDate', value: dto.nextInvoiceDate },
+    ],
+    actions: [
+      {
+        key: 'sign',
+        labelKey: 'Erp::SignContract',
+        icon: 'fas fa-file-signature',
+        permission: `${SERVICE}.Update`,
+        visible: dto => dto.status === ServiceContractStatus.Draft,
+        run: dto => this.contracts.sign(dto.id!),
+      },
+      {
+        key: 'invoice',
+        labelKey: 'Erp::InvoiceDuePeriods',
+        icon: 'fas fa-file-invoice-dollar',
+        permission: `${SERVICE}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        visible: dto => dto.status === ServiceContractStatus.Signed,
+        run: dto => this.contracts.invoiceDue(dto.id!, { asOfDate: today() }),
+      },
+      {
+        key: 'cancel',
+        labelKey: 'Erp::CancelContract',
+        icon: 'fas fa-ban',
+        permission: `${SERVICE}.Update`,
+        confirmKey: 'Erp::CancelContractConfirmation',
+        visible: dto => dto.status !== ServiceContractStatus.Cancelled,
+        run: dto => this.contracts.cancel(dto.id!),
+      },
+    ],
+    listActions: [
+      {
+        key: 'invoiceAll',
+        labelKey: 'Erp::InvoiceAllDueContracts',
+        icon: 'fas fa-file-invoice-dollar',
+        permission: `${SERVICE}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        run: () => this.contracts.invoiceAllDue({ asOfDate: today() }),
+      },
+    ],
+    parts: [
+      {
+        entity: 'serviceContractLine',
+        lines: dto => this.contractLines.getList({ serviceContractId: dto.id, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ serviceContractId: dto.id, lineValue: 0 }),
+        columns: ['serviceItemNo', 'description', 'lineValue'],
+        totals: ['lineValue'],
+        editable: dto => dto.status === ServiceContractStatus.Draft,
+      },
+    ],
+  };
+
+  readonly serviceContractLine: RecordEntity<ServiceContractLineDto, CreateUpdateServiceContractLineDto> = {
+    key: 'serviceContractLine',
+    titleKey: 'Erp::ServiceContractLine',
+    pluralKey: 'Erp::ServiceContractLines',
+    icon: 'fas fa-list',
+    permission: SERVICE,
+    listRoute: ['/erp/service-contracts'],
+    columns: [
+      { field: 'serviceItemNo', labelKey: 'Erp::ServiceItemNo', width: 130 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'lineValue', labelKey: 'Erp::AnnualAmount', type: 'currency', width: 130 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('serviceItemNo', 'Erp::ServiceItemNo', 'serviceItem'),
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'lineValue', labelKey: 'Erp::AnnualAmount', type: 'currency', min: 0 },
+    ],
+    getList: query => this.contractLines.getList(query),
+    get: id => this.contractLines.get(id),
+    create: input => this.contractLines.create(input),
+    update: (id, input) => this.contractLines.update(id, input),
+    delete: id => this.contractLines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.serviceItemNo ?? String(dto.lineNo), name: dto.description ?? undefined }),
+    newRecord: () => ({ lineValue: 0 }),
+  };
+
+  readonly serviceOrder: RecordEntity<ServiceOrderDto, CreateUpdateServiceOrderDto> = {
+    key: 'serviceOrder',
+    titleKey: 'Erp::ServiceOrder',
+    pluralKey: 'Erp::ServiceOrders',
+    icon: 'fas fa-screwdriver-wrench',
+    permission: SERVICE,
+    listRoute: ['/erp/service-orders'],
+    chatterEntityType: 'ServiceOrder',
+    columns: [
+      { field: 'no', labelKey: 'Erp::No', width: 120 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'customerNo', labelKey: 'Erp::CustomerNo', width: 120 },
+      { field: 'customerName', labelKey: 'Erp::CustomerName', width: 180 },
+      { field: 'status', labelKey: 'Erp::Status', type: 'select', options: enumOptions(serviceOrderStatusOptions, 'ServiceOrderStatus'), width: 120 },
+      { field: 'priority', labelKey: 'Erp::Priority', type: 'select', options: enumOptions(servicePriorityOptions, 'ServicePriority'), width: 100 },
+      { field: 'resourceNo', labelKey: 'Erp::Technician', width: 120 },
+      { field: 'orderDate', labelKey: 'Erp::OrderDate', type: 'date', width: 120 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      { field: 'no', labelKey: 'Erp::No', type: 'text', maxLength: 20, createOnly: true, placeholderKey: 'Erp::NextFromSeries' },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250, wide: true },
+      codeField('customerNo', 'Erp::CustomerNo', 'customer', 'general', { required: true }),
+      codeField('serviceOrderType', 'Erp::ServiceOrderType', 'serviceOrderType'),
+      { field: 'priority', labelKey: 'Erp::Priority', type: 'select', options: enumOptions(servicePriorityOptions, 'ServicePriority') },
+      { field: 'orderDate', labelKey: 'Erp::OrderDate', type: 'date', required: true },
+      codeField('resourceNo', 'Erp::Technician', 'resource'),
+      codeField('contractNo', 'Erp::ServiceContract', 'serviceContract'),
+      readonly('status', 'Erp::Status'),
+      readonly('finishingDate', 'Erp::FinishingDate'),
+      readonly('lastInvoiceNo', 'Erp::LastInvoiceNo'),
+    ],
+    getList: query => this.orders.getList(query),
+    get: id => this.orders.get(id),
+    create: input => this.orders.create(input),
+    update: (id, input) => this.orders.update(id, input),
+    delete: id => this.orders.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ priority: ServicePriority.Medium, orderDate: today() }),
+    facts: dto => [
+      { labelKey: 'Erp::Status', value: ServiceOrderStatus[dto.status] },
+      { labelKey: 'Erp::Amount', value: dto.amount, type: 'currency' },
+      { labelKey: 'Erp::WarrantyAmount', value: dto.warrantyAmount, type: 'currency' },
+    ],
+    actions: [
+      {
+        key: 'start',
+        labelKey: 'Erp::StartServiceOrder',
+        icon: 'fas fa-play',
+        permission: `${SERVICE}.Update`,
+        visible: dto => dto.status === ServiceOrderStatus.Pending || dto.status === ServiceOrderStatus.OnHold,
+        run: dto => this.orders.changeStatus(dto.id!, { status: ServiceOrderStatus.InProcess }),
+      },
+      {
+        key: 'hold',
+        labelKey: 'Erp::PutOnHold',
+        icon: 'fas fa-pause',
+        permission: `${SERVICE}.Update`,
+        visible: dto => dto.status === ServiceOrderStatus.Pending || dto.status === ServiceOrderStatus.InProcess,
+        run: dto => this.orders.changeStatus(dto.id!, { status: ServiceOrderStatus.OnHold }),
+      },
+      {
+        // Ships the parts, books the hours and costs and invoices what is not under warranty.
+        key: 'post',
+        labelKey: 'Erp::Post',
+        icon: 'fas fa-paper-plane',
+        permission: `${SERVICE}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        visible: dto => dto.status !== ServiceOrderStatus.Finished && dto.status !== ServiceOrderStatus.OnHold,
+        run: dto => this.orders.runPosting(dto.id!, { postingDate: today() }),
+      },
+    ],
+    parts: [
+      {
+        entity: 'serviceItemLine',
+        lines: dto => this.itemLines.getList({ serviceOrderId: dto.id, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ serviceOrderId: dto.id }),
+        columns: ['serviceItemNo', 'description', 'serialNo', 'faultCode', 'resolutionCode', 'faultComment', 'warranty'],
+        editable: dto => dto.status !== ServiceOrderStatus.Finished,
+      },
+      {
+        entity: 'serviceLine',
+        lines: dto => this.lines.getList({ serviceOrderId: dto.id, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ serviceOrderId: dto.id, type: ServiceLineType.Item, quantity: 1, lineDiscountPct: 0 }),
+        columns: ['serviceItemNo', 'type', 'no', 'description', 'quantity', 'unitPrice', 'lineDiscountPct', 'lineAmount', 'warranty', 'quantityPosted'],
+        totals: ['lineAmount'],
+        editable: dto => dto.status !== ServiceOrderStatus.Finished,
+      },
+    ],
+  };
+
+  readonly serviceItemLine: RecordEntity<ServiceItemLineDto, CreateUpdateServiceItemLineDto> = {
+    key: 'serviceItemLine',
+    titleKey: 'Erp::ServiceItemLine',
+    pluralKey: 'Erp::ServiceItemLines',
+    icon: 'fas fa-list',
+    permission: SERVICE,
+    listRoute: ['/erp/service-orders'],
+    columns: [
+      { field: 'serviceItemNo', labelKey: 'Erp::ServiceItemNo', width: 130 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 130 },
+      { field: 'faultCode', labelKey: 'Erp::FaultCode', width: 120 },
+      { field: 'resolutionCode', labelKey: 'Erp::ResolutionCode', width: 120 },
+      { field: 'faultComment', labelKey: 'Erp::FaultComment', width: 200 },
+      { field: 'warranty', labelKey: 'Erp::Warranty', type: 'boolean', width: 90 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('serviceItemNo', 'Erp::ServiceItemNo', 'serviceItem', 'general', { required: true }),
+      readonly('description', 'Erp::Description'),
+      readonly('serialNo', 'Erp::SerialNo'),
+      codeField('faultCode', 'Erp::FaultCode', 'faultCode'),
+      codeField('resolutionCode', 'Erp::ResolutionCode', 'resolutionCode'),
+      { field: 'faultComment', labelKey: 'Erp::FaultComment', type: 'text', maxLength: 250 },
+      { field: 'warranty', labelKey: 'Erp::Warranty', type: 'checkbox' },
+    ],
+    getList: query => this.itemLines.getList(query),
+    get: id => this.itemLines.get(id),
+    create: input => this.itemLines.create(input),
+    update: (id, input) => this.itemLines.update(id, input),
+    delete: id => this.itemLines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.serviceItemNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({}),
+  };
+
+  readonly serviceLine: RecordEntity<ServiceLineDto, CreateUpdateServiceLineDto> = {
+    key: 'serviceLine',
+    titleKey: 'Erp::ServiceLine',
+    pluralKey: 'Erp::ServiceLines',
+    icon: 'fas fa-list',
+    permission: SERVICE,
+    listRoute: ['/erp/service-orders'],
+    columns: [
+      { field: 'serviceItemNo', labelKey: 'Erp::ServiceItemNo', width: 120 },
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(serviceLineTypeOptions, 'ServiceLineType'), width: 110 },
+      { field: 'no', labelKey: 'Erp::No', width: 110 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 90 },
+      { field: 'unitPrice', labelKey: 'Erp::UnitPrice', type: 'currency', width: 110 },
+      { field: 'lineDiscountPct', labelKey: 'Erp::LineDiscountPct', type: 'number', width: 90 },
+      { field: 'lineAmount', labelKey: 'Erp::LineAmount', type: 'currency', width: 120 },
+      { field: 'warranty', labelKey: 'Erp::Warranty', type: 'boolean', width: 90 },
+      { field: 'quantityPosted', labelKey: 'Erp::QuantityPosted', type: 'number', width: 100 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('serviceItemNo', 'Erp::ServiceItemNo', 'serviceItem'),
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(serviceLineTypeOptions, 'ServiceLineType') },
+      { field: 'no', labelKey: 'Erp::No', type: 'text', required: true, maxLength: 20 },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      codeField('locationCode', 'Erp::LocationCode', 'location'),
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', required: true, min: 0 },
+      { field: 'unitPrice', labelKey: 'Erp::UnitPrice', type: 'currency', min: 0 },
+      { field: 'lineDiscountPct', labelKey: 'Erp::LineDiscountPct', type: 'number', min: 0 },
+      readonly('lineAmount', 'Erp::LineAmount'),
+      { field: 'warranty', labelKey: 'Erp::Warranty', type: 'checkbox' },
+      readonly('quantityPosted', 'Erp::QuantityPosted'),
+    ],
+    getList: query => this.lines.getList(query),
+    get: id => this.lines.get(id),
+    create: input => this.lines.create(input),
+    update: (id, input) => this.lines.update(id, input),
+    delete: id => this.lines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ type: ServiceLineType.Item, quantity: 1, lineDiscountPct: 0 }),
+  };
+
+  readonly serviceLedgerEntry: RecordEntity<ServiceLedgerEntryDto, never> = {
+    key: 'serviceLedgerEntry',
+    titleKey: 'Erp::ServiceLedgerEntry',
+    pluralKey: 'Erp::ServiceLedgerEntries',
+    icon: 'fas fa-receipt',
+    permission: SERVICE,
+    listRoute: ['/erp/service-ledger-entries'],
+    readOnly: true,
+    columns: [
+      { field: 'entryNo', labelKey: 'Erp::EntryNo', type: 'number', width: 90 },
+      { field: 'entryType', labelKey: 'Erp::EntryType', type: 'select', options: enumOptions(serviceLedgerEntryTypeOptions, 'ServiceLedgerEntryType'), width: 100 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'documentNo', labelKey: 'Erp::DocumentNo', width: 120 },
+      { field: 'serviceOrderNo', labelKey: 'Erp::ServiceOrderNo', width: 120 },
+      { field: 'serviceContractNo', labelKey: 'Erp::ServiceContractNo', width: 120 },
+      { field: 'serviceItemNo', labelKey: 'Erp::ServiceItemNo', width: 120 },
+      { field: 'customerNo', labelKey: 'Erp::CustomerNo', width: 110 },
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(serviceLineTypeOptions, 'ServiceLineType'), width: 100 },
+      { field: 'no', labelKey: 'Erp::No', width: 100 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 90 },
+      { field: 'costAmount', labelKey: 'Erp::CostAmount', type: 'currency', width: 120 },
+      { field: 'amount', labelKey: 'Erp::Amount', type: 'currency', width: 120 },
+      { field: 'warranty', labelKey: 'Erp::Warranty', type: 'boolean', width: 90 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [readonly('documentNo', 'Erp::DocumentNo'), readonly('description', 'Erp::Description'), readonly('costAmount', 'Erp::CostAmount'), readonly('amount', 'Erp::Amount')],
+    getList: query => this.serviceLedger.getList(query),
+    get: id => this.serviceLedger.get(id),
+    create: () => EMPTY,
+    update: () => EMPTY,
+    delete: () => EMPTY,
+    toItem: dto => ({ id: dto.id, code: String(dto.entryNo), name: dto.documentNo ?? undefined }),
+    newRecord: () => ({}),
+  };
+
+  readonly warrantyLedgerEntry: RecordEntity<WarrantyLedgerEntryDto, never> = {
+    key: 'warrantyLedgerEntry',
+    titleKey: 'Erp::WarrantyLedgerEntry',
+    pluralKey: 'Erp::WarrantyLedgerEntries',
+    icon: 'fas fa-shield-halved',
+    permission: SERVICE,
+    listRoute: ['/erp/warranty-ledger-entries'],
+    readOnly: true,
+    columns: [
+      { field: 'entryNo', labelKey: 'Erp::EntryNo', type: 'number', width: 90 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'documentNo', labelKey: 'Erp::DocumentNo', width: 120 },
+      { field: 'serviceOrderNo', labelKey: 'Erp::ServiceOrderNo', width: 120 },
+      { field: 'serviceItemNo', labelKey: 'Erp::ServiceItemNo', width: 120 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 110 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 130 },
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(serviceLineTypeOptions, 'ServiceLineType'), width: 100 },
+      { field: 'no', labelKey: 'Erp::No', width: 100 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 90 },
+      { field: 'amount', labelKey: 'Erp::Amount', type: 'currency', width: 120 },
+      { field: 'costAmount', labelKey: 'Erp::CostAmount', type: 'currency', width: 120 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [readonly('documentNo', 'Erp::DocumentNo'), readonly('description', 'Erp::Description'), readonly('amount', 'Erp::Amount'), readonly('costAmount', 'Erp::CostAmount')],
+    getList: query => this.warrantyLedger.getList(query),
+    get: id => this.warrantyLedger.get(id),
+    create: () => EMPTY,
+    update: () => EMPTY,
+    delete: () => EMPTY,
+    toItem: dto => ({ id: dto.id, code: String(dto.entryNo), name: dto.documentNo ?? undefined }),
+    newRecord: () => ({}),
+  };
+
+  get all(): RecordEntity[] {
+    return [
+      this.serviceOrderType,
+      this.faultCode,
+      this.resolutionCode,
+      this.serviceItem,
+      this.serviceContract,
+      this.serviceContractLine,
+      this.serviceOrder,
+      this.serviceItemLine,
+      this.serviceLine,
+      this.serviceLedgerEntry,
+      this.warrantyLedgerEntry,
+    ];
+  }
+}

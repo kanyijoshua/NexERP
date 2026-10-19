@@ -66,6 +66,16 @@ public class EmployeeLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
         DimensionSetId = dimensionSetId;
     }
 
+    void IApplicableLedgerEntry.RestoreRemaining(decimal amount, decimal amountLcy)
+    {
+        RemainingAmount += amount;
+        Open = RemainingAmount != 0m;
+        if (Open)
+        {
+            ClosedByEntryNo = 0;
+        }
+    }
+
     void IApplicableLedgerEntry.ReduceRemaining(decimal amount, decimal amountLcy, long closedByEntryNo)
     {
         RemainingAmount -= amount;

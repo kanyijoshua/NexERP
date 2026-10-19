@@ -181,6 +181,13 @@ public class Customer : CompanyAggregateRoot, IHasNo
 
     public void SetCreditLimit(decimal creditLimit) => CreditLimit = creditLimit;
 
+    /// <summary>The reminder and finance charge terms the customer is chased by.</summary>
+    public void SetCollectionTerms(string reminderTermsCode, string finChargeTermsCode)
+    {
+        ReminderTermsCode = CodeTableEntity.NormalizeCode(Check.Length(reminderTermsCode, nameof(reminderTermsCode), 10));
+        FinChargeTermsCode = CodeTableEntity.NormalizeCode(Check.Length(finChargeTermsCode, nameof(finChargeTermsCode), 10));
+    }
+
     public void SetPaymentTerms(string paymentTermsCode) =>
         PaymentTermsCode = Check.Length(
             paymentTermsCode,

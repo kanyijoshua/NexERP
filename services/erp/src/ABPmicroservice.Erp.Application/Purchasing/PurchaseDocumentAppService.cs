@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
@@ -7,6 +8,8 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
+using ABPmicroservice.Erp.Pricing;
+using ABPmicroservice.Erp.Sales;
 using ABPmicroservice.Erp.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -83,8 +86,9 @@ public class PurchaseDocumentAppService
         );
 
         await ApplyHeaderAsync(header, input, vendor);
-        ReplaceLines(header, input);
+        await UpsertLinesAsync(header, input);
         await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, vendor);
+        ApplyQuantitiesToPost(header, input);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -104,8 +108,9 @@ public class PurchaseDocumentAppService
 
         var vendor = await _vendorRepository.GetAsync(header.VendorId);
         await ApplyHeaderAsync(header, input, vendor);
-        ReplaceLines(header, input);
+        await UpsertLinesAsync(header, input);
         await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, vendor);
+        ApplyQuantitiesToPost(header, input);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -186,6 +191,93 @@ public class PurchaseDocumentAppService
     public async Task CancelApprovalRequestAsync(Guid id)
     {
         await _approvalsManager.CancelApprovalRequestAsync(ApprovalKind, id, GetUserId());
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Post)]
+    public async Task<PurchasePostingResultDto> RunOrderPostingAsync(Guid id, PurchaseOrderPostingInput input)
+    {
+        var toPost = await GetEntityByIdAsync(id);
+        if (!toPost.IsOrderType)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.DocumentNotAnOrder).WithData("documentNo", toPost.No);
+        }
+
+        // Posting releases an open document first, so the same approval rule applies.
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, toPost);
+
+        foreach (var line in input.Lines)
+        {
+            toPost.SetQuantitiesToPost(line.LineId, line.QtyToReceive, line.QtyToInvoice);
+        }
+
+        var result = await _purchasePostingEngine.PostAsync(id, input.Receive, input.Invoice);
+        return new PurchasePostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = result.Invoice?.No,
+            ReceiptNo = result.Receipt?.No,
+        };
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Create)]
+    public async Task<PurchaseHeaderDto> MakeOrderAsync(Guid id, MakeOrderInput input)
+    {
+        var order = await Flow.MakeOrderAsync(id, input?.PostingDate ?? Clock.Now.Date);
+        return await MapToGetOutputDtoAsync(order);
+    }
+
+    public async Task<List<OpenReceiptLineDto>> GetOpenReceiptLinesAsync(Guid id)
+    {
+        await CheckGetPolicyAsync();
+        var lines = await Flow.GetOpenReceiptLinesAsync(id);
+        return lines
+            .Select(x => new OpenReceiptLineDto
+            {
+                ReceiptLineId = x.Line.Id,
+                ReceiptNo = x.Receipt.No,
+                PostingDate = x.Receipt.PostingDate,
+                OrderNo = x.Receipt.OrderNo,
+                LineNo = x.Line.LineNo,
+                Type = x.Line.Type,
+                No = x.Line.No,
+                Description = x.Line.Description,
+                Quantity = x.Line.Quantity,
+                QtyNotInvoiced = x.Line.QtyNotInvoiced,
+                DirectUnitCost = x.Line.DirectUnitCost,
+            })
+            .ToList();
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<PurchaseHeaderDto> CollectReceiptLinesAsync(Guid id, GetReceiptLinesInput input)
+    {
+        return await MapToGetOutputDtoAsync(await Flow.GetReceiptLinesAsync(id, input.ReceiptLineIds));
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<PurchaseHeaderDto> CopyLinesFromAsync(Guid id, CopyDocumentLinesInput input)
+    {
+        return await MapToGetOutputDtoAsync(await Flow.CopyLinesAsync(id, input.SourceDocumentId));
+    }
+
+    private PurchaseDocumentFlow Flow => LazyServiceProvider.LazyGetRequiredService<PurchaseDocumentFlow>();
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<PurchaseHeaderDto> CloseOrderAsync(Guid id, CloseCancelPurchaseOrderInput input)
+    {
+        var header = await GetEntityByIdAsync(id);
+        header.CloseLpo(CurrentUser.UserName ?? CurrentUser.Id?.ToString() ?? "System", input.Comments);
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<PurchaseHeaderDto> CancelOrderAsync(Guid id, CloseCancelPurchaseOrderInput input)
+    {
+        var header = await GetEntityByIdAsync(id);
+        header.CancelLpo(CurrentUser.UserName ?? CurrentUser.Id?.ToString() ?? "System", input.Comments);
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
     }
 
     private const ApprovalDocumentKind ApprovalKind = ApprovalDocumentKind.PurchaseDocument;
@@ -320,25 +412,34 @@ public class PurchaseDocumentAppService
             input.CreditorNo,
             input.ReasonCode
         );
+        header.SetProcurementDetails(
+            input.RequisitionNo,
+            input.TenderNo,
+            input.ContractCommencementDate,
+            input.ContractCompletionDate
+        );
     }
 
-    // The client always sends the whole document, so the line set is replaced wholesale.
-    private void ReplaceLines(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input)
+    /// <summary>
+    /// The client always sends the whole document. Lines it sends back with their id are changed in
+    /// place, so what has been received and invoiced on them is kept; lines it leaves out are
+    /// removed, and new lines are added. An item line without a cost takes the price list's.
+    /// </summary>
+    private async Task UpsertLinesAsync(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input)
     {
-        header.ClearLines();
+        var sent = input.Lines.Where(l => l.Id.HasValue).Select(l => l.Id!.Value).ToHashSet();
+        foreach (var removed in header.Lines.Where(l => !sent.Contains(l.Id)).Select(l => l.Id).ToList())
+        {
+            header.RemoveLine(removed);
+        }
 
         foreach (var lineInput in input.Lines)
         {
-            var line = header.AddLine(
-                lineInput.Id ?? GuidGenerator.Create(),
-                lineInput.Type,
-                lineInput.No,
-                lineInput.Description,
-                lineInput.Quantity,
-                lineInput.DirectUnitCost,
-                lineInput.LineDiscountPercent,
-                lineInput.UnitOfMeasureCode
-            );
+            var (directUnitCost, discount) = await CostOfAsync(header, lineInput);
+            var existing = lineInput.Id.HasValue ? header.Lines.FirstOrDefault(l => l.Id == lineInput.Id.Value) : null;
+            var line = existing != null
+                ? header.UpdateLine(existing.Id, lineInput.Type, lineInput.No, lineInput.Description, lineInput.Quantity, directUnitCost, discount, lineInput.UnitOfMeasureCode)
+                : header.AddLine(GuidGenerator.Create(), lineInput.Type, lineInput.No, lineInput.Description, lineInput.Quantity, directUnitCost, discount, lineInput.UnitOfMeasureCode);
 
             if (!string.IsNullOrWhiteSpace(lineInput.LocationCode))
             {
@@ -368,9 +469,69 @@ public class PurchaseDocumentAppService
             {
                 line.SetDeferralCode(lineInput.DeferralCode);
             }
-            if (lineInput.QtyToReceive != 0 || lineInput.QuantityReceived != 0 || lineInput.QtyToInvoice != 0 || lineInput.QuantityInvoiced != 0)
+            await SetVariantAndUnitAsync(line, lineInput.VariantCode);
+        }
+    }
+
+    /// <summary>The variant of an item line and how many base units one unit of its unit of measure holds.</summary>
+    private async Task SetVariantAndUnitAsync(PurchaseLine line, string variantCode)
+    {
+        line.SetVariant(variantCode);
+        if (line.Type != DocumentLineType.Item || line.No.IsNullOrWhiteSpace())
+        {
+            line.SetQtyPerUnitOfMeasure(1m);
+            return;
+        }
+
+        var item = await LazyServiceProvider.LazyGetRequiredService<IRepository<Item, Guid>>().FirstOrDefaultAsync(i => i.No == line.No);
+        if (item == null)
+        {
+            return;
+        }
+
+        var units = LazyServiceProvider.LazyGetRequiredService<ItemUnitOfMeasureManager>();
+        await units.EnsureVariantAsync(item.No, line.VariantCode);
+        line.SetQtyPerUnitOfMeasure(await units.GetQtyPerAsync(item, line.UnitOfMeasureCode));
+    }
+
+    /// <summary>The cost an item line gets when it is sent without one.</summary>
+    private async Task<(decimal DirectUnitCost, decimal Discount)> CostOfAsync(PurchaseHeader header, PurchaseLineInputDto line)
+    {
+        if (line.Type != DocumentLineType.Item || line.DirectUnitCost != 0m || line.No.IsNullOrWhiteSpace())
+        {
+            return (line.DirectUnitCost, line.LineDiscountPercent);
+        }
+
+        var quote = await LazyServiceProvider.LazyGetRequiredService<PriceCalculator>().FindPriceAsync(new PriceQuery
+        {
+            PriceType = PriceType.Purchase,
+            PartyNo = header.BuyFromVendorNo,
+            ItemNo = line.No,
+            UnitOfMeasureCode = line.UnitOfMeasureCode,
+            Quantity = line.Quantity,
+            CurrencyCode = header.CurrencyCode,
+            Date = header.PostingDate,
+        });
+        return (quote.UnitPrice, line.LineDiscountPercent != 0m ? line.LineDiscountPercent : quote.LineDiscountPercent);
+    }
+
+    /// <summary>The quantities to receive and invoice sent with the lines of an order, in the order the lines were sent.</summary>
+    private static void ApplyQuantitiesToPost(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input)
+    {
+        if (!header.IsOrderType && header.DocumentType != PurchaseDocumentType.BlanketOrder)
+        {
+            return;
+        }
+
+        var lines = header.Lines.OrderBy(l => l.LineNo).ToList();
+        for (var i = 0; i < input.Lines.Count && i < lines.Count; i++)
+        {
+            var sent = input.Lines[i];
+            if (sent.QtyToReceive.HasValue || sent.QtyToInvoice.HasValue)
             {
-                line.SetQuantities(lineInput.QtyToReceive, lineInput.QuantityReceived, lineInput.QtyToInvoice, lineInput.QuantityInvoiced);
+                var line = (sent.Id.HasValue ? lines.FirstOrDefault(l => l.Id == sent.Id.Value) : null) ?? lines[i];
+                var qtyToReceive = sent.QtyToReceive ?? line.QtyToReceive;
+                header.SetQuantitiesToPost(line.Id, qtyToReceive, sent.QtyToInvoice ?? Math.Min(line.QtyToInvoice, line.QtyReceivedNotInvoiced + qtyToReceive));
             }
         }
     }

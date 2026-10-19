@@ -1,4 +1,12 @@
 import type { CreateUpdateSalesHeaderDto, GetSalesDocumentListInput, SalesHeaderDto } from './models';
+import type {
+  CopyDocumentLinesInput,
+  GetShipmentLinesInput,
+  MakeOrderInput,
+  OpenShipmentLineDto,
+  SalesOrderPostingInput,
+  SalesPostingResultDto,
+} from './orders.models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -89,6 +97,45 @@ export class SalesDocumentService {
     this.restService.request<any, SalesHeaderDto>({
       method: 'PUT',
       url: `/api/erp/sales-document/${id}`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  runOrderPosting = (id: string, input: SalesOrderPostingInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesPostingResultDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/run-order-posting`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  makeOrder = (id: string, input: MakeOrderInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/make-order`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  getOpenShipmentLines = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, OpenShipmentLineDto[]>({
+      method: 'GET',
+      url: `/api/erp/sales-document/${id}/open-shipment-lines`,
+    },
+    { apiName: this.apiName,...config });
+
+  collectShipmentLines = (id: string, input: GetShipmentLinesInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/collect-shipment-lines`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  copyLinesFrom = (id: string, input: CopyDocumentLinesInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/copy-lines-from`,
       body: input,
     },
     { apiName: this.apiName,...config });

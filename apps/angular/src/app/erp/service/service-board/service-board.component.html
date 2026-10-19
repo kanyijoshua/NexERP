@@ -1,0 +1,29 @@
+<erp-page-toolbar title="Erp::ServiceBoard" breadcrumb="Erp::Menu:Service" icon="fas fa-table-columns" [showSearch]="false" [showCreate]="false">
+  <div class="d-flex align-items-center gap-2">
+    <label class="small text-secondary mb-0" for="board-technician">{{ 'Erp::Technician' | abpLocalization }}</label>
+    <erp-lookup inputId="board-technician" entity="resource" [(ngModel)]="technician" (ngModelChange)="load()"></erp-lookup>
+  </div>
+  <a class="btn btn-sm btn-primary" routerLink="/erp/service-orders" *abpPermission="'Erp.Service.Create'">
+    <i class="fas fa-plus me-1"></i>{{ 'Erp::ServiceOrders' | abpLocalization }}
+  </a>
+</erp-page-toolbar>
+
+<erp-kanban-board [columns]="columns()" [cardId]="cardId" [cardTemplate]="card" (moved)="onMoved($event)"></erp-kanban-board>
+
+<ng-template #card let-card>
+  <div role="button" tabindex="0" (click)="open(card)" (keydown.enter)="open(card)">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <span class="fw-semibold small">{{ card.no }} · {{ card.description }}</span>
+      @if (card.priority === priorityHigh) {
+        <i class="fas fa-circle-exclamation text-danger small" [title]="'Erp::Enum:ServicePriority.High' | abpLocalization"></i>
+      }
+    </div>
+    <div class="small text-secondary">{{ card.customerName }}</div>
+    <div class="d-flex justify-content-between small mt-1">
+      <span class="font-monospace">{{ card.orderDate | date: 'mediumDate' }}</span>
+      @if (card.resourceNo) {
+        <span class="badge bg-light text-secondary border"><i class="fas fa-user-gear me-1"></i>{{ card.resourceNo }}</span>
+      }
+    </div>
+  </div>
+</ng-template>

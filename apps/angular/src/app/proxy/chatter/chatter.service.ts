@@ -54,5 +54,19 @@ export class ChatterService {
     },
     { apiName: this.apiName,...config });
 
+  completeTask = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, DocumentActivityTaskDto>({
+      method: 'POST',
+      url: `/api/erp/chatter/${id}/complete-task`,
+    },
+    { apiName: this.apiName,...config });
+
+  getMyTasks = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ListResultDto<DocumentActivityTaskDto>>({
+      method: 'GET',
+      url: '/api/erp/chatter/my-tasks',
+    },
+    { apiName: this.apiName,...config });
+
   constructor(private restService: RestService) {}
 }

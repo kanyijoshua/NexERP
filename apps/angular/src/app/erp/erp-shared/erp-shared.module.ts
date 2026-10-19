@@ -13,6 +13,7 @@ import { ChatterWidgetComponent } from '../components/chatter-widget/chatter-wid
 import { DocumentPageComponent } from './document-page/document-page.component';
 import { JournalPageComponent } from './journal-page/journal-page.component';
 import { KanbanBoardComponent } from './kanban-board/kanban-board.component';
+import { WeekGridComponent } from './week-grid/week-grid.component';
 import { LineGridComponent } from './line-grid/line-grid.component';
 import { LookupComponent } from './lookup/lookup.component';
 import { PageToolbarComponent } from './page-toolbar/page-toolbar.component';
@@ -48,6 +49,7 @@ const DECLARATIONS = [
   DocumentPageComponent,
   JournalPageComponent,
   KanbanBoardComponent,
+  WeekGridComponent,
   ReportPageComponent,
   SmartButtonsComponent,
   RecordFormComponent,

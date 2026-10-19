@@ -18,6 +18,20 @@ public class ItemDto : FullAuditedEntityDto<Guid>
     public string InventoryPostingGroup { get; set; }
     public string VatProdPostingGroup { get; set; }
     public bool Blocked { get; set; }
+    public CostingMethod CostingMethod { get; set; }
+    public string ItemTrackingCode { get; set; }
+    public ABPmicroservice.Erp.Manufacturing.ReplenishmentSystem ReplenishmentSystem { get; set; }
+    public string ProductionBomNo { get; set; }
+    public string RoutingNo { get; set; }
+    public ABPmicroservice.Erp.Manufacturing.ReorderPolicy ReorderPolicy { get; set; }
+    public decimal ReorderPoint { get; set; }
+    public decimal ReorderQuantity { get; set; }
+    public decimal MaximumInventory { get; set; }
+    public decimal SafetyStock { get; set; }
+    public string LeadTimeCalculation { get; set; }
+    public decimal StandardCost { get; set; }
+    public string VendorNo { get; set; }
+    public decimal LastDirectCost { get; set; }
 }
 
 public class CreateUpdateItemDto
@@ -33,6 +47,19 @@ public class CreateUpdateItemDto
     public string GenProdPostingGroup { get; set; }
     public string InventoryPostingGroup { get; set; }
     public string VatProdPostingGroup { get; set; }
+    public CostingMethod CostingMethod { get; set; }
+    public string ItemTrackingCode { get; set; }
+    public ABPmicroservice.Erp.Manufacturing.ReplenishmentSystem ReplenishmentSystem { get; set; }
+    public string ProductionBomNo { get; set; }
+    public string RoutingNo { get; set; }
+    public ABPmicroservice.Erp.Manufacturing.ReorderPolicy ReorderPolicy { get; set; }
+    public decimal ReorderPoint { get; set; }
+    public decimal ReorderQuantity { get; set; }
+    public decimal MaximumInventory { get; set; }
+    public decimal SafetyStock { get; set; }
+    public string LeadTimeCalculation { get; set; }
+    public decimal StandardCost { get; set; }
+    public string VendorNo { get; set; }
 }
 
 public class GetItemListInput : ErpPagedListInput
@@ -94,6 +121,14 @@ public class ItemLedgerEntryDto : EntityDto<Guid>
     public decimal UnitCost { get; set; }
     public decimal SalesAmount { get; set; }
     public string LocationCode { get; set; }
+    public string VariantCode { get; set; }
+    public string LotNo { get; set; }
+    public string SerialNo { get; set; }
+    public DateTime? ExpirationDate { get; set; }
+    public decimal InvoicedQuantity { get; set; }
+    public decimal RemainingQuantity { get; set; }
+    public bool Open { get; set; }
+    public decimal CostAmountActual { get; set; }
 }
 
 public class GetItemLedgerEntryListInput : ErpPagedListInput
@@ -101,4 +136,7 @@ public class GetItemLedgerEntryListInput : ErpPagedListInput
     public Guid? ItemId { get; set; }
     public string DocumentNo { get; set; }
     public ItemLedgerEntryType? EntryType { get; set; }
+    public string LocationCode { get; set; }
+    public string LotNo { get; set; }
+    public bool? Open { get; set; }
 }

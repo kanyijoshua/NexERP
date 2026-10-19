@@ -71,6 +71,8 @@ public class GenJnlPostLine : DomainService
     private IRepository<VatEntry, Guid> VatEntryRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<VatEntry, Guid>>();
     private PostingSetupManager PostingSetupManager => LazyServiceProvider.LazyGetRequiredService<PostingSetupManager>();
     private CurrencyExchangeRateManager CurrencyManager => LazyServiceProvider.LazyGetRequiredService<CurrencyExchangeRateManager>();
+    private EntryApplicationManager ApplicationManager => LazyServiceProvider.LazyGetRequiredService<EntryApplicationManager>();
+    private DeferralPoster DeferralPoster => LazyServiceProvider.LazyGetRequiredService<DeferralPoster>();
 
     public GenJnlPostLine(
         IRepository<GLAccount, Guid> glAccountRepository,
@@ -110,6 +112,8 @@ public class GenJnlPostLine : DomainService
         public string Description => Line.Description;
         public Guid DimensionSetId => Line.DimensionSetId;
         public string CurrencyCode => Line.CurrencyCode;
+
+        public ApplicationPostingInfo ApplicationInfo => new(PostingDate, DocumentType, DocumentNo, Description, DimensionSetId, Context);
     }
 
     /// <summary>One side of a journal line: the account or the balancing account.</summary>
@@ -121,7 +125,8 @@ public class GenJnlPostLine : DomainService
         GeneralPostingType GenPostingType,
         string VatBusPostingGroup,
         string VatProdPostingGroup,
-        string AppliesToDocNo
+        string AppliesToDocNo,
+        string DeferralCode = null
     );
 
     /// <summary>
@@ -152,7 +157,8 @@ public class GenJnlPostLine : DomainService
                 line.GenPostingType,
                 line.VatBusPostingGroup,
                 line.VatProdPostingGroup,
-                accountIsParty ? line.AppliesToDocNo : null
+                accountIsParty ? line.AppliesToDocNo : null,
+                line.DeferralCode
             )
         );
 
@@ -371,6 +377,7 @@ public class GenJnlPostLine : DomainService
         if (!hasVat)
         {
             await PostGL(line, side.AccountNo, side.AmountLcy, sourceNo: null);
+            await DeferAsync(line, side, side.AmountLcy);
             return;
         }
 
@@ -381,6 +388,7 @@ public class GenJnlPostLine : DomainService
         if (vat.Base != 0m && setup.VatCalculationType != VatCalculationType.FullVat)
         {
             await PostGL(line, side.AccountNo, vat.Base, sourceNo: null);
+            await DeferAsync(line, side, vat.Base);
         }
 
         await PostVatAsync(
@@ -394,6 +402,30 @@ public class GenJnlPostLine : DomainService
             line.DocumentNo,
             line.BillToPayToNo,
             line.Description,
+            line.Context
+        );
+    }
+
+    /// <summary>Spreads what a G/L account side posted over the periods of its deferral template.</summary>
+    private async Task DeferAsync(LineContext line, Side side, decimal amountLcy)
+    {
+        if (side.DeferralCode == null || amountLcy == 0m)
+        {
+            return;
+        }
+
+        await DeferralPoster.PostAsync(
+            side.DeferralCode,
+            DeferralSourceType.GLJournal,
+            side.AccountNo,
+            amountLcy,
+            line.PostingDate,
+            line.DocumentType,
+            line.DocumentNo,
+            line.Line.LineNo,
+            line.Description,
+            line.BillToPayToNo,
+            line.DimensionSetId,
             line.Context
         );
     }
@@ -428,23 +460,25 @@ public class GenJnlPostLine : DomainService
             RegisterNo = line.Context.Register.No,
         };
 
-        var realized = 0m;
+        var discount = await PaymentDiscountAsync(line, customer.PaymentTermsCode, side.Amount);
+        entry.SetPaymentDiscount(discount.Date, discount.Possible);
+        await ApplicationManager.WriteInitialEntryAsync(PartyLedgerType.Customer, entry, line.DocumentType, line.Context);
+
+        // The receivables control account must move with the subledger, or the books do not balance.
+        await PostGL(line, receivablesAccountNo, side.AmountLcy, customer.No);
+
+        var outcome = new ApplicationOutcome(0m, 0m);
         if (side.AppliesToDocNo != null)
         {
             var open = await FindOpenEntryAsync(_custLedgerEntryRepository, e => e.CustomerId == customer.Id && e.Open, side.AppliesToDocNo);
-            realized = EntryApplication.Apply(entry, open);
-            await _custLedgerEntryRepository.UpdateAsync(open);
+            outcome = await ApplicationManager.ApplyOnPostingAsync(PartyLedgerType.Customer, entry, open, line.ApplicationInfo);
         }
 
         line.Context.Register.NoteCustomerEntry(entry.EntryNo);
         await _custLedgerEntryRepository.InsertAsync(entry);
 
-        customer.ApplyBalance(side.AmountLcy - realized);
+        customer.ApplyBalance(side.AmountLcy + outcome.BalanceChangeLcy);
         await _customerRepository.UpdateAsync(customer);
-
-        // The receivables control account must move with the subledger, or the books do not balance.
-        await PostGL(line, receivablesAccountNo, side.AmountLcy, customer.No);
-        await PostRealizedAsync(line, receivablesAccountNo, entry.CurrencyCode, realized, customer.No);
     }
 
     private async Task PostVendorEntryAsync(LineContext line, Side side)
@@ -480,22 +514,24 @@ public class GenJnlPostLine : DomainService
             RegisterNo = line.Context.Register.No,
         };
 
-        var realized = 0m;
+        var discount = await PaymentDiscountAsync(line, vendor.PaymentTermsCode, side.Amount);
+        entry.SetPaymentDiscount(discount.Date, discount.Possible);
+        await ApplicationManager.WriteInitialEntryAsync(PartyLedgerType.Vendor, entry, line.DocumentType, line.Context);
+
+        await PostGL(line, payablesAccountNo, side.AmountLcy, vendor.No);
+
+        var outcome = new ApplicationOutcome(0m, 0m);
         if (side.AppliesToDocNo != null)
         {
             var open = await FindOpenEntryAsync(_vendorLedgerEntryRepository, e => e.VendorId == vendor.Id && e.Open, side.AppliesToDocNo);
-            realized = EntryApplication.Apply(entry, open);
-            await _vendorLedgerEntryRepository.UpdateAsync(open);
+            outcome = await ApplicationManager.ApplyOnPostingAsync(PartyLedgerType.Vendor, entry, open, line.ApplicationInfo);
         }
 
         line.Context.Register.NoteVendorEntry(entry.EntryNo);
         await _vendorLedgerEntryRepository.InsertAsync(entry);
 
-        vendor.ApplyBalance(side.AmountLcy - realized);
+        vendor.ApplyBalance(side.AmountLcy + outcome.BalanceChangeLcy);
         await _vendorRepository.UpdateAsync(vendor);
-
-        await PostGL(line, payablesAccountNo, side.AmountLcy, vendor.No);
-        await PostRealizedAsync(line, payablesAccountNo, entry.CurrencyCode, realized, vendor.No);
     }
 
     private async Task PostBankEntryAsync(LineContext line, Side side)
@@ -588,21 +624,30 @@ public class GenJnlPostLine : DomainService
     }
 
     /// <summary>
-    /// Clears the realized difference out of the control account and into the currency's realized
-    /// gain or loss account. Positive <paramref name="realized"/> is a loss.
+    /// The payment discount an invoice offers: the line's own discount when it carries one, otherwise
+    /// the party's payment terms. A credit memo offers one only when the terms say so.
     /// </summary>
-    private async Task PostRealizedAsync(LineContext line, string controlAccountNo, string currencyCode, decimal realized, string sourceNo)
+    private async Task<(DateTime? Date, decimal Possible)> PaymentDiscountAsync(LineContext line, string paymentTermsCode, decimal amount)
     {
-        if (realized == 0m || currencyCode == null)
+        if (line.Line.PaymentDiscountPct > 0m && line.Line.PmtDiscountDate.HasValue)
         {
-            return;
+            return (line.Line.PmtDiscountDate, CurrencyExchangeRateManager.RoundLcy(amount * line.Line.PaymentDiscountPct / 100m));
         }
 
-        var currency = await CurrencyManager.GetCurrencyAsync(currencyCode);
-        var gainLossAccountNo = currency.GetGainLossAccount(gain: realized < 0m, realized: true);
+        if (line.DocumentType is not (GLEntryDocumentType.Invoice or GLEntryDocumentType.CreditMemo))
+        {
+            return (null, 0m);
+        }
 
-        await PostGL(line, controlAccountNo, -realized, sourceNo);
-        await PostGL(line, gainLossAccountNo, realized, sourceNo);
+        var code = CodeTableEntity.NormalizeCode(paymentTermsCode);
+        var terms = code == null ? null : await PaymentTermsRepository.FirstOrDefaultAsync(t => t.Code == code);
+        if (terms == null || terms.DiscountPercent == 0m || (line.DocumentType == GLEntryDocumentType.CreditMemo && !terms.CalcPmtDiscOnCrMemos))
+        {
+            return (null, 0m);
+        }
+
+        var baseDate = line.DocumentDate == default ? line.PostingDate : line.DocumentDate;
+        return (terms.CalculateDiscountDate(baseDate), CurrencyExchangeRateManager.RoundLcy(amount * terms.DiscountPercent / 100m));
     }
 
     private async Task<TEntry> FindOpenEntryAsync<TEntry>(

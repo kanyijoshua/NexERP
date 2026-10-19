@@ -99,4 +99,22 @@ public class ChatterAppService : ErpAppService, IChatterAppService
         await _taskRepository.InsertAsync(task, autoSave: true);
         return ObjectMapper.Map<DocumentActivityTask, DocumentActivityTaskDto>(task);
     }
+
+    [Authorize(ErpPermissions.Chatter.Create)]
+    public async Task<DocumentActivityTaskDto> CompleteTaskAsync(Guid id)
+    {
+        var task = await _taskRepository.GetAsync(id);
+        task.MarkCompleted();
+        await _taskRepository.UpdateAsync(task, autoSave: true);
+        return ObjectMapper.Map<DocumentActivityTask, DocumentActivityTaskDto>(task);
+    }
+
+    public async Task<ListResultDto<DocumentActivityTaskDto>> GetMyTasksAsync()
+    {
+        var userId = CurrentUser.Id ?? Guid.Empty;
+        var tasks = await _taskRepository.GetListAsync(t => t.AssignedUserId == userId && !t.Completed);
+        return new ListResultDto<DocumentActivityTaskDto>(
+            ObjectMapper.Map<List<DocumentActivityTask>, List<DocumentActivityTaskDto>>(tasks.OrderBy(t => t.DueDate).ToList())
+        );
+    }
 }

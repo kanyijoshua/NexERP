@@ -122,6 +122,10 @@ export interface PartyLedgerEntryDto extends EntityDto<string> {
   open: boolean;
   closedByEntryNo: number;
   reversed: boolean;
+  pmtDiscountDate?: string;
+  originalPmtDiscPossible: number;
+  remainingPmtDiscPossible: number;
+  lastIssuedReminderLevel: number;
 }
 
 export interface GetPartyLedgerEntryListInput extends PagedAndSortedResultRequestDto {

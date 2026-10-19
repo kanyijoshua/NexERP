@@ -15,6 +15,10 @@ public class CreateUpdatePostingGroupDto : CreateUpdateCodeTableDto { }
 public class CustomerPostingGroupDto : PostingGroupDto
 {
     public string ReceivablesAccountNo { get; set; }
+    public string PaymentDiscDebitAccNo { get; set; }
+    public string PaymentDiscCreditAccNo { get; set; }
+    public string AdditionalFeeAccountNo { get; set; }
+    public string InterestAccountNo { get; set; }
 }
 
 public class CreateUpdateCustomerPostingGroupDto : CreateUpdatePostingGroupDto
@@ -22,11 +26,25 @@ public class CreateUpdateCustomerPostingGroupDto : CreateUpdatePostingGroupDto
     [Required]
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string ReceivablesAccountNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string PaymentDiscDebitAccNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string PaymentDiscCreditAccNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string AdditionalFeeAccountNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string InterestAccountNo { get; set; }
 }
 
 public class VendorPostingGroupDto : PostingGroupDto
 {
     public string PayablesAccountNo { get; set; }
+    public string PaymentDiscDebitAccNo { get; set; }
+    public string PaymentDiscCreditAccNo { get; set; }
 }
 
 public class CreateUpdateVendorPostingGroupDto : CreateUpdatePostingGroupDto
@@ -34,6 +52,12 @@ public class CreateUpdateVendorPostingGroupDto : CreateUpdatePostingGroupDto
     [Required]
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string PayablesAccountNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string PaymentDiscDebitAccNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string PaymentDiscCreditAccNo { get; set; }
 }
 
 public class GeneralPostingSetupDto : FullAuditedEntityDto<Guid>

@@ -1,0 +1,89 @@
+<erp-page-toolbar title="Erp::Pipeline" breadcrumb="Erp::Menu:Crm" icon="fas fa-table-columns" [showSearch]="false" [showCreate]="false">
+  <div class="btn-group btn-group-sm" role="group" [attr.aria-label]="'Erp::Pipeline' | abpLocalization">
+    <button type="button" class="btn" [class.btn-primary]="pipeline() === 'Lead'" [class.btn-outline-primary]="pipeline() !== 'Lead'" (click)="switchPipeline('Lead')">
+      {{ 'Erp::Leads' | abpLocalization }}
+    </button>
+    <button
+      type="button"
+      class="btn"
+      [class.btn-primary]="pipeline() === 'Opportunity'"
+      [class.btn-outline-primary]="pipeline() !== 'Opportunity'"
+      (click)="switchPipeline('Opportunity')"
+    >
+      {{ 'Erp::Opportunities' | abpLocalization }}
+    </button>
+  </div>
+  <div class="btn-group btn-group-sm" role="group">
+    <button type="button" class="btn btn-outline-secondary" [class.active]="view() === 'board'" [title]="'Erp::Kanban' | abpLocalization" (click)="view.set('board')">
+      <i class="fas fa-table-columns"></i>
+    </button>
+    <button type="button" class="btn btn-outline-secondary" [class.active]="view() === 'list'" [title]="'Erp::List' | abpLocalization" (click)="view.set('list')">
+      <i class="fas fa-list"></i>
+    </button>
+  </div>
+  <a class="btn btn-sm btn-primary" routerLink="/erp/opportunities" *abpPermission="'Erp.Crm.Create'">
+    <i class="fas fa-plus me-1"></i>{{ 'Erp::Opportunities' | abpLocalization }}
+  </a>
+</erp-page-toolbar>
+
+@if (pendingLoss()) {
+  <div class="alert alert-warning d-flex flex-wrap align-items-end gap-2">
+    <div>
+      <label class="form-label small mb-1" for="loss-code">{{ 'Erp::CloseOpportunityCode' | abpLocalization }} *</label>
+      <erp-lookup id="loss-code" entity="closeOpportunityCode" [(ngModel)]="closeCode"></erp-lookup>
+    </div>
+    <button type="button" class="btn btn-sm btn-danger" [disabled]="!closeCode" (click)="confirmLoss()">{{ 'Erp::MarkLost' | abpLocalization }}</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelLoss()">{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+  </div>
+}
+
+@if (view() === 'board') {
+  <erp-kanban-board [columns]="columns()" [cardId]="cardId" [cardTemplate]="card" (moved)="onMoved($event)"></erp-kanban-board>
+} @else {
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::Stage' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::No' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+            <th scope="col">{{ 'Erp::Contact' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::ExpectedRevenue' | abpLocalization }}</th>
+            <th scope="col" class="text-end">{{ 'Erp::Probability' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (column of columns(); track column.id) {
+            @for (row of column.cards; track row.id) {
+              <tr role="button" tabindex="0" (click)="open(row)" (keydown.enter)="open(row)">
+                <td>{{ column.title }}</td>
+                <td class="font-monospace small">{{ row.no }}</td>
+                <td>{{ row.description }}</td>
+                <td>{{ row.contactName ?? row.contactCompanyName }}</td>
+                <td class="text-end font-monospace">{{ row.expectedRevenue | erpAmount }}</td>
+                <td class="text-end">{{ row.probability }}%</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<ng-template #card let-card>
+  <div role="button" tabindex="0" (click)="open(card)" (keydown.enter)="open(card)">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <span class="fw-semibold small">{{ card.description }}</span>
+      @if (card.priority === 2) {
+        <i class="fas fa-star text-warning small" [title]="'Erp::Enum:OpportunityPriority.High' | abpLocalization"></i>
+      }
+    </div>
+    <div class="small text-secondary">{{ card.contactName ?? card.contactCompanyName }}</div>
+    <div class="d-flex justify-content-between small mt-1">
+      <span class="font-monospace">{{ card.expectedRevenue | erpAmount }}</span>
+      <span class="badge bg-light text-secondary border">{{ card.probability }}%</span>
+    </div>
+  </div>
+</ng-template>

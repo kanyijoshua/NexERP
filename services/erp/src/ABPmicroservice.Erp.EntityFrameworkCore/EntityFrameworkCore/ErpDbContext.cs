@@ -175,6 +175,9 @@ public partial class ErpDbContext : AbpDbContext<ErpDbContext>
         "RemainingAmountLcy",
         "RemainingQuantity",
         "InvoicedQuantity",
+        // An invoice turns expected cost into actual cost; a revaluation changes the cost of what is left.
+        "UnitCost",
+        "CostAmountActual",
         "ClosedByEntryId",
         "ClosedByEntryNo",
         "ClosedAtDate",
@@ -184,6 +187,16 @@ public partial class ErpDbContext : AbpDbContext<ErpDbContext>
         // A reversal never deletes the original; it stamps it as reversed and points at its mirror.
         "Reversed",
         "ReversedByEntryNo",
+        // Applying, unapplying and payment discounts.
+        "RemainingPmtDiscPossible",
+        "Unapplied",
+        "UnappliedByEntryNo",
+        // A reminder raises the level of the entries it reminds of.
+        "LastIssuedReminderLevel",
+        // A bank reconciliation matches entries to statement lines.
+        "StatementStatus",
+        "StatementNo",
+        "StatementLineNo",
     ];
 
     public ErpDbContext(DbContextOptions<ErpDbContext> options)

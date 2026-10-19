@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Documents;
@@ -7,6 +8,7 @@ using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
+using ABPmicroservice.Erp.Pricing;
 using ABPmicroservice.Erp.Workflows;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -83,8 +85,9 @@ public class SalesDocumentAppService
         );
 
         await ApplyHeaderAsync(header, input, customer);
-        ReplaceLines(header, input);
+        await UpsertLinesAsync(header, input);
         await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, customer);
+        ApplyQuantitiesToPost(header, input);
 
         await Repository.InsertAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -104,8 +107,9 @@ public class SalesDocumentAppService
 
         var customer = await _customerRepository.GetAsync(header.CustomerId);
         await ApplyHeaderAsync(header, input, customer);
-        ReplaceLines(header, input);
+        await UpsertLinesAsync(header, input);
         await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, customer);
+        ApplyQuantitiesToPost(header, input);
 
         await Repository.UpdateAsync(header, autoSave: true);
         return await MapToGetOutputDtoAsync(header);
@@ -174,6 +178,73 @@ public class SalesDocumentAppService
         await _salesPostingEngine.PostAsync(id);
         return await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id));
     }
+
+    [Authorize(ErpPermissions.SalesDocuments.Post)]
+    public async Task<SalesPostingResultDto> RunOrderPostingAsync(Guid id, SalesOrderPostingInput input)
+    {
+        var toPost = await GetEntityByIdAsync(id);
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, toPost);
+        if (toPost.Status == DocumentStatus.Open)
+        {
+            await EnsureWithinCreditLimitAsync(toPost);
+        }
+
+        foreach (var line in input.Lines)
+        {
+            toPost.SetQuantitiesToPost(line.LineId, line.QtyToShip, line.QtyToInvoice);
+        }
+
+        var result = await _salesPostingEngine.PostAsync(id, input.Ship, input.Invoice);
+        return new SalesPostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = result.Invoice?.No,
+            ShipmentNo = result.Shipment?.No,
+        };
+    }
+
+    [Authorize(ErpPermissions.SalesDocuments.Create)]
+    public async Task<SalesHeaderDto> MakeOrderAsync(Guid id, MakeOrderInput input)
+    {
+        var order = await Flow.MakeOrderAsync(id, input?.PostingDate ?? Clock.Now.Date);
+        return await MapToGetOutputDtoAsync(order);
+    }
+
+    public async Task<List<OpenShipmentLineDto>> GetOpenShipmentLinesAsync(Guid id)
+    {
+        await CheckGetPolicyAsync();
+        var lines = await Flow.GetOpenShipmentLinesAsync(id);
+        return lines
+            .Select(x => new OpenShipmentLineDto
+            {
+                ShipmentLineId = x.Line.Id,
+                ShipmentNo = x.Shipment.No,
+                PostingDate = x.Shipment.PostingDate,
+                OrderNo = x.Shipment.OrderNo,
+                LineNo = x.Line.LineNo,
+                Type = x.Line.Type,
+                No = x.Line.No,
+                Description = x.Line.Description,
+                Quantity = x.Line.Quantity,
+                QtyNotInvoiced = x.Line.QtyNotInvoiced,
+                UnitPrice = x.Line.UnitPrice,
+            })
+            .ToList();
+    }
+
+    [Authorize(ErpPermissions.SalesDocuments.Update)]
+    public async Task<SalesHeaderDto> CollectShipmentLinesAsync(Guid id, GetShipmentLinesInput input)
+    {
+        return await MapToGetOutputDtoAsync(await Flow.GetShipmentLinesAsync(id, input.ShipmentLineIds));
+    }
+
+    [Authorize(ErpPermissions.SalesDocuments.Update)]
+    public async Task<SalesHeaderDto> CopyLinesFromAsync(Guid id, CopyDocumentLinesInput input)
+    {
+        return await MapToGetOutputDtoAsync(await Flow.CopyLinesAsync(id, input.SourceDocumentId));
+    }
+
+    private SalesDocumentFlow Flow => LazyServiceProvider.LazyGetRequiredService<SalesDocumentFlow>();
 
     [Authorize(ErpPermissions.SalesDocuments.Update)]
     public async Task<ApprovalRequestResultDto> SendApprovalRequestAsync(Guid id)
@@ -257,6 +328,17 @@ public class SalesDocumentAppService
         header.SetPaymentTerms(paymentTermsCode);
         header.SetLocation(input.LocationCode);
         header.SetExternalDocumentNo(input.ExternalDocumentNo);
+        header.SetShipTo(
+            input.ShipToCode,
+            input.ShipToName,
+            input.ShipToAddress,
+            input.ShipToCity,
+            input.ShipToPostCode,
+            input.ShipToCountryRegionCode,
+            input.ShipToContact
+        );
+        header.SetShipmentDate(input.ShipmentDate);
+        header.SetCustomerPriceGroup(customer.CustomerPriceGroup);
     }
 
     /// <summary>
@@ -287,23 +369,97 @@ public class SalesDocumentAppService
         }
     }
 
-    // The client always sends the whole document, so the line set is replaced wholesale.
-    private void ReplaceLines(SalesHeader header, CreateUpdateSalesHeaderDto input)
+    /// <summary>
+    /// The client always sends the whole document. Lines it sends back with their id are changed in
+    /// place, so what has been shipped and invoiced on them is kept; lines it leaves out are removed,
+    /// and new lines are added. An item line without a price takes the price list's.
+    /// </summary>
+    private async Task UpsertLinesAsync(SalesHeader header, CreateUpdateSalesHeaderDto input)
     {
-        header.ClearLines();
-
-        foreach (var line in input.Lines)
+        var sent = input.Lines.Where(l => l.Id.HasValue).Select(l => l.Id!.Value).ToHashSet();
+        foreach (var removed in header.Lines.Where(l => !sent.Contains(l.Id)).Select(l => l.Id).ToList())
         {
-            header.AddLine(
-                GuidGenerator.Create(),
-                line.Type,
-                line.No,
-                line.Description,
-                line.Quantity,
-                line.UnitPrice,
-                line.LineDiscountPercent,
-                line.UnitOfMeasureCode
-            );
+            header.RemoveLine(removed);
+        }
+
+        foreach (var lineInput in input.Lines)
+        {
+            var (unitPrice, discount) = await PriceOfAsync(header, lineInput);
+            var existing = lineInput.Id.HasValue ? header.Lines.FirstOrDefault(l => l.Id == lineInput.Id.Value) : null;
+            var line = existing != null
+                ? header.UpdateLine(existing.Id, lineInput.Type, lineInput.No, lineInput.Description, lineInput.Quantity, unitPrice, discount, lineInput.UnitOfMeasureCode)
+                : header.AddLine(GuidGenerator.Create(), lineInput.Type, lineInput.No, lineInput.Description, lineInput.Quantity, unitPrice, discount, lineInput.UnitOfMeasureCode);
+
+            line.SetLocation(lineInput.LocationCode);
+            line.SetShipmentDate(lineInput.ShipmentDate);
+            await SetVariantAndUnitAsync(line, lineInput.VariantCode);
+            await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<ABPmicroservice.Erp.Finance.DeferralTemplate>(lineInput.DeferralCode);
+            line.SetDeferralCode(lineInput.DeferralCode);
+            line.SetProject(lineInput.ProjectNo, lineInput.ProjectTaskNo);
+        }
+    }
+
+    /// <summary>The variant of an item line and how many base units one unit of its unit of measure holds.</summary>
+    private async Task SetVariantAndUnitAsync(SalesLine line, string variantCode)
+    {
+        line.SetVariant(variantCode);
+        if (line.Type != DocumentLineType.Item || line.No.IsNullOrWhiteSpace())
+        {
+            line.SetQtyPerUnitOfMeasure(1m);
+            return;
+        }
+
+        var item = await LazyServiceProvider.LazyGetRequiredService<IRepository<Item, Guid>>().FirstOrDefaultAsync(i => i.No == line.No);
+        if (item == null)
+        {
+            return;
+        }
+
+        var units = LazyServiceProvider.LazyGetRequiredService<ItemUnitOfMeasureManager>();
+        await units.EnsureVariantAsync(item.No, line.VariantCode);
+        line.SetQtyPerUnitOfMeasure(await units.GetQtyPerAsync(item, line.UnitOfMeasureCode));
+    }
+
+    /// <summary>The price an item line gets when it is sent without one.</summary>
+    private async Task<(decimal UnitPrice, decimal Discount)> PriceOfAsync(SalesHeader header, SalesLineInputDto line)
+    {
+        if (line.Type != DocumentLineType.Item || line.UnitPrice != 0m || line.No.IsNullOrWhiteSpace())
+        {
+            return (line.UnitPrice, line.LineDiscountPercent);
+        }
+
+        var quote = await LazyServiceProvider.LazyGetRequiredService<PriceCalculator>().FindPriceAsync(new PriceQuery
+        {
+            PriceType = PriceType.Sale,
+            PartyNo = header.SellToCustomerNo,
+            CustomerPriceGroup = header.CustomerPriceGroup,
+            ItemNo = line.No,
+            UnitOfMeasureCode = line.UnitOfMeasureCode,
+            Quantity = line.Quantity,
+            CurrencyCode = header.CurrencyCode,
+            Date = header.PostingDate,
+        });
+        return (quote.UnitPrice, line.LineDiscountPercent != 0m ? line.LineDiscountPercent : quote.LineDiscountPercent);
+    }
+
+    /// <summary>The quantities to ship and invoice sent with the lines of an order (on a blanket order: to put on the next order), in the order the lines were sent.</summary>
+    private static void ApplyQuantitiesToPost(SalesHeader header, CreateUpdateSalesHeaderDto input)
+    {
+        if (!header.IsOrderType && header.DocumentType != SalesDocumentType.BlanketOrder)
+        {
+            return;
+        }
+
+        var lines = header.Lines.OrderBy(l => l.LineNo).ToList();
+        for (var i = 0; i < input.Lines.Count && i < lines.Count; i++)
+        {
+            var sent = input.Lines[i];
+            if (sent.QtyToShip.HasValue || sent.QtyToInvoice.HasValue)
+            {
+                var line = (sent.Id.HasValue ? lines.FirstOrDefault(l => l.Id == sent.Id.Value) : null) ?? lines[i];
+                var qtyToShip = sent.QtyToShip ?? line.QtyToShip;
+                header.SetQuantitiesToPost(line.Id, qtyToShip, sent.QtyToInvoice ?? Math.Min(line.QtyToInvoice, line.QtyShippedNotInvoiced + qtyToShip));
+            }
         }
     }
 }

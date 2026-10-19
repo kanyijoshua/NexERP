@@ -154,6 +154,12 @@ public class PartyLedgerEntryDto : EntityDto<Guid>
     public bool Open { get; set; }
     public long ClosedByEntryNo { get; set; }
     public bool Reversed { get; set; }
+    public DateTime? PmtDiscountDate { get; set; }
+    public decimal OriginalPmtDiscPossible { get; set; }
+    public decimal RemainingPmtDiscPossible { get; set; }
+
+    /// <summary>The last reminder level issued for the entry; customers only.</summary>
+    public int LastIssuedReminderLevel { get; set; }
 }
 
 public class GetPartyLedgerEntryListInput : ErpPagedListInput

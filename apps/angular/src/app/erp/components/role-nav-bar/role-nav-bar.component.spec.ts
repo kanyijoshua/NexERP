@@ -112,7 +112,7 @@ describe('RoleNavBarComponent', () => {
     expect(menuSuite.open).toHaveBeenCalled();
   });
 
-  it('shows sublinks in the BC-style sublink bar for the active group', () => {
+  it('shows sublinks in the sublink bar for the active group', () => {
     const sublinks = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.role-subbar__item'));
 
     expect(sublinks.map(i => i.textContent?.trim())).toEqual(['General Journals']);

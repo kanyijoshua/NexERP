@@ -33,6 +33,9 @@ public class ItemLedgerEntryAppService
                 !input.DocumentNo.IsNullOrWhiteSpace(),
                 x => x.DocumentNo == input.DocumentNo
             )
-            .WhereIf(input.EntryType.HasValue, x => x.EntryType == input.EntryType.Value);
+            .WhereIf(input.EntryType.HasValue, x => x.EntryType == input.EntryType.Value)
+            .WhereIf(!input.LocationCode.IsNullOrWhiteSpace(), x => x.LocationCode == input.LocationCode)
+            .WhereIf(!input.LotNo.IsNullOrWhiteSpace(), x => x.LotNo == input.LotNo)
+            .WhereIf(input.Open.HasValue, x => x.Open == input.Open.Value);
     }
 }

@@ -146,11 +146,56 @@ public partial class ErpDataSeederContributor
             await Repo<Location>().InsertAsync(main);
         }
 
+        if (!await Repo<Location>().AnyAsync(l => l.Code == "IN-TRANSIT"))
+        {
+            var transit = new Location(NewId(), "IN-TRANSIT", "In transit");
+            transit.SetUseAsInTransit(true);
+            await Repo<Location>().InsertAsync(transit);
+        }
+
+        await EnsureSeriesAsync("T-ORD", "Transfer orders", "TO-00001");
+        await EnsureSeriesAsync("T-SHPT+", "Posted transfer shipments", "TS-00001");
+        await EnsureSeriesAsync("T-RCPT+", "Posted transfer receipts", "TR-00001");
+
         if (await IsEmptyAsync<InventorySetup>())
         {
             var setup = new InventorySetup(NewId());
             setup.SetNumbering("ITEM");
+            setup.SetTransferNumbering("T-ORD", "T-SHPT+", "T-RCPT+");
             await Repo<InventorySetup>().InsertAsync(setup);
+        }
+
+        // Item journals post adjustments against the setup with a blank business group.
+        if (!await Repo<GeneralPostingSetup>().AnyAsync(s => s.GenBusPostingGroup == null && s.GenProdPostingGroup == "RETAIL"))
+        {
+            await Repo<GeneralPostingSetup>().InsertAsync(new GeneralPostingSetup(NewId(), null, "RETAIL", "4000", "5000", "5000", "5000"));
+        }
+
+        if (await IsEmptyAsync<ItemJournalTemplate>())
+        {
+            foreach (var (name, type, description) in new[]
+            {
+                ("ITEM", ItemJournalTemplateType.Item, "Item journal"),
+                ("RECLASS", ItemJournalTemplateType.Transfer, "Item reclassification journal"),
+                ("PHYS INVT", ItemJournalTemplateType.PhysicalInventory, "Physical inventory journal"),
+                ("REVAL", ItemJournalTemplateType.Revaluation, "Revaluation journal"),
+            })
+            {
+                var template = new ItemJournalTemplate(NewId(), name, type);
+                template.SetDescription(description);
+                await Repo<ItemJournalTemplate>().InsertAsync(template);
+                await Repo<ItemJournalBatch>().InsertAsync(new ItemJournalBatch(NewId(), name, "DEFAULT", "Default journal"));
+            }
+        }
+
+        if (await IsEmptyAsync<ItemTrackingCode>())
+        {
+            var lots = new ItemTrackingCode(NewId(), "LOTALL", "Lot tracking");
+            lots.SetRules(lotSpecific: true, serialSpecific: false, expirationDateRequired: false);
+            await Repo<ItemTrackingCode>().InsertAsync(lots);
+            var serials = new ItemTrackingCode(NewId(), "SNALL", "Serial number tracking");
+            serials.SetRules(lotSpecific: false, serialSpecific: true, expirationDateRequired: false);
+            await Repo<ItemTrackingCode>().InsertAsync(serials);
         }
 
         if (await IsEmptyAsync<SalespersonPurchaser>())

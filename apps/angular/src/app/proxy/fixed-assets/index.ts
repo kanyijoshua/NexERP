@@ -17,3 +17,7 @@ export * from './fixed-asset.service';
 export * from './main-asset-component.service';
 export * from './maintenance-registration.service';
 export * from './maintenance.service';
+export * from './fa-journal-batch.service';
+export * from './fa-journal-line.service';
+export * from './fixed-asset-posting.models';
+export * from './fixed-asset-value.service';

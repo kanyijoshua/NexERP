@@ -28,6 +28,10 @@ public class InventorySetup : CompanyEntity
     /// </summary>
     public bool AutomaticCostPosting { get; private set; }
 
+    public string TransferOrderNos { get; private set; }
+    public string PostedTransferShipmentNos { get; private set; }
+    public string PostedTransferReceiptNos { get; private set; }
+
     protected InventorySetup() { }
 
     public InventorySetup(Guid id)
@@ -42,6 +46,16 @@ public class InventorySetup : CompanyEntity
             ? null
             : Check.Length(itemNos.Trim(), nameof(itemNos), ErpDomainConsts.MaxNoSeriesCodeLength);
     }
+
+    public void SetTransferNumbering(string transferOrderNos, string postedTransferShipmentNos, string postedTransferReceiptNos)
+    {
+        TransferOrderNos = Series(transferOrderNos, nameof(transferOrderNos));
+        PostedTransferShipmentNos = Series(postedTransferShipmentNos, nameof(postedTransferShipmentNos));
+        PostedTransferReceiptNos = Series(postedTransferReceiptNos, nameof(postedTransferReceiptNos));
+    }
+
+    private static string Series(string value, string name) =>
+        value.IsNullOrWhiteSpace() ? null : Check.Length(value.Trim(), name, ErpDomainConsts.MaxNoSeriesCodeLength);
 
     public void SetRules(bool locationMandatory, bool preventNegativeInventory, bool automaticCostPosting)
     {

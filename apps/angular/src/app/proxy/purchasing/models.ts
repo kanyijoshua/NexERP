@@ -81,9 +81,13 @@ export interface CreateUpdatePurchaseHeaderDto {
   assignedUserId?: string;
   paymentReference?: string;
   invoiceReceivedDate?: string;
-  creditorNo?: string;
   reasonCode?: string;
+  requisitionNo?: string;
+  tenderNo?: string;
+  contractCommencementDate?: string;
+  contractCompletionDate?: string;
 }
+
 
 export interface CreateUpdateVendorDto {
   no?: string;
@@ -236,7 +240,24 @@ export interface PurchaseHeaderDto extends FullAuditedEntityDto<string> {
   invoiceReceivedDate?: string;
   creditorNo?: string;
   reasonCode?: string;
+  requisitionNo?: string;
+  tenderNo?: string;
+  orderStage?: number;
+  contractCommencementDate?: string;
+  contractCompletionDate?: string;
+  lpoClosed?: boolean;
+  closedBy?: string;
+  closeComments?: string;
+  cancelledBy?: string;
+  cancelComments?: string;
+  lastReceivingNo?: string;
+  lastPostingNo?: string;
 }
+
+export interface CloseCancelPurchaseOrderInput {
+  comments: string;
+}
+
 
 export interface PurchaseLineDto extends EntityDto<string> {
   purchaseHeaderId?: string;
@@ -272,6 +293,13 @@ export interface PurchaseLineDto extends EntityDto<string> {
   vatPercent: number;
   vatBaseAmount: number;
   vatAmount: number;
+  receiptLineId?: string;
+  receiptNo?: string;
+  receiptLineNo?: number;
+  blanketOrderNo?: string;
+  blanketOrderLineNo?: number;
+  variantCode?: string;
+  qtyPerUnitOfMeasure: number;
 }
 
 export interface PurchaseLineInputDto {
@@ -289,9 +317,8 @@ export interface PurchaseLineInputDto {
   shortcutDimension1Code?: string;
   shortcutDimension2Code?: string;
   qtyToReceive?: number;
-  quantityReceived?: number;
   qtyToInvoice?: number;
-  quantityInvoiced?: number;
+  variantCode?: string;
   deferralCode?: string;
   taxAreaCode?: string;
   taxLiable?: boolean;

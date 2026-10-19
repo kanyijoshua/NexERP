@@ -14,6 +14,7 @@ public class LocationDto : CodeTableDto
     public string CountryRegionCode { get; set; }
     public string PhoneNo { get; set; }
     public string Contact { get; set; }
+    public bool UseAsInTransit { get; set; }
 }
 
 public class CreateUpdateLocationDto : CreateUpdateCodeTableDto
@@ -35,6 +36,8 @@ public class CreateUpdateLocationDto : CreateUpdateCodeTableDto
 
     [StringLength(ErpDomainConsts.MaxNameLength)]
     public string Contact { get; set; }
+
+    public bool UseAsInTransit { get; set; }
 }
 
 /// <summary>Inventory Setup.</summary>
@@ -46,6 +49,15 @@ public class InventorySetupDto
     public bool LocationMandatory { get; set; }
     public bool PreventNegativeInventory { get; set; }
     public bool AutomaticCostPosting { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string TransferOrderNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string PostedTransferShipmentNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string PostedTransferReceiptNos { get; set; }
 }
 
 public interface ILocationAppService

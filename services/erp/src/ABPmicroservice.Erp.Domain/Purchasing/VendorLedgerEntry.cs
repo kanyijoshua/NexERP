@@ -10,7 +10,7 @@ namespace ABPmicroservice.Erp.Purchasing;
 /// Vendor Ledger Entry.
 /// Immutable subledger entry tracking accounts payable balances per vendor.
 /// </summary>
-public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
+public class VendorLedgerEntry : LedgerEntryBase, IPartyLedgerEntry
 {
     public Guid VendorId { get; private set; }
     public string VendorNo { get; private set; }
@@ -62,6 +62,41 @@ public class VendorLedgerEntry : LedgerEntryBase, IApplicableLedgerEntry
     public string JournalBatchName { get; internal set; }
     public string ExternalDocumentNo { get; internal set; }
     public string PaymentMethodCode { get; internal set; }
+
+    Guid IPartyLedgerEntry.PartyId => VendorId;
+
+    string IPartyLedgerEntry.PartyNo => VendorNo;
+
+    /// <summary>The last day a payment may take the discount on.</summary>
+    public DateTime? PmtDiscountDate { get; private set; }
+
+    /// <summary>The discount the entry offered when posted, in its currency.</summary>
+    public decimal OriginalPmtDiscPossible { get; private set; }
+
+    /// <summary>The discount still to be taken; zero once taken or once the entry is closed without it.</summary>
+    public decimal RemainingPmtDiscPossible { get; internal set; }
+
+    internal void SetPaymentDiscount(DateTime? pmtDiscountDate, decimal possible)
+    {
+        PmtDiscountDate = possible == 0m ? null : pmtDiscountDate?.Date;
+        OriginalPmtDiscPossible = PmtDiscountDate == null ? 0m : possible;
+        RemainingPmtDiscPossible = OriginalPmtDiscPossible;
+    }
+
+    void IPartyLedgerEntry.TakePmtDiscount() => RemainingPmtDiscPossible = 0m;
+
+    void IPartyLedgerEntry.RestorePmtDiscount(decimal amount) => RemainingPmtDiscPossible = amount;
+
+    void IApplicableLedgerEntry.RestoreRemaining(decimal amount, decimal amountLcy)
+    {
+        RemainingAmount += amount;
+        RemainingAmountLcy += amountLcy;
+        Open = RemainingAmount != 0m;
+        if (Open)
+        {
+            ClosedByEntryNo = 0;
+        }
+    }
 
     protected VendorLedgerEntry() { }
 

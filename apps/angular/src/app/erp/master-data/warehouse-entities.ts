@@ -1,0 +1,703 @@
+import { Injectable, inject } from '@angular/core';
+import {
+  CreateUpdateItemJournalBatchDto,
+  CreateUpdateItemJournalLineDto,
+  CreateUpdateItemJournalTemplateDto,
+  CreateUpdateItemTrackingCodeDto,
+  CreateUpdateItemTrackingLineDto,
+  CreateUpdateItemUnitOfMeasureDto,
+  CreateUpdateItemVariantDto,
+  CreateUpdateLotNoInformationDto,
+  CreateUpdateSerialNoInformationDto,
+  CreateUpdateTransferHeaderDto,
+  CreateUpdateTransferLineDto,
+  ItemJournalBatchDto,
+  ItemJournalBatchService,
+  ItemJournalLineDto,
+  ItemJournalLineService,
+  ItemJournalTemplateDto,
+  ItemJournalTemplateService,
+  ItemJournalTemplateType,
+  ItemLedgerEntryDto,
+  ItemLedgerEntryService,
+  ItemLedgerEntryType,
+  ItemTrackingCodeDto,
+  ItemTrackingCodeService,
+  ItemTrackingLineDto,
+  ItemTrackingLineService,
+  ItemTrackingSourceType,
+  ItemUnitOfMeasureDto,
+  ItemUnitOfMeasureService,
+  ItemVariantDto,
+  ItemVariantService,
+  LotNoInformationDto,
+  LotNoInformationService,
+  PostedTransferDto,
+  PostedTransferService,
+  SerialNoInformationDto,
+  SerialNoInformationService,
+  TransferHeaderDto,
+  TransferLineDto,
+  TransferLineService,
+  TransferOrderService,
+  TransferStatus,
+  itemJournalTemplateTypeOptions,
+  itemLedgerEntryTypeOptions,
+  itemTrackingSourceTypeOptions,
+  transferStatusOptions,
+} from '@proxy/inventory';
+import { EMPTY, map, of } from 'rxjs';
+import { RecordEntity, RecordField } from '../erp-shared';
+import { codeField, codeTableEntity, enumOptions } from './entity-helpers';
+
+const ITEMS = 'Erp.Items';
+const JOURNALS = 'Erp.ItemJournals';
+const TRANSFERS = 'Erp.TransferOrders';
+
+const today = () => new Date().toISOString().substring(0, 10);
+
+function readonly(field: string, labelKey: string, section = 'general'): RecordField {
+  return { field, labelKey, type: 'readonly', section };
+}
+
+/**
+ * The item tracking lines of one document, journal or transfer line, as a record table of their
+ * own: opened as a list dialog from the line, its lines are listed, created and changed there.
+ */
+export function itemTrackingLinesFor(
+  service: ItemTrackingLineService,
+  sourceType: ItemTrackingSourceType,
+  sourceId: string,
+  itemNo: string,
+): RecordEntity<ItemTrackingLineDto, CreateUpdateItemTrackingLineDto> {
+  return {
+    key: `itemTrackingLine:${sourceId}`,
+    titleKey: 'Erp::ItemTrackingLine',
+    pluralKey: 'Erp::ItemTrackingLines',
+    icon: 'fas fa-barcode',
+    permission: ITEMS,
+    listRoute: ['/erp/item-tracking-lines'],
+    columns: [
+      { field: 'lotNo', labelKey: 'Erp::LotNo' },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo' },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 110 },
+      { field: 'quantityHandled', labelKey: 'Erp::QuantityHandled', type: 'number', width: 130 },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date', width: 130 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      { field: 'lotNo', labelKey: 'Erp::LotNo', type: 'text', maxLength: 50 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', type: 'text', maxLength: 50 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', required: true, min: 0 },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date' },
+    ],
+    getList: query => service.getList({ ...query, sourceType, sourceId }),
+    get: id => service.get(id),
+    create: input => service.create({ ...input, sourceType, sourceId, itemNo }),
+    update: (id, input) => service.update(id, { ...input, sourceType, sourceId, itemNo }),
+    delete: id => service.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.serialNo ?? dto.lotNo ?? '', name: String(dto.quantity) }),
+    newRecord: () => ({ quantity: 1 }),
+  };
+}
+
+/** Variants, units of measure, tracking, item ledger entries, item journals and transfer orders. */
+@Injectable({ providedIn: 'root' })
+export class WarehouseEntities {
+  private readonly variants = inject(ItemVariantService);
+  private readonly units = inject(ItemUnitOfMeasureService);
+  private readonly trackingCodes = inject(ItemTrackingCodeService);
+  private readonly lots = inject(LotNoInformationService);
+  private readonly serials = inject(SerialNoInformationService);
+  private readonly trackingLines = inject(ItemTrackingLineService);
+  private readonly ledger = inject(ItemLedgerEntryService);
+  private readonly templates = inject(ItemJournalTemplateService);
+  private readonly batches = inject(ItemJournalBatchService);
+  private readonly journalLines = inject(ItemJournalLineService);
+  private readonly transfers = inject(TransferOrderService);
+  private readonly transferLines = inject(TransferLineService);
+  private readonly postedTransfers = inject(PostedTransferService);
+
+  readonly itemVariant: RecordEntity<ItemVariantDto, CreateUpdateItemVariantDto> = {
+    key: 'itemVariant',
+    titleKey: 'Erp::ItemVariant',
+    pluralKey: 'Erp::ItemVariants',
+    icon: 'fas fa-shapes',
+    permission: ITEMS,
+    listRoute: ['/erp/item-variants'],
+    columns: [
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'code', labelKey: 'Erp::Code', width: 120 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'boolean', width: 90 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true, createOnly: true }),
+      { field: 'code', labelKey: 'Erp::Code', type: 'text', required: true, maxLength: 20 },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'checkbox' },
+    ],
+    getList: query => this.variants.getList(query),
+    get: id => this.variants.get(id),
+    create: input => this.variants.create(input),
+    update: (id, input) => this.variants.update(id, input),
+    delete: id => this.variants.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.code ?? '', name: dto.description ?? undefined }),
+    newRecord: term => ({ code: (term ?? '').toUpperCase(), blocked: false }),
+  };
+
+  readonly itemUnitOfMeasure: RecordEntity<ItemUnitOfMeasureDto, CreateUpdateItemUnitOfMeasureDto> = {
+    key: 'itemUnitOfMeasure',
+    titleKey: 'Erp::ItemUnitOfMeasure',
+    pluralKey: 'Erp::ItemUnitsOfMeasure',
+    icon: 'fas fa-ruler',
+    permission: ITEMS,
+    listRoute: ['/erp/item-units-of-measure'],
+    columns: [
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'code', labelKey: 'Erp::Code', width: 120 },
+      { field: 'qtyPerUnitOfMeasure', labelKey: 'Erp::QtyPerUnitOfMeasure', type: 'number', width: 160 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true, createOnly: true }),
+      codeField('code', 'Erp::Code', 'unitOfMeasure', 'general', { required: true }),
+      { field: 'qtyPerUnitOfMeasure', labelKey: 'Erp::QtyPerUnitOfMeasure', type: 'number', required: true, min: 0 },
+    ],
+    getList: query => this.units.getList(query),
+    get: id => this.units.get(id),
+    create: input => this.units.create(input),
+    update: (id, input) => this.units.update(id, input),
+    delete: id => this.units.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.code ?? '', name: String(dto.qtyPerUnitOfMeasure) }),
+    newRecord: () => ({ qtyPerUnitOfMeasure: 1 }),
+  };
+
+  readonly itemTrackingCode = codeTableEntity<ItemTrackingCodeDto, CreateUpdateItemTrackingCodeDto>(this.trackingCodes, {
+    key: 'itemTrackingCode',
+    titleKey: 'Erp::ItemTrackingCode',
+    pluralKey: 'Erp::ItemTrackingCodes',
+    icon: 'fas fa-barcode',
+    permission: 'Erp.InventorySetup',
+    route: '/erp/item-tracking-codes',
+    columns: [
+      { field: 'lotSpecific', labelKey: 'Erp::LotSpecific', type: 'boolean', width: 150 },
+      { field: 'serialSpecific', labelKey: 'Erp::SerialSpecific', type: 'boolean', width: 170 },
+    ],
+    fields: [
+      { field: 'lotSpecific', labelKey: 'Erp::LotSpecific', type: 'checkbox' },
+      { field: 'serialSpecific', labelKey: 'Erp::SerialSpecific', type: 'checkbox' },
+      { field: 'expirationDateRequired', labelKey: 'Erp::ExpirationDateRequired', type: 'checkbox' },
+    ],
+    defaults: { lotSpecific: true, serialSpecific: false, expirationDateRequired: false },
+  });
+
+  readonly lotNoInformation: RecordEntity<LotNoInformationDto, CreateUpdateLotNoInformationDto> = {
+    key: 'lotNoInformation',
+    titleKey: 'Erp::LotNoInformation',
+    pluralKey: 'Erp::LotNoInformation',
+    icon: 'fas fa-boxes-packing',
+    permission: ITEMS,
+    listRoute: ['/erp/lot-no-information'],
+    columns: [
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', width: 110 },
+      { field: 'lotNo', labelKey: 'Erp::LotNo', width: 140 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date', width: 130 },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'boolean', width: 90 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true, createOnly: true }),
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', type: 'text', maxLength: 20, createOnly: true },
+      { field: 'lotNo', labelKey: 'Erp::LotNo', type: 'text', required: true, maxLength: 50, createOnly: true },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date' },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'checkbox' },
+    ],
+    getList: query => this.lots.getList(query),
+    get: id => this.lots.get(id),
+    create: input => this.lots.create(input),
+    update: (id, input) => this.lots.update(id, input),
+    delete: id => this.lots.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.lotNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ blocked: false }),
+  };
+
+  readonly serialNoInformation: RecordEntity<SerialNoInformationDto, CreateUpdateSerialNoInformationDto> = {
+    key: 'serialNoInformation',
+    titleKey: 'Erp::SerialNoInformation',
+    pluralKey: 'Erp::SerialNoInformation',
+    icon: 'fas fa-hashtag',
+    permission: ITEMS,
+    listRoute: ['/erp/serial-no-information'],
+    columns: [
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', width: 110 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 160 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'boolean', width: 90 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true, createOnly: true }),
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', type: 'text', maxLength: 20, createOnly: true },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', type: 'text', required: true, maxLength: 50, createOnly: true },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'blocked', labelKey: 'Erp::Blocked', type: 'checkbox' },
+    ],
+    getList: query => this.serials.getList(query),
+    get: id => this.serials.get(id),
+    create: input => this.serials.create(input),
+    update: (id, input) => this.serials.update(id, input),
+    delete: id => this.serials.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.serialNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ blocked: false }),
+  };
+
+  readonly itemTrackingLine: RecordEntity<ItemTrackingLineDto, CreateUpdateItemTrackingLineDto> = {
+    key: 'itemTrackingLine',
+    titleKey: 'Erp::ItemTrackingLine',
+    pluralKey: 'Erp::ItemTrackingLines',
+    icon: 'fas fa-barcode',
+    permission: ITEMS,
+    listRoute: ['/erp/item-tracking-lines'],
+    columns: [
+      { field: 'sourceType', labelKey: 'Erp::SourceType', type: 'select', options: enumOptions(itemTrackingSourceTypeOptions, 'ItemTrackingSourceType'), width: 150 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'lotNo', labelKey: 'Erp::LotNo' },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo' },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 110 },
+      { field: 'quantityHandled', labelKey: 'Erp::QuantityHandled', type: 'number', width: 130 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      readonly('sourceType', 'Erp::SourceType'),
+      readonly('itemNo', 'Erp::ItemNo'),
+      { field: 'lotNo', labelKey: 'Erp::LotNo', type: 'text', maxLength: 50 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', type: 'text', maxLength: 50 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', min: 0 },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date' },
+    ],
+    getList: query => this.trackingLines.getList(query),
+    get: id => this.trackingLines.get(id),
+    create: input => this.trackingLines.create(input),
+    update: (id, input) => this.trackingLines.update(id, input),
+    delete: id => this.trackingLines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.serialNo ?? dto.lotNo ?? '', name: dto.itemNo ?? undefined }),
+    newRecord: () => ({ quantity: 1 }),
+  };
+
+  readonly itemLedgerEntry: RecordEntity<ItemLedgerEntryDto, never> = {
+    key: 'itemLedgerEntry',
+    titleKey: 'Erp::ItemLedgerEntry',
+    pluralKey: 'Erp::ItemLedgerEntries',
+    icon: 'fas fa-receipt',
+    permission: ITEMS,
+    listRoute: ['/erp/item-ledger-entries'],
+    readOnly: true,
+    columns: [
+      { field: 'entryNo', labelKey: 'Erp::EntryNo', type: 'number', width: 100 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'entryType', labelKey: 'Erp::EntryType', type: 'select', options: enumOptions(itemLedgerEntryTypeOptions, 'ItemLedgerEntryType'), width: 140 },
+      { field: 'documentNo', labelKey: 'Erp::DocumentNo', width: 140 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 110 },
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', width: 110 },
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', width: 100 },
+      { field: 'lotNo', labelKey: 'Erp::LotNo', width: 110 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 110 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 100 },
+      { field: 'remainingQuantity', labelKey: 'Erp::RemainingQuantity', type: 'number', width: 140 },
+      { field: 'invoicedQuantity', labelKey: 'Erp::InvoicedQuantity', type: 'number', width: 130 },
+      { field: 'unitCost', labelKey: 'Erp::UnitCost', type: 'currency', width: 120 },
+      { field: 'open', labelKey: 'Erp::Open', type: 'boolean', width: 80 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      readonly('entryNo', 'Erp::EntryNo'),
+      readonly('postingDate', 'Erp::PostingDate'),
+      readonly('documentNo', 'Erp::DocumentNo'),
+      readonly('itemNo', 'Erp::ItemNo'),
+      readonly('locationCode', 'Erp::LocationCode'),
+      readonly('variantCode', 'Erp::VariantCode'),
+      readonly('lotNo', 'Erp::LotNo'),
+      readonly('serialNo', 'Erp::SerialNo'),
+      readonly('expirationDate', 'Erp::ExpirationDate'),
+      readonly('quantity', 'Erp::Quantity'),
+      readonly('remainingQuantity', 'Erp::RemainingQuantity'),
+      readonly('invoicedQuantity', 'Erp::InvoicedQuantity'),
+      readonly('unitCost', 'Erp::UnitCost'),
+      readonly('costAmountActual', 'Erp::CostAmountActual'),
+    ],
+    getList: query => this.ledger.getList(query),
+    get: id => this.ledger.get(id),
+    create: () => EMPTY,
+    update: () => EMPTY,
+    delete: () => EMPTY,
+    toItem: dto => ({ id: dto.id, code: String(dto.entryNo), name: dto.documentNo ?? undefined }),
+    newRecord: () => ({}),
+  };
+
+  readonly itemJournalTemplate: RecordEntity<ItemJournalTemplateDto, CreateUpdateItemJournalTemplateDto> = {
+    key: 'itemJournalTemplate',
+    titleKey: 'Erp::ItemJournalTemplate',
+    pluralKey: 'Erp::ItemJournalTemplates',
+    icon: 'fas fa-layer-group',
+    permission: JOURNALS,
+    listRoute: ['/erp/item-journal-templates'],
+    columns: [
+      { field: 'name', labelKey: 'Erp::Name', width: 150 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(itemJournalTemplateTypeOptions, 'ItemJournalTemplateType'), width: 170 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      { field: 'name', labelKey: 'Erp::Name', type: 'text', required: true, maxLength: 10 },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'type', labelKey: 'Erp::Type', type: 'select', options: enumOptions(itemJournalTemplateTypeOptions, 'ItemJournalTemplateType') },
+    ],
+    getList: query => this.templates.getList(query),
+    get: id => this.templates.get(id),
+    create: input => this.templates.create(input),
+    update: (id, input) => this.templates.update(id, input),
+    delete: id => this.templates.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.name ?? '', name: dto.description ?? undefined }),
+    newRecord: term => ({ name: (term ?? '').toUpperCase(), type: ItemJournalTemplateType.Item }),
+  };
+
+  readonly itemJournalBatch: RecordEntity<ItemJournalBatchDto, CreateUpdateItemJournalBatchDto> = {
+    key: 'itemJournalBatch',
+    titleKey: 'Erp::ItemJournalBatch',
+    pluralKey: 'Erp::ItemJournalBatches',
+    icon: 'fas fa-dolly',
+    permission: JOURNALS,
+    listRoute: ['/erp/item-journals'],
+    columns: [
+      { field: 'journalTemplateName', labelKey: 'Erp::JournalTemplateName', width: 150 },
+      { field: 'name', labelKey: 'Erp::Name', width: 150 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'templateType', labelKey: 'Erp::TemplateType', type: 'select', options: enumOptions(itemJournalTemplateTypeOptions, 'ItemJournalTemplateType'), sortable: false, filterable: false, width: 170 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      { field: 'journalTemplateName', labelKey: 'Erp::JournalTemplateName', type: 'lookup', lookupEntity: 'itemJournalTemplate', required: true, createOnly: true },
+      { field: 'name', labelKey: 'Erp::Name', type: 'text', required: true, maxLength: 100 },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+    ],
+    getList: query => this.batches.getList(query),
+    get: id => this.batches.get(id),
+    create: input => this.batches.create(input),
+    update: (id, input) => this.batches.update(id, input),
+    delete: id => this.batches.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.name ?? '', name: dto.journalTemplateName ?? undefined }),
+    newRecord: () => ({ journalTemplateName: 'ITEM' }),
+    actions: [
+      {
+        key: 'calculateInventory',
+        labelKey: 'Erp::CalculateInventory',
+        icon: 'fas fa-calculator',
+        permission: JOURNALS,
+        visible: dto => dto.templateType === ItemJournalTemplateType.PhysicalInventory,
+        run: dto => this.batches.calculateInventory(dto.id!, { postingDate: today(), documentNo: `COUNT-${today()}` }),
+      },
+      {
+        key: 'calculateInventoryValue',
+        labelKey: 'Erp::CalculateInventoryValue',
+        icon: 'fas fa-coins',
+        permission: JOURNALS,
+        visible: dto => dto.templateType === ItemJournalTemplateType.Revaluation,
+        run: dto => this.batches.calculateInventoryValue(dto.id!, { postingDate: today(), documentNo: `REVAL-${today()}` }),
+      },
+      {
+        key: 'post',
+        labelKey: 'Erp::Post',
+        icon: 'fas fa-paper-plane',
+        permission: `${JOURNALS}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        run: dto => this.batches.runPosting(dto.id!),
+      },
+    ],
+    parts: [
+      {
+        entity: 'itemJournalLine',
+        lines: dto =>
+          this.journalLines.getList({ itemJournalBatchId: dto.id, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ itemJournalBatchId: dto.id, postingDate: today(), documentNo: `${dto.name ?? 'ADJ'}-${today()}`, entryType: ItemLedgerEntryType.PositiveAdjmt }),
+        columns: ['postingDate', 'entryType', 'documentNo', 'itemNo', 'locationCode', 'newLocationCode', 'lotNo', 'serialNo', 'quantity', 'unitCost', 'qtyCalculated', 'qtyPhysInventory', 'unitCostRevalued'],
+        totals: ['amount'],
+      },
+    ],
+  };
+
+  readonly itemJournalLine: RecordEntity<ItemJournalLineDto, CreateUpdateItemJournalLineDto> = {
+    key: 'itemJournalLine',
+    titleKey: 'Erp::ItemJournalLine',
+    pluralKey: 'Erp::ItemJournalLines',
+    icon: 'fas fa-list',
+    permission: JOURNALS,
+    listRoute: ['/erp/item-journals'],
+    columns: [
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'entryType', labelKey: 'Erp::EntryType', type: 'select', options: enumOptions(itemLedgerEntryTypeOptions, 'ItemLedgerEntryType'), width: 140 },
+      { field: 'documentNo', labelKey: 'Erp::DocumentNo', width: 140 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', width: 110 },
+      { field: 'newLocationCode', labelKey: 'Erp::NewLocationCode', width: 120 },
+      { field: 'lotNo', labelKey: 'Erp::LotNo', width: 110 },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', width: 110 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 100 },
+      { field: 'unitCost', labelKey: 'Erp::UnitCost', type: 'currency', width: 110 },
+      { field: 'amount', labelKey: 'Erp::Amount', type: 'currency', width: 120 },
+      { field: 'qtyCalculated', labelKey: 'Erp::QtyCalculated', type: 'number', width: 130 },
+      { field: 'qtyPhysInventory', labelKey: 'Erp::QtyPhysInventory', type: 'number', width: 140 },
+      { field: 'unitCostRevalued', labelKey: 'Erp::UnitCostRevalued', type: 'currency', width: 140 },
+    ],
+    sections: [
+      { key: 'general', labelKey: 'Erp::General' },
+      { key: 'tracking', labelKey: 'Erp::ItemTrackingLines', collapsed: true },
+    ],
+    fields: [
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
+      { field: 'entryType', labelKey: 'Erp::EntryType', type: 'select', options: enumOptions(itemLedgerEntryTypeOptions, 'ItemLedgerEntryType') },
+      { field: 'documentNo', labelKey: 'Erp::DocumentNo', type: 'text', required: true, maxLength: 20 },
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true }),
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      codeField('locationCode', 'Erp::LocationCode', 'location'),
+      codeField('newLocationCode', 'Erp::NewLocationCode', 'location'),
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', type: 'text', maxLength: 20 },
+      codeField('unitOfMeasureCode', 'Erp::UnitOfMeasureCode', 'unitOfMeasure'),
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number' },
+      { field: 'unitCost', labelKey: 'Erp::UnitCost', type: 'currency', min: 0 },
+      { field: 'qtyCalculated', labelKey: 'Erp::QtyCalculated', type: 'readonly' },
+      { field: 'qtyPhysInventory', labelKey: 'Erp::QtyPhysInventory', type: 'number', min: 0 },
+      { field: 'unitCostCalculated', labelKey: 'Erp::UnitCostCalculated', type: 'readonly' },
+      { field: 'unitCostRevalued', labelKey: 'Erp::UnitCostRevalued', type: 'currency', min: 0 },
+      { field: 'lotNo', labelKey: 'Erp::LotNo', type: 'text', maxLength: 50, section: 'tracking' },
+      { field: 'serialNo', labelKey: 'Erp::SerialNo', type: 'text', maxLength: 50, section: 'tracking' },
+      { field: 'expirationDate', labelKey: 'Erp::ExpirationDate', type: 'date', section: 'tracking' },
+    ],
+    getList: query => this.journalLines.getList(query),
+    get: id => this.journalLines.get(id),
+    create: input => this.journalLines.create(input),
+    update: (id, input) => this.journalLines.update(id, input),
+    delete: id => this.journalLines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.itemNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ postingDate: today(), entryType: ItemLedgerEntryType.PositiveAdjmt, quantity: 0, unitCost: 0, qtyPhysInventory: 0, unitCostRevalued: 0 }),
+  };
+
+  readonly transferOrder: RecordEntity<TransferHeaderDto, CreateUpdateTransferHeaderDto> = {
+    key: 'transferOrder',
+    titleKey: 'Erp::TransferOrder',
+    pluralKey: 'Erp::TransferOrders',
+    icon: 'fas fa-truck-arrow-right',
+    permission: TRANSFERS,
+    listRoute: ['/erp/transfer-orders'],
+    columns: [
+      { field: 'no', labelKey: 'Erp::No', width: 140 },
+      { field: 'fromLocationCode', labelKey: 'Erp::FromLocationCode', width: 140 },
+      { field: 'toLocationCode', labelKey: 'Erp::ToLocationCode', width: 140 },
+      { field: 'inTransitCode', labelKey: 'Erp::InTransitCode', width: 130 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+      { field: 'status', labelKey: 'Erp::Status', type: 'select', options: enumOptions(transferStatusOptions, 'TransferStatus'), width: 120 },
+      { field: 'completed', labelKey: 'Erp::Completed', type: 'boolean', width: 110 },
+    ],
+    sections: [
+      { key: 'general', labelKey: 'Erp::General' },
+      { key: 'shipping', labelKey: 'Erp::Shipping' },
+    ],
+    fields: [
+      { field: 'no', labelKey: 'Erp::No', type: 'text', maxLength: 20, createOnly: true, placeholderKey: 'Erp::NextFromSeries' },
+      codeField('fromLocationCode', 'Erp::FromLocationCode', 'location', 'general', { required: true }),
+      codeField('toLocationCode', 'Erp::ToLocationCode', 'location', 'general', { required: true }),
+      codeField('inTransitCode', 'Erp::InTransitCode', 'location', 'general', { required: true }),
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
+      { field: 'shipmentDate', labelKey: 'Erp::ShipmentDate', type: 'date', section: 'shipping' },
+      { field: 'receiptDate', labelKey: 'Erp::ReceiptDate', type: 'date', section: 'shipping' },
+    ],
+    getList: query => this.transfers.getList(query),
+    get: id => this.transfers.get(id),
+    create: input => this.transfers.create(input),
+    update: (id, input) => this.transfers.update(id, input),
+    delete: id => this.transfers.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: `${dto.fromLocationCode ?? ''} → ${dto.toLocationCode ?? ''}` }),
+    newRecord: () => ({ postingDate: today(), inTransitCode: 'IN-TRANSIT' }),
+    facts: dto => [
+      { labelKey: 'Erp::Status', value: TransferStatus[dto.status] },
+      { labelKey: 'Erp::Completed', value: dto.completed, type: 'boolean' },
+    ],
+    actions: [
+      {
+        key: 'release',
+        labelKey: 'Erp::Release',
+        icon: 'fas fa-lock',
+        permission: `${TRANSFERS}.Update`,
+        visible: dto => dto.status === TransferStatus.Open && !dto.completed,
+        run: dto => this.transfers.release(dto.id!),
+      },
+      {
+        key: 'reopen',
+        labelKey: 'Erp::Reopen',
+        icon: 'fas fa-lock-open',
+        permission: `${TRANSFERS}.Update`,
+        visible: dto => dto.status === TransferStatus.Released && !dto.completed,
+        run: dto => this.transfers.reopen(dto.id!),
+      },
+      {
+        key: 'ship',
+        labelKey: 'Erp::Ship',
+        icon: 'fas fa-truck-fast',
+        permission: `${TRANSFERS}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        visible: dto => !dto.completed,
+        run: dto => this.transfers.ship(dto.id!),
+      },
+      {
+        key: 'receive',
+        labelKey: 'Erp::Receive',
+        icon: 'fas fa-dolly',
+        permission: `${TRANSFERS}.Post`,
+        confirmKey: 'Erp::PostDocumentConfirmation',
+        visible: dto => !dto.completed && !!dto.lastShipmentNo,
+        run: dto => this.transfers.receive(dto.id!),
+      },
+    ],
+    parts: [
+      {
+        entity: 'transferLine',
+        lines: dto => this.transferLines.getList({ transferHeaderId: dto.id, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ transferHeaderId: dto.id }),
+        columns: ['itemNo', 'variantCode', 'description', 'unitOfMeasureCode', 'quantity', 'qtyToShip', 'quantityShipped', 'qtyToReceive', 'quantityReceived'],
+        totals: ['quantity'],
+      },
+    ],
+  };
+
+  readonly transferLine: RecordEntity<TransferLineDto, CreateUpdateTransferLineDto> = {
+    key: 'transferLine',
+    titleKey: 'Erp::TransferLine',
+    pluralKey: 'Erp::TransferLines',
+    icon: 'fas fa-list',
+    permission: TRANSFERS,
+    listRoute: ['/erp/transfer-orders'],
+    columns: [
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', width: 110 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'unitOfMeasureCode', labelKey: 'Erp::UnitOfMeasureCode', width: 110 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 100 },
+      { field: 'qtyToShip', labelKey: 'Erp::QtyToShip', type: 'number', width: 110 },
+      { field: 'quantityShipped', labelKey: 'Erp::QuantityShipped', type: 'number', width: 130 },
+      { field: 'qtyToReceive', labelKey: 'Erp::QtyToReceive', type: 'number', width: 120 },
+      { field: 'quantityReceived', labelKey: 'Erp::QuantityReceived', type: 'number', width: 140 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('itemNo', 'Erp::ItemNo', 'item', 'general', { required: true }),
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', type: 'text', maxLength: 20 },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      codeField('unitOfMeasureCode', 'Erp::UnitOfMeasureCode', 'unitOfMeasure'),
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', required: true, min: 0 },
+      { field: 'qtyToShip', labelKey: 'Erp::QtyToShip', type: 'number', min: 0 },
+      { field: 'quantityShipped', labelKey: 'Erp::QuantityShipped', type: 'readonly' },
+      { field: 'qtyToReceive', labelKey: 'Erp::QtyToReceive', type: 'number', min: 0 },
+      { field: 'quantityReceived', labelKey: 'Erp::QuantityReceived', type: 'readonly' },
+    ],
+    getList: query => this.transferLines.getList(query),
+    get: id => this.transferLines.get(id),
+    create: input => this.transferLines.create(input),
+    update: (id, input) => this.transferLines.update(id, input),
+    delete: id => this.transferLines.delete(id),
+    toItem: dto => ({ id: dto.id, code: dto.itemNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({ quantity: 1 }),
+  };
+
+  readonly postedTransfer: RecordEntity<PostedTransferDto, never> = {
+    key: 'postedTransfer',
+    titleKey: 'Erp::PostedTransfer',
+    pluralKey: 'Erp::PostedTransfers',
+    icon: 'fas fa-truck-ramp-box',
+    permission: TRANSFERS,
+    listRoute: ['/erp/posted-transfers'],
+    readOnly: true,
+    columns: [
+      { field: 'no', labelKey: 'Erp::No', width: 140 },
+      { field: 'receipt', labelKey: 'Erp::TransferReceipt', type: 'boolean', width: 130 },
+      { field: 'transferOrderNo', labelKey: 'Erp::TransferOrderNo', width: 150 },
+      { field: 'fromLocationCode', labelKey: 'Erp::FromLocationCode', width: 140 },
+      { field: 'toLocationCode', labelKey: 'Erp::ToLocationCode', width: 140 },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: 120 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      readonly('no', 'Erp::No'),
+      readonly('transferOrderNo', 'Erp::TransferOrderNo'),
+      readonly('fromLocationCode', 'Erp::FromLocationCode'),
+      readonly('toLocationCode', 'Erp::ToLocationCode'),
+      readonly('inTransitCode', 'Erp::InTransitCode'),
+      readonly('postingDate', 'Erp::PostingDate'),
+    ],
+    getList: query => this.postedTransfers.getList(query),
+    get: id => this.postedTransfers.get(id),
+    create: () => EMPTY,
+    update: () => EMPTY,
+    delete: () => EMPTY,
+    toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.transferOrderNo ?? undefined }),
+    newRecord: () => ({}),
+    parts: [
+      {
+        entity: 'postedTransferLine',
+        lines: dto => of(dto.lines ?? []),
+        totals: ['quantity'],
+        editable: () => false,
+      },
+    ],
+  };
+
+  readonly postedTransferLine: RecordEntity = {
+    key: 'postedTransferLine',
+    titleKey: 'Erp::PostedTransferLine',
+    pluralKey: 'Erp::Lines',
+    icon: 'fas fa-list',
+    permission: TRANSFERS,
+    listRoute: ['/erp/posted-transfers'],
+    readOnly: true,
+    columns: [
+      { field: 'lineNo', labelKey: 'Erp::LineNo', type: 'number', width: 90 },
+      { field: 'itemNo', labelKey: 'Erp::ItemNo', width: 120 },
+      { field: 'variantCode', labelKey: 'Erp::VariantCode', width: 110 },
+      { field: 'description', labelKey: 'Erp::Description' },
+      { field: 'unitOfMeasureCode', labelKey: 'Erp::UnitOfMeasureCode', width: 110 },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: 100 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [readonly('itemNo', 'Erp::ItemNo'), readonly('description', 'Erp::Description'), readonly('quantity', 'Erp::Quantity')],
+    getList: () => of({ items: [], totalCount: 0 }),
+    get: () => EMPTY,
+    create: () => EMPTY,
+    update: () => EMPTY,
+    delete: () => EMPTY,
+    toItem: dto => ({ id: dto.id, code: dto.itemNo ?? '', name: dto.description ?? undefined }),
+    newRecord: () => ({}),
+  };
+
+  get all(): RecordEntity[] {
+    return [
+      this.itemVariant,
+      this.itemUnitOfMeasure,
+      this.itemTrackingCode,
+      this.lotNoInformation,
+      this.serialNoInformation,
+      this.itemTrackingLine,
+      this.itemLedgerEntry,
+      this.itemJournalTemplate,
+      this.itemJournalBatch,
+      this.itemJournalLine,
+      this.transferOrder,
+      this.transferLine,
+      this.postedTransfer,
+      this.postedTransferLine,
+    ];
+  }
+}

@@ -210,6 +210,14 @@ public class GenJournalLine : CompanyEntity
     /// <summary>Message to Recipient.</summary>
     public string MessageToRecipient { get; private set; }
 
+    /// <summary>The last day a payment may take the discount; with <see cref="PaymentDiscountPct"/> it overrides the payment terms.</summary>
+    public DateTime? PmtDiscountDate { get; private set; }
+
+    public decimal PaymentDiscountPct { get; private set; }
+
+    /// <summary>Spreads the G/L account side of the line over later periods.</summary>
+    public string DeferralCode { get; private set; }
+
     protected GenJournalLine() { }
 
     public GenJournalLine(
@@ -312,6 +320,20 @@ public class GenJournalLine : CompanyEntity
     }
 
     public void SetDimensionSet(Guid dimensionSetId) => DimensionSetId = dimensionSetId;
+
+    public void SetPaymentDiscount(DateTime? pmtDiscountDate, decimal paymentDiscountPct)
+    {
+        if (paymentDiscountPct < 0m || paymentDiscountPct > 100m)
+        {
+            throw new BusinessException(ErpErrorCodes.PostingSetup.InvalidPercent).WithData("value", paymentDiscountPct);
+        }
+
+        PmtDiscountDate = pmtDiscountDate?.Date;
+        PaymentDiscountPct = paymentDiscountPct;
+    }
+
+    public void SetDeferralCode(string deferralCode) =>
+        DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxCodeLength));
 
     /// <summary>Sets the currency and its factor, and the LCY amount with them.</summary>
     public void SetCurrency(string currencyCode, decimal currencyFactor)

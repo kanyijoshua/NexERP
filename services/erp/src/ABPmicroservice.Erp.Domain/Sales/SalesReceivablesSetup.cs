@@ -21,6 +21,14 @@ public class SalesReceivablesSetup : CompanyEntity
     public string CreditMemoNos { get; private set; }
     public string PostedInvoiceNos { get; private set; }
     public string PostedCreditMemoNos { get; private set; }
+    public string BlanketOrderNos { get; private set; }
+    public string ReturnOrderNos { get; private set; }
+    public string PostedShipmentNos { get; private set; }
+    public string PostedReturnReceiptNos { get; private set; }
+    public string ReminderNos { get; private set; }
+    public string IssuedReminderNos { get; private set; }
+    public string FinChargeMemoNos { get; private set; }
+    public string IssuedFinChargeMemoNos { get; private set; }
 
     /// <summary>What releasing or posting a document checks the customer's credit against.</summary>
     public CreditWarnings CreditWarnings { get; private set; } = CreditWarnings.BothWarnings;
@@ -52,6 +60,29 @@ public class SalesReceivablesSetup : CompanyEntity
         PostedCreditMemoNos = Code(postedCreditMemoNos, nameof(postedCreditMemoNos));
     }
 
+    /// <summary>The series of blanket orders, return orders and the shipments and return receipts posted from orders.</summary>
+    public void SetOrderNumberSeries(
+        string blanketOrderNos,
+        string returnOrderNos,
+        string postedShipmentNos,
+        string postedReturnReceiptNos
+    )
+    {
+        BlanketOrderNos = Code(blanketOrderNos, nameof(blanketOrderNos));
+        ReturnOrderNos = Code(returnOrderNos, nameof(returnOrderNos));
+        PostedShipmentNos = Code(postedShipmentNos, nameof(postedShipmentNos));
+        PostedReturnReceiptNos = Code(postedReturnReceiptNos, nameof(postedReturnReceiptNos));
+    }
+
+    /// <summary>The series of reminders and finance charge memos, and of the issued ones.</summary>
+    public void SetCollectionNumberSeries(string reminderNos, string issuedReminderNos, string finChargeMemoNos, string issuedFinChargeMemoNos)
+    {
+        ReminderNos = Code(reminderNos, nameof(reminderNos));
+        IssuedReminderNos = Code(issuedReminderNos, nameof(issuedReminderNos));
+        FinChargeMemoNos = Code(finChargeMemoNos, nameof(finChargeMemoNos));
+        IssuedFinChargeMemoNos = Code(issuedFinChargeMemoNos, nameof(issuedFinChargeMemoNos));
+    }
+
     public void SetGeneral(CreditWarnings creditWarnings, bool extDocNoMandatory)
     {
         CreditWarnings = creditWarnings;
@@ -67,6 +98,8 @@ public class SalesReceivablesSetup : CompanyEntity
             SalesDocumentType.Order => OrderNos,
             SalesDocumentType.Invoice => InvoiceNos,
             SalesDocumentType.CreditMemo => CreditMemoNos,
+            SalesDocumentType.BlanketOrder => BlanketOrderNos,
+            SalesDocumentType.ReturnOrder => ReturnOrderNos,
             _ => null,
         };
     }
@@ -74,7 +107,13 @@ public class SalesReceivablesSetup : CompanyEntity
     /// <summary>The series that numbers the posted document.</summary>
     public string GetPostedDocumentNos(SalesDocumentType documentType)
     {
-        return documentType == SalesDocumentType.CreditMemo ? PostedCreditMemoNos : PostedInvoiceNos;
+        return documentType is SalesDocumentType.CreditMemo or SalesDocumentType.ReturnOrder ? PostedCreditMemoNos : PostedInvoiceNos;
+    }
+
+    /// <summary>The series that numbers a posted shipment, or a posted return receipt.</summary>
+    public string GetShipmentNos(bool isReturn)
+    {
+        return isReturn ? PostedReturnReceiptNos : PostedShipmentNos;
     }
 
     private static string Code(string value, string name)

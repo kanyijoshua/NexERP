@@ -111,6 +111,9 @@ export interface CreateUpdateGenJournalLineDto {
   countryRegionCode?: string;
   paymentReference?: string;
   messageToRecipient?: string;
+  pmtDiscountDate?: string;
+  paymentDiscountPct?: number;
+  deferralCode?: string;
 }
 
 export interface CreateUpdateGenJournalTemplateDto {
@@ -267,6 +270,9 @@ export interface GenJournalLineDto extends EntityDto<string> {
   countryRegionCode?: string;
   paymentReference?: string;
   messageToRecipient?: string;
+  pmtDiscountDate?: string;
+  paymentDiscountPct?: number;
+  deferralCode?: string;
 }
 
 export interface GenJournalPostingResultDto {
@@ -387,18 +393,30 @@ export interface CreateUpdatePostingGroupDto extends CreateUpdateCodeTableDto {
 
 export interface CustomerPostingGroupDto extends PostingGroupDto {
   receivablesAccountNo?: string;
+  paymentDiscDebitAccNo?: string;
+  paymentDiscCreditAccNo?: string;
+  additionalFeeAccountNo?: string;
+  interestAccountNo?: string;
 }
 
 export interface CreateUpdateCustomerPostingGroupDto extends CreateUpdatePostingGroupDto {
   receivablesAccountNo: string;
+  paymentDiscDebitAccNo?: string;
+  paymentDiscCreditAccNo?: string;
+  additionalFeeAccountNo?: string;
+  interestAccountNo?: string;
 }
 
 export interface VendorPostingGroupDto extends PostingGroupDto {
   payablesAccountNo?: string;
+  paymentDiscDebitAccNo?: string;
+  paymentDiscCreditAccNo?: string;
 }
 
 export interface CreateUpdateVendorPostingGroupDto extends CreateUpdatePostingGroupDto {
   payablesAccountNo: string;
+  paymentDiscDebitAccNo?: string;
+  paymentDiscCreditAccNo?: string;
 }
 
 export interface GeneralPostingSetupDto extends FullAuditedEntityDto<string> {

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   BankAccReconciliationDto,
   BankAccReconciliationLineDto,
@@ -158,6 +159,7 @@ import { codeField, codeTableEntity, enumOptions } from './entity-helpers';
  */
 @Injectable({ providedIn: 'root' })
 export class BaseTableEntities {
+  private readonly router = inject(Router);
   private readonly sourceCodeService = inject(SourceCodeService);
   private readonly reasonCodeService = inject(ReasonCodeService);
   private readonly countryRegionService = inject(CountryRegionService);
@@ -842,6 +844,17 @@ export class BaseTableEntities {
     icon: 'fas fa-scale-balanced',
     permission: 'Erp.BankReconciliations',
     listRoute: ['/erp/bank-acc-reconciliations'],
+    actions: [
+      {
+        key: 'worksheet',
+        labelKey: 'Erp::BankReconciliationWorksheet',
+        icon: 'fas fa-scale-balanced',
+        run: dto => {
+          void this.router.navigate(['/erp/finance/bank-reconciliation', dto.id]);
+          return EMPTY;
+        },
+      },
+    ],
     parts: [
       {
         entity: 'bankAccReconciliationLine',

@@ -143,6 +143,7 @@ export function postingGroupEntity<TDto extends { id?: string; code?: string; de
   service: CodeTableApi<TDto, TInput>,
   account?: { field: string; labelKey: string },
   permission = 'Erp.PostingSetup',
+  extraFields: RecordField[] = [],
 ): RecordEntity<TDto, TInput> {
   return codeTableEntity(service, {
     key,
@@ -152,6 +153,6 @@ export function postingGroupEntity<TDto extends { id?: string; code?: string; de
     permission,
     route,
     columns: account ? [{ field: account.field, labelKey: account.labelKey, width: 160 }] : [],
-    fields: account ? [accountField(account.field, account.labelKey, 'general', true)] : [],
+    fields: [...(account ? [accountField(account.field, account.labelKey, 'general', true)] : []), ...extraFields],
   });
 }

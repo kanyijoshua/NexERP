@@ -26,6 +26,42 @@ public interface IApplicableLedgerEntry
 
     /// <summary>Takes an applied amount off the entry, closing it when nothing is left.</summary>
     void ReduceRemaining(decimal amount, decimal amountLcy, long closedByEntryNo);
+
+    /// <summary>Gives an applied amount back to the entry when its application is undone, reopening it.</summary>
+    void RestoreRemaining(decimal amount, decimal amountLcy);
+}
+
+/// <summary>
+/// A customer or vendor entry: what applying, unapplying and payment discounts need beyond
+/// <see cref="IApplicableLedgerEntry"/>.
+/// </summary>
+public interface IPartyLedgerEntry : IApplicableLedgerEntry
+{
+    Guid Id { get; }
+
+    Guid PartyId { get; }
+
+    string PartyNo { get; }
+
+    DateTime PostingDate { get; }
+
+    string DocumentType { get; }
+
+    decimal Amount { get; }
+
+    decimal AmountLcy { get; }
+
+    DateTime DueDate { get; }
+
+    Guid DimensionSetId { get; }
+
+    DateTime? PmtDiscountDate { get; }
+
+    decimal RemainingPmtDiscPossible { get; }
+
+    void TakePmtDiscount();
+
+    void RestorePmtDiscount(decimal amount);
 }
 
 /// <summary>
@@ -73,7 +109,7 @@ public static class EntryApplication
     }
 
     // The LCY share of an applied amount; all of it when the entry is settled in full, so no cent is stranded.
-    private static decimal Portion(IApplicableLedgerEntry entry, decimal amount)
+    internal static decimal Portion(IApplicableLedgerEntry entry, decimal amount)
     {
         return amount == entry.RemainingAmount
             ? entry.RemainingAmountLcy

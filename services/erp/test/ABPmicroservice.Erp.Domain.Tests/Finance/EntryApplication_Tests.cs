@@ -38,6 +38,13 @@ public class EntryApplication_Tests
                 ClosedBy = closedByEntryNo;
             }
         }
+
+        public void RestoreRemaining(decimal amount, decimal amountLcy)
+        {
+            RemainingAmount += amount;
+            RemainingAmountLcy += amountLcy;
+            Open = RemainingAmount != 0m;
+        }
     }
 
     [Fact]

@@ -97,7 +97,9 @@ public class CustomerPostingGroupAppService
     protected override async Task ApplyAsync(CustomerPostingGroup entity, CreateUpdateCustomerPostingGroupDto input)
     {
         await PostingSetupManager.EnsureGLAccountsExistAsync(input.ReceivablesAccountNo);
+        await PostingSetupManager.EnsureGLAccountsExistAsync(input.PaymentDiscDebitAccNo, input.PaymentDiscCreditAccNo, input.AdditionalFeeAccountNo, input.InterestAccountNo);
         entity.SetReceivablesAccount(input.ReceivablesAccountNo);
+        entity.SetCollectionAccounts(input.PaymentDiscDebitAccNo, input.PaymentDiscCreditAccNo, input.AdditionalFeeAccountNo, input.InterestAccountNo);
     }
 }
 
@@ -115,6 +117,8 @@ public class VendorPostingGroupAppService
     protected override async Task ApplyAsync(VendorPostingGroup entity, CreateUpdateVendorPostingGroupDto input)
     {
         await PostingSetupManager.EnsureGLAccountsExistAsync(input.PayablesAccountNo);
+        await PostingSetupManager.EnsureGLAccountsExistAsync(input.PaymentDiscDebitAccNo, input.PaymentDiscCreditAccNo);
         entity.SetPayablesAccount(input.PayablesAccountNo);
+        entity.SetPaymentDiscountAccounts(input.PaymentDiscDebitAccNo, input.PaymentDiscCreditAccNo);
     }
 }

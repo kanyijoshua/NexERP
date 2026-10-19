@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -49,4 +50,35 @@ public interface ISalesDocumentAppService
 
     /// <summary>Withdraws a pending request and reopens the document. Routed as POST .../{id}/cancel-approval-request.</summary>
     Task CancelApprovalRequestAsync(Guid id);
+
+    /// <summary>
+    /// Ships and/or invoices an order or return order, with optional quantities per line.
+    /// Routed as POST .../{id}/run-order-posting.
+    /// </summary>
+    Task<SalesPostingResultDto> RunOrderPostingAsync(Guid id, SalesOrderPostingInput input);
+
+    /// <summary>Makes an order from a quote or blanket order. Routed as POST .../{id}/make-order.</summary>
+    Task<SalesHeaderDto> MakeOrderAsync(Guid id, MakeOrderInput input);
+
+    /// <summary>The customer's posted shipment (or return receipt) lines not invoiced yet. Routed as GET .../{id}/open-shipment-lines.</summary>
+    Task<List<OpenShipmentLineDto>> GetOpenShipmentLinesAsync(Guid id);
+
+    /// <summary>Adds posted shipment lines to an invoice. Routed as POST .../{id}/collect-shipment-lines.</summary>
+    Task<SalesHeaderDto> CollectShipmentLinesAsync(Guid id, GetShipmentLinesInput input);
+
+    /// <summary>Appends the lines of another sales document. Routed as POST .../{id}/copy-lines-from.</summary>
+    Task<SalesHeaderDto> CopyLinesFromAsync(Guid id, CopyDocumentLinesInput input);
 }
+
+public interface IPostedSalesShipmentAppService
+    : IReadOnlyAppService<PostedSalesShipmentDto, PostedSalesShipmentDto, Guid, GetPostedSalesDocumentListInput>
+{
+    /// <summary>
+    /// Undoes a shipment line not invoiced yet; <paramref name="id"/> is the shipment line's id.
+    /// Routed as POST .../{id}/undo-line.
+    /// </summary>
+    Task UndoLineAsync(Guid id);
+}
+
+public interface IPostedSalesInvoiceAppService
+    : IReadOnlyAppService<PostedSalesInvoiceDto, PostedSalesInvoiceDto, Guid, GetPostedSalesDocumentListInput> { }

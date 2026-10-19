@@ -194,6 +194,13 @@ public class GenJournalLineDto : EntityDto<Guid>
     public string CountryRegionCode { get; set; }
     public string PaymentReference { get; set; }
     public string MessageToRecipient { get; set; }
+
+    public DateTime? PmtDiscountDate { get; set; }
+
+    public decimal PaymentDiscountPct { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxDeferralTemplateCodeLength)]
+    public string DeferralCode { get; set; }
 }
 
 public class CreateUpdateGenJournalLineDto
@@ -313,6 +320,13 @@ public class CreateUpdateGenJournalLineDto
 
     [StringLength(140)]
     public string MessageToRecipient { get; set; }
+
+    public DateTime? PmtDiscountDate { get; set; }
+
+    public decimal PaymentDiscountPct { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxDeferralTemplateCodeLength)]
+    public string DeferralCode { get; set; }
 }
 
 public class GenJournalPostingResultDto

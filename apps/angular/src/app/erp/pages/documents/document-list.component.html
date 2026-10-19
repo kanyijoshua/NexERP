@@ -87,9 +87,21 @@
                   <i class="fas fa-lock-open"></i>
                 </button>
               }
+              @if (mode === 'invoice' && row.status === DocumentStatus.Open) {
+                <button type="button" class="btn btn-sm btn-outline-info erp-action-btn" [title]="sourceLinesLabelKey | abpLocalization" [attr.aria-label]="sourceLinesLabelKey | abpLocalization" [disabled]="busyId === row.id" (click)="openSource(row, $event)">
+                  <i class="fas fa-truck-ramp-box"></i>
+                </button>
+              }
+            </ng-container>
+            <ng-container *abpPermission="permissionPrefix + '.Create'">
+              @if (makesOrders) {
+                <button type="button" class="btn btn-sm btn-outline-success erp-action-btn" [title]="'Erp::MakeOrder' | abpLocalization" [attr.aria-label]="'Erp::MakeOrder' | abpLocalization" [disabled]="busyId === row.id" (click)="act('makeOrder', row, $event)">
+                  <i class="fas fa-file-signature"></i>
+                </button>
+              }
             </ng-container>
             <ng-container *abpPermission="permissionPrefix + '.Post'">
-              @if (row.status === DocumentStatus.Released) {
+              @if (row.status === DocumentStatus.Released && !makesOrders) {
                 <button type="button" class="btn btn-sm btn-success erp-action-btn" [title]="'Erp::Post' | abpLocalization" [attr.aria-label]="'Erp::Post' | abpLocalization" [disabled]="busyId === row.id" (click)="act('runPosting', row, $event)">
                   <i class="fas fa-check-circle"></i>
                 </button>
@@ -188,9 +200,21 @@
                       <i class="fas fa-lock-open me-1"></i>{{ 'Erp::Reopen' | abpLocalization }}
                     </button>
                   }
+                  @if (mode === 'invoice' && row.status === DocumentStatus.Open) {
+                    <button type="button" class="btn btn-xs btn-outline-info" [disabled]="busyId === row.id" (click)="openSource(row, $event)">
+                      <i class="fas fa-truck-ramp-box me-1"></i>{{ sourceLinesLabelKey | abpLocalization }}
+                    </button>
+                  }
+                </ng-container>
+                <ng-container *abpPermission="permissionPrefix + '.Create'">
+                  @if (makesOrders) {
+                    <button type="button" class="btn btn-xs btn-outline-success" [disabled]="busyId === row.id" (click)="act('makeOrder', row, $event)">
+                      <i class="fas fa-file-signature me-1"></i>{{ 'Erp::MakeOrder' | abpLocalization }}
+                    </button>
+                  }
                 </ng-container>
                 <ng-container *abpPermission="permissionPrefix + '.Post'">
-                  @if (row.status === DocumentStatus.Released) {
+                  @if (row.status === DocumentStatus.Released && !makesOrders) {
                     <button type="button" class="btn btn-xs btn-success" [disabled]="busyId === row.id" (click)="act('runPosting', row, $event)">
                       <i class="fas fa-check-circle me-1"></i>{{ 'Erp::Post' | abpLocalization }}
                     </button>
@@ -213,6 +237,54 @@
 
   <div class="col-xl-4">
     @if (selected) {
+      @if (selectedLines.length) {
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-light fw-bold text-secondary">
+            <i class="fas fa-list-ol text-primary me-2"></i>{{ 'Erp::Lines' | abpLocalization }} · {{ selected.no }}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0 small align-middle">
+              <thead>
+                <tr>
+                  <th>{{ 'Erp::No' | abpLocalization }}</th>
+                  <th class="text-end">{{ 'Erp::Quantity' | abpLocalization }}</th>
+                  @if (mode === 'order' || mode === 'blanket') {
+                    <th class="text-end">{{ (mode === 'blanket' ? 'Erp::QuantityOrdered' : shippedLabelKey) | abpLocalization }}</th>
+                  }
+                  @if (mode === 'order') {
+                    <th class="text-end">{{ 'Erp::QuantityInvoiced' | abpLocalization }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of selectedLines; track line.id) {
+                  <tr>
+                    <td>
+                      <span class="font-monospace">{{ line.no }}</span>
+                      <div class="text-muted text-truncate" style="max-width: 14rem">{{ line.description }}</div>
+                      @if (line.sourceNo) {
+                        <div class="text-muted"><i class="fas fa-truck-ramp-box me-1"></i>{{ line.sourceNo }}</div>
+                      }
+                      @if (canTrack && line.isItem) {
+                        <button type="button" class="btn btn-link btn-sm p-0 small" (click)="openTracking(line)">
+                          <i class="fas fa-barcode me-1"></i>{{ 'Erp::ItemTrackingLines' | abpLocalization }}
+                        </button>
+                      }
+                    </td>
+                    <td class="text-end">{{ line.quantity | number: '1.0-5' }}</td>
+                    @if (mode === 'order' || mode === 'blanket') {
+                      <td class="text-end">{{ line.quantityShipped | number: '1.0-5' }}</td>
+                    }
+                    @if (mode === 'order') {
+                      <td class="text-end">{{ line.quantityInvoiced | number: '1.0-5' }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
       @if (canSeeApprovals && history.length) {
         <div class="card border-0 shadow-sm mb-3">
           <div class="card-header bg-light fw-bold text-secondary">
@@ -298,5 +370,106 @@
   <ng-template #abpFooter>
     <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
     <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isPostOpen" [busy]="isBusy" [options]="{ size: 'lg' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ 'Erp::Post' | abpLocalization }} · {{ postingRow?.no }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <div class="btn-group mb-3" role="group" [attr.aria-label]="'Erp::Post' | abpLocalization">
+      <input type="radio" class="btn-check" name="post-choice" id="post-ship" value="ship" [(ngModel)]="postChoice" />
+      <label class="btn btn-outline-primary" for="post-ship">{{ shipLabelKey | abpLocalization }}</label>
+      <input type="radio" class="btn-check" name="post-choice" id="post-invoice" value="invoice" [(ngModel)]="postChoice" />
+      <label class="btn btn-outline-primary" for="post-invoice">{{ 'Erp::Invoice' | abpLocalization }}</label>
+      <input type="radio" class="btn-check" name="post-choice" id="post-both" value="both" [(ngModel)]="postChoice" />
+      <label class="btn btn-outline-primary" for="post-both">{{ shipLabelKey | abpLocalization }} + {{ 'Erp::Invoice' | abpLocalization }}</label>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle small">
+        <thead>
+          <tr>
+            <th>{{ 'Erp::No' | abpLocalization }}</th>
+            <th class="text-end">{{ 'Erp::Quantity' | abpLocalization }}</th>
+            <th class="text-end">{{ shippedLabelKey | abpLocalization }}</th>
+            <th class="text-end">{{ 'Erp::QuantityInvoiced' | abpLocalization }}</th>
+            <th style="width: 8rem">{{ shipLabelKey | abpLocalization }}</th>
+            <th style="width: 8rem">{{ 'Erp::Invoice' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of postLines; track line.lineId) {
+            <tr>
+              <td>
+                <span class="font-monospace">{{ line.no }}</span>
+                <div class="text-muted text-truncate" style="max-width: 16rem">{{ line.description }}</div>
+              </td>
+              <td class="text-end">{{ line.quantity | number: '1.0-5' }}</td>
+              <td class="text-end">{{ line.shipped | number: '1.0-5' }}</td>
+              <td class="text-end">{{ line.invoiced | number: '1.0-5' }}</td>
+              <td>
+                <input type="number" class="form-control form-control-sm text-end" min="0" [max]="line.quantity - line.shipped" [attr.aria-label]="shipLabelKey | abpLocalization" [disabled]="postChoice === 'invoice'" [(ngModel)]="line.qtyToShip" />
+              </td>
+              <td>
+                <input type="number" class="form-control form-control-sm text-end" min="0" [max]="maxToInvoice(line)" [attr.aria-label]="'Erp::Invoice' | abpLocalization" [disabled]="postChoice === 'ship'" [(ngModel)]="line.qtyToInvoice" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check-circle" (click)="confirmPost()">{{ 'Erp::Post' | abpLocalization }}</abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isSourceOpen" [busy]="isBusy" [options]="{ size: 'lg' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">{{ sourceLinesLabelKey | abpLocalization }} · {{ sourceRow?.no }}</h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    @if (sourceLines.length) {
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle small">
+          <thead>
+            <tr>
+              <th style="width: 2rem"></th>
+              <th>{{ 'Erp::DocumentNo' | abpLocalization }}</th>
+              <th>{{ 'Erp::PostingDate' | abpLocalization }}</th>
+              <th>{{ 'Erp::No' | abpLocalization }}</th>
+              <th class="text-end">{{ 'Erp::QtyNotInvoiced' | abpLocalization }}</th>
+              <th class="text-end">{{ unitAmountLabelKey | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of sourceLines; track line.id) {
+              <tr role="button" tabindex="0" (click)="toggleSource(line.id)" (keydown.enter)="toggleSource(line.id)">
+                <td>
+                  <input type="checkbox" class="form-check-input" [checked]="sourceSelection.has(line.id)" [attr.aria-label]="line.documentNo + ' ' + line.lineNo" (click)="$event.stopPropagation(); toggleSource(line.id)" />
+                </td>
+                <td class="font-monospace">{{ line.documentNo }}<div class="text-muted">{{ line.orderNo }}</div></td>
+                <td>{{ line.postingDate | date: 'mediumDate' }}</td>
+                <td><span class="font-monospace">{{ line.no }}</span><div class="text-muted">{{ line.description }}</div></td>
+                <td class="text-end">{{ line.qtyNotInvoiced | number: '1.0-5' }}</td>
+                <td class="text-end">{{ line.unitAmount | erpAmount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="text-muted mb-0">{{ 'Erp::NoOpenSourceLines' | abpLocalization }}</p>
+    }
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-plus" [disabled]="!sourceSelection.size" (click)="collectSelected()">{{ 'Erp::AddLines' | abpLocalization }}</abp-button>
   </ng-template>
 </abp-modal>

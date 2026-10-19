@@ -21,6 +21,7 @@ public static class ErpDomainConsts
     public const int MaxYourReferenceLength = 35;
     public const int MaxPostingGroupLength = 20;
     public const int MaxUnitOfMeasureCodeLength = 10;
+    public const int MaxLotNoLength = 50;
     public const int MaxDocumentNoLength = 20;
     public const int MaxExternalDocumentNoLength = 35;
     public const int MaxGeneralBusPostingGroupLength = 20;
@@ -57,6 +58,9 @@ public static class ErpDomainConsts
     public const int MaxTaxGroupCodeLength = 20;
     public const int MaxCostTypeLength = 20;
     public const int MaxDeferralTemplateCodeLength = 10;
+    public const int MaxDeferralPeriods = 120;
+    public const int MaxReminderTermsCodeLength = 10;
+    public const int MaxAnalysisPeriods = 60;
     public const int MaxCurrencyDescriptionLength = 60;
     public const int MaxContactLength = 100;
     public const int MaxVatRegistrationNoLength = 20;

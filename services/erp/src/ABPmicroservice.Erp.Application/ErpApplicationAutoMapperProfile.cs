@@ -14,6 +14,7 @@ using ABPmicroservice.Erp.Payroll;
 using ABPmicroservice.Erp.Kanban;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Pensions;
+using ABPmicroservice.Erp.Pricing;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
@@ -55,10 +56,19 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<SalesHeader, SalesHeaderDto>();
         CreateMap<SalesLine, SalesLineDto>();
 
-        // Purchasing
+        // Purchasing & Procurement
         CreateMap<Vendor, VendorDto>();
         CreateMap<PurchaseHeader, PurchaseHeaderDto>();
         CreateMap<PurchaseLine, PurchaseLineDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.ProcurementPlan, ABPmicroservice.Erp.Procurement.ProcurementPlanDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.ProcurementPlanLine, ABPmicroservice.Erp.Procurement.ProcurementPlanLineDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.PurchaseRequisition, ABPmicroservice.Erp.Procurement.PurchaseRequisitionDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.PurchaseRequisitionLine, ABPmicroservice.Erp.Procurement.PurchaseRequisitionLineDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.TenderHeader, ABPmicroservice.Erp.Procurement.TenderHeaderDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.TenderLine, ABPmicroservice.Erp.Procurement.TenderLineDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.TenderCommittee, ABPmicroservice.Erp.Procurement.TenderCommitteeDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.TenderMandatoryRequirement, ABPmicroservice.Erp.Procurement.TenderMandatoryRequirementDto>();
+        CreateMap<ABPmicroservice.Erp.Procurement.TenderBid, ABPmicroservice.Erp.Procurement.TenderBidDto>();
 
         // Number series: the summary fields are filled by NoSeriesAppService from the line in force.
         CreateMap<NoSeries, NoSeriesDto>()
@@ -94,7 +104,75 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ExchRateAdjustmentResult, ExchRateAdjustmentDto>();
         CreateMap<ExchRateAdjmtRegister, ExchRateAdjmtRegisterDto>();
         CreateMap<CustomerLedgerEntry, PartyLedgerEntryDto>().ForMember(d => d.PartyNo, o => o.MapFrom(s => s.CustomerNo));
-        CreateMap<VendorLedgerEntry, PartyLedgerEntryDto>().ForMember(d => d.PartyNo, o => o.MapFrom(s => s.VendorNo));
+        CreateMap<VendorLedgerEntry, PartyLedgerEntryDto>()
+            .ForMember(d => d.PartyNo, o => o.MapFrom(s => s.VendorNo))
+            .ForMember(d => d.LastIssuedReminderLevel, o => o.Ignore());
+
+        // Reminders, deferrals and cash flow
+        CreateMap<ReminderTerms, ReminderTermsDto>();
+        CreateMap<ReminderLevel, ReminderLevelDto>();
+        CreateMap<FinanceChargeTerms, FinanceChargeTermsDto>();
+        CreateMap<DeferralTemplate, DeferralTemplateDto>();
+        CreateMap<PostedDeferralHeader, PostedDeferralHeaderDto>();
+        CreateMap<PostedDeferralLine, PostedDeferralLineDto>();
+        CreateMap<CashFlowForecast, CashFlowForecastDto>();
+        CreateMap<CashFlowManualEntry, CashFlowManualEntryDto>();
+        CreateMap<CashFlowWorksheetLine, CashFlowWorksheetLineDto>();
+        CreateMap<CashFlowForecastEntry, CashFlowForecastEntryDto>();
+
+        // Fixed asset journals
+        CreateMap<FixedAssets.FAJournalBatch, FixedAssets.FAJournalBatchDto>();
+        CreateMap<FixedAssets.FAJournalLine, FixedAssets.FAJournalLineDto>();
+
+        // Service management
+        CreateMap<ServiceManagement.ServiceOrderType, ServiceManagement.ServiceOrderTypeDto>();
+        CreateMap<ServiceManagement.FaultCode, ServiceManagement.FaultCodeDto>();
+        CreateMap<ServiceManagement.ResolutionCode, ServiceManagement.ResolutionCodeDto>();
+        CreateMap<ServiceManagement.ServiceItem, ServiceManagement.ServiceItemDto>();
+        CreateMap<ServiceManagement.ServiceContract, ServiceManagement.ServiceContractDto>();
+        CreateMap<ServiceManagement.ServiceContractLine, ServiceManagement.ServiceContractLineDto>();
+        CreateMap<ServiceManagement.ServiceOrder, ServiceManagement.ServiceOrderDto>()
+            .ForMember(d => d.Amount, o => o.Ignore())
+            .ForMember(d => d.WarrantyAmount, o => o.Ignore());
+        CreateMap<ServiceManagement.ServiceItemLine, ServiceManagement.ServiceItemLineDto>();
+        CreateMap<ServiceManagement.ServiceLine, ServiceManagement.ServiceLineDto>();
+        CreateMap<ServiceManagement.ServiceLedgerEntry, ServiceManagement.ServiceLedgerEntryDto>();
+        CreateMap<ServiceManagement.WarrantyLedgerEntry, ServiceManagement.WarrantyLedgerEntryDto>();
+
+        // Manufacturing
+        CreateMap<Manufacturing.WorkCenter, Manufacturing.WorkCenterDto>();
+        CreateMap<Manufacturing.MachineCenter, Manufacturing.MachineCenterDto>();
+        CreateMap<Manufacturing.ProductionBom, Manufacturing.ProductionBomDto>();
+        CreateMap<Manufacturing.ProductionBomLine, Manufacturing.ProductionBomLineDto>();
+        CreateMap<Manufacturing.Routing, Manufacturing.RoutingDto>();
+        CreateMap<Manufacturing.RoutingLine, Manufacturing.RoutingLineDto>();
+        CreateMap<Manufacturing.ProductionOrder, Manufacturing.ProductionOrderDto>();
+        CreateMap<Manufacturing.ProdOrderComponent, Manufacturing.ProdOrderComponentDto>();
+        CreateMap<Manufacturing.ProdOrderRoutingLine, Manufacturing.ProdOrderRoutingLineDto>();
+        CreateMap<Manufacturing.CapacityLedgerEntry, Manufacturing.CapacityLedgerEntryDto>();
+        CreateMap<Manufacturing.PlanningLine, Manufacturing.PlanningLineDto>();
+
+        // Projects
+        CreateMap<Projects.ProjectPostingGroup, Projects.ProjectPostingGroupDto>();
+        CreateMap<Projects.Resource, Projects.ResourceDto>();
+        CreateMap<Projects.Project, Projects.ProjectDto>();
+        CreateMap<Projects.ProjectTask, Projects.ProjectTaskDto>();
+        CreateMap<Projects.ProjectPlanningLine, Projects.ProjectPlanningLineDto>();
+        CreateMap<Projects.ProjectJournalBatch, Projects.ProjectJournalBatchDto>();
+        CreateMap<Projects.ProjectJournalLine, Projects.ProjectJournalLineDto>();
+        CreateMap<Projects.ProjectLedgerEntry, Projects.ProjectLedgerEntryDto>();
+        CreateMap<Projects.ResourceLedgerEntry, Projects.ResourceLedgerEntryDto>();
+        CreateMap<Projects.TimeSheetHeader, Projects.TimeSheetDto>().ForMember(d => d.Lines, o => o.Ignore());
+
+        // CRM
+        CreateMap<Crm.Contact, Crm.ContactDto>();
+        CreateMap<Crm.Opportunity, Crm.OpportunityDto>();
+        CreateMap<Crm.CloseOpportunityCode, Crm.CloseOpportunityCodeDto>();
+        CreateMap<Crm.ActivityType, Crm.ActivityTypeDto>();
+        CreateMap<Kanban.KanbanStage, Crm.PipelineStageSetupDto>();
+        CreateMap<Crm.Campaign, Crm.CampaignDto>();
+        CreateMap<Crm.CampaignTarget, Crm.CampaignTargetDto>();
+        CreateMap<Crm.InteractionLogEntry, Crm.InteractionLogEntryDto>();
 
         // Finance setup
         CreateMap<PaymentTerms, PaymentTermsDto>();
@@ -273,5 +351,35 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<JobQueueCategory, JobQueueCategoryDto>();
         CreateMap<JobQueueEntry, JobQueueEntryDto>();
         CreateMap<JobQueueLogEntry, JobQueueLogEntryDto>();
+
+        // Orders: posted shipments, receipts and invoices
+        CreateMap<PostedSalesShipment, PostedSalesShipmentDto>();
+        CreateMap<PostedSalesShipmentLine, PostedSalesShipmentLineDto>();
+        CreateMap<PostedSalesHeader, PostedSalesInvoiceDto>();
+        CreateMap<PostedSalesLine, PostedSalesInvoiceLineDto>();
+        CreateMap<PostedPurchaseReceipt, PostedPurchaseReceiptDto>();
+        CreateMap<PostedPurchaseReceiptLine, PostedPurchaseReceiptLineDto>();
+        CreateMap<PostedPurchaseHeader, PostedPurchaseInvoiceDto>();
+        CreateMap<PostedPurchaseLine, PostedPurchaseInvoiceLineDto>();
+
+        // Pricing
+        CreateMap<PriceList, PriceListDto>();
+        CreateMap<PriceListLine, PriceListLineDto>();
+        CreateMap<CustomerPriceGroup, CustomerPriceGroupDto>();
+
+        // Inventory: variants, units, tracking, item journals and transfers
+        CreateMap<ItemVariant, ItemVariantDto>();
+        CreateMap<ItemUnitOfMeasure, ItemUnitOfMeasureDto>();
+        CreateMap<ItemTrackingCode, ItemTrackingCodeDto>();
+        CreateMap<LotNoInformation, LotNoInformationDto>();
+        CreateMap<SerialNoInformation, SerialNoInformationDto>();
+        CreateMap<ItemTrackingLine, ItemTrackingLineDto>();
+        CreateMap<ItemJournalTemplate, ItemJournalTemplateDto>();
+        CreateMap<ItemJournalBatch, ItemJournalBatchDto>().ForMember(d => d.TemplateType, o => o.Ignore());
+        CreateMap<ItemJournalLine, ItemJournalLineDto>();
+        CreateMap<TransferHeader, TransferHeaderDto>();
+        CreateMap<TransferLine, TransferLineDto>();
+        CreateMap<PostedTransfer, PostedTransferDto>();
+        CreateMap<PostedTransferLine, PostedTransferLineDto>();
     }
 }

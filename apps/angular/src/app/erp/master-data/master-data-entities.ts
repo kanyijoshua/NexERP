@@ -62,7 +62,7 @@ import {
   SalesDocumentService,
   SalesDocumentType,
 } from '@proxy/sales';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
 import { accountField, blockActions, codeField, codeOf, enumOptions, postingGroupEntity } from './entity-helpers';
 import { BaseTableEntities } from './base-entities';
 import { PensionEntities } from './pension-entities';
@@ -74,6 +74,18 @@ import { PensionSetupEntities } from './pension-setup-entities';
 import { StudentAccountEntities } from './student-account-entities';
 import { CampusEntities } from './campus-entities';
 import { PayrollEntities } from './payroll-entities';
+import { OrdersEntities } from './orders-entities';
+import { WarehouseEntities } from './warehouse-entities';
+import { FinanceOperationsEntities } from './finance-operations-entities';
+import { FixedAssetPostingEntities } from './fixed-asset-posting-entities';
+import { CrmEntities } from './crm-entities';
+import { ProjectEntities } from './project-entities';
+import { ManufacturingEntities } from './manufacturing-entities';
+import { ServiceEntities } from './service-entities';
+import { reorderPolicyOptions, replenishmentSystemOptions } from '@proxy/manufacturing';
+import { ItemUnitOfMeasureService, ItemVariantService, costingMethodOptions, CostingMethod } from '@proxy/inventory';
+import { ProcurementEntities } from './procurement-entities';
+
 import {
   ADDITIONAL_SECTION,
   CUSTOMER_ADDITIONAL_FIELDS,
@@ -183,7 +195,19 @@ export class MasterDataEntities {
   private readonly campus = inject(CampusEntities);
   private readonly payroll = inject(PayrollEntities);
   private readonly paymentVouchers = inject(PaymentVoucherEntities);
+  private readonly procurement = inject(ProcurementEntities);
+  private readonly orders = inject(OrdersEntities);
+  private readonly warehouse = inject(WarehouseEntities);
+  private readonly financeOperations = inject(FinanceOperationsEntities);
+  private readonly fixedAssetPosting = inject(FixedAssetPostingEntities);
+  private readonly crm = inject(CrmEntities);
+  private readonly projectEntities = inject(ProjectEntities);
+  private readonly manufacturingEntities = inject(ManufacturingEntities);
+  private readonly serviceEntities = inject(ServiceEntities);
+  private readonly itemVariants = inject(ItemVariantService);
+  private readonly itemUnits = inject(ItemUnitOfMeasureService);
   private readonly customerLedgerEntries = inject(CustomerLedgerEntryService);
+
   private readonly vendorLedgerEntries = inject(VendorLedgerEntryService);
 
   readonly customer: RecordEntity<CustomerDto, CreateUpdateCustomerDto> = {
@@ -384,6 +408,7 @@ export class MasterDataEntities {
       { key: 'general', labelKey: 'Erp::General' },
       { key: 'prices', labelKey: 'Erp::PricesAndSales' },
       { key: 'costs', labelKey: 'Erp::CostsAndPosting', collapsed: true },
+      { key: 'planning', labelKey: 'Erp::Replenishment', collapsed: true },
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -405,6 +430,27 @@ export class MasterDataEntities {
       { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', type: 'lookup', lookupEntity: 'genProdPostingGroup', section: 'costs', cardOnly: true },
       { field: 'inventoryPostingGroup', labelKey: 'Erp::InventoryPostingGroup', type: 'lookup', lookupEntity: 'inventoryPostingGroup', section: 'costs', cardOnly: true },
       codeField('vatProdPostingGroup', 'Erp::VatProdPostingGroup', 'vatProdPostingGroup', 'costs', { cardOnly: true }),
+      { field: 'costingMethod', labelKey: 'Erp::CostingMethod', type: 'select', options: enumOptions(costingMethodOptions, 'CostingMethod'), section: 'costs', cardOnly: true },
+      codeField('itemTrackingCode', 'Erp::ItemTrackingCode', 'itemTrackingCode', 'costs', { cardOnly: true }),
+      { field: 'lastDirectCost', labelKey: 'Erp::LastDirectCost', type: 'readonly', section: 'costs', cardOnly: true },
+      { field: 'standardCost', labelKey: 'Erp::StandardCost', type: 'currency', section: 'costs', min: 0, cardOnly: true },
+      {
+        field: 'replenishmentSystem',
+        labelKey: 'Erp::ReplenishmentSystem',
+        type: 'select',
+        options: enumOptions(replenishmentSystemOptions, 'ReplenishmentSystem'),
+        section: 'planning',
+        cardOnly: true,
+      },
+      codeField('vendorNo', 'Erp::VendorNo', 'vendor', 'planning', { cardOnly: true }),
+      codeField('productionBomNo', 'Erp::ProductionBomNo', 'productionBom', 'planning', { cardOnly: true }),
+      codeField('routingNo', 'Erp::RoutingNo', 'routing', 'planning', { cardOnly: true }),
+      { field: 'reorderPolicy', labelKey: 'Erp::ReorderPolicy', type: 'select', options: enumOptions(reorderPolicyOptions, 'ReorderPolicy'), section: 'planning', cardOnly: true },
+      { field: 'reorderPoint', labelKey: 'Erp::ReorderPoint', type: 'number', min: 0, section: 'planning', cardOnly: true },
+      { field: 'reorderQuantity', labelKey: 'Erp::ReorderQuantity', type: 'number', min: 0, section: 'planning', cardOnly: true },
+      { field: 'maximumInventory', labelKey: 'Erp::MaximumInventory', type: 'number', min: 0, section: 'planning', cardOnly: true },
+      { field: 'safetyStock', labelKey: 'Erp::SafetyStock', type: 'number', min: 0, section: 'planning', cardOnly: true },
+      { field: 'leadTimeCalculation', labelKey: 'Erp::LeadTimeCalculation', type: 'text', maxLength: 20, section: 'planning', cardOnly: true },
     ],
     getList: query => this.items.getList(query),
     get: id => this.items.get(id),
@@ -413,7 +459,31 @@ export class MasterDataEntities {
     delete: id => this.items.delete(id),
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
     // An item needs a number and a unit of measure, so there is no one-click "Create 'term'".
-    newRecord: term => ({ description: term ?? '', type: ItemType.Inventory, unitPrice: 0, unitCost: 0 }),
+    newRecord: term => ({ description: term ?? '', type: ItemType.Inventory, unitPrice: 0, unitCost: 0, costingMethod: CostingMethod.Fifo }),
+    related: dto =>
+      of([
+        {
+          labelKey: 'Erp::ItemLedgerEntries',
+          icon: 'fas fa-receipt',
+          routerLink: ['/erp/item-ledger-entries'],
+          queryParams: { filter: dto.no },
+          permission: 'Erp.Items',
+        },
+      ]),
+    parts: [
+      {
+        entity: 'itemVariant',
+        lines: dto => this.itemVariants.getList({ itemNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ itemNo: dto.no }),
+        columns: ['code', 'description', 'blocked'],
+      },
+      {
+        entity: 'itemUnitOfMeasure',
+        lines: dto => this.itemUnits.getList({ itemNo: dto.no, maxResultCount: 1000, skipCount: 0 }).pipe(map(r => r.items ?? [])),
+        newLine: dto => ({ itemNo: dto.no }),
+        columns: ['code', 'qtyPerUnitOfMeasure'],
+      },
+    ],
     facts: dto => [
       { labelKey: 'Erp::Inventory', value: dto.inventory, type: 'number' },
       { labelKey: 'Erp::UnitPrice', value: dto.unitPrice, type: 'currency' },
@@ -745,6 +815,14 @@ export class MasterDataEntities {
     '/erp/customer-posting-groups',
     this.customerGroups,
     { field: 'receivablesAccountNo', labelKey: 'Erp::ReceivablesAccount' },
+    'Erp.PostingSetup',
+    // Discounts granted, reminder fees and interest post to the group's accounts.
+    [
+      accountField('paymentDiscDebitAccNo', 'Erp::PaymentDiscDebitAccNo', 'general'),
+      accountField('paymentDiscCreditAccNo', 'Erp::PaymentDiscCreditAccNo', 'general'),
+      accountField('additionalFeeAccountNo', 'Erp::AdditionalFeeAccountNo', 'general'),
+      accountField('interestAccountNo', 'Erp::InterestAccountNo', 'general'),
+    ],
   );
 
   readonly vendorPostingGroup = postingGroupEntity(
@@ -755,6 +833,11 @@ export class MasterDataEntities {
     '/erp/vendor-posting-groups',
     this.vendorGroups,
     { field: 'payablesAccountNo', labelKey: 'Erp::PayablesAccount' },
+    'Erp.PostingSetup',
+    [
+      accountField('paymentDiscDebitAccNo', 'Erp::PaymentDiscDebitAccNo', 'general'),
+      accountField('paymentDiscCreditAccNo', 'Erp::PaymentDiscCreditAccNo', 'general'),
+    ],
   );
 
   readonly inventoryPostingGroup = postingGroupEntity(
@@ -884,6 +967,16 @@ export class MasterDataEntities {
       ...this.campus.all,
       ...this.payroll.all,
       ...this.paymentVouchers.all,
+      ...this.procurement.all,
+      ...this.orders.all,
+      ...this.warehouse.all,
+      ...this.financeOperations.all,
+      ...this.fixedAssetPosting.all,
+      ...this.crm.all,
+      ...this.projectEntities.all,
+      ...this.manufacturingEntities.all,
+      ...this.serviceEntities.all,
     ];
   }
 }
+

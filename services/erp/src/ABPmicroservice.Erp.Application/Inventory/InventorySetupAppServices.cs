@@ -22,6 +22,7 @@ public class LocationAppService : CodeTableAppServiceBase<Location, LocationDto,
     {
         entity.SetAddress(input.Address, input.City, input.PostCode, input.CountryRegionCode);
         entity.SetContact(input.Contact, input.PhoneNo);
+        entity.SetUseAsInTransit(input.UseAsInTransit);
         return Task.CompletedTask;
     }
 }
@@ -53,10 +54,11 @@ public class InventorySetupAppService : ErpAppService, IInventorySetupAppService
     [Authorize(ErpPermissions.InventorySetup.Update)]
     public async Task<InventorySetupDto> UpdateAsync(InventorySetupDto input)
     {
-        await _codeValidator.EnsureExistAsync(input.ItemNos);
+        await _codeValidator.EnsureExistAsync(input.ItemNos, input.TransferOrderNos, input.PostedTransferShipmentNos, input.PostedTransferReceiptNos);
 
         var setup = await _setupManager.GetAsync();
         setup.SetNumbering(input.ItemNos);
+        setup.SetTransferNumbering(input.TransferOrderNos, input.PostedTransferShipmentNos, input.PostedTransferReceiptNos);
         setup.SetRules(input.LocationMandatory, input.PreventNegativeInventory, input.AutomaticCostPosting);
 
         await _repository.UpdateAsync(setup, autoSave: true);

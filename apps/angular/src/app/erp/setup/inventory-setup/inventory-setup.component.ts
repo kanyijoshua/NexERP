@@ -22,11 +22,22 @@ export class InventorySetupComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly series = signal<NoSeriesDto[]>([]);
+
+  /** The number series fields, in the order they show. */
+  readonly seriesFields = [
+    { control: 'itemNos', labelKey: 'Erp::ItemNos' },
+    { control: 'transferOrderNos', labelKey: 'Erp::TransferOrderNos' },
+    { control: 'postedTransferShipmentNos', labelKey: 'Erp::PostedTransferShipmentNos' },
+    { control: 'postedTransferReceiptNos', labelKey: 'Erp::PostedTransferReceiptNos' },
+  ];
   readonly loading = signal(false);
   readonly saving = signal(false);
 
   readonly form = this.fb.group({
     itemNos: this.fb.control<string | null>(null),
+    transferOrderNos: this.fb.control<string | null>(null),
+    postedTransferShipmentNos: this.fb.control<string | null>(null),
+    postedTransferReceiptNos: this.fb.control<string | null>(null),
     locationMandatory: this.fb.control(false, { nonNullable: true }),
     preventNegativeInventory: this.fb.control(false, { nonNullable: true }),
     automaticCostPosting: this.fb.control(true, { nonNullable: true }),
@@ -41,7 +52,13 @@ export class InventorySetupComponent implements OnInit {
     const value = this.form.getRawValue();
     this.saving.set(true);
     this.setupService
-      .update({ ...value, itemNos: value.itemNos || undefined } as InventorySetupDto)
+      .update({
+        ...value,
+        itemNos: value.itemNos || undefined,
+        transferOrderNos: value.transferOrderNos || undefined,
+        postedTransferShipmentNos: value.postedTransferShipmentNos || undefined,
+        postedTransferReceiptNos: value.postedTransferReceiptNos || undefined,
+      } as InventorySetupDto)
       .pipe(
         finalize(() => this.saving.set(false)),
         takeUntilDestroyed(this.destroyRef),
@@ -64,7 +81,13 @@ export class InventorySetupComponent implements OnInit {
       )
       .subscribe(({ setup, series }) => {
         this.series.set(series.items ?? []);
-        this.form.reset({ ...setup, itemNos: setup.itemNos ?? null });
+        this.form.reset({
+          ...setup,
+          itemNos: setup.itemNos ?? null,
+          transferOrderNos: setup.transferOrderNos ?? null,
+          postedTransferShipmentNos: setup.postedTransferShipmentNos ?? null,
+          postedTransferReceiptNos: setup.postedTransferReceiptNos ?? null,
+        });
       });
   }
 }

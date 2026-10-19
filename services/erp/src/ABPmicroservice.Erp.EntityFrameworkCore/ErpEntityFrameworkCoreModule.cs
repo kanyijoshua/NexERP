@@ -1,4 +1,5 @@
 using System;
+using ABPmicroservice.Erp.Inventory;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.RapidStart;
@@ -51,6 +52,21 @@ public class ErpEntityFrameworkCoreModule : AbpModule
             options.Entity<PurchaseHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<PostedSalesHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<PostedPurchaseHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<PostedSalesShipment>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<PostedPurchaseReceipt>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<TransferHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<PostedTransfer>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Finance.PostedDeferralHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Sales.ReminderHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Sales.FinanceChargeMemoHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Projects.Project>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Tasks));
+            options.Entity<ABPmicroservice.Erp.Projects.TimeSheetHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Manufacturing.ProductionBom>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Manufacturing.Routing>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Manufacturing.ProductionOrder>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Components).Include(x => x.RoutingLines));
+            options.Entity<ABPmicroservice.Erp.ServiceManagement.ServiceContract>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.ServiceManagement.ServiceOrder>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.ItemLines).Include(x => x.Lines));
+            options.Entity<ABPmicroservice.Erp.Pricing.PriceList>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<NoSeries>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
             options.Entity<Workflow>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Steps));
             options.Entity<AccountSchedule>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));

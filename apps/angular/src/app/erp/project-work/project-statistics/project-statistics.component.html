@@ -1,0 +1,61 @@
+<erp-page-toolbar title="Erp::ProjectStatistics" breadcrumb="Erp::Menu:Projects" icon="fas fa-chart-column" [showSearch]="false" [showCreate]="false"></erp-page-toolbar>
+
+@if (project(); as p) {
+  <div class="mb-3">
+    <span class="fw-semibold">{{ p.no }}</span> <span class="text-secondary">{{ p.description }}</span>
+    @if (p.customerName) {
+      <span class="badge bg-light text-secondary border ms-2">{{ p.customerName }}</span>
+    }
+  </div>
+}
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-sm mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">{{ 'Erp::TaskNo' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::Description' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::BudgetCost' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::UsageCost' | abpLocalization }}</th>
+          <th scope="col" style="width: 12rem">{{ 'Erp::CostProgress' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::BudgetPrice' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::UsagePrice' | abpLocalization }}</th>
+          <th scope="col" class="text-end">{{ 'Erp::InvoicedPrice' | abpLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.taskNo) {
+          <tr [class.fw-semibold]="row.taskType !== posting">
+            <td class="font-monospace small">{{ row.taskNo }}</td>
+            <td [style.padding-left.rem]="0.5 + row.indentation">{{ row.description }}</td>
+            <td class="text-end font-monospace">{{ row.budgetCost | erpAmount }}</td>
+            <td class="text-end font-monospace">{{ row.usageCost | erpAmount }}</td>
+            <td>
+              @if (row.budgetCost) {
+                <div class="progress" style="height: 8px" role="progressbar" [attr.aria-valuenow]="percent(row.usageCost, row.budgetCost)" aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar" [class.bg-danger]="row.usageCost > row.budgetCost" [style.width.%]="percent(row.usageCost, row.budgetCost) > 100 ? 100 : percent(row.usageCost, row.budgetCost)"></div>
+                </div>
+                <div class="small text-secondary">{{ percent(row.usageCost, row.budgetCost) }}%</div>
+              }
+            </td>
+            <td class="text-end font-monospace">{{ row.budgetPrice | erpAmount }}</td>
+            <td class="text-end font-monospace">{{ row.usagePrice | erpAmount }}</td>
+            <td class="text-end font-monospace">{{ row.invoicedPrice | erpAmount }}</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <th scope="row" colspan="2">{{ 'Erp::Total' | abpLocalization }}</th>
+          <td class="text-end font-monospace fw-bold">{{ totals().budgetCost | erpAmount }}</td>
+          <td class="text-end font-monospace fw-bold">{{ totals().usageCost | erpAmount }}</td>
+          <td></td>
+          <td class="text-end font-monospace fw-bold">{{ totals().budgetPrice | erpAmount }}</td>
+          <td class="text-end font-monospace fw-bold">{{ totals().usagePrice | erpAmount }}</td>
+          <td class="text-end font-monospace fw-bold">{{ totals().invoicedPrice | erpAmount }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

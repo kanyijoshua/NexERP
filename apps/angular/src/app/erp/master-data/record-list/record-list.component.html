@@ -11,6 +11,19 @@
   [exportDisabled]="!loadedRows.length"
   (export)="onExport($event)"
 >
+  @for (listAction of entity.listActions ?? []; track listAction.key) {
+    <button
+      *abpPermission="listAction.permission ?? ''"
+      type="button"
+      class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-sm"
+      [title]="listAction.labelKey | abpLocalization"
+      [disabled]="runningListAction"
+      (click)="runListAction(listAction)"
+    >
+      <i [class]="listAction.icon"></i>
+      <span class="d-none d-md-inline">{{ listAction.labelKey | abpLocalization }}</span>
+    </button>
+  }
   @if (entity.key === 'glAccount') {
     <button
       *abpPermission="permission('Update')"

@@ -84,6 +84,11 @@ public static class ErpModuleRegistry
     public const string Pensions = "Pensions";
     public const string Academics = "Academics";
     public const string Payroll = "Payroll";
+    public const string Procurement = "Procurement";
+    public const string Crm = "Crm";
+    public const string Projects = "Projects";
+    public const string Manufacturing = "Manufacturing";
+    public const string Service = "Service";
 
     private static readonly List<ErpModuleDefinition> Definitions =
     [
@@ -106,13 +111,18 @@ public static class ErpModuleRegistry
 
         new(Sales, GroupOperations, "fas fa-file-invoice-dollar", "/erp/sales-invoices", false, [Finance], ["Sales"]),
         new(Purchasing, GroupOperations, "fas fa-truck", "/erp/purchase-invoices", false, [Finance], ["Purchasing"]),
-        new(Inventory, GroupOperations, "fas fa-boxes-stacked", null, false, [Finance], ["Inventory"]),
+        new(Inventory, GroupOperations, "fas fa-boxes-stacked", null, false, [Finance], ["Inventory", "Pricing"]),
         new(CashManagement, GroupFinance, "fas fa-building-columns", "/erp/bank-accounts", false, [Finance], ["CashManagement"]),
         new(HumanResources, GroupOperations, "fas fa-id-badge", "/erp/employees", false, [], ["HumanResources"]),
         new(FixedAssets, GroupFinance, "fas fa-building", "/erp/fixed-assets", false, [Finance], ["FixedAssets"]),
         new(Pensions, GroupOperations, "fas fa-piggy-bank", "/erp/pension-members", false, [Finance], ["Pensions"]),
         new(Academics, GroupOperations, "fas fa-graduation-cap", "/erp/students", false, [Finance], ["Academics"]),
         new(Payroll, GroupOperations, "fas fa-money-check-dollar", "/erp/payroll-runs", false, [Finance, HumanResources], ["Payroll"]),
+        new(Service, GroupOperations, "fas fa-screwdriver-wrench", "/erp/service-orders", false, [Sales], ["ServiceManagement"]),
+        new(Manufacturing, GroupOperations, "fas fa-industry", "/erp/production-orders", false, [Purchasing], ["Manufacturing"]),
+        new(Projects, GroupOperations, "fas fa-diagram-project", "/erp/projects", false, [Sales, Purchasing, HumanResources], ["Projects"]),
+        new(Crm, GroupOperations, "fas fa-handshake", "/erp/crm/pipeline", false, [Sales], ["Crm"]),
+        new(Procurement, GroupOperations, "fas fa-file-contract", "/erp/purchase-requisitions", false, [Purchasing, Approvals], ["Procurement"]),
         new(Reporting, GroupFinance, "fas fa-chart-line", "/erp/reports/financial", false, [Finance], ["Reporting"]),
         new(Approvals, GroupCollaboration, "fas fa-user-check", "/erp/approvals", false, [], ["Workflows"]),
         new(Chatter, GroupCollaboration, "fas fa-comments", null, false, [], ["Chatter"]),

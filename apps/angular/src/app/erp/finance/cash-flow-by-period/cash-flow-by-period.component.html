@@ -1,0 +1,110 @@
+<erp-page-toolbar
+  title="Erp::CashFlowByPeriod"
+  breadcrumb="Erp::Menu:CashFlow"
+  icon="fas fa-money-bill-trend-up"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<form class="card border-0 shadow-sm mb-3" (ngSubmit)="load()">
+  <div class="card-body d-flex flex-wrap align-items-end gap-3">
+    @if (forecast(); as f) {
+      <div class="me-3">
+        <div class="small text-secondary">{{ 'Erp::CashFlowForecast' | abpLocalization }}</div>
+        <div class="fw-semibold">{{ f.no }} <span class="fw-normal text-secondary">{{ f.description }}</span></div>
+      </div>
+    }
+    <div>
+      <label class="form-label small mb-1" for="cf-start">{{ 'Erp::StartingDate' | abpLocalization }}</label>
+      <input id="cf-start" type="date" name="startDate" class="form-control form-control-sm" [(ngModel)]="startDate" />
+    </div>
+    <div>
+      <label class="form-label small mb-1" for="cf-type">{{ 'Erp::PeriodType' | abpLocalization }}</label>
+      <select id="cf-type" name="periodType" class="form-select form-select-sm" [(ngModel)]="periodType">
+        @for (option of periodTypes; track option.value) {
+          <option [ngValue]="option.value">{{ option.label | abpLocalization }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label class="form-label small mb-1" for="cf-count">{{ 'Erp::NoOfPeriods' | abpLocalization }}</label>
+      <input id="cf-count" type="number" min="1" max="60" name="periodCount" class="form-control form-control-sm" style="width: 6rem" [(ngModel)]="periodCount" />
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary" [disabled]="busy()">
+      <i class="fas fa-rotate me-1"></i>{{ 'Erp::Show' | abpLocalization }}
+    </button>
+  </div>
+</form>
+
+@if (result(); as r) {
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white fw-bold">{{ 'Erp::ExpectedCashBalance' | abpLocalization }}</div>
+    <div class="card-body">
+      <div class="d-flex align-items-end gap-2" style="height: 140px" role="img" [attr.aria-label]="'Erp::ExpectedCashBalance' | abpLocalization">
+        @for (balance of r.balances; track $index) {
+          <div class="flex-fill d-flex flex-column justify-content-end align-items-center h-100" [title]="(r.periods[$index]?.name ?? '') + ': ' + (balance | erpAmount)">
+            <div
+              class="w-100 rounded-top"
+              [class.bg-primary]="balance >= 0"
+              [class.bg-danger]="balance < 0"
+              [style.height.%]="barHeight(balance)"
+              style="min-height: 2px"
+            ></div>
+          </div>
+        }
+      </div>
+      <div class="d-flex gap-2 mt-1">
+        @for (period of r.periods; track $index) {
+          <div class="flex-fill text-center small text-secondary text-truncate">{{ period.name }}</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">{{ 'Erp::SourceType' | abpLocalization }}</th>
+            @for (period of r.periods; track $index) {
+              <th scope="col" class="text-end text-nowrap">{{ period.name }}</th>
+            }
+            <th scope="col" class="text-end">{{ 'Erp::Total' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of r.rows; track row.sourceType) {
+            <tr>
+              <th scope="row" class="fw-normal text-nowrap">{{ 'Erp::Enum:CashFlowSourceType.' + sourceType[row.sourceType] | abpLocalization }}</th>
+              @for (amount of row.amounts; track $index) {
+                <td class="text-end font-monospace" [class.text-danger]="amount < 0">{{ amount | erpAmount }}</td>
+              }
+              <td class="text-end font-monospace fw-semibold">{{ row.total | erpAmount }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="r.periods.length + 2" class="text-center text-secondary py-4">{{ 'Erp::NoCashFlowEntries' | abpLocalization }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th scope="row">{{ 'Erp::NetCashFlow' | abpLocalization }}</th>
+            @for (total of r.totals; track $index) {
+              <td class="text-end font-monospace fw-semibold">{{ total | erpAmount }}</td>
+            }
+            <td></td>
+          </tr>
+          <tr>
+            <th scope="row">{{ 'Erp::ExpectedCashBalance' | abpLocalization }}</th>
+            @for (balance of r.balances; track $index) {
+              <td class="text-end font-monospace fw-bold" [class.text-danger]="balance < 0">{{ balance | erpAmount }}</td>
+            }
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+}

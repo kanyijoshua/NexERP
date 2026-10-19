@@ -1,0 +1,73 @@
+<erp-page-toolbar
+  title="Erp::ServiceSetup"
+  breadcrumb="Erp::Menu:Service"
+  icon="fas fa-gears"
+  [showSearch]="false"
+  [showCreate]="false"
+></erp-page-toolbar>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="card border-0 shadow-sm" style="max-width: 720px">
+    <div class="card-body">
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-order-nos">{{ 'Erp::ServiceOrderNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="svc-order-nos" class="form-select form-select-sm" formControlName="serviceOrderNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-item-nos">{{ 'Erp::ServiceItemNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="svc-item-nos" class="form-select form-select-sm" formControlName="serviceItemNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-contract-nos">{{ 'Erp::ServiceContractNos' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <select id="svc-contract-nos" class="form-select form-select-sm" formControlName="serviceContractNos">
+            <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+            @for (s of series(); track s.id) {
+              <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-revenue">{{ 'Erp::ServiceRevenueAccount' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="svc-revenue" formControlName="serviceRevenueAccountNo" entity="glAccount"></erp-lookup>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-contract-revenue">{{ 'Erp::ContractRevenueAccount' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="svc-contract-revenue" formControlName="contractRevenueAccountNo" entity="glAccount"></erp-lookup>
+        </div>
+      </div>
+      <div class="row align-items-center mb-2">
+        <label class="col-sm-5 col-form-label" for="svc-warranty">{{ 'Erp::DefaultWarrantyMonths' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <input id="svc-warranty" type="number" min="0" class="form-control form-control-sm" formControlName="defaultWarrantyMonths" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *abpPermission="'Erp.ServiceSetup.Update'" class="mt-3" style="max-width: 720px">
+    <div class="text-end">
+      <abp-button buttonType="submit" iconClass="fa fa-check" [loading]="saving()" [disabled]="form.pristine || loading()">
+        {{ 'Erp::Save' | abpLocalization }}
+      </abp-button>
+    </div>
+  </div>
+</form>

@@ -6,18 +6,23 @@ import {
   CustomerLedgerEntryService,
   GLEntryDocumentType,
   GetPartyLedgerEntryListInput,
+  PartyLedgerEntryDto,
+  PartyLedgerType,
   VendorLedgerEntryService,
   glEntryDocumentTypeOptions,
 } from '@proxy/finance';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ApplyEntriesDialogComponent } from '../apply-entries/apply-entries-dialog.component';
 import { EmployeeLedgerEntryService } from '@proxy/human-resources';
 import { Observable, map } from 'rxjs';
-import { ErpTableColumn, ErpTableComponent, ErpTableSource } from '../../erp-shared';
+import { ErpTableAction, ErpTableColumn, ErpTableComponent, ErpTableSource } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
 export type PartyLedgerKind = 'customer' | 'vendor' | 'employee';
 
 /** One row of any of the three party ledgers, as the page shows it. */
 export interface PartyLedgerRow {
+  id?: string;
   entryNo: number;
   partyNo?: string;
   postingDate?: string;
@@ -61,8 +66,12 @@ export class PartyLedgerEntriesComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly modals = inject(NgbModal);
 
   readonly onlyOpen = signal(false);
+
+  /** Customers and vendors: apply an entry to others of the same party, see its detailed entries, undo it. */
+  actions: ErpTableAction<PartyLedgerRow>[] = [];
 
   kind: PartyLedgerKind = 'customer';
   partyNo: string | null = null;
@@ -84,8 +93,27 @@ export class PartyLedgerEntriesComponent implements OnInit {
     this.kind = (this.route.snapshot.data['kind'] as PartyLedgerKind) ?? 'customer';
     this.partyNo = this.route.snapshot.queryParamMap.get('partyNo');
     this.columns = this.buildColumns();
+    if (this.kind !== 'employee') {
+      this.actions = [
+        {
+          key: 'apply',
+          title: 'Erp::ApplyEntries',
+          icon: 'fas fa-link',
+          permission: 'Erp.EntryApplication',
+          action: (row, event) => this.applyEntries(row, event),
+        },
+      ];
+    }
 
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.table?.reload());
+  }
+
+  applyEntries(row: PartyLedgerRow, event?: Event): void {
+    event?.stopPropagation();
+    const ref = this.modals.open(ApplyEntriesDialogComponent, { size: 'xl', scrollable: true });
+    ref.componentInstance.partyType = this.kind === 'vendor' ? PartyLedgerType.Vendor : PartyLedgerType.Customer;
+    ref.componentInstance.applying = row as unknown as PartyLedgerEntryDto;
+    ref.closed.subscribe(() => this.table?.reload());
   }
 
   toggleOpen(value: boolean): void {

@@ -39,17 +39,19 @@
           <i class="fas fa-hashtag text-primary me-2"></i>{{ 'Erp::Numbering' | abpLocalization }}
         </div>
         <div class="card-body">
-          <div class="row align-items-center">
-            <label class="col-sm-5 col-form-label" for="inv-item-nos">{{ 'Erp::ItemNos' | abpLocalization }}</label>
-            <div class="col-sm-7">
-              <select id="inv-item-nos" class="form-select form-select-sm" formControlName="itemNos">
-                <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
-                @for (s of series(); track s.id) {
-                  <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
-                }
-              </select>
+          @for (field of seriesFields; track field.control) {
+            <div class="row align-items-center mb-2">
+              <label class="col-sm-5 col-form-label" [for]="'inv-' + field.control">{{ field.labelKey | abpLocalization }}</label>
+              <div class="col-sm-7">
+                <select [id]="'inv-' + field.control" class="form-select form-select-sm" [formControlName]="field.control">
+                  <option [ngValue]="null">{{ 'Erp::NumberedByHand' | abpLocalization }}</option>
+                  @for (s of series(); track s.id) {
+                    <option [ngValue]="s.code">{{ s.code }} — {{ s.description }}</option>
+                  }
+                </select>
+              </div>
             </div>
-          </div>
+          }
         </div>
       </div>
     </div>

@@ -146,6 +146,20 @@ export interface RecordAction<TDto> {
 }
 
 /**
+ * An action of the whole table, shown on the list page's toolbar: "Suggest Reminders",
+ * "Create Finance Charge Memos". The list reloads after it.
+ */
+export interface RecordListAction {
+  key: string;
+  labelKey: string;
+  icon: string;
+  /** Full permission name. */
+  permission?: string;
+  confirmKey?: string;
+  run: () => Observable<unknown>;
+}
+
+/**
  * A table of lines shown on a record's card under its fields, e.g. a voucher's lines. The lines are
  * records of another registered entity, opened, added and deleted through its card dialog.
  */
@@ -189,6 +203,8 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   attachmentEntityType?: string;
   /** A table only posting writes (ledger entries, posted statements): no New, Edit or Delete. */
   readOnly?: boolean;
+  /** Records come only from an action (a worksheet's suggestions): Edit and Delete, but no New. */
+  noCreate?: boolean;
   /** Chatter thread key for the card page. No chatter when omitted. */
   chatterEntityType?: string;
   /** Optional row-level styling function for table rows and card view. */
@@ -218,6 +234,8 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
 
   facts?(dto: TDto): RecordFact[];
   actions?: RecordAction<TDto>[];
+  /** Actions of the whole table, on the list page's toolbar. */
+  listActions?: RecordListAction[];
   /** Smart buttons of the card page. */
   related?(dto: TDto): Observable<SmartButton[]>;
   /** Line tables of the card page, under the fields. */
@@ -257,7 +275,7 @@ export class RecordEntityRegistry {
 export const READ_ONLY_PERMISSION = 'Erp.ReadOnlyTable';
 
 export function recordPermission(entity: RecordEntity, action?: 'Create' | 'Update' | 'Delete'): string {
-  if (action && entity.readOnly) {
+  if ((action && entity.readOnly) || (action === 'Create' && entity.noCreate)) {
     // Never granted, so every create, edit and delete affordance stays hidden.
     return READ_ONLY_PERMISSION;
   }

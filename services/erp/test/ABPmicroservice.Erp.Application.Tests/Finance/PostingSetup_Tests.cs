@@ -126,10 +126,10 @@ public class PostingSetup_Tests : ErpApplicationTestBase
 
             // A blank business group is the row for parties without one.
             var blankBus = await _generalSetup.CreateAsync(
-                new CreateUpdateGeneralPostingSetupDto { GenProdPostingGroup = "retail", SalesAccountNo = "4000" }
+                new CreateUpdateGeneralPostingSetupDto { GenProdPostingGroup = "services", SalesAccountNo = "4000" }
             );
             blankBus.GenBusPostingGroup.ShouldBeNull();
-            blankBus.GenProdPostingGroup.ShouldBe("RETAIL");
+            blankBus.GenProdPostingGroup.ShouldBe("SERVICES");
 
             var badAccount = await Should.ThrowAsync<BusinessException>(
                 () => _inventorySetup.CreateAsync(new CreateUpdateInventoryPostingSetupDto { InventoryPostingGroup = "RETAIL", InventoryAccountNo = "9999" })

@@ -28,6 +28,30 @@ public class SalesReceivablesSetupDto
     [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
     public string PostedCreditMemoNos { get; set; }
 
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string BlanketOrderNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string ReturnOrderNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string PostedShipmentNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string PostedReturnReceiptNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string ReminderNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string IssuedReminderNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string FinChargeMemoNos { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string IssuedFinChargeMemoNos { get; set; }
+
     public CreditWarnings CreditWarnings { get; set; }
 
     public bool ExtDocNoMandatory { get; set; }

@@ -197,6 +197,53 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
     /// <summary>Reason Code.</summary>
     public string ReasonCode { get; private set; }
 
+    /// <summary>Source Purchase Requisition No.</summary>
+    public string RequisitionNo { get; private set; }
+
+    /// <summary>Source Tender / RFQ No.</summary>
+    public string TenderNo { get; private set; }
+
+    /// <summary>Purchase Order Lifecycle Stage.</summary>
+    public ABPmicroservice.Erp.Procurement.PurchaseOrderStage OrderStage { get; private set; }
+
+    /// <summary>Contract Commencement Date for LPO/Contracts.</summary>
+    public DateTime? ContractCommencementDate { get; private set; }
+
+    /// <summary>Contract Completion Date for LPO/Contracts.</summary>
+    public DateTime? ContractCompletionDate { get; private set; }
+
+    /// <summary>Whether this Local Purchase Order has been closed.</summary>
+    public bool LpoClosed { get; private set; }
+
+    /// <summary>Closing Comments / Notes.</summary>
+    public string CloseComments { get; private set; }
+
+    /// <summary>User who closed the LPO.</summary>
+    public string ClosedBy { get; private set; }
+
+    /// <summary>Cancellation Comments / Reason.</summary>
+    public string CancelComments { get; private set; }
+
+    /// <summary>User who cancelled the LPO.</summary>
+    public string CancelledBy { get; private set; }
+
+    /// <summary>The last receipt (or return shipment) posted from this order.</summary>
+    public string LastReceivingNo { get; private set; }
+
+    /// <summary>The last invoice (or credit memo) posted from this order.</summary>
+    public string LastPostingNo { get; private set; }
+
+    /// <summary>An order or return order: received and invoiced in parts rather than in one go.</summary>
+    public bool IsOrderType => DocumentType is PurchaseDocumentType.Order or PurchaseDocumentType.ReturnOrder;
+
+    /// <summary>A credit memo or return order: posts with every sign turned round.</summary>
+    public bool IsReturn => DocumentType is PurchaseDocumentType.CreditMemo or PurchaseDocumentType.ReturnOrder;
+
+    public bool IsCompletelyInvoiced => Lines.All(l => l.QuantityInvoiced == l.Quantity);
+
+    /// <summary>A closed or canceled order takes no further postings.</summary>
+    public bool IsClosed => LpoClosed || OrderStage == ABPmicroservice.Erp.Procurement.PurchaseOrderStage.Cancelled;
+
     protected PurchaseHeader()
     {
         Lines = new Collection<PurchaseLine>();
@@ -405,7 +452,7 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         var line = new PurchaseLine(
             lineId,
             Id,
-            Lines.Count + 1,
+            Lines.Count == 0 ? 1 : Lines.Max(l => l.LineNo) + 1,
             type,
             no,
             description,
@@ -429,6 +476,27 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         return line;
     }
 
+    /// <summary>Changes a line in place, so what has been received and invoiced on it is kept.</summary>
+    public PurchaseLine UpdateLine(
+        Guid lineId,
+        DocumentLineType type,
+        string no,
+        string description,
+        decimal quantity,
+        decimal directUnitCost,
+        decimal lineDiscountPercent = 0m,
+        string unitOfMeasureCode = null
+    )
+    {
+        EnsureNotPosted();
+        EnsureOpen();
+
+        var line = GetLine(lineId);
+        line.Update(No, type, no, description, quantity, directUnitCost, lineDiscountPercent, unitOfMeasureCode);
+        RecalculateTotals();
+        return line;
+    }
+
     public void RemoveLine(Guid lineId)
     {
         EnsureNotPosted();
@@ -437,6 +505,7 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         var line = Lines.FirstOrDefault(l => l.Id == lineId);
         if (line != null)
         {
+            EnsureNoPostedQuantity(line);
             Lines.Remove(line);
             RecalculateTotals();
         }
@@ -446,8 +515,91 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
     {
         EnsureNotPosted();
         EnsureOpen();
+        foreach (var line in Lines)
+        {
+            EnsureNoPostedQuantity(line);
+        }
         Lines.Clear();
         RecalculateTotals();
+    }
+
+    public PurchaseLine GetLine(Guid lineId)
+    {
+        return Lines.FirstOrDefault(l => l.Id == lineId)
+            ?? throw new BusinessException(ErpErrorCodes.Documents.LineNotFound)
+                .WithData("documentNo", No)
+                .WithData("lineId", lineId);
+    }
+
+    /// <summary>
+    /// What the next posting of an order receives and invoices. Unlike the rest of the document this
+    /// can be changed while the order is released, which is how a partial receipt is posted.
+    /// </summary>
+    public void SetQuantitiesToPost(Guid lineId, decimal qtyToReceive, decimal qtyToInvoice)
+    {
+        EnsureNotPosted();
+        EnsureNotClosed();
+        GetLine(lineId).SetQuantitiesToPost(No, qtyToReceive, qtyToInvoice);
+    }
+
+    /// <summary>
+    /// Notes what a posting run produced, moves the order stage on, and marks the document posted
+    /// once nothing is left to invoice.
+    /// </summary>
+    internal void RecordPosting(string receivingNo, string postingNo)
+    {
+        if (receivingNo != null)
+        {
+            LastReceivingNo = receivingNo;
+        }
+        if (postingNo != null)
+        {
+            LastPostingNo = postingNo;
+        }
+
+        foreach (var line in Lines)
+        {
+            line.ResetQuantitiesToPost();
+        }
+
+        if (DocumentType == PurchaseDocumentType.Order)
+        {
+            if (IsCompletelyInvoiced)
+            {
+                OrderStage = ABPmicroservice.Erp.Procurement.PurchaseOrderStage.Invoiced;
+            }
+            else if (Lines.All(l => l.QuantityReceived >= l.Quantity))
+            {
+                OrderStage = ABPmicroservice.Erp.Procurement.PurchaseOrderStage.Received;
+            }
+            else if (Lines.Any(l => l.QuantityReceived != 0m))
+            {
+                OrderStage = ABPmicroservice.Erp.Procurement.PurchaseOrderStage.PartiallyReceived;
+            }
+        }
+
+        if (IsCompletelyInvoiced && postingNo != null)
+        {
+            MarkPosted(postingNo);
+        }
+    }
+
+    public void EnsureNotClosed()
+    {
+        if (IsClosed)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.OrderClosed).WithData("documentNo", No);
+        }
+    }
+
+    private void EnsureNoPostedQuantity(PurchaseLine line)
+    {
+        if (line.HasPostedQuantity && !line.IsFromReceipt)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.LineAlreadyPosted)
+                .WithData("documentNo", No)
+                .WithData("lineNo", line.LineNo);
+        }
     }
 
     public void RecalculateTotals()
@@ -578,4 +730,53 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         CreditorNo = CodeTableEntity.NormalizeCode(Check.Length(creditorNo, nameof(creditorNo), 20));
         ReasonCode = CodeTableEntity.NormalizeCode(Check.Length(reasonCode, nameof(reasonCode), 10));
     }
+
+    public void SetProcurementDetails(
+        string requisitionNo = null,
+        string tenderNo = null,
+        DateTime? commencementDate = null,
+        DateTime? completionDate = null
+    )
+    {
+        RequisitionNo = CodeTableEntity.NormalizeCode(Check.Length(requisitionNo, nameof(requisitionNo), 30));
+        TenderNo = CodeTableEntity.NormalizeCode(Check.Length(tenderNo, nameof(tenderNo), 30));
+        ContractCommencementDate = commencementDate?.Date;
+        ContractCompletionDate = completionDate?.Date;
+    }
+
+    public void SetOrderStage(ABPmicroservice.Erp.Procurement.PurchaseOrderStage stage)
+    {
+        OrderStage = stage;
+    }
+
+    /// <summary>Closes an order that will not be received or invoiced any further.</summary>
+    public void CloseLpo(string userId, string comments)
+    {
+        EnsureNotPosted();
+        EnsureNotClosed();
+        LpoClosed = true;
+        ClosedBy = userId;
+        CloseComments = comments;
+        OrderStage = ABPmicroservice.Erp.Procurement.PurchaseOrderStage.Closed;
+    }
+
+    /// <summary>Cancels an order before anything has been received or invoiced on it.</summary>
+    public void CancelLpo(string userId, string comments)
+    {
+        EnsureNotPosted();
+        EnsureNotClosed();
+        var posted = Lines.FirstOrDefault(l => l.HasPostedQuantity);
+        if (posted != null)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.LineAlreadyPosted)
+                .WithData("documentNo", No)
+                .WithData("lineNo", posted.LineNo);
+        }
+
+        CancelComments = comments;
+        CancelledBy = userId;
+        OrderStage = ABPmicroservice.Erp.Procurement.PurchaseOrderStage.Cancelled;
+        Status = DocumentStatus.Open;
+    }
 }
+

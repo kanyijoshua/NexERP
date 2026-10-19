@@ -68,6 +68,14 @@ export interface CreateUpdateSalesHeaderDto {
   paymentTermsCode?: string;
   locationCode?: string;
   externalDocumentNo?: string;
+  shipToCode?: string;
+  shipToName?: string;
+  shipToAddress?: string;
+  shipToCity?: string;
+  shipToPostCode?: string;
+  shipToCountryRegionCode?: string;
+  shipToContact?: string;
+  shipmentDate?: string;
   lines: SalesLineInputDto[];
 }
 
@@ -159,6 +167,18 @@ export interface SalesHeaderDto extends FullAuditedEntityDto<string> {
   totalAmountIncludingVat: number;
   posted: boolean;
   postedDocumentNo?: string;
+  shipToCode?: string;
+  shipToName?: string;
+  shipToAddress?: string;
+  shipToCity?: string;
+  shipToPostCode?: string;
+  shipToCountryRegionCode?: string;
+  shipToContact?: string;
+  shipmentDate?: string;
+  customerPriceGroup?: string;
+  quoteNo?: string;
+  lastShippingNo?: string;
+  lastPostingNo?: string;
   lines: SalesLineDto[];
 }
 
@@ -181,6 +201,22 @@ export interface SalesLineDto extends EntityDto<string> {
   vatBaseAmount: number;
   vatAmount: number;
   unitOfMeasureCode?: string;
+  locationCode?: string;
+  shipmentDate?: string;
+  qtyToShip: number;
+  quantityShipped: number;
+  qtyToInvoice: number;
+  quantityInvoiced: number;
+  shipmentLineId?: string;
+  shipmentNo?: string;
+  shipmentLineNo?: number;
+  blanketOrderNo?: string;
+  blanketOrderLineNo?: number;
+  variantCode?: string;
+  qtyPerUnitOfMeasure: number;
+  deferralCode?: string;
+  projectNo?: string;
+  projectTaskNo?: string;
 }
 
 export interface SalesLineInputDto {
@@ -192,6 +228,14 @@ export interface SalesLineInputDto {
   unitPrice: number;
   lineDiscountPercent: number;
   unitOfMeasureCode?: string;
+  locationCode?: string;
+  shipmentDate?: string;
+  qtyToShip?: number;
+  qtyToInvoice?: number;
+  variantCode?: string;
+  deferralCode?: string;
+  projectNo?: string;
+  projectTaskNo?: string;
 }
 
 export interface SalesReceivablesSetupDto {
@@ -202,6 +246,14 @@ export interface SalesReceivablesSetupDto {
   creditMemoNos?: string;
   postedInvoiceNos?: string;
   postedCreditMemoNos?: string;
+  blanketOrderNos?: string;
+  returnOrderNos?: string;
+  postedShipmentNos?: string;
+  postedReturnReceiptNos?: string;
+  reminderNos?: string;
+  issuedReminderNos?: string;
+  finChargeMemoNos?: string;
+  issuedFinChargeMemoNos?: string;
   creditWarnings: CreditWarnings;
   extDocNoMandatory: boolean;
 }

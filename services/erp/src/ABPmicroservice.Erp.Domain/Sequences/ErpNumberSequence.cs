@@ -39,10 +39,20 @@ public static class ErpSequenceNames
     public const string VendorLedgerEntry = "VENDLEDG";
     public const string ItemLedgerEntry = "ITEMLEDG";
     public const string ValueEntry = "VALUEENTRY";
+    public const string ItemApplicationEntry = "ITEMAPPL";
     public const string GLRegister = "GLREGISTER";
     public const string BankAccountLedgerEntry = "BANKLEDG";
     public const string VatEntry = "VATENTRY";
     public const string EmployeeLedgerEntry = "EMPLLEDG";
+    public const string DetailedCustLedgEntry = "DTLCUSTLEDG";
+    public const string DetailedVendorLedgEntry = "DTLVENDLEDG";
+    public const string CashFlowForecastEntry = "CASHFLOW";
+    public const string FALedgerEntry = "FALEDG";
+    public const string ProjectLedgerEntry = "PROJLEDG";
+    public const string CapacityLedgerEntry = "CAPLEDG";
+    public const string ServiceLedgerEntry = "SERVLEDG";
+    public const string WarrantyLedgerEntry = "WARRLEDG";
+    public const string ResourceLedgerEntry = "RESLEDG";
 
     /// <summary>
     /// Groups the entries written by one posting run,

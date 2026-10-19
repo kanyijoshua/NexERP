@@ -27,6 +27,7 @@ public class StandardReportAppService : ErpAppService, IStandardReportAppService
         [StandardReportAreas.Pensions] = ErpPermissions.Pensions.Default,
         [StandardReportAreas.Academics] = ErpPermissions.Academics.Default,
         [StandardReportAreas.Payroll] = ErpPermissions.Payroll.Default,
+        [StandardReportAreas.Inventory] = ErpPermissions.Items.Default,
     };
 
     private readonly StandardReportCatalog _catalog;

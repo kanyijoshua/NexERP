@@ -2,6 +2,7 @@ import type { ItemType } from './item-type.enum';
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CodeTableDto, CreateUpdateCodeTableDto } from '../companies/models';
 import type { ItemLedgerEntryType } from './item-ledger-entry-type.enum';
+import type { CostingMethod } from './warehouse.enums';
 
 export interface CreateUpdateItemCategoryDto {
   code?: string;
@@ -22,6 +23,19 @@ export interface CreateUpdateItemDto {
   genProdPostingGroup?: string;
   inventoryPostingGroup?: string;
   vatProdPostingGroup?: string;
+  costingMethod?: CostingMethod;
+  itemTrackingCode?: string;
+  replenishmentSystem?: number;
+  productionBomNo?: string;
+  routingNo?: string;
+  reorderPolicy?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  maximumInventory?: number;
+  safetyStock?: number;
+  leadTimeCalculation?: string;
+  standardCost?: number;
+  vendorNo?: string;
 }
 
 export interface CreateUpdateUnitOfMeasureDto {
@@ -41,6 +55,9 @@ export interface GetItemLedgerEntryListInput extends PagedAndSortedResultRequest
   itemId?: string;
   documentNo?: string;
   entryType?: ItemLedgerEntryType;
+  locationCode?: string;
+  lotNo?: string;
+  open?: boolean;
 }
 
 export interface GetItemListInput extends PagedAndSortedResultRequestDto {
@@ -76,7 +93,22 @@ export interface ItemDto extends FullAuditedEntityDto<string> {
   inventory: number;
   genProdPostingGroup?: string;
   inventoryPostingGroup?: string;
+  vatProdPostingGroup?: string;
   blocked: boolean;
+  costingMethod: CostingMethod;
+  itemTrackingCode?: string;
+  replenishmentSystem?: number;
+  productionBomNo?: string;
+  routingNo?: string;
+  reorderPolicy?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  maximumInventory?: number;
+  safetyStock?: number;
+  leadTimeCalculation?: string;
+  standardCost?: number;
+  vendorNo?: string;
+  lastDirectCost: number;
 }
 
 export interface ItemLedgerEntryDto extends EntityDto<string> {
@@ -90,6 +122,14 @@ export interface ItemLedgerEntryDto extends EntityDto<string> {
   unitCost: number;
   salesAmount: number;
   locationCode?: string;
+  variantCode?: string;
+  lotNo?: string;
+  serialNo?: string;
+  expirationDate?: string;
+  invoicedQuantity: number;
+  remainingQuantity: number;
+  open: boolean;
+  costAmountActual: number;
 }
 
 export interface UnitOfMeasureDto extends FullAuditedEntityDto<string> {
@@ -104,6 +144,7 @@ export interface LocationDto extends CodeTableDto {
   countryRegionCode?: string;
   phoneNo?: string;
   contact?: string;
+  useAsInTransit: boolean;
 }
 
 export interface CreateUpdateLocationDto extends CreateUpdateCodeTableDto {
@@ -113,6 +154,7 @@ export interface CreateUpdateLocationDto extends CreateUpdateCodeTableDto {
   countryRegionCode?: string;
   phoneNo?: string;
   contact?: string;
+  useAsInTransit: boolean;
 }
 
 export interface InventorySetupDto {
@@ -120,4 +162,7 @@ export interface InventorySetupDto {
   locationMandatory: boolean;
   preventNegativeInventory: boolean;
   automaticCostPosting: boolean;
+  transferOrderNos?: string;
+  postedTransferShipmentNos?: string;
+  postedTransferReceiptNos?: string;
 }

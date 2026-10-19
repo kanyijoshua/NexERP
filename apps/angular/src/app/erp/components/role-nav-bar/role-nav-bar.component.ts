@@ -31,13 +31,13 @@ const ACTIVE_MATCH: IsActiveMatchOptions = {
 };
 
 /**
- * The role center navigation bar, modeled after Microsoft Dynamics 365 Business Central (BC).
+ * The role center navigation bar.
  * <p>
  * Tier 1 (Main Navigation Bar): Company, top-level groups (Finance ▾, Setup ▾, Reports ▾)
  * and direct links, scrolled with arrows, role switcher, and Menu Suite explorer.
  * <p>
- * Tier 2 (Business Central Sublinks Bar): Displays the sublinks (children) of the currently selected
- * or active group directly beneath the top bar in Business Central accent styling.
+ * Tier 2 (sublinks bar): Displays the sublinks (children) of the currently selected
+ * or active group directly beneath the top bar in accent styling.
  * </p>
  */
 @Component({
@@ -68,7 +68,7 @@ export class RoleNavBarComponent implements OnInit, AfterViewInit {
   /** Explicitly selected top group; null falls back to route-based or first menu group. */
   readonly selectedGroupKey = signal<string | null>(null);
 
-  /** The top group whose sublinks are currently displayed in the BC sublink bar. */
+  /** The top group whose sublinks are currently displayed in the sublink bar. */
   readonly selectedGroup = computed<RoleCenterNavItemDto | null>(() => {
     const all = this.items();
     const key = this.selectedGroupKey();
@@ -87,7 +87,7 @@ export class RoleNavBarComponent implements OnInit, AfterViewInit {
     return all.find(i => this.isMenu(i)) ?? null;
   });
 
-  /** The sublinks to show in the second row (BC sublink bar). */
+  /** The sublinks to show in the second row (sublink bar). */
   readonly sublinks = computed<RoleCenterNavItemDto[]>(() => {
     return this.selectedGroup()?.children ?? [];
   });

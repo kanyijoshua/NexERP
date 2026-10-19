@@ -103,6 +103,9 @@ export interface BankAccountLedgerEntryDto extends EntityDto<string> {
   remainingAmount: number;
   open: boolean;
   reversed: boolean;
+  statementStatus?: number;
+  statementNo?: string;
+  statementLineNo?: number;
 }
 
 export interface GetBankAccountLedgerEntryListInput extends PagedAndSortedResultRequestDto {

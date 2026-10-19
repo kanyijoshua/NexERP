@@ -20,6 +20,20 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
     /// <summary>Source code of a VAT settlement.</summary>
     public const string VatSettlementSourceCode = "VATSTMT";
 
+    /// <summary>Source code of applying posted entries to each other; undone by unapplying, not by reversal.</summary>
+    public const string ApplicationSourceCode = "APPLN";
+
+    /// <summary>Source code of the payments a bank reconciliation posts for its unmatched lines.</summary>
+    public const string BankReconciliationSourceCode = "BANKREC";
+
+    /// <summary>Source code of issued reminders and finance charge memos.</summary>
+    public const string ReminderSourceCode = "REMINDER";
+
+    public const string FinanceChargeSourceCode = "FINCHRG";
+
+    /// <summary>Source code of undoing an application.</summary>
+    public const string UnapplicationSourceCode = "UNAPPL";
+
     /// <summary>Consecutive register number within the company.</summary>
     public long No { get; private set; }
 
@@ -112,7 +126,7 @@ public class GLRegister : CompanyBasicEntity, IHasCreationTime
     public bool IsReversible =>
         !Reversed
         && ReversedRegisterNo == 0
-        && SourceCode is not (ExchRateAdjustmentSourceCode or VatSettlementSourceCode);
+        && SourceCode is not (ExchRateAdjustmentSourceCode or VatSettlementSourceCode or ApplicationSourceCode or UnapplicationSourceCode);
 
     internal void NoteGLEntry(long entryNo)
     {

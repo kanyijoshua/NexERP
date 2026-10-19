@@ -100,4 +100,10 @@ public interface IChatterAppService : IApplicationService
 
     /// <summary>Routed as POST /api/erp/chatter/task.</summary>
     Task<DocumentActivityTaskDto> CreateTaskAsync(CreateActivityTaskDto input);
+
+    /// <summary>Marks an activity done. Routed as POST /api/erp/chatter/{id}/complete-task.</summary>
+    Task<DocumentActivityTaskDto> CompleteTaskAsync(Guid id);
+
+    /// <summary>The open activities assigned to the current user, oldest due first.</summary>
+    Task<ListResultDto<DocumentActivityTaskDto>> GetMyTasksAsync();
 }

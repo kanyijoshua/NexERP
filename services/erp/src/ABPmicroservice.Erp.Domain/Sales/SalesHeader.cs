@@ -54,7 +54,38 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
 
     public string PostedDocumentNo { get; private set; }
 
+    public string ShipToCode { get; private set; }
+    public string ShipToName { get; private set; }
+    public string ShipToAddress { get; private set; }
+    public string ShipToCity { get; private set; }
+    public string ShipToPostCode { get; private set; }
+    public string ShipToCountryRegionCode { get; private set; }
+    public string ShipToContact { get; private set; }
+
+    /// <summary>When the goods are expected to leave; lines without their own date take this one.</summary>
+    public DateTime? ShipmentDate { get; private set; }
+
+    /// <summary>The price group the customer's prices are looked up under.</summary>
+    public string CustomerPriceGroup { get; private set; }
+
+    /// <summary>The quote this order was made from.</summary>
+    public string QuoteNo { get; private set; }
+
+    /// <summary>The last shipment (or return receipt) posted from this order.</summary>
+    public string LastShippingNo { get; private set; }
+
+    /// <summary>The last invoice (or credit memo) posted from this order.</summary>
+    public string LastPostingNo { get; private set; }
+
     public Collection<SalesLine> Lines { get; private set; }
+
+    /// <summary>An order or return order: shipped and invoiced in parts rather than in one go.</summary>
+    public bool IsOrderType => DocumentType is SalesDocumentType.Order or SalesDocumentType.ReturnOrder;
+
+    /// <summary>A credit memo or return order: posts with every sign turned round.</summary>
+    public bool IsReturn => DocumentType is SalesDocumentType.CreditMemo or SalesDocumentType.ReturnOrder;
+
+    public bool IsCompletelyInvoiced => Lines.All(l => l.QuantityInvoiced == l.Quantity);
 
     protected SalesHeader()
     {
@@ -139,6 +170,43 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         );
     }
 
+    public void SetShipTo(
+        string shipToCode,
+        string shipToName = null,
+        string shipToAddress = null,
+        string shipToCity = null,
+        string shipToPostCode = null,
+        string shipToCountryRegionCode = null,
+        string shipToContact = null
+    )
+    {
+        EnsureNotPosted();
+        ShipToCode = CodeTableEntity.NormalizeCode(Check.Length(shipToCode, nameof(shipToCode), ErpDomainConsts.MaxLocationCodeLength));
+        ShipToName = Check.Length(shipToName, nameof(shipToName), ErpDomainConsts.MaxNameLength);
+        ShipToAddress = Check.Length(shipToAddress, nameof(shipToAddress), ErpDomainConsts.MaxAddressLength);
+        ShipToCity = Check.Length(shipToCity, nameof(shipToCity), ErpDomainConsts.MaxCityLength);
+        ShipToPostCode = Check.Length(shipToPostCode, nameof(shipToPostCode), ErpDomainConsts.MaxPostCodeLength);
+        ShipToCountryRegionCode = CodeTableEntity.NormalizeCode(Check.Length(shipToCountryRegionCode, nameof(shipToCountryRegionCode), ErpDomainConsts.MaxCountryRegionCodeLength));
+        ShipToContact = Check.Length(shipToContact, nameof(shipToContact), ErpDomainConsts.MaxContactLength);
+    }
+
+    public void SetShipmentDate(DateTime? shipmentDate)
+    {
+        EnsureNotPosted();
+        ShipmentDate = shipmentDate?.Date;
+    }
+
+    public void SetCustomerPriceGroup(string customerPriceGroup)
+    {
+        EnsureNotPosted();
+        CustomerPriceGroup = CodeTableEntity.NormalizeCode(Check.Length(customerPriceGroup, nameof(customerPriceGroup), ErpDomainConsts.MaxPostingGroupLength));
+    }
+
+    public void SetQuoteNo(string quoteNo)
+    {
+        QuoteNo = Check.Length(quoteNo, nameof(quoteNo), ErpDomainConsts.MaxDocumentNoLength);
+    }
+
     public SalesLine AddLine(
         Guid lineId,
         DocumentLineType type,
@@ -156,7 +224,7 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         var line = new SalesLine(
             lineId,
             Id,
-            Lines.Count + 1,
+            Lines.Count == 0 ? 1 : Lines.Max(l => l.LineNo) + 1,
             type,
             no,
             description,
@@ -171,6 +239,27 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         return line;
     }
 
+    /// <summary>Changes a line in place, so what has been shipped and invoiced on it is kept.</summary>
+    public SalesLine UpdateLine(
+        Guid lineId,
+        DocumentLineType type,
+        string no,
+        string description,
+        decimal quantity,
+        decimal unitPrice,
+        decimal lineDiscountPercent = 0m,
+        string unitOfMeasureCode = null
+    )
+    {
+        EnsureNotPosted();
+        EnsureOpen();
+
+        var line = GetLine(lineId);
+        line.Update(No, type, no, description, quantity, unitPrice, lineDiscountPercent, unitOfMeasureCode);
+        RecalculateTotals();
+        return line;
+    }
+
     public void RemoveLine(Guid lineId)
     {
         EnsureNotPosted();
@@ -179,6 +268,7 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         var line = Lines.FirstOrDefault(l => l.Id == lineId);
         if (line != null)
         {
+            EnsureNoPostedQuantity(line);
             Lines.Remove(line);
             RecalculateTotals();
         }
@@ -188,8 +278,63 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
     {
         EnsureNotPosted();
         EnsureOpen();
+        foreach (var line in Lines)
+        {
+            EnsureNoPostedQuantity(line);
+        }
         Lines.Clear();
         RecalculateTotals();
+    }
+
+    public SalesLine GetLine(Guid lineId)
+    {
+        return Lines.FirstOrDefault(l => l.Id == lineId)
+            ?? throw new BusinessException(ErpErrorCodes.Documents.LineNotFound)
+                .WithData("documentNo", No)
+                .WithData("lineId", lineId);
+    }
+
+    /// <summary>
+    /// What the next posting of an order ships and invoices. Unlike the rest of the document this
+    /// can be changed while the order is released, which is how a partial shipment is posted.
+    /// </summary>
+    public void SetQuantitiesToPost(Guid lineId, decimal qtyToShip, decimal qtyToInvoice)
+    {
+        EnsureNotPosted();
+        GetLine(lineId).SetQuantitiesToPost(No, qtyToShip, qtyToInvoice);
+    }
+
+    /// <summary>Notes what a posting run produced, and marks the document posted once nothing is left to invoice.</summary>
+    internal void RecordPosting(string shippingNo, string postingNo)
+    {
+        if (shippingNo != null)
+        {
+            LastShippingNo = shippingNo;
+        }
+        if (postingNo != null)
+        {
+            LastPostingNo = postingNo;
+        }
+
+        foreach (var line in Lines)
+        {
+            line.ResetQuantitiesToPost();
+        }
+
+        if (IsCompletelyInvoiced && postingNo != null)
+        {
+            MarkPosted(postingNo);
+        }
+    }
+
+    private void EnsureNoPostedQuantity(SalesLine line)
+    {
+        if (line.HasPostedQuantity && !line.IsFromShipment)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.LineAlreadyPosted)
+                .WithData("documentNo", No)
+                .WithData("lineNo", line.LineNo);
+        }
     }
 
     public void RecalculateTotals()

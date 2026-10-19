@@ -91,6 +91,36 @@ public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvi
             L("Permission:Erp:PurchaseDocuments:Post")
         );
 
+        var procPlans = erpGroup.AddPermission(
+            ErpPermissions.ProcurementPlans.Default,
+            L("Permission:Erp:ProcurementPlans")
+        );
+        procPlans.AddChild(ErpPermissions.ProcurementPlans.Create, L("Permission:Erp:ProcurementPlans:Create"));
+        procPlans.AddChild(ErpPermissions.ProcurementPlans.Update, L("Permission:Erp:ProcurementPlans:Update"));
+        procPlans.AddChild(ErpPermissions.ProcurementPlans.Delete, L("Permission:Erp:ProcurementPlans:Delete"));
+        procPlans.AddChild(ErpPermissions.ProcurementPlans.Approve, L("Permission:Erp:ProcurementPlans:Approve"));
+
+        var requisitions = erpGroup.AddPermission(
+            ErpPermissions.PurchaseRequisitions.Default,
+            L("Permission:Erp:PurchaseRequisitions")
+        );
+        requisitions.AddChild(ErpPermissions.PurchaseRequisitions.Create, L("Permission:Erp:PurchaseRequisitions:Create"));
+        requisitions.AddChild(ErpPermissions.PurchaseRequisitions.Update, L("Permission:Erp:PurchaseRequisitions:Update"));
+        requisitions.AddChild(ErpPermissions.PurchaseRequisitions.Delete, L("Permission:Erp:PurchaseRequisitions:Delete"));
+        requisitions.AddChild(ErpPermissions.PurchaseRequisitions.Release, L("Permission:Erp:PurchaseRequisitions:Release"));
+        requisitions.AddChild(ErpPermissions.PurchaseRequisitions.Convert, L("Permission:Erp:PurchaseRequisitions:Convert"));
+
+        var tenders = erpGroup.AddPermission(
+            ErpPermissions.Tenders.Default,
+            L("Permission:Erp:Tenders")
+        );
+        tenders.AddChild(ErpPermissions.Tenders.Create, L("Permission:Erp:Tenders:Create"));
+        tenders.AddChild(ErpPermissions.Tenders.Update, L("Permission:Erp:Tenders:Update"));
+        tenders.AddChild(ErpPermissions.Tenders.Delete, L("Permission:Erp:Tenders:Delete"));
+        tenders.AddChild(ErpPermissions.Tenders.Release, L("Permission:Erp:Tenders:Release"));
+        tenders.AddChild(ErpPermissions.Tenders.Evaluate, L("Permission:Erp:Tenders:Evaluate"));
+        tenders.AddChild(ErpPermissions.Tenders.Award, L("Permission:Erp:Tenders:Award"));
+
         AddCrud(
             erpGroup,
             ErpPermissions.Dimensions.Default,
@@ -267,6 +297,7 @@ public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvi
         jobQueue.AddChild(ErpPermissions.JobQueue.Execute, L("Permission:Erp:JobQueue:Execute"));
 
         DefineBaseTables(erpGroup);
+        DefineFinanceOperations(erpGroup);
 
         AddCrud(erpGroup, ErpPermissions.Pensions.Default, ErpPermissions.Pensions.Create, ErpPermissions.Pensions.Update, ErpPermissions.Pensions.Delete, "Pensions");
         erpGroup.GetPermissionOrNull(ErpPermissions.Pensions.Default).AddChild(ErpPermissions.Pensions.Post, L("Permission:Erp:Pensions:Post"));
@@ -281,6 +312,14 @@ public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvi
         AddCrud(erpGroup, ErpPermissions.PaymentVoucherSetup.Default, ErpPermissions.PaymentVoucherSetup.Create, ErpPermissions.PaymentVoucherSetup.Update, ErpPermissions.PaymentVoucherSetup.Delete, "PaymentVoucherSetup");
 
         AddCrud(erpGroup, ErpPermissions.Payroll.Default, ErpPermissions.Payroll.Create, ErpPermissions.Payroll.Update, ErpPermissions.Payroll.Delete, "Payroll");
+        erpGroup.AddPermission(ErpPermissions.ItemJournals.Default, L("Permission:Erp:ItemJournals"))
+            .AddChild(ErpPermissions.ItemJournals.Post, L("Permission:Erp:ItemJournals:Post"));
+        var transfers = erpGroup.AddPermission(ErpPermissions.TransferOrders.Default, L("Permission:Erp:TransferOrders"));
+        transfers.AddChild(ErpPermissions.TransferOrders.Create, L("Permission:Erp:TransferOrders:Create"));
+        transfers.AddChild(ErpPermissions.TransferOrders.Update, L("Permission:Erp:TransferOrders:Update"));
+        transfers.AddChild(ErpPermissions.TransferOrders.Delete, L("Permission:Erp:TransferOrders:Delete"));
+        transfers.AddChild(ErpPermissions.TransferOrders.Post, L("Permission:Erp:TransferOrders:Post"));
+        AddCrud(erpGroup, ErpPermissions.PriceLists.Default, ErpPermissions.PriceLists.Create, ErpPermissions.PriceLists.Update, ErpPermissions.PriceLists.Delete, "PriceLists");
         erpGroup.GetPermissionOrNull(ErpPermissions.Payroll.Default).AddChild(ErpPermissions.Payroll.Post, L("Permission:Erp:Payroll:Post"));
         AddCrud(erpGroup, ErpPermissions.PayrollSetup.Default, ErpPermissions.PayrollSetup.Create, ErpPermissions.PayrollSetup.Update, ErpPermissions.PayrollSetup.Delete, "PayrollSetup");
 

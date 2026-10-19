@@ -12,6 +12,10 @@ import { PartyLedgerEntriesComponent } from './party-ledger-entries/party-ledger
 import { ExchRateAdjustmentComponent } from './exch-rate-adjustment/exch-rate-adjustment.component';
 import { VatReturnComponent } from './vat-return/vat-return.component';
 import { VatSettlementComponent } from './vat-settlement/vat-settlement.component';
+import { ApplyEntriesDialogComponent } from './apply-entries/apply-entries-dialog.component';
+import { BankReconciliationWorksheetComponent } from './bank-reconciliation-worksheet/bank-reconciliation-worksheet.component';
+import { CashFlowByPeriodComponent } from './cash-flow-by-period/cash-flow-by-period.component';
+import { BudgetMatrixComponent } from './budget-matrix/budget-matrix.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'general-journal', pathMatch: 'full' },
@@ -87,6 +91,24 @@ const routes: Routes = [
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.PeriodicActivities.SettleVat' },
   },
+  {
+    path: 'bank-reconciliation/:id',
+    component: BankReconciliationWorksheetComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.BankReconciliations' },
+  },
+  {
+    path: 'cash-flow-by-period/:id',
+    component: CashFlowByPeriodComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.CashFlow' },
+  },
+  {
+    path: 'budget-matrix',
+    component: BudgetMatrixComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Budgets' },
+  },
 ];
 
 @NgModule({
@@ -101,6 +123,10 @@ const routes: Routes = [
     ExchRateAdjustmentComponent,
     VatReturnComponent,
     VatSettlementComponent,
+    ApplyEntriesDialogComponent,
+    BankReconciliationWorksheetComponent,
+    CashFlowByPeriodComponent,
+    BudgetMatrixComponent,
   ],
   imports: [ErpSharedModule, RouterModule.forChild(routes)],
 })

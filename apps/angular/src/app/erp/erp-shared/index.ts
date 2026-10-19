@@ -16,6 +16,7 @@ export * from './document-page/document-totals';
 export * from './journal-page/journal-page.component';
 export * from './journal-page/journal-balance';
 export * from './kanban-board/kanban-board.component';
+export * from './week-grid/week-grid.component';
 export * from './report-page/report-page.component';
 export * from './report-page/save-blob';
 export * from './file/read-file-base64';

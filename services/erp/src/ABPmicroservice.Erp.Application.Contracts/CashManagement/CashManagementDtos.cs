@@ -171,6 +171,9 @@ public class BankAccountLedgerEntryDto : EntityDto<Guid>
     public decimal RemainingAmount { get; set; }
     public bool Open { get; set; }
     public bool Reversed { get; set; }
+    public BankEntryStatementStatus StatementStatus { get; set; }
+    public string StatementNo { get; set; }
+    public int StatementLineNo { get; set; }
 }
 
 public class GetBankAccountLedgerEntryListInput : ErpPagedListInput

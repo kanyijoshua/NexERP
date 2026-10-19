@@ -149,6 +149,13 @@ public class BankAccount : CompanyAggregateRoot, IHasNo
 
     public void Unblock() => Blocked = false;
 
+    /// <summary>Remembers the last posted statement, which the next reconciliation starts from.</summary>
+    internal void RecordStatement(string statementNo, decimal endingBalance)
+    {
+        LastStatementNo = statementNo;
+        BalanceLastStatement = endingBalance;
+    }
+
     internal void ApplyBalance(decimal amount, decimal amountLcy)
     {
         Balance += amount;
@@ -226,6 +233,28 @@ public class BankAccountLedgerEntry : LedgerEntryBase
     public bool Reversed { get; internal set; }
     public long ReversedByEntryNo { get; internal set; }
     public long ReversedEntryNo { get; internal set; }
+
+    /// <summary>Whether the entry is on no statement, matched on one being reconciled, or on a posted one.</summary>
+    public BankEntryStatementStatus StatementStatus { get; private set; }
+
+    public string StatementNo { get; private set; }
+
+    public int StatementLineNo { get; private set; }
+
+    internal void SetStatement(BankEntryStatementStatus status, string statementNo, int statementLineNo)
+    {
+        StatementStatus = status;
+        StatementNo = statementNo;
+        StatementLineNo = statementLineNo;
+    }
+
+    /// <summary>The statement it was matched on has been posted: the entry is reconciled.</summary>
+    internal void CloseOnStatement()
+    {
+        StatementStatus = BankEntryStatementStatus.Closed;
+        Open = false;
+        RemainingAmount = 0m;
+    }
 
     protected BankAccountLedgerEntry() { }
 

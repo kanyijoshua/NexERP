@@ -35,12 +35,16 @@ public class SalesSetupAppService : ErpAppService, ISalesSetupAppService
     {
         await _codeValidator.EnsureExistAsync(
             input.CustomerNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
-            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
+            input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos,
+            input.BlanketOrderNos, input.ReturnOrderNos, input.PostedShipmentNos, input.PostedReturnReceiptNos,
+            input.ReminderNos, input.IssuedReminderNos, input.FinChargeMemoNos, input.IssuedFinChargeMemoNos);
 
         var setup = await _setupManager.GetAsync();
         setup.SetNumberSeries(
             input.CustomerNos, input.QuoteNos, input.OrderNos, input.InvoiceNos,
             input.CreditMemoNos, input.PostedInvoiceNos, input.PostedCreditMemoNos);
+        setup.SetOrderNumberSeries(input.BlanketOrderNos, input.ReturnOrderNos, input.PostedShipmentNos, input.PostedReturnReceiptNos);
+        setup.SetCollectionNumberSeries(input.ReminderNos, input.IssuedReminderNos, input.FinChargeMemoNos, input.IssuedFinChargeMemoNos);
         setup.SetGeneral(input.CreditWarnings, input.ExtDocNoMandatory);
 
         await _repository.UpdateAsync(setup, autoSave: true);

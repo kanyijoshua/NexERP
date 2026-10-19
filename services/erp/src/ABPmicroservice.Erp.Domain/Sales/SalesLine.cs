@@ -1,4 +1,5 @@
 using System;
+using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Documents;
 using ABPmicroservice.Erp.Finance;
 using Volo.Abp;
@@ -9,6 +10,12 @@ namespace ABPmicroservice.Erp.Sales;
 /// <summary>
 /// Sales document line.
 /// Child entity of <see cref="SalesHeader"/>.
+/// <para>
+/// On an order the quantity is shipped and invoiced in parts: <see cref="QtyToShip"/> and
+/// <see cref="QtyToInvoice"/> say what the next posting does, <see cref="QuantityShipped"/> and
+/// <see cref="QuantityInvoiced"/> what has been done. On a return order "ship" means receiving the
+/// goods back. An invoice or credit memo ships and invoices the whole quantity in one go.
+/// </para>
 /// </summary>
 public class SalesLine : Entity<Guid>
 {
@@ -51,6 +58,74 @@ public class SalesLine : Entity<Guid>
     /// <summary>The VAT of the line, also for reverse charge where the party does not pay it.</summary>
     public decimal VatAmount { get; private set; }
 
+    /// <summary>Where the stock of this line ships from; blank takes the header's location.</summary>
+    public string LocationCode { get; private set; }
+
+    public DateTime? ShipmentDate { get; private set; }
+
+    public decimal QtyToShip { get; private set; }
+
+    public decimal QuantityShipped { get; private set; }
+
+    public decimal QtyToInvoice { get; private set; }
+
+    public decimal QuantityInvoiced { get; private set; }
+
+    /// <summary>Set on an invoice line made from a posted shipment line: the goods have already left.</summary>
+    public Guid? ShipmentLineId { get; private set; }
+
+    public string ShipmentNo { get; private set; }
+
+    public int? ShipmentLineNo { get; private set; }
+
+    /// <summary>The blanket order line an order line draws its quantity from.</summary>
+    public string BlanketOrderNo { get; private set; }
+
+    public int? BlanketOrderLineNo { get; private set; }
+
+    /// <summary>The variant of the item; blank is the item itself.</summary>
+    public string VariantCode { get; private set; }
+
+    /// <summary>Base units in one unit of the line's unit of measure.</summary>
+    public decimal QtyPerUnitOfMeasure { get; private set; } = 1m;
+
+    /// <summary>Spreads the revenue of the line over later periods.</summary>
+    public string DeferralCode { get; private set; }
+
+    /// <summary>The project task the line bills; posting writes a project sale.</summary>
+    public string ProjectNo { get; private set; }
+
+    public string ProjectTaskNo { get; private set; }
+
+    public void SetProject(string projectNo, string projectTaskNo)
+    {
+        ProjectNo = CodeTableEntity.NormalizeCode(Check.Length(projectNo, nameof(projectNo), ErpDomainConsts.MaxNoLength));
+        ProjectTaskNo = ProjectNo == null ? null : CodeTableEntity.NormalizeCode(Check.Length(projectTaskNo, nameof(projectTaskNo), ErpDomainConsts.MaxNoLength));
+    }
+
+    public void SetDeferralCode(string deferralCode)
+    {
+        DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxDeferralTemplateCodeLength));
+    }
+
+    public void SetVariant(string variantCode)
+    {
+        VariantCode = CodeTableEntity.NormalizeCode(Check.Length(variantCode, nameof(variantCode), ErpDomainConsts.MaxCodeLength));
+    }
+
+    public void SetQtyPerUnitOfMeasure(decimal qtyPerUnitOfMeasure)
+    {
+        QtyPerUnitOfMeasure = qtyPerUnitOfMeasure > 0m ? qtyPerUnitOfMeasure : 1m;
+    }
+
+    public decimal OutstandingQuantity => Quantity - QuantityShipped;
+
+    public decimal QtyShippedNotInvoiced => QuantityShipped - QuantityInvoiced;
+
+    public bool HasPostedQuantity => QuantityShipped != 0m || QuantityInvoiced != 0m;
+
+    public bool IsFromShipment => ShipmentLineId.HasValue;
+
     protected SalesLine() { }
 
     public SalesLine(
@@ -89,8 +164,147 @@ public class SalesLine : Entity<Guid>
         Quantity = quantity;
         UnitPrice = unitPrice;
         LineDiscountPercent = lineDiscountPercent;
+        ResetQuantitiesToPost();
         RecalculateAmounts();
     }
+
+    /// <summary>
+    /// Changes the line in place. Once part of it has been shipped or invoiced it keeps its item or
+    /// account, cannot go below what has been posted, and once invoicing has started its price is fixed.
+    /// </summary>
+    public void Update(
+        string documentNo,
+        DocumentLineType type,
+        string no,
+        string description,
+        decimal quantity,
+        decimal unitPrice,
+        decimal lineDiscountPercent,
+        string unitOfMeasureCode
+    )
+    {
+        if (HasPostedQuantity)
+        {
+            // A line taken from a shipment invoices exactly that shipment line.
+            if (type != Type || !string.Equals(no, No, StringComparison.OrdinalIgnoreCase)
+                || (IsFromShipment && quantity != Quantity)
+                || (QuantityInvoiced != 0m && (unitPrice != UnitPrice || lineDiscountPercent != LineDiscountPercent)))
+            {
+                throw new BusinessException(ErpErrorCodes.Documents.LineAlreadyPosted)
+                    .WithData("documentNo", documentNo)
+                    .WithData("lineNo", LineNo);
+            }
+
+            var posted = Math.Max(Math.Abs(QuantityShipped), Math.Abs(QuantityInvoiced));
+            if (Math.Abs(quantity) < posted)
+            {
+                throw new BusinessException(ErpErrorCodes.Documents.QuantityBelowPosted)
+                    .WithData("documentNo", documentNo)
+                    .WithData("lineNo", LineNo)
+                    .WithData("quantity", posted);
+            }
+        }
+
+        Type = type;
+        No = Check.Length(no, nameof(no), ErpDomainConsts.MaxNoLength);
+        Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
+        UnitOfMeasureCode = Check.Length(unitOfMeasureCode, nameof(unitOfMeasureCode), ErpDomainConsts.MaxUnitOfMeasureCodeLength);
+        SetAmounts(quantity, unitPrice, lineDiscountPercent);
+    }
+
+    public void SetLocation(string locationCode)
+    {
+        LocationCode = CodeTableEntity.NormalizeCode(Check.Length(locationCode, nameof(locationCode), ErpDomainConsts.MaxLocationCodeLength));
+    }
+
+    public void SetShipmentDate(DateTime? shipmentDate)
+    {
+        ShipmentDate = shipmentDate?.Date;
+    }
+
+    /// <summary>
+    /// What the next posting ships and invoices. Shipping cannot go beyond the outstanding
+    /// quantity, and invoicing not beyond what has been or is being shipped.
+    /// </summary>
+    public void SetQuantitiesToPost(string documentNo, decimal qtyToShip, decimal qtyToInvoice)
+    {
+        if (qtyToShip < 0m || qtyToInvoice < 0m)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.NegativeQuantityToPost)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo);
+        }
+
+        if (IsFromShipment)
+        {
+            qtyToShip = 0m;
+        }
+        else if (qtyToShip > OutstandingQuantity)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.QtyToShipTooLarge)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo)
+                .WithData("quantity", qtyToShip)
+                .WithData("outstanding", OutstandingQuantity);
+        }
+
+        var available = IsFromShipment ? Quantity - QuantityInvoiced : QtyShippedNotInvoiced + qtyToShip;
+        if (qtyToInvoice > available)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.QtyToInvoiceTooLarge)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo)
+                .WithData("quantity", qtyToInvoice)
+                .WithData("available", available);
+        }
+
+        QtyToShip = qtyToShip;
+        QtyToInvoice = qtyToInvoice;
+    }
+
+    /// <summary>Ship whatever is outstanding and invoice everything not invoiced yet.</summary>
+    public void ResetQuantitiesToPost()
+    {
+        QtyToShip = IsFromShipment ? 0m : Quantity - QuantityShipped;
+        QtyToInvoice = Quantity - QuantityInvoiced;
+    }
+
+    public void LinkToShipmentLine(Guid shipmentLineId, string shipmentNo, int shipmentLineNo)
+    {
+        ShipmentLineId = shipmentLineId;
+        ShipmentNo = Check.Length(shipmentNo, nameof(shipmentNo), ErpDomainConsts.MaxDocumentNoLength);
+        ShipmentLineNo = shipmentLineNo;
+        // The goods have left already; only the invoice is outstanding.
+        QuantityShipped = Quantity;
+        ResetQuantitiesToPost();
+    }
+
+    public void LinkToBlanketOrder(string blanketOrderNo, int blanketOrderLineNo)
+    {
+        BlanketOrderNo = Check.Length(blanketOrderNo, nameof(blanketOrderNo), ErpDomainConsts.MaxDocumentNoLength);
+        BlanketOrderLineNo = blanketOrderLineNo;
+    }
+
+    internal void RecordShipped(decimal quantity)
+    {
+        QuantityShipped += quantity;
+    }
+
+    internal void RecordInvoiced(decimal quantity)
+    {
+        QuantityInvoiced += quantity;
+    }
+
+    /// <summary>Takes back a shipment that was undone.</summary>
+    internal void RecordShipmentUndone(decimal quantity)
+    {
+        QuantityShipped -= quantity;
+        ResetQuantitiesToPost();
+    }
+
+    /// <summary>The part of the line amount the quantity to invoice stands for.</summary>
+    public decimal AmountToInvoice(decimal quantity) =>
+        DocumentAmounts.Portion(LineAmount, Quantity, QuantityInvoiced, quantity);
 
     /// <summary>Takes the rate and groups of a VAT Posting Setup, or none with a null setup.</summary>
     public void SetVat(VatPostingSetup setup)

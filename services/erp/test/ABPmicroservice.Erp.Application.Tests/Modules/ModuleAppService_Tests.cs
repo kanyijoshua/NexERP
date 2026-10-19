@@ -78,7 +78,8 @@ public class ModuleAppService_Tests : ErpApplicationTestBase
         );
 
         sales.DependsOn.ShouldContain(ErpModuleRegistry.Finance);
-        sales.BlockedBy.ShouldBeEmpty();
+        // Only the modules built on sales (CRM and the like) hold it on.
+        sales.BlockedBy.Count.ShouldBe(ErpModuleRegistry.All.Count(m => m.DependsOn.Contains(ErpModuleRegistry.Sales)));
     }
 
     [Fact]

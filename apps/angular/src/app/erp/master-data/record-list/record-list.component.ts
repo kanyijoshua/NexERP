@@ -16,6 +16,7 @@ import {
   RecordDialogService,
   RecordEntity,
   RecordEntityRegistry,
+  RecordListAction,
   recordPermission,
   toRecordTableColumns,
 } from '../../erp-shared';
@@ -59,6 +60,33 @@ export class RecordListComponent implements OnInit {
 
   viewMode: 'table' | 'card' = this.readViewMode();
   isIndenting = false;
+  runningListAction = false;
+
+  /** Runs an action of the whole table, asking first when it says to, and reloads the list. */
+  runListAction(action: RecordListAction): void {
+    const go = () => {
+      this.runningListAction = true;
+      action.run().subscribe({
+        next: () => {
+          this.toaster.success('Erp::SavedSuccessfully');
+          this.table?.reload();
+        },
+        error: () => (this.runningListAction = false),
+        complete: () => (this.runningListAction = false),
+      });
+    };
+
+    if (!action.confirmKey) {
+      go();
+      return;
+    }
+
+    this.confirmation.warn(action.confirmKey, action.labelKey).subscribe((status: Confirmation.Status) => {
+      if (status === Confirmation.Status.confirm) {
+        go();
+      }
+    });
+  }
 
   /** The policy an action needs; one nobody holds when the table is read-only. */
   permission(action: 'Create' | 'Update' | 'Delete'): string {

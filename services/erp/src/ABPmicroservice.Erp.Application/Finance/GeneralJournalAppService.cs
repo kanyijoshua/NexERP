@@ -303,6 +303,9 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         );
 
         line.SetRecurring(input.RecurringMethod, input.RecurringFrequency, input.ExpirationDate);
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<DeferralTemplate>(input.DeferralCode);
+        line.SetDeferralCode(input.DeferralCode);
+        line.SetPaymentDiscount(input.PmtDiscountDate, input.PaymentDiscountPct);
         line.SetAdditionalFields(
             input.PostingGroup,
             input.ShortcutDimension1Code,

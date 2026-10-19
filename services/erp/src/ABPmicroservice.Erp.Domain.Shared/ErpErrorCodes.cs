@@ -197,6 +197,46 @@ public static class ErpErrorCodes
         public const string DocumentNotReleased = Prefix + ":Documents:00004";
         public const string CannotModifyPostedDocument = Prefix + ":Documents:00005";
         public const string DocumentNoAlreadyExists = Prefix + ":Documents:00006";
+        public const string DocumentTypeCannotBePosted = Prefix + ":Documents:00007";
+        public const string NothingToPost = Prefix + ":Documents:00008";
+        public const string QtyToShipTooLarge = Prefix + ":Documents:00009";
+        public const string QtyToInvoiceTooLarge = Prefix + ":Documents:00010";
+        public const string LineAlreadyPosted = Prefix + ":Documents:00011";
+        public const string QuantityBelowPosted = Prefix + ":Documents:00012";
+        public const string DocumentNotAnOrder = Prefix + ":Documents:00013";
+        public const string ShipmentLineFullyInvoiced = Prefix + ":Documents:00014";
+        public const string CannotUndoInvoicedLine = Prefix + ":Documents:00015";
+        public const string CannotMakeOrder = Prefix + ":Documents:00016";
+        public const string BlanketQuantityExceeded = Prefix + ":Documents:00017";
+        public const string PartyMismatch = Prefix + ":Documents:00018";
+        public const string OrderClosed = Prefix + ":Documents:00019";
+        public const string LineNotFound = Prefix + ":Documents:00020";
+        public const string NegativeQuantityToPost = Prefix + ":Documents:00021";
+        public const string WrongDocumentType = Prefix + ":Documents:00022";
+    }
+
+    public static class Pricing
+    {
+        public const string PriceListCodeAlreadyExists = Prefix + ":Pricing:00001";
+        public const string PriceListNotEditable = Prefix + ":Pricing:00002";
+        public const string InvalidPeriod = Prefix + ":Pricing:00003";
+        public const string AssetRequired = Prefix + ":Pricing:00004";
+        public const string SourceRequired = Prefix + ":Pricing:00005";
+    }
+
+    public static class Procurement
+    {
+        public const string ProcurementPlanNotOpen = Prefix + ":Procurement:00001";
+        public const string RequisitionHasNoLines = Prefix + ":Procurement:00002";
+        public const string RequisitionAlreadyClosed = Prefix + ":Procurement:00003";
+        public const string RequisitionNotOpen = Prefix + ":Procurement:00004";
+        public const string CannotReleaseTenderInCurrentState = Prefix + ":Procurement:00005";
+        public const string TenderLockedForEditing = Prefix + ":Procurement:00006";
+        public const string ProcurementPlanAlreadyExists = Prefix + ":Procurement:00007";
+        public const string RequisitionNoAlreadyExists = Prefix + ":Procurement:00008";
+        public const string RequisitionMustBeApprovedToConvert = Prefix + ":Procurement:00009";
+        public const string TenderNoAlreadyExists = Prefix + ":Procurement:00010";
+        public const string BidNotFound = Prefix + ":Procurement:00011";
     }
 
     public static class PostingSetup
@@ -260,6 +300,25 @@ public static class ErpErrorCodes
     {
         public const string InsufficientInventory = Prefix + ":Inventory:00001";
         public const string LocationMandatory = Prefix + ":Inventory:00002";
+        public const string TrackingRequired = Prefix + ":Inventory:00003";
+        public const string TrackingQuantityMismatch = Prefix + ":Inventory:00004";
+        public const string SerialQuantityNotOne = Prefix + ":Inventory:00005";
+        public const string InsufficientTrackedQuantity = Prefix + ":Inventory:00006";
+        public const string SerialRequiredForSpecificCost = Prefix + ":Inventory:00007";
+        public const string VariantNotFound = Prefix + ":Inventory:00008";
+        public const string UnitOfMeasureNotFound = Prefix + ":Inventory:00009";
+        public const string JournalEntryTypeNotAllowed = Prefix + ":Inventory:00010";
+        public const string JournalHasNoLines = Prefix + ":Inventory:00011";
+        public const string NewLocationRequired = Prefix + ":Inventory:00012";
+        public const string SameLocation = Prefix + ":Inventory:00013";
+        public const string InTransitLocationRequired = Prefix + ":Inventory:00014";
+        public const string TransferQuantityTooLarge = Prefix + ":Inventory:00015";
+        public const string TransferNotReleased = Prefix + ":Inventory:00016";
+        public const string TransferNothingToPost = Prefix + ":Inventory:00017";
+        public const string TemplateTypeMismatch = Prefix + ":Inventory:00018";
+        public const string DuplicateSerialNo = Prefix + ":Inventory:00019";
+        public const string CannotChangeCostingMethod = Prefix + ":Inventory:00020";
+        public const string LocationIsInTransit = Prefix + ":Inventory:00021";
     }
 
     public static class Purchasing
@@ -415,6 +474,130 @@ public static class ErpErrorCodes
     public static class BaseTables
     {
         public const string RecordAlreadyExists = Prefix + ":BaseTables:00001";
+    }
+
+    /// <summary>Applying entries, bank reconciliation, reminders, deferrals, cash flow and budgets.</summary>
+    public static class FinanceOperations
+    {
+        public const string EntryNotOpen = Prefix + ":FinanceOps:00001";
+        public const string EntriesNotSameParty = Prefix + ":FinanceOps:00002";
+        public const string NothingToApply = Prefix + ":FinanceOps:00003";
+        public const string NothingToUnapply = Prefix + ":FinanceOps:00004";
+        public const string UnapplyDateTooEarly = Prefix + ":FinanceOps:00005";
+        public const string AmountToApplyTooLarge = Prefix + ":FinanceOps:00006";
+        public const string PaymentDiscountAccountMissing = Prefix + ":FinanceOps:00007";
+        public const string BankRecDifference = Prefix + ":FinanceOps:00008";
+        public const string BankRecLineNotFullyApplied = Prefix + ":FinanceOps:00009";
+        public const string BankEntryAlreadyMatched = Prefix + ":FinanceOps:00010";
+        public const string BankEntryWrongAccount = Prefix + ":FinanceOps:00011";
+        public const string StatementImportInvalid = Prefix + ":FinanceOps:00012";
+        public const string ReminderTermsNotFound = Prefix + ":FinanceOps:00013";
+        public const string ReminderLevelNotFound = Prefix + ":FinanceOps:00014";
+        public const string CollectionDocumentIssued = Prefix + ":FinanceOps:00015";
+        public const string CollectionDocumentEmpty = Prefix + ":FinanceOps:00016";
+        public const string CollectionAccountMissing = Prefix + ":FinanceOps:00017";
+        public const string FinanceChargeTermsNotFound = Prefix + ":FinanceOps:00018";
+        public const string DeferralTemplateNotFound = Prefix + ":FinanceOps:00019";
+        public const string DeferralInvalidPeriods = Prefix + ":FinanceOps:00020";
+        public const string BudgetNotFound = Prefix + ":FinanceOps:00021";
+        public const string BudgetBlocked = Prefix + ":FinanceOps:00022";
+        public const string InvalidPeriodCount = Prefix + ":FinanceOps:00023";
+    }
+
+    public static class FixedAssets
+    {
+        public const string FixedAssetNotFound = Prefix + ":FixedAssets:00001";
+        public const string FixedAssetBlocked = Prefix + ":FixedAssets:00002";
+        public const string AssetNotInBook = Prefix + ":FixedAssets:00003";
+        public const string AlreadyDisposed = Prefix + ":FixedAssets:00004";
+        public const string DepreciationBookNotFound = Prefix + ":FixedAssets:00005";
+        public const string NotAcquired = Prefix + ":FixedAssets:00006";
+        public const string PostingGroupNotFound = Prefix + ":FixedAssets:00007";
+        public const string PostingGroupAccountMissing = Prefix + ":FixedAssets:00008";
+        public const string NothingToPost = Prefix + ":FixedAssets:00009";
+        public const string CreditMemoNotSupported = Prefix + ":FixedAssets:00010";
+    }
+
+    public static class Crm
+    {
+        public const string ContactNotFound = Prefix + ":Crm:00001";
+        public const string ContactAlreadyExists = Prefix + ":Crm:00002";
+        public const string OpportunityAlreadyExists = Prefix + ":Crm:00003";
+        public const string OpportunityClosed = Prefix + ":Crm:00004";
+        public const string StageNotInPipeline = Prefix + ":Crm:00005";
+        public const string NotALead = Prefix + ":Crm:00006";
+        public const string CloseCodeRequired = Prefix + ":Crm:00007";
+        public const string CloseCodeNotFound = Prefix + ":Crm:00008";
+        public const string CloseCodeWrongType = Prefix + ":Crm:00009";
+        public const string StageWonAndLost = Prefix + ":Crm:00010";
+        public const string NoContact = Prefix + ":Crm:00011";
+        public const string CampaignNotFound = Prefix + ":Crm:00012";
+        public const string AlreadyTargeted = Prefix + ":Crm:00013";
+    }
+
+    public static class Projects
+    {
+        public const string ProjectNotFound = Prefix + ":Projects:00001";
+        public const string ProjectNotOpen = Prefix + ":Projects:00002";
+        public const string TaskNotFound = Prefix + ":Projects:00003";
+        public const string TaskNotPosting = Prefix + ":Projects:00004";
+        public const string PostingGroupNotFound = Prefix + ":Projects:00005";
+        public const string PostingGroupAccountMissing = Prefix + ":Projects:00006";
+        public const string ResourceNotFound = Prefix + ":Projects:00007";
+        public const string ResourceBlocked = Prefix + ":Projects:00008";
+        public const string BalAccountRequired = Prefix + ":Projects:00009";
+        public const string NothingToPost = Prefix + ":Projects:00010";
+        public const string TimeSheetNotOpen = Prefix + ":Projects:00011";
+        public const string TimeSheetEmpty = Prefix + ":Projects:00012";
+        public const string TimeSheetNotSubmitted = Prefix + ":Projects:00013";
+        public const string TimeSheetNotApproved = Prefix + ":Projects:00014";
+        public const string TimeSheetPosted = Prefix + ":Projects:00015";
+        public const string InvalidHours = Prefix + ":Projects:00016";
+        public const string NothingToInvoice = Prefix + ":Projects:00017";
+        public const string NoCustomer = Prefix + ":Projects:00018";
+        public const string AlreadyExists = Prefix + ":Projects:00019";
+    }
+
+    public static class Manufacturing
+    {
+        public const string SetupMissing = Prefix + ":Manufacturing:00001";
+        public const string SetupAccountMissing = Prefix + ":Manufacturing:00002";
+        public const string BomNotFound = Prefix + ":Manufacturing:00003";
+        public const string BomNotCertified = Prefix + ":Manufacturing:00004";
+        public const string BomCertified = Prefix + ":Manufacturing:00005";
+        public const string BomEmpty = Prefix + ":Manufacturing:00006";
+        public const string BomLoop = Prefix + ":Manufacturing:00007";
+        public const string InvalidQuantityPer = Prefix + ":Manufacturing:00008";
+        public const string RoutingNotFound = Prefix + ":Manufacturing:00009";
+        public const string CenterNotFound = Prefix + ":Manufacturing:00010";
+        public const string WrongOrderStatus = Prefix + ":Manufacturing:00011";
+        public const string OrderStarted = Prefix + ":Manufacturing:00012";
+        public const string ComponentNotFound = Prefix + ":Manufacturing:00013";
+        public const string OperationNotFound = Prefix + ":Manufacturing:00014";
+        public const string NoVendor = Prefix + ":Manufacturing:00015";
+        public const string AlreadyExists = Prefix + ":Manufacturing:00016";
+    }
+
+    public static class Service
+    {
+        public const string SetupMissing = Prefix + ":Service:00001";
+        public const string SetupAccountMissing = Prefix + ":Service:00002";
+        public const string WarrantyDates = Prefix + ":Service:00003";
+        public const string ContractDates = Prefix + ":Service:00004";
+        public const string ContractNotDraft = Prefix + ":Service:00005";
+        public const string ContractEmpty = Prefix + ":Service:00006";
+        public const string OrderFinished = Prefix + ":Service:00007";
+        public const string FinishByPosting = Prefix + ":Service:00008";
+        public const string OrderOnHold = Prefix + ":Service:00009";
+        public const string NothingToPost = Prefix + ":Service:00010";
+        public const string LinePosted = Prefix + ":Service:00011";
+        public const string InvalidLine = Prefix + ":Service:00012";
+        public const string CustomerBlocked = Prefix + ":Service:00013";
+        public const string ServiceItemNotFound = Prefix + ":Service:00014";
+        public const string SerialNoInUse = Prefix + ":Service:00015";
+        public const string AlreadyExists = Prefix + ":Service:00016";
+        public const string ServiceItemOfOtherCustomer = Prefix + ":Service:00017";
+        public const string ResourceNotFound = Prefix + ":Service:00018";
     }
 
     public static class JobQueue

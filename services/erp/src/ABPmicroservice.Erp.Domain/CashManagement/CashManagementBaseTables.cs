@@ -83,6 +83,13 @@ public class BankAccReconciliationLine : CompanyEntity
     public string ShortcutDimension2Code { get; private set; }
     public string TransactionId { get; private set; }
 
+    /// <summary>What the matched bank entries add up to; the difference is what is still unmatched.</summary>
+    internal void SetApplied(decimal appliedAmount)
+    {
+        AppliedAmount = appliedAmount;
+        Difference = StatementAmount - appliedAmount;
+    }
+
     protected BankAccReconciliationLine() { }
 
     public BankAccReconciliationLine(Guid id, BankAccRecStmtType statementType, string bankAccountNo, string statementNo, int statementLineNo)

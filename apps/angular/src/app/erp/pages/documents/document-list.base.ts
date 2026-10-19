@@ -27,6 +27,9 @@ import {
   calculateDocumentTotals,
 } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
+import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
+import { ItemTrackingLineService, ItemTrackingSourceType } from '@proxy/inventory';
+import { itemTrackingLinesFor } from '../../master-data/warehouse-entities';
 
 /** The fields the list page needs from a sales or purchase header. */
 export interface DocumentRow {
@@ -58,11 +61,69 @@ export interface NewDocumentInput {
 }
 
 export type DocumentAction =
-  'release' | 'reopen' | 'sendApprovalRequest' | 'cancelApprovalRequest' | 'runPosting' | 'delete';
+  'release' | 'reopen' | 'sendApprovalRequest' | 'cancelApprovalRequest' | 'runPosting' | 'delete' | 'makeOrder';
 
 /**
- * Sales and purchase invoice lists behave identically: list, create, release, reopen,
- * ask for approval, post. Subclasses supply the API and the wording; they share one template.
+ * How a kind of document is posted:
+ * - `invoice`: an invoice or credit memo, shipped and invoiced in one go;
+ * - `order`: an order or return order, shipped (received) and invoiced in parts;
+ * - `quote` / `blanket`: never posted, made into an order instead.
+ */
+export type DocumentMode = 'invoice' | 'order' | 'quote' | 'blanket';
+
+/** A line of the selected document with what has been shipped (received) and invoiced on it. */
+export interface DocumentLineRow {
+  id: string;
+  lineNo: number;
+  no?: string;
+  description?: string;
+  quantity: number;
+  qtyToShip: number;
+  quantityShipped: number;
+  qtyToInvoice: number;
+  quantityInvoiced: number;
+  /** The posted shipment (receipt) line an invoice line was taken from. */
+  sourceNo?: string;
+  /** An item line, which can carry lot and serial numbers. */
+  isItem?: boolean;
+}
+
+/** A posted shipment (receipt) line still waiting for an invoice. */
+export interface OpenSourceLine {
+  id: string;
+  documentNo?: string;
+  orderNo?: string;
+  postingDate?: string;
+  lineNo: number;
+  no?: string;
+  description?: string;
+  qtyNotInvoiced: number;
+  unitAmount: number;
+}
+
+/** One line of the order posting dialog. */
+export interface PostingLine {
+  lineId: string;
+  lineNo: number;
+  no?: string;
+  description?: string;
+  quantity: number;
+  shipped: number;
+  invoiced: number;
+  qtyToShip: number;
+  qtyToInvoice: number;
+}
+
+export interface PostingResult {
+  invoiceNo?: string;
+  shipmentNo?: string;
+}
+
+/**
+ * Sales and purchase documents behave identically: list, create, release, reopen, ask for
+ * approval, post. Orders also ship (receive) and invoice in parts, quotes and blanket orders are
+ * made into orders, and invoices take their lines from posted shipments (receipts). Subclasses
+ * supply the API and the wording; they share one template.
  */
 @Directive()
 export abstract class DocumentListBase<TRow extends DocumentRow> implements OnInit {
@@ -75,6 +136,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected readonly exportService = inject(ErpExportService);
   protected readonly localization = inject(LocalizationService);
   private readonly permissions = inject(PermissionService);
+  private readonly dialogs = inject(RecordDialogService);
+  private readonly trackingLines = inject(ItemTrackingLineService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -144,6 +207,73 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   abstract readonly externalDocumentNoLabelKey: string;
   /** What an item line takes as its unit amount: the item's price on sales, its cost on purchases. */
   abstract readonly itemAmountField: 'unitPrice' | 'unitCost';
+
+  /** How the documents of this page are posted. */
+  mode: DocumentMode = 'invoice';
+  /** "Ship" on sales, "Receive" on purchases; on a return document the goods move the other way. */
+  shipLabelKey = 'Erp::Ship';
+  shippedLabelKey = 'Erp::QuantityShipped';
+  /** "Get Shipment Lines" / "Get Receipt Lines". */
+  sourceLinesLabelKey = 'Erp::GetShipmentLines';
+
+  /** The lines of the selected document, with what has been posted on them. */
+  selectedLines: DocumentLineRow[] = [];
+
+  /** Where the lots and serial numbers of this page's lines are kept. */
+  protected trackingSourceType: ItemTrackingSourceType | null = null;
+
+  get canTrack(): boolean {
+    return this.trackingSourceType !== null;
+  }
+
+  /** Opens the lot and serial numbers of an item line. */
+  openTracking(line: DocumentLineRow): void {
+    if (this.trackingSourceType === null || !line.no) {
+      return;
+    }
+    this.dialogs
+      .openList(itemTrackingLinesFor(this.trackingLines, this.trackingSourceType, line.id, line.no))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
+  isPostOpen = false;
+  postChoice: 'ship' | 'invoice' | 'both' = 'both';
+  postLines: PostingLine[] = [];
+  postingRow: TRow | null = null;
+
+  isSourceOpen = false;
+  sourceLines: OpenSourceLine[] = [];
+  sourceSelection = new Set<string>();
+  sourceRow: TRow | null = null;
+
+  get isOrderMode(): boolean {
+    return this.mode === 'order';
+  }
+
+  get makesOrders(): boolean {
+    return this.mode === 'quote' || this.mode === 'blanket';
+  }
+
+  /** Lines of the selected document, with what has been shipped and invoiced on them. */
+  protected loadLines(_id: string): Observable<DocumentLineRow[]> | null {
+    return null;
+  }
+
+  /** Posts an order: ship (receive), invoice or both, with the quantities per line. */
+  protected postOrder(_id: string, _ship: boolean, _invoice: boolean, _lines: PostingLine[]): Observable<PostingResult> | null {
+    return null;
+  }
+
+  /** The posted shipment (receipt) lines an invoice can take. */
+  protected openSourceLines(_id: string): Observable<OpenSourceLine[]> | null {
+    return null;
+  }
+
+  /** Adds posted shipment (receipt) lines to an invoice. */
+  protected collectSourceLines(_id: string, _lineIds: string[]): Observable<unknown> | null {
+    return null;
+  }
 
   /**
    * Only the documents of this customer / vendor (`?partyId=` from the smart button on its card).
@@ -300,6 +430,10 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     this.selected = row;
     this.selection = row ? [row] : [];
     this.history = [];
+    this.selectedLines = [];
+
+    const lines = row?.id ? this.loadLines(row.id) : null;
+    lines?.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => (this.selectedLines = result));
 
     if (row?.id && this.canSeeApprovals) {
       this.approvalEntries
@@ -337,10 +471,20 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       return;
     }
 
-    if (action === 'runPosting' || action === 'delete') {
+    // An order is posted through the dialog that says what to ship and invoice.
+    if (action === 'runPosting' && this.isOrderMode) {
+      this.openPost(row);
+      return;
+    }
+
+    if (action === 'runPosting' || action === 'delete' || action === 'makeOrder') {
       this.confirmation
         .warn(
-          action === 'delete' ? 'Erp::ItemWillBeDeletedMessage' : 'Erp::PostDocumentConfirmation',
+          action === 'delete'
+            ? 'Erp::ItemWillBeDeletedMessage'
+            : action === 'makeOrder'
+              ? 'Erp::MakeOrderConfirmation'
+              : 'Erp::PostDocumentConfirmation',
           'Erp::AreYouSure',
         )
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -353,6 +497,117 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     }
 
     this.execute(action, row);
+  }
+
+  /** Opens the order posting dialog with each line's outstanding quantities. */
+  openPost(row: TRow): void {
+    const lines = this.loadLines(row.id as string);
+    if (!lines) {
+      return;
+    }
+
+    lines.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      this.postingRow = row;
+      this.postChoice = 'both';
+      this.postLines = result.map(l => ({
+        lineId: l.id,
+        lineNo: l.lineNo,
+        no: l.no,
+        description: l.description,
+        quantity: l.quantity,
+        shipped: l.quantityShipped,
+        invoiced: l.quantityInvoiced,
+        qtyToShip: l.qtyToShip,
+        qtyToInvoice: l.qtyToInvoice,
+      }));
+      this.isPostOpen = true;
+    });
+  }
+
+  /** Invoicing cannot go beyond what has been shipped, or is being shipped now. */
+  maxToInvoice(line: PostingLine): number {
+    const shipping = this.postChoice === 'invoice' ? 0 : Number(line.qtyToShip) || 0;
+    return line.shipped - line.invoiced + shipping;
+  }
+
+  confirmPost(): void {
+    const row = this.postingRow;
+    if (!row?.id || this.isBusy) {
+      return;
+    }
+
+    const ship = this.postChoice !== 'invoice';
+    const invoice = this.postChoice !== 'ship';
+    const request = this.postOrder(row.id, ship, invoice, this.postLines.map(l => ({
+      ...l,
+      qtyToShip: ship ? Number(l.qtyToShip) || 0 : 0,
+      qtyToInvoice: invoice ? Math.min(Number(l.qtyToInvoice) || 0, this.maxToInvoice(l)) : 0,
+    })));
+    if (!request) {
+      return;
+    }
+
+    this.isBusy = true;
+    request
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(result => {
+        this.isPostOpen = false;
+        this.toaster.success('Erp::OrderPosted', undefined, {
+          messageLocalizationParams: [[result.shipmentNo, result.invoiceNo].filter(Boolean).join(', ')],
+        });
+        this.table?.reload();
+        this.chatter?.load();
+      });
+  }
+
+  /** Lists the posted shipment (receipt) lines the selected invoice can take. */
+  openSource(row: TRow, event?: Event): void {
+    event?.stopPropagation();
+    const request = row.id ? this.openSourceLines(row.id) : null;
+    if (!request) {
+      return;
+    }
+
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(lines => {
+      this.sourceRow = row;
+      this.sourceLines = lines;
+      this.sourceSelection = new Set<string>();
+      this.isSourceOpen = true;
+    });
+  }
+
+  toggleSource(id: string): void {
+    if (this.sourceSelection.has(id)) {
+      this.sourceSelection.delete(id);
+    } else {
+      this.sourceSelection.add(id);
+    }
+  }
+
+  collectSelected(): void {
+    const row = this.sourceRow;
+    const request = row?.id ? this.collectSourceLines(row.id, [...this.sourceSelection]) : null;
+    if (!request || this.isBusy) {
+      return;
+    }
+
+    this.isBusy = true;
+    request
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.isSourceOpen = false;
+        this.toaster.success('Erp::LinesAdded');
+        this.table?.reload();
+        if (row) {
+          this.select(row);
+        }
+      });
   }
 
   openCreate(): void {
@@ -445,6 +700,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         return 'Erp::DocumentReopened';
       case 'runPosting':
         return 'Erp::DocumentPosted';
+      case 'makeOrder':
+        return 'Erp::OrderMade';
       default:
         return 'Erp::DeletedSuccessfully';
     }

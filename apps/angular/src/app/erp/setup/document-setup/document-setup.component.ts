@@ -29,10 +29,14 @@ export class DocumentSetupComponent implements OnInit {
     { control: 'customerNos', labelKey: 'Erp::CustomerNos' },
     { control: 'quoteNos', labelKey: 'Erp::QuoteNos' },
     { control: 'orderNos', labelKey: 'Erp::OrderNos' },
+    { control: 'blanketOrderNos', labelKey: 'Erp::BlanketOrderNos' },
     { control: 'invoiceNos', labelKey: 'Erp::InvoiceNos' },
+    { control: 'returnOrderNos', labelKey: 'Erp::ReturnOrderNos' },
     { control: 'creditMemoNos', labelKey: 'Erp::CreditMemoNos' },
+    { control: 'postedShipmentNos', labelKey: 'Erp::PostedShipmentNos' },
     { control: 'postedInvoiceNos', labelKey: 'Erp::PostedInvoiceNos' },
     { control: 'postedCreditMemoNos', labelKey: 'Erp::PostedCreditMemoNos' },
+    { control: 'postedReturnReceiptNos', labelKey: 'Erp::PostedReturnReceiptNos' },
   ];
 
   readonly purchaseFields: SeriesField[] = [

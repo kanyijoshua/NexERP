@@ -25,6 +25,10 @@ public class PurchasesPayablesSetup : CompanyEntity
     public string PostedReceiptNos { get; private set; }
     public string PostedReturnShptNos { get; private set; }
     public string ReturnOrderNos { get; private set; }
+    public string ProcurementPlanNos { get; private set; }
+    public string RequisitionNos { get; private set; }
+    public string TenderNos { get; private set; }
+    public string RfqNos { get; private set; }
 
     /// <summary>An invoice cannot be posted without the vendor's invoice number.</summary>
     public bool ExtDocNoMandatory { get; private set; }
@@ -152,7 +156,26 @@ public class PurchasesPayablesSetup : CompanyEntity
     /// <summary>The series that numbers the posted document.</summary>
     public string GetPostedDocumentNos(PurchaseDocumentType documentType)
     {
-        return documentType == PurchaseDocumentType.CreditMemo ? PostedCreditMemoNos : PostedInvoiceNos;
+        return documentType is PurchaseDocumentType.CreditMemo or PurchaseDocumentType.ReturnOrder ? PostedCreditMemoNos : PostedInvoiceNos;
+    }
+
+    /// <summary>The series that numbers a posted receipt, or a posted return shipment.</summary>
+    public string GetReceiptNos(bool isReturn)
+    {
+        return isReturn ? PostedReturnShptNos : PostedReceiptNos;
+    }
+
+    public void SetProcurementNumberSeries(
+        string procurementPlanNos,
+        string requisitionNos,
+        string tenderNos,
+        string rfqNos
+    )
+    {
+        ProcurementPlanNos = Code(procurementPlanNos, nameof(procurementPlanNos));
+        RequisitionNos = Code(requisitionNos, nameof(requisitionNos));
+        TenderNos = Code(tenderNos, nameof(tenderNos));
+        RfqNos = Code(rfqNos, nameof(rfqNos));
     }
 
     private static string Code(string value, string name)

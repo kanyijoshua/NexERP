@@ -162,6 +162,59 @@ public partial class ErpPermissions
         public const string Post = Default + ".Post";
     }
 
+    public static class ItemJournals
+    {
+        public const string Default = GroupName + ".ItemJournals";
+        public const string Post = Default + ".Post";
+    }
+
+    public static class TransferOrders
+    {
+        public const string Default = GroupName + ".TransferOrders";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Post = Default + ".Post";
+    }
+
+    public static class PriceLists
+    {
+        public const string Default = GroupName + ".PriceLists";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class ProcurementPlans
+    {
+        public const string Default = GroupName + ".ProcurementPlans";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Approve = Default + ".Approve";
+    }
+
+    public static class PurchaseRequisitions
+    {
+        public const string Default = GroupName + ".PurchaseRequisitions";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Release = Default + ".Release";
+        public const string Convert = Default + ".Convert";
+    }
+
+    public static class Tenders
+    {
+        public const string Default = GroupName + ".Tenders";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Release = Default + ".Release";
+        public const string Evaluate = Default + ".Evaluate";
+        public const string Award = Default + ".Award";
+    }
+
     public static class Dimensions
     {
         public const string Default = GroupName + ".Dimensions";

@@ -19,6 +19,9 @@ public class Location : CodeTableEntity
     public string PhoneNo { get; private set; }
     public string Contact { get; private set; }
 
+    /// <summary>Holds stock on its way between two locations; transfer orders ship into it and receive out of it.</summary>
+    public bool UseAsInTransit { get; private set; }
+
     protected Location() { }
 
     public Location(Guid id, string code, string description)
@@ -31,6 +34,8 @@ public class Location : CodeTableEntity
         PostCode = Check.Length(postCode, nameof(postCode), ErpDomainConsts.MaxPostCodeLength);
         CountryRegionCode = Check.Length(countryRegionCode, nameof(countryRegionCode), ErpDomainConsts.MaxCountryRegionCodeLength);
     }
+
+    public void SetUseAsInTransit(bool useAsInTransit) => UseAsInTransit = useAsInTransit;
 
     public void SetContact(string contact, string phoneNo)
     {

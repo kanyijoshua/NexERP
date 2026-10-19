@@ -8,6 +8,7 @@ namespace ABPmicroservice.Erp.Inventory;
 /// <summary>
 /// Value Entry.
 /// Tracks monetary valuation changes and unit cost calculations for item transactions.
+/// Cost amounts carry the sign of the stock movement: inbound adds value, outbound removes it.
 /// </summary>
 public class ValueEntry : LedgerEntryBase
 {
@@ -17,9 +18,17 @@ public class ValueEntry : LedgerEntryBase
     public DateTime PostingDate { get; private set; }
     public string DocumentNo { get; private set; }
     public decimal ValuationQuantity { get; private set; }
+
+    /// <summary>The part of the movement this entry invoices; zero on a shipment or receipt.</summary>
+    public decimal InvoicedQuantity { get; private set; }
+
     public decimal CostAmountExpected { get; private set; }
     public decimal CostAmountActual { get; private set; }
     public Guid DimensionSetId { get; private set; }
+
+    public ValueEntryType EntryType { get; private set; }
+    public string LocationCode { get; private set; }
+    public string VariantCode { get; private set; }
 
     protected ValueEntry() { }
 
@@ -32,7 +41,9 @@ public class ValueEntry : LedgerEntryBase
         string documentNo,
         decimal valuationQuantity,
         decimal costAmountActual,
-        Guid dimensionSetId = default
+        Guid dimensionSetId = default,
+        decimal costAmountExpected = 0m,
+        decimal? invoicedQuantity = null
     )
         : base(id)
     {
@@ -42,8 +53,17 @@ public class ValueEntry : LedgerEntryBase
         PostingDate = postingDate;
         DocumentNo = Check.NotNullOrWhiteSpace(documentNo, nameof(documentNo), ErpDomainConsts.MaxDocumentNoLength);
         ValuationQuantity = valuationQuantity;
+        InvoicedQuantity = invoicedQuantity ?? valuationQuantity;
         CostAmountActual = costAmountActual;
-        CostAmountExpected = 0m;
+        CostAmountExpected = costAmountExpected;
         DimensionSetId = dimensionSetId;
+    }
+
+    internal ValueEntry WithDetails(ValueEntryType entryType, string locationCode, string variantCode)
+    {
+        EntryType = entryType;
+        LocationCode = locationCode;
+        VariantCode = variantCode;
+        return this;
     }
 }

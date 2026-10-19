@@ -195,6 +195,18 @@ public class SalesHeaderDto : FullAuditedEntityDto<Guid>
     public decimal TotalAmountIncludingVat { get; set; }
     public bool Posted { get; set; }
     public string PostedDocumentNo { get; set; }
+    public string ShipToCode { get; set; }
+    public string ShipToName { get; set; }
+    public string ShipToAddress { get; set; }
+    public string ShipToCity { get; set; }
+    public string ShipToPostCode { get; set; }
+    public string ShipToCountryRegionCode { get; set; }
+    public string ShipToContact { get; set; }
+    public DateTime? ShipmentDate { get; set; }
+    public string CustomerPriceGroup { get; set; }
+    public string QuoteNo { get; set; }
+    public string LastShippingNo { get; set; }
+    public string LastPostingNo { get; set; }
     public List<SalesLineDto> Lines { get; set; } = new();
 }
 
@@ -218,6 +230,22 @@ public class SalesLineDto : EntityDto<Guid>
     public decimal VatBaseAmount { get; set; }
     public decimal VatAmount { get; set; }
     public string UnitOfMeasureCode { get; set; }
+    public string LocationCode { get; set; }
+    public DateTime? ShipmentDate { get; set; }
+    public decimal QtyToShip { get; set; }
+    public decimal QuantityShipped { get; set; }
+    public decimal QtyToInvoice { get; set; }
+    public decimal QuantityInvoiced { get; set; }
+    public Guid? ShipmentLineId { get; set; }
+    public string ShipmentNo { get; set; }
+    public int? ShipmentLineNo { get; set; }
+    public string BlanketOrderNo { get; set; }
+    public int? BlanketOrderLineNo { get; set; }
+    public string VariantCode { get; set; }
+    public decimal QtyPerUnitOfMeasure { get; set; }
+    public string DeferralCode { get; set; }
+    public string ProjectNo { get; set; }
+    public string ProjectTaskNo { get; set; }
 }
 
 public class CreateUpdateSalesHeaderDto
@@ -231,6 +259,14 @@ public class CreateUpdateSalesHeaderDto
     public string PaymentTermsCode { get; set; }
     public string LocationCode { get; set; }
     public string ExternalDocumentNo { get; set; }
+    public string ShipToCode { get; set; }
+    public string ShipToName { get; set; }
+    public string ShipToAddress { get; set; }
+    public string ShipToCity { get; set; }
+    public string ShipToPostCode { get; set; }
+    public string ShipToCountryRegionCode { get; set; }
+    public string ShipToContact { get; set; }
+    public DateTime? ShipmentDate { get; set; }
     public List<SalesLineInputDto> Lines { get; set; } = new();
 }
 
@@ -244,6 +280,24 @@ public class SalesLineInputDto
     public decimal UnitPrice { get; set; }
     public decimal LineDiscountPercent { get; set; }
     public string UnitOfMeasureCode { get; set; }
+    public string LocationCode { get; set; }
+    public DateTime? ShipmentDate { get; set; }
+    public string VariantCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxDeferralTemplateCodeLength)]
+    public string DeferralCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string ProjectNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string ProjectTaskNo { get; set; }
+
+    /// <summary>On an order: how much the next posting ships. Blank ships everything outstanding.</summary>
+    public decimal? QtyToShip { get; set; }
+
+    /// <summary>On an order: how much the next posting invoices. Blank invoices everything shipped.</summary>
+    public decimal? QtyToInvoice { get; set; }
 }
 
 public class GetSalesDocumentListInput : ErpPagedListInput

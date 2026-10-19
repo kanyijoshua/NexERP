@@ -37,6 +37,30 @@ public static class RoleCenterCatalog
     // Documents
     private static readonly RoleCenterLink SalesInvoices = new("Menu:SalesInvoices", "/erp/sales-invoices", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
     private static readonly RoleCenterLink PurchaseInvoices = new("Menu:PurchaseInvoices", "/erp/purchase-invoices", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PurchaseOrders = new("Menu:PurchaseOrders", "/erp/purchase-orders", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PurchaseRequisitions = new("Menu:PurchaseRequisitions", "/erp/purchase-requisitions", ErpModuleRegistry.Procurement, ErpPermissions.PurchaseRequisitions.Default);
+    private static readonly RoleCenterLink Tenders = new("Menu:Tenders", "/erp/tenders", ErpModuleRegistry.Procurement, ErpPermissions.Tenders.Default);
+    private static readonly RoleCenterLink ProcurementPlans = new("Menu:ProcurementPlans", "/erp/procurement-plans", ErpModuleRegistry.Procurement, ErpPermissions.ProcurementPlans.Default);
+    private static readonly RoleCenterLink SalesQuotes = new("Menu:SalesQuotes", "/erp/sales-quotes", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink SalesOrders = new("Menu:SalesOrders", "/erp/sales-orders", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink SalesCreditMemos = new("Menu:SalesCreditMemos", "/erp/sales-credit-memos", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink SalesBlanketOrders = new("Menu:SalesBlanketOrders", "/erp/sales-blanket-orders", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink SalesReturnOrders = new("Menu:SalesReturnOrders", "/erp/sales-return-orders", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink PostedSalesShipments = new("Menu:PostedSalesShipments", "/erp/posted-sales-shipments", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink PostedSalesInvoices = new("Menu:PostedSalesInvoices", "/erp/posted-sales-invoices", ErpModuleRegistry.Sales, ErpPermissions.SalesDocuments.Default);
+    private static readonly RoleCenterLink PurchaseQuotes = new("Menu:PurchaseQuotes", "/erp/purchase-quotes", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PurchaseCreditMemos = new("Menu:PurchaseCreditMemos", "/erp/purchase-credit-memos", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PurchaseBlanketOrders = new("Menu:PurchaseBlanketOrders", "/erp/purchase-blanket-orders", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PurchaseReturnOrders = new("Menu:PurchaseReturnOrders", "/erp/purchase-return-orders", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PostedPurchaseReceipts = new("Menu:PostedPurchaseReceipts", "/erp/posted-purchase-receipts", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PostedPurchaseInvoices = new("Menu:PostedPurchaseInvoices", "/erp/posted-purchase-invoices", ErpModuleRegistry.Purchasing, ErpPermissions.PurchaseDocuments.Default);
+    private static readonly RoleCenterLink PriceLists = new("Menu:PriceLists", "/erp/price-lists", ErpModuleRegistry.Inventory, ErpPermissions.PriceLists.Default);
+    private static readonly RoleCenterLink CustomerPriceGroups = new("Menu:CustomerPriceGroups", "/erp/customer-price-groups", ErpModuleRegistry.Inventory, ErpPermissions.PriceLists.Default);
+    private static readonly RoleCenterLink ItemJournals = new("Menu:ItemJournals", "/erp/item-journals", ErpModuleRegistry.Inventory, ErpPermissions.ItemJournals.Default);
+    private static readonly RoleCenterLink TransferOrders = new("Menu:TransferOrders", "/erp/transfer-orders", ErpModuleRegistry.Inventory, ErpPermissions.TransferOrders.Default);
+    private static readonly RoleCenterLink PostedTransfers = new("Menu:PostedTransfers", "/erp/posted-transfers", ErpModuleRegistry.Inventory, ErpPermissions.TransferOrders.Default);
+    private static readonly RoleCenterLink ItemLedgerEntries = new("Menu:ItemLedgerEntries", "/erp/item-ledger-entries", ErpModuleRegistry.Inventory, ErpPermissions.Items.Default);
+    private static readonly RoleCenterLink ItemTrackingCodes = new("Menu:ItemTrackingCodes", "/erp/item-tracking-codes", ErpModuleRegistry.Inventory, ErpPermissions.InventorySetup.Default);
     private static readonly RoleCenterLink RequestsToApprove = new("Menu:RequestsToApprove", "/erp/approvals", ErpModuleRegistry.Approvals, ErpPermissions.Workflows.Default);
 
     // Ledgers
@@ -103,6 +127,26 @@ public static class RoleCenterCatalog
     private static readonly RoleCenterLink DataExport = new("Menu:DataExport", "/erp/setup/data-export", ErpModuleRegistry.DataExport, ErpPermissions.DataExport.Default);
     private static readonly RoleCenterLink ConfigPackages = new("Menu:ConfigPackages", "/erp/rapid-start/packages", ErpModuleRegistry.RapidStart, ErpPermissions.RapidStart.Default);
     private static readonly RoleCenterLink ConfigWorksheet = new("Menu:ConfigWorksheet", "/erp/rapid-start/worksheet", ErpModuleRegistry.RapidStart, ErpPermissions.RapidStart.Default);
+    private static readonly RoleCenterLink Reminders = new("Menu:Reminders", "/erp/reminders", ErpModuleRegistry.Finance, ErpPermissions.Reminders.Default);
+    private static readonly RoleCenterLink FinanceChargeMemos = new("Menu:FinanceChargeMemos", "/erp/finance-charge-memos", ErpModuleRegistry.Finance, ErpPermissions.FinanceChargeMemos.Default);
+    private static readonly RoleCenterLink BankReconciliations = new("Menu:BankAccReconciliations", "/erp/bank-acc-reconciliations", ErpModuleRegistry.CashManagement, ErpPermissions.BankReconciliations.Default);
+    private static readonly RoleCenterLink CashFlowForecasts = new("Menu:CashFlowForecasts", "/erp/cash-flow-forecasts", ErpModuleRegistry.Finance, ErpPermissions.CashFlow.Default);
+    private static readonly RoleCenterLink DeferralTemplates = new("Menu:DeferralTemplates", "/erp/deferral-templates", ErpModuleRegistry.Finance, ErpPermissions.Deferrals.Default);
+    private static readonly RoleCenterLink CrmPipeline = new("Menu:Pipeline", "/erp/crm/pipeline", ErpModuleRegistry.Crm, ErpPermissions.Crm.Default);
+    private static readonly RoleCenterLink Opportunities = new("Menu:Opportunities", "/erp/opportunities", ErpModuleRegistry.Crm, ErpPermissions.Crm.Default);
+    private static readonly RoleCenterLink Contacts = new("Menu:Contacts", "/erp/contacts", ErpModuleRegistry.Crm, ErpPermissions.Crm.Default);
+    private static readonly RoleCenterLink MyActivities = new("Menu:MyActivities", "/erp/crm/my-activities", ErpModuleRegistry.Crm, ErpPermissions.Chatter.Default);
+    private static readonly RoleCenterLink Projects = new("Menu:ProjectList", "/erp/projects", ErpModuleRegistry.Projects, ErpPermissions.Projects.Default);
+    private static readonly RoleCenterLink TimeSheets = new("Menu:TimeSheets", "/erp/time-sheets", ErpModuleRegistry.Projects, ErpPermissions.TimeSheets.Default);
+    private static readonly RoleCenterLink ProjectJournals = new("Menu:ProjectJournals", "/erp/project-journals", ErpModuleRegistry.Projects, ErpPermissions.Projects.Default);
+    private static readonly RoleCenterLink ServiceOrders = new("Menu:ServiceOrders", "/erp/service-orders", ErpModuleRegistry.Service, ErpPermissions.Service.Default);
+    private static readonly RoleCenterLink ServiceContracts = new("Menu:ServiceContracts", "/erp/service-contracts", ErpModuleRegistry.Service, ErpPermissions.Service.Default);
+    private static readonly RoleCenterLink ServiceItems = new("Menu:ServiceItems", "/erp/service-items", ErpModuleRegistry.Service, ErpPermissions.Service.Default);
+    private static readonly RoleCenterLink ProductionOrders = new("Menu:ProductionOrders", "/erp/production-orders", ErpModuleRegistry.Manufacturing, ErpPermissions.Manufacturing.Default);
+    private static readonly RoleCenterLink PlanningWorksheet = new("Menu:PlanningWorksheet", "/erp/planning-worksheet", ErpModuleRegistry.Manufacturing, ErpPermissions.Manufacturing.Default);
+    private static readonly RoleCenterLink ProductionBoms = new("Menu:ProductionBoms", "/erp/production-boms", ErpModuleRegistry.Manufacturing, ErpPermissions.Manufacturing.Default);
+    private static readonly RoleCenterLink FAJournals = new("Menu:FAJournals", "/erp/fa-journals", ErpModuleRegistry.FixedAssets, ErpPermissions.FAJournals.Default);
+    private static readonly RoleCenterLink BudgetMatrix = new("Menu:BudgetMatrix", "/erp/finance/budget-matrix", ErpModuleRegistry.Finance, ErpPermissions.Budgets.Default);
     private static readonly RoleCenterLink ImportData = new("Menu:ImportData", "/erp/rapid-start/import", ErpModuleRegistry.RapidStart, ErpPermissions.RapidStart.Apply);
 
     // Menus shared by several role centers
@@ -130,6 +174,7 @@ public static class RoleCenterCatalog
         "Menu:CashManagement",
         BankAccounts,
         BankLedgerEntries,
+        BankReconciliations,
         PaymentMethods,
         BankAccountPostingGroups
     );
@@ -140,14 +185,39 @@ public static class RoleCenterCatalog
         VatStatement,
         VatSettlement,
         AdjustExchangeRates,
-        AccountingPeriods
+        AccountingPeriods,
+        Reminders,
+        FinanceChargeMemos,
+        CashFlowForecasts,
+        DeferralTemplates,
+        BudgetMatrix,
+        FAJournals
     );
 
     private static readonly RoleCenterMenu Sales = Menu(
         "sales",
         "Menu:Sales",
+        Projects,
+        TimeSheets,
+        ProjectJournals,
+        CrmPipeline,
+        Opportunities,
+        Contacts,
+        MyActivities,
+        ServiceOrders,
+        ServiceContracts,
+        ServiceItems,
         Customers,
+        SalesQuotes,
+        SalesOrders,
         SalesInvoices,
+        SalesCreditMemos,
+        SalesBlanketOrders,
+        SalesReturnOrders,
+        PostedSalesShipments,
+        PostedSalesInvoices,
+        PriceLists,
+        CustomerPriceGroups,
         CustomerLedgerEntries,
         SalespeoplePurchasers
     );
@@ -156,7 +226,17 @@ public static class RoleCenterCatalog
         "purchasing",
         "Menu:Purchasing",
         Vendors,
+        PurchaseQuotes,
+        PurchaseOrders,
         PurchaseInvoices,
+        PurchaseCreditMemos,
+        PurchaseBlanketOrders,
+        PurchaseReturnOrders,
+        PostedPurchaseReceipts,
+        PostedPurchaseInvoices,
+        PurchaseRequisitions,
+        Tenders,
+        ProcurementPlans,
         VendorLedgerEntries
     );
 
@@ -164,9 +244,17 @@ public static class RoleCenterCatalog
         "inventory",
         "Menu:Inventory",
         Items,
+        ItemJournals,
+        TransferOrders,
+        PostedTransfers,
+        ProductionOrders,
+        PlanningWorksheet,
+        ProductionBoms,
+        ItemLedgerEntries,
         ItemCategories,
         UnitsOfMeasure,
         Locations,
+        ItemTrackingCodes,
         InventorySetup
     );
 

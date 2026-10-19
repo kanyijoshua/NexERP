@@ -45,6 +45,7 @@ public static class StandardReportAreas
     public const string Pensions = "Pensions";
     public const string Academics = "Academics";
     public const string Payroll = "Payroll";
+    public const string Inventory = "Inventory";
 }
 
 /// <summary>One report of the catalog, as the report list and Report Selections name it.</summary>

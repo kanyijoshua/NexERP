@@ -14,7 +14,7 @@
   </div>
 </div>
 
-<erp-table [tableId]="'ledger-entries-' + kind" [source]="source" [columns]="columns" [clickableRows]="false">
+<erp-table [tableId]="'ledger-entries-' + kind" [source]="source" [columns]="columns" [actions]="actions" [clickableRows]="false">
   <ng-template erpTableCol="entryNo" let-value="value">
     <span class="font-monospace small">{{ value }}</span>
   </ng-template>

@@ -45,7 +45,7 @@ export interface ErpTableColumn<T = any> {
   cellClass?: string | ((data: { row: T; column?: any; value?: any } | T) => string | Record<string, boolean>);
   /** For code/link: whether the value is a link that emits `codeClick`. */
   clickable?: boolean | ((row: T) => boolean);
-  /** Optional field name providing a Business Central-style secondary sublink value */
+  /** Optional field name providing a secondary sublink value */
   sublinkField?: string;
   /** Optional formatter or extractor for the secondary sublink */
   sublinkFormat?: (row: T) => string | null | undefined;

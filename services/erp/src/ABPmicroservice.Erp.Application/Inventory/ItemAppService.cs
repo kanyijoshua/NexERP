@@ -6,6 +6,7 @@ using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -53,6 +54,9 @@ public class ItemAppService
             PostingGroupBase.NormalizeCode(input.InventoryPostingGroup)
         );
         item.SetVatProdPostingGroup(input.VatProdPostingGroup);
+        item.SetCostingMethod(input.CostingMethod);
+        item.SetItemTrackingCode(input.ItemTrackingCode);
+        item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
 
         await Repository.InsertAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
@@ -81,9 +85,28 @@ public class ItemAppService
             PostingGroupBase.NormalizeCode(input.InventoryPostingGroup)
         );
         item.SetVatProdPostingGroup(input.VatProdPostingGroup);
+        await SetCostingAsync(item, input);
 
         await Repository.UpdateAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
+    }
+
+    /// <summary>
+    /// The costing method and tracking code. Neither can change once stock has moved: the entries
+    /// already posted were costed and tracked the old way.
+    /// </summary>
+    private async Task SetCostingAsync(Item item, CreateUpdateItemDto input)
+    {
+        var changed = item.CostingMethod != input.CostingMethod
+            || !string.Equals(item.ItemTrackingCode, CodeTableEntity.NormalizeCode(input.ItemTrackingCode), StringComparison.Ordinal);
+        if (changed && await LazyServiceProvider.LazyGetRequiredService<IRepository<ItemLedgerEntry, Guid>>().AnyAsync(e => e.ItemId == item.Id))
+        {
+            throw new BusinessException(ErpErrorCodes.Inventory.CannotChangeCostingMethod).WithData("itemNo", item.No);
+        }
+
+        item.SetCostingMethod(input.CostingMethod);
+        item.SetItemTrackingCode(input.ItemTrackingCode);
+        item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
     }
 
     /// <summary>A posting group on the card must exist; blank means none.</summary>
@@ -93,6 +116,7 @@ public class ItemAppService
         await codes.EnsureExistsAsync<GenProductPostingGroup>(input.GenProdPostingGroup);
         await codes.EnsureExistsAsync<InventoryPostingGroup>(input.InventoryPostingGroup);
         await codes.EnsureExistsAsync<VatProductPostingGroup>(input.VatProdPostingGroup);
+        await codes.EnsureExistsAsync<ItemTrackingCode>(input.ItemTrackingCode);
     }
 
     public override async Task DeleteAsync(Guid id)

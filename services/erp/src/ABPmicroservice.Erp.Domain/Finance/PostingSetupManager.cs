@@ -171,6 +171,16 @@ public class PostingSetupManager : DomainService
         return Required(setup, setup.COGSAccountNo, "COGS Account");
     }
 
+    /// <summary>
+    /// The account the other side of a stock adjustment or revaluation posts to: the Inventory
+    /// Adjmt. Account of the setup with a blank business group and the item's product group.
+    /// </summary>
+    public async Task<string> GetInventoryAdjmtAccountAsync(string genProdPostingGroup)
+    {
+        var setup = await GetGeneralPostingSetupAsync(null, genProdPostingGroup);
+        return Required(setup, setup.InventoryAdjmtAccountNo, "Inventory Adjmt. Account");
+    }
+
     private static string Required(GeneralPostingSetup setup, string accountNo, string field)
     {
         if (accountNo.IsNullOrWhiteSpace())

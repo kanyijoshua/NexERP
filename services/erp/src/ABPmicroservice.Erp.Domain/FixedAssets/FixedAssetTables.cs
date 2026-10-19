@@ -386,6 +386,12 @@ public class FADepreciationBook : CompanyEntity
     public bool UseHalfYearConvention { get; private set; }
     public bool DefaultFADepreciationBook { get; private set; }
 
+    /// <summary>The first acquisition starts the depreciation unless a starting date was set.</summary>
+    internal void StartDepreciation(DateTime date)
+    {
+        DepreciationStartingDate ??= date.Date;
+    }
+
     protected FADepreciationBook() { }
 
     public FADepreciationBook(Guid id, string faNo, string depreciationBookCode)

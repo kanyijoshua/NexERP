@@ -391,6 +391,7 @@ export class SetupEntities {
       { field: 'countryRegionCode', labelKey: 'Erp::CountryRegionCode', type: 'text', section: 'contact', maxLength: 10, cardOnly: true },
       { field: 'contact', labelKey: 'Erp::Contact', type: 'text', section: 'contact', maxLength: 100, cardOnly: true },
       { field: 'phoneNo', labelKey: 'Erp::PhoneNo', type: 'text', section: 'contact', maxLength: 30, cardOnly: true },
+      { field: 'useAsInTransit', labelKey: 'Erp::UseAsInTransit', type: 'checkbox', cardOnly: true },
     ],
   });
 

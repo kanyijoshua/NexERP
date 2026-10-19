@@ -1,0 +1,40 @@
+<erp-page-toolbar title="Erp::MyActivities" breadcrumb="Erp::Menu:Crm" icon="fas fa-list-check" [showSearch]="false" [showCreate]="false"></erp-page-toolbar>
+
+@if (overdue()) {
+  <div class="alert alert-danger py-2 small">{{ 'Erp::OverdueActivities' | abpLocalization }}: {{ overdue() }}</div>
+}
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">{{ 'Erp::DueDate' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::ActivityType' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::Summary' | abpLocalization }}</th>
+          <th scope="col">{{ 'Erp::Record' | abpLocalization }}</th>
+          <th scope="col"><span class="visually-hidden">{{ 'Erp::Actions' | abpLocalization }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (task of tasks(); track task.id) {
+          <tr [class.table-danger]="isOverdue(task)">
+            <td class="text-nowrap">{{ task.dueDate | date: 'yyyy-MM-dd' }}</td>
+            <td>{{ task.activityType }}</td>
+            <td>{{ task.summary }}</td>
+            <td class="small text-secondary">{{ task.entityType }} {{ task.entityNo }}</td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-success" (click)="complete(task)">
+                <i class="fas fa-check me-1"></i>{{ 'Erp::MarkDone' | abpLocalization }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-center text-secondary py-4">{{ 'Erp::NoOpenActivities' | abpLocalization }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

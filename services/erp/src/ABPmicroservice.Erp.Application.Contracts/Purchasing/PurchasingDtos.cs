@@ -228,6 +228,18 @@ public class PurchaseHeaderDto : FullAuditedEntityDto<Guid>
     public DateTime? InvoiceReceivedDate { get; set; }
     public string CreditorNo { get; set; }
     public string ReasonCode { get; set; }
+    public string RequisitionNo { get; set; }
+    public string TenderNo { get; set; }
+    public ABPmicroservice.Erp.Procurement.PurchaseOrderStage OrderStage { get; set; }
+    public DateTime? ContractCommencementDate { get; set; }
+    public DateTime? ContractCompletionDate { get; set; }
+    public bool LpoClosed { get; set; }
+    public string CloseComments { get; set; }
+    public string ClosedBy { get; set; }
+    public string CancelComments { get; set; }
+    public string CancelledBy { get; set; }
+    public string LastReceivingNo { get; set; }
+    public string LastPostingNo { get; set; }
 }
 
 public class PurchaseLineDto : EntityDto<Guid>
@@ -265,6 +277,13 @@ public class PurchaseLineDto : EntityDto<Guid>
     public decimal VatPercent { get; set; }
     public decimal VatBaseAmount { get; set; }
     public decimal VatAmount { get; set; }
+    public Guid? ReceiptLineId { get; set; }
+    public string ReceiptNo { get; set; }
+    public int? ReceiptLineNo { get; set; }
+    public string BlanketOrderNo { get; set; }
+    public int? BlanketOrderLineNo { get; set; }
+    public string VariantCode { get; set; }
+    public decimal QtyPerUnitOfMeasure { get; set; }
 }
 
 public class CreateUpdatePurchaseHeaderDto
@@ -408,6 +427,23 @@ public class CreateUpdatePurchaseHeaderDto
 
     [StringLength(10)]
     public string ReasonCode { get; set; }
+
+    [StringLength(30)]
+    public string RequisitionNo { get; set; }
+
+    [StringLength(30)]
+    public string TenderNo { get; set; }
+
+    public DateTime? ContractCommencementDate { get; set; }
+    public DateTime? ContractCompletionDate { get; set; }
+}
+
+
+public class CloseCancelPurchaseOrderInput
+{
+    [Required]
+    [StringLength(500)]
+    public string Comments { get; set; }
 }
 
 public class PurchaseLineInputDto
@@ -425,10 +461,14 @@ public class PurchaseLineInputDto
     public string ItemCategoryCode { get; set; }
     public string ShortcutDimension1Code { get; set; }
     public string ShortcutDimension2Code { get; set; }
-    public decimal QtyToReceive { get; set; }
-    public decimal QuantityReceived { get; set; }
-    public decimal QtyToInvoice { get; set; }
-    public decimal QuantityInvoiced { get; set; }
+    public string VariantCode { get; set; }
+
+    /// <summary>On an order: how much the next posting receives. Blank receives everything outstanding.</summary>
+    public decimal? QtyToReceive { get; set; }
+
+    /// <summary>On an order: how much the next posting invoices. Blank invoices everything received.</summary>
+    public decimal? QtyToInvoice { get; set; }
+
     public string DeferralCode { get; set; }
     public string TaxAreaCode { get; set; }
     public bool TaxLiable { get; set; }

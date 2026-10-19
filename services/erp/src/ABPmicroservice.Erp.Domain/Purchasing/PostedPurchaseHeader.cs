@@ -25,6 +25,14 @@ public class PostedPurchaseHeader : CompanyBasicEntity
     public decimal TotalAmount { get; private set; }
     public decimal TotalAmountIncludingVat { get; private set; }
     public Guid DimensionSetId { get; private set; }
+
+    /// <summary>A posted credit memo rather than an invoice.</summary>
+    public bool CreditMemo { get; private set; }
+
+    /// <summary>The order (or return order) this was invoiced from; blank for a stand-alone invoice.</summary>
+    public string OrderNo { get; private set; }
+
+    public string VendorInvoiceNo { get; private set; }
     public Collection<PostedPurchaseLine> Lines { get; private set; }
 
     protected PostedPurchaseHeader()
@@ -60,6 +68,14 @@ public class PostedPurchaseHeader : CompanyBasicEntity
         DimensionSetId = dimensionSetId;
         Lines = new Collection<PostedPurchaseLine>();
     }
+
+    public void SetDetails(bool creditMemo, string orderNo, string currencyCode, string vendorInvoiceNo)
+    {
+        CreditMemo = creditMemo;
+        OrderNo = Check.Length(orderNo, nameof(orderNo), ErpDomainConsts.MaxDocumentNoLength);
+        CurrencyCode = Check.Length(currencyCode, nameof(currencyCode), ErpDomainConsts.MaxCurrencyCodeLength);
+        VendorInvoiceNo = Check.Length(vendorInvoiceNo, nameof(vendorInvoiceNo), ErpDomainConsts.MaxExternalDocumentNoLength);
+    }
 }
 
 /// <summary>
@@ -76,6 +92,16 @@ public class PostedPurchaseLine : Entity<Guid>
     public decimal DirectUnitCost { get; private set; }
     public decimal LineAmount { get; private set; }
     public Guid DimensionSetId { get; private set; }
+    public decimal LineDiscountPercent { get; private set; }
+    public string UnitOfMeasureCode { get; private set; }
+    public decimal VatPercent { get; private set; }
+    public decimal VatAmount { get; private set; }
+    public decimal AmountIncludingVat { get; private set; }
+
+    /// <summary>The order line, and the receipt line where the goods came in, that this line invoices.</summary>
+    public int? OrderLineNo { get; private set; }
+    public string ReceiptNo { get; private set; }
+    public int? ReceiptLineNo { get; private set; }
 
     protected PostedPurchaseLine() { }
 
@@ -102,5 +128,21 @@ public class PostedPurchaseLine : Entity<Guid>
         DirectUnitCost = directUnitCost;
         LineAmount = lineAmount;
         DimensionSetId = dimensionSetId;
+    }
+
+    public void SetDetails(decimal lineDiscountPercent, string unitOfMeasureCode, decimal vatPercent, decimal vatAmount, decimal amountIncludingVat)
+    {
+        LineDiscountPercent = lineDiscountPercent;
+        UnitOfMeasureCode = Check.Length(unitOfMeasureCode, nameof(unitOfMeasureCode), ErpDomainConsts.MaxUnitOfMeasureCodeLength);
+        VatPercent = vatPercent;
+        VatAmount = vatAmount;
+        AmountIncludingVat = amountIncludingVat;
+    }
+
+    public void SetSource(int? orderLineNo, string receiptNo, int? receiptLineNo)
+    {
+        OrderLineNo = orderLineNo;
+        ReceiptNo = Check.Length(receiptNo, nameof(receiptNo), ErpDomainConsts.MaxDocumentNoLength);
+        ReceiptLineNo = receiptLineNo;
     }
 }

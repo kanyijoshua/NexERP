@@ -174,6 +174,12 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
                     await SeedPensionsAsync();
                     await SeedAcademicsAsync();
                     await SeedPayrollAsync();
+                    await SeedFinanceOperationsAsync();
+                    await SeedFixedAssetPostingAsync();
+                    await SeedCrmAsync();
+                    await SeedProjectsAsync();
+                    await SeedManufacturingAsync();
+                    await SeedServiceManagementAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {
@@ -288,6 +294,10 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
         await AddSeriesAsync("S-CR", "Sales Credit Memos", "SCM-00001", manualNos: true);
         await AddSeriesAsync("S-INV+", "Posted Sales Invoices", "PSI-00001", dateOrder: true);
         await AddSeriesAsync("S-CR+", "Posted Sales Credit Memos", "PSCM-00001", dateOrder: true);
+        await AddSeriesAsync("S-BLK", "Sales Blanket Orders", "SB-00001", manualNos: true);
+        await AddSeriesAsync("S-RET", "Sales Return Orders", "SR-00001", manualNos: true);
+        await AddSeriesAsync("S-SHPT+", "Posted Sales Shipments", "SSH-00001", dateOrder: true);
+        await AddSeriesAsync("S-RCPT+", "Posted Return Receipts", "SRR-00001", dateOrder: true);
 
         await AddSeriesAsync("P-QUO", "Purchase Quotes", "PQ-00001", manualNos: true);
         await AddSeriesAsync("P-ORD", "Purchase Orders", "PO-00001", manualNos: true);
@@ -295,18 +305,23 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
         await AddSeriesAsync("P-CR", "Purchase Credit Memos", "PCM-00001", manualNos: true);
         await AddSeriesAsync("P-INV+", "Posted Purchase Invoices", "PPI-00001", dateOrder: true);
         await AddSeriesAsync("P-CR+", "Posted Purchase Credit Memos", "PPCM-00001", dateOrder: true);
+        await AddSeriesAsync("P-BLK", "Purchase Blanket Orders", "PB-00001", manualNos: true);
+        await AddSeriesAsync("P-RET", "Purchase Return Orders", "PR-00001", manualNos: true);
+        await AddSeriesAsync("P-RCPT+", "Posted Purchase Receipts", "PRC-00001", dateOrder: true);
+        await AddSeriesAsync("P-SHPT+", "Posted Return Shipments", "PRS-00001", dateOrder: true);
 
         if (await _salesSetupRepository.GetCountAsync() == 0)
         {
             var salesSetup = new SalesReceivablesSetup(NewId());
             salesSetup.SetNumberSeries("CUST", "S-QUO", "S-ORD", "S-INV", "S-CR", "S-INV+", "S-CR+");
+            salesSetup.SetOrderNumberSeries("S-BLK", "S-RET", "S-SHPT+", "S-RCPT+");
             await _salesSetupRepository.InsertAsync(salesSetup);
         }
 
         if (await _purchaseSetupRepository.GetCountAsync() == 0)
         {
             var purchaseSetup = new PurchasesPayablesSetup(NewId());
-            purchaseSetup.SetNumberSeries("VEND", "P-QUO", "P-ORD", "P-INV", "P-CR", "P-INV+", "P-CR+");
+            purchaseSetup.SetNumberSeries("VEND", "P-QUO", "P-ORD", "P-INV", "P-CR", "P-INV+", "P-CR+", "P-BLK", "P-RCPT+", "P-SHPT+", "P-RET");
             await _purchaseSetupRepository.InsertAsync(purchaseSetup);
         }
     }
