@@ -133,12 +133,13 @@ public class ProfileAppService_Tests : ErpApplicationTestBase
         await PickAsync(ErpProfileIds.HumanResourcesManager);
         (await MyAsync()).Navigation.Select(n => n.Key).ShouldContain("human-resources");
 
-        // Payroll runs on employees, so it goes first.
+        // Payroll and projects run on employees, so they go first.
         await InCompanyAsync(
             DefaultCompanyName,
             async () =>
             {
                 await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Payroll, Enabled = false });
+                await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Projects, Enabled = false });
                 await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.HumanResources, Enabled = false });
             }
         );
@@ -157,6 +158,7 @@ public class ProfileAppService_Tests : ErpApplicationTestBase
                 {
                     await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.HumanResources, Enabled = true });
                     await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Payroll, Enabled = true });
+                    await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Projects, Enabled = true });
                 }
             );
             await PickAsync(null);

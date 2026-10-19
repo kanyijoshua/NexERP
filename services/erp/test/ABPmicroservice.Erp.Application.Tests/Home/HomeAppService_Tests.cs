@@ -113,9 +113,18 @@ public class HomeAppService_Tests : ErpApplicationTestBase
         var before = await SummaryAsync();
         before.Cues.Select(c => c.Key).ShouldContain("OpenSalesInvoices");
 
+        // CRM, projects and service sell through Sales, so they go first.
         await InCompanyAsync(
             DefaultCompanyName,
-            () => _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Sales, Enabled = false })
+            async () =>
+            {
+                foreach (var dependent in DependentsOfSales)
+                {
+                    await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = dependent, Enabled = false });
+                }
+
+                await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Sales, Enabled = false });
+            }
         );
 
         var after = await SummaryAsync();
@@ -124,9 +133,18 @@ public class HomeAppService_Tests : ErpApplicationTestBase
 
         await InCompanyAsync(
             DefaultCompanyName,
-            () => _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Sales, Enabled = true })
+            async () =>
+            {
+                await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = ErpModuleRegistry.Sales, Enabled = true });
+                foreach (var dependent in DependentsOfSales)
+                {
+                    await _modules.SetEnabledAsync(new SetModuleEnabledInput { Code = dependent, Enabled = true });
+                }
+            }
         );
     }
+
+    private static readonly string[] DependentsOfSales = [ErpModuleRegistry.Crm, ErpModuleRegistry.Projects, ErpModuleRegistry.Service];
 
     [Fact]
     public async Task An_Amount_Cue_Is_Marked_As_Money()
