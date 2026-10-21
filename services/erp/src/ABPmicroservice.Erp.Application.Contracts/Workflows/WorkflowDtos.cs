@@ -17,7 +17,52 @@ public class WorkflowDto : EntityDto<Guid>
     public decimal MinimumAmount { get; set; }
     public ApproverLimitType ApproverLimitType { get; set; }
     public int DueDays { get; set; }
+    public WorkflowApproverType ApproverType { get; set; }
+    public string WorkflowUserGroupCode { get; set; }
+    public Guid? SpecificApproverUserId { get; set; }
+    public string SpecificApproverUserName { get; set; }
+    public int DelegateAfterDays { get; set; }
     public List<WorkflowStepDto> Steps { get; set; } = new();
+}
+
+public class WorkflowTemplateDto
+{
+    public string Code { get; set; }
+    public string Description { get; set; }
+    public ApprovalDocumentKind DocumentKind { get; set; }
+    public ApproverLimitType ApproverLimitType { get; set; }
+    public WorkflowApproverType ApproverType { get; set; }
+    public decimal MinimumAmount { get; set; }
+    public int DueDays { get; set; }
+    public int DelegateAfterDays { get; set; }
+}
+
+public class NewWorkflowFromTemplateDto
+{
+    [Required]
+    public string TemplateCode { get; set; }
+
+    [Required]
+    [StringLength(ErpDomainConsts.MaxWorkflowCodeLength)]
+    public string Code { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxDescriptionLength)]
+    public string Description { get; set; }
+
+    /// <summary>Required by templates whose approvers are a workflow user group.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string WorkflowUserGroupCode { get; set; }
+}
+
+public class CopyWorkflowDto
+{
+    [Required]
+    [StringLength(ErpDomainConsts.MaxWorkflowCodeLength)]
+    public string Code { get; set; }
+
+    /// <summary>Blank keeps the description of the workflow copied.</summary>
+    [StringLength(ErpDomainConsts.MaxDescriptionLength)]
+    public string Description { get; set; }
 }
 
 public class WorkflowStepDto : EntityDto<Guid>
@@ -55,6 +100,19 @@ public class CreateUpdateWorkflowDto
 
     [Range(0, 3650)]
     public int DueDays { get; set; }
+
+    public WorkflowApproverType ApproverType { get; set; }
+
+    /// <summary>Required when the approver type is a workflow user group.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string WorkflowUserGroupCode { get; set; }
+
+    /// <summary>Required when the approver limit type is a specific approver; must be in the Approval User Setup.</summary>
+    public Guid? SpecificApproverUserId { get; set; }
+
+    /// <summary>Delegate a request automatically after this many days without a response. Zero means never.</summary>
+    [Range(0, 365)]
+    public int DelegateAfterDays { get; set; }
 
     public List<CreateUpdateWorkflowStepDto> Steps { get; set; } = new();
 }
@@ -101,6 +159,9 @@ public class GetApprovalEntriesInput : ErpPagedListInput
 
     /// <summary>All entries of one document, whatever their status (its approval history).</summary>
     public Guid? DocumentId { get; set; }
+
+    /// <summary>Only open entries past their due date ("Overdue Approval Entries").</summary>
+    public bool OnlyOverdue { get; set; }
 }
 
 public class ApprovalCommentInput
@@ -133,6 +194,15 @@ public interface IWorkflowAppService : IApplicationService
 
     /// <summary>Routed as POST /api/erp/workflow/{id}/disable.</summary>
     Task DisableAsync(Guid id);
+
+    /// <summary>The built-in templates. Routed as GET /api/erp/workflow/templates.</summary>
+    Task<ListResultDto<WorkflowTemplateDto>> GetTemplatesAsync();
+
+    /// <summary>A new, disabled workflow from a template. Routed as POST /api/erp/workflow/new-from-template.</summary>
+    Task<WorkflowDto> NewFromTemplateAsync(NewWorkflowFromTemplateDto input);
+
+    /// <summary>A disabled copy under a new code. Routed as POST /api/erp/workflow/{id}/copy.</summary>
+    Task<WorkflowDto> CopyAsync(Guid id, CopyWorkflowDto input);
 }
 
 /// <summary>What an approver does with requests: the "Requests to Approve" page.</summary>

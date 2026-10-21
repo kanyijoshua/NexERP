@@ -14,7 +14,7 @@ import { finalize } from 'rxjs';
 import { ErpTableColumn, ErpTableComponent, ErpTableQuery, ErpTableSource } from '../erp-shared';
 import { CompanyService } from '../services/company.service';
 
-type ApprovalView = 'toApprove' | 'sentByMe' | 'all';
+type ApprovalView = 'toApprove' | 'sentByMe' | 'overdue' | 'all';
 type PendingAction = 'approve' | 'reject';
 
 /**
@@ -100,9 +100,18 @@ export class RequestsToApproveComponent implements OnInit {
   }
 
   documentRoute(entry: ApprovalEntryDto): string[] {
-    return entry.documentKind === ApprovalDocumentKind.PurchaseDocument
-      ? ['/erp/purchase-invoices']
-      : ['/erp/sales-invoices'];
+    switch (entry.documentKind) {
+      case ApprovalDocumentKind.PurchaseDocument:
+        return ['/erp/purchase-invoices'];
+      case ApprovalDocumentKind.PaymentVoucher:
+        return ['/erp/payment-vouchers'];
+      case ApprovalDocumentKind.PurchaseRequisition:
+        return ['/erp/purchase-requisitions'];
+      case ApprovalDocumentKind.Tender:
+        return ['/erp/tenders'];
+      default:
+        return ['/erp/sales-invoices'];
+    }
   }
 
   isOverdue(entry: ApprovalEntryDto): boolean {
@@ -175,7 +184,9 @@ export class RequestsToApproveComponent implements OnInit {
       sentByMe: this.view === 'sentByMe',
       // The work list shows what is waiting; the other views show the whole history.
       status: this.view === 'toApprove' ? ApprovalStatus.Open : undefined,
-      allStatuses: this.view !== 'toApprove',
+      allStatuses: this.view !== 'toApprove' && this.view !== 'overdue',
+      // Open requests past their due date, whoever they wait for.
+      onlyOverdue: this.view === 'overdue',
       documentId: undefined,
     } as GetApprovalEntriesInput;
   }

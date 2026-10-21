@@ -228,10 +228,41 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
         await _vendorPostingGroupRepository.InsertAsync(new VendorPostingGroup(NewId(), "DOMESTIC", "2100", "Domestic Vendors"));
         await _generalPostingSetupRepository.InsertAsync(new GeneralPostingSetup(NewId(), "DOMESTIC", "RETAIL", "4000", "5000", "5000", "5000"));
 
-        // 3. Dimensions
-        var deptDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "DEPARTMENT", "Department"));
+        // 3. Dimensions (up to 8 Business Central dimensions)
+        var deptDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "DEPARTMENT", "Department", "Operating department"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "SALES", "Sales"));
         await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "ADMIN", "Administration"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), deptDim.Id, "DEPARTMENT", "PROD", "Production"));
+
+        var projDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "PROJECT", "Project", "Project or cost center"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), projDim.Id, "PROJECT", "VW", "Volkswagen"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), projDim.Id, "PROJECT", "TOYOTA", "Toyota"));
+
+        var custGroupDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "CUSTOMERGROUP", "Customer Group", "Customer segment"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), custGroupDim.Id, "CUSTOMERGROUP", "SMALL", "Small Business"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), custGroupDim.Id, "CUSTOMERGROUP", "MEDIUM", "Medium Business"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), custGroupDim.Id, "CUSTOMERGROUP", "LARGE", "Large Enterprise"));
+
+        var areaDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "AREA", "Area", "Geographical area"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), areaDim.Id, "AREA", "10", "North"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), areaDim.Id, "AREA", "20", "South"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), areaDim.Id, "AREA", "30", "East"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), areaDim.Id, "AREA", "40", "West"));
+
+        var busGroupDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "BUSINESSGROUP", "Business Group", "Business line"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), busGroupDim.Id, "BUSINESSGROUP", "OFFICE", "Office"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), busGroupDim.Id, "BUSINESSGROUP", "IND", "Industrial"));
+
+        var salesPersonDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "SALESPERSON", "Salesperson", "Salesperson dimension"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), salesPersonDim.Id, "SALESPERSON", "PS", "Peter Saddow"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), salesPersonDim.Id, "SALESPERSON", "JR", "John Roberts"));
+
+        var purchaserDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "PURCHASER", "Purchaser", "Purchaser dimension"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), purchaserDim.Id, "PURCHASER", "AH", "Annette Hill"));
+
+        var campaignDim = await _dimensionRepository.InsertAsync(new Dimension(NewId(), "CAMPAIGN", "Sales Campaign", "Marketing campaign"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), campaignDim.Id, "CAMPAIGN", "WINTER", "Winter Campaign"));
+        await _dimensionValueRepository.InsertAsync(new DimensionValue(NewId(), campaignDim.Id, "CAMPAIGN", "SUMMER", "Summer Campaign"));
     }
 
     /// <summary>

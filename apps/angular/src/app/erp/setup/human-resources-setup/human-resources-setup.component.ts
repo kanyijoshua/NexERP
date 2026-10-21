@@ -2,7 +2,12 @@ import { ToasterService } from '@abp/ng.theme.shared';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder } from '@angular/forms';
-import { HumanResourceUnitOfMeasureDto, HumanResourceUnitOfMeasureService, HumanResourcesSetupService } from '@proxy/human-resources';
+import {
+  HumanResourceUnitOfMeasureDto,
+  HumanResourceUnitOfMeasureService,
+  HumanResourcesSetupDto,
+  HumanResourcesSetupService,
+} from '@proxy/human-resources';
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
@@ -30,6 +35,7 @@ export class HumanResourcesSetupComponent implements OnInit {
   readonly form = this.fb.group({
     employeeNos: this.fb.control<string | null>(null),
     baseUnitOfMeasure: this.fb.control<string | null>(null),
+    baseCalendarCode: this.fb.control<string | null>(null),
   });
 
   ngOnInit(): void {
@@ -41,13 +47,17 @@ export class HumanResourcesSetupComponent implements OnInit {
     const value = this.form.getRawValue();
     this.saving.set(true);
     this.setupService
-      .update({ employeeNos: value.employeeNos || undefined, baseUnitOfMeasure: value.baseUnitOfMeasure || undefined })
+      .update({
+        employeeNos: value.employeeNos || undefined,
+        baseUnitOfMeasure: value.baseUnitOfMeasure || undefined,
+        baseCalendarCode: value.baseCalendarCode || undefined,
+      })
       .pipe(
         finalize(() => this.saving.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(setup => {
-        this.form.reset({ employeeNos: setup.employeeNos ?? null, baseUnitOfMeasure: setup.baseUnitOfMeasure ?? null });
+        this.reset(setup);
         this.toaster.success('Erp::SavedSuccessfully');
       });
   }
@@ -66,7 +76,15 @@ export class HumanResourcesSetupComponent implements OnInit {
       .subscribe(({ setup, series, units }) => {
         this.series.set(series.items ?? []);
         this.units.set(units.items ?? []);
-        this.form.reset({ employeeNos: setup.employeeNos ?? null, baseUnitOfMeasure: setup.baseUnitOfMeasure ?? null });
+        this.reset(setup);
       });
+  }
+
+  private reset(setup: HumanResourcesSetupDto): void {
+    this.form.reset({
+      employeeNos: setup.employeeNos ?? null,
+      baseUnitOfMeasure: setup.baseUnitOfMeasure ?? null,
+      baseCalendarCode: setup.baseCalendarCode ?? null,
+    });
   }
 }

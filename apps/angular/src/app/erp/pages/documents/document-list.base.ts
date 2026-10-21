@@ -11,11 +11,13 @@ import {
   ApprovalRequestResultDto,
   ApprovalStatus,
 } from '@proxy/workflows';
-import { Observable, finalize } from 'rxjs';
+import { Observable, Subscription, finalize } from 'rxjs';
 import { ChatterWidgetComponent } from '../../components/chatter-widget/chatter-widget.component';
 import {
+  DocumentAction as CardAction,
   DocumentLineChange,
   DocumentLineColumn,
+  DocumentTotal,
   ErpExportColumn,
   ErpExportOptions,
   ErpExportService,
@@ -119,6 +121,40 @@ export interface PostingResult {
   shipmentNo?: string;
 }
 
+/** A header field on the document card's General section. */
+export interface DocumentCardField {
+  field: string;
+  labelKey: string;
+  type: 'text' | 'date' | 'lookup' | 'readonly';
+  /** `lookup` only: the record entity looked up, e.g. `location`. */
+  entity?: string;
+  maxLength?: number;
+}
+
+/** A sales or purchase header as the card loads it: every field, with its lines. */
+export type DocumentCardData = Record<string, unknown> & DocumentRow & { lines?: Record<string, unknown>[] };
+
+/** One line on the document card, the same for sales and purchases. */
+export interface DocumentCardLine {
+  id: string | null;
+  type: DocumentLineType;
+  no: string;
+  description: string;
+  locationCode: string | null;
+  quantity: number;
+  unitOfMeasureCode: string | null;
+  unitAmount: number;
+  lineDiscountPercent: number;
+  lineAmount: number;
+  vatPercent: number;
+  /** Qty. to Ship / Qty. to Receive. */
+  qtyToShip: number;
+  /** Quantity Shipped / Quantity Received. */
+  quantityShipped: number;
+  qtyToInvoice: number;
+  quantityInvoiced: number;
+}
+
 /**
  * Sales and purchase documents behave identically: list, create, release, reopen, ask for
  * approval, post. Orders also ship (receive) and invoice in parts, quotes and blanket orders are
@@ -215,6 +251,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   shippedLabelKey = 'Erp::QuantityShipped';
   /** "Get Shipment Lines" / "Get Receipt Lines". */
   sourceLinesLabelKey = 'Erp::GetShipmentLines';
+  /** "Qty. to Ship" / "Qty. to Receive". */
+  qtyToShipLabelKey = 'Erp::QtyToShip';
 
   /** The lines of the selected document, with what has been posted on them. */
   selectedLines: DocumentLineRow[] = [];
@@ -294,6 +332,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   selection: TRow[] = [];
   history: ApprovalEntryDto[] = [];
   busyId: string | null = null;
+  private linesSub?: Subscription;
+  private historySub?: Subscription;
 
   isModalOpen = false;
   isBusy = false;
@@ -321,11 +361,356 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected abstract createDocument(input: NewDocumentInput): Observable<TRow>;
   protected abstract run(action: DocumentAction, id: string): Observable<unknown>;
 
+  /** The header fields of the card's General section. */
+  abstract readonly cardFields: DocumentCardField[];
+  /** The whole document, header and lines. */
+  protected abstract loadDocument(id: string): Observable<DocumentCardData>;
+  /** Saves the whole document; lines missing from `input.lines` are deleted. */
+  protected abstract updateDocument(id: string, input: Record<string, unknown>): Observable<unknown>;
+  protected abstract toCardLine(line: Record<string, unknown>): DocumentCardLine;
+  /** The line as the update takes it; `original` is the saved line, so fields the card does not show are kept. */
+  protected abstract fromCardLine(line: DocumentCardLine, original: Record<string, unknown> | undefined): Record<string, unknown>;
+
+  // --- Document card: the header above, its lines below ---
+
+  /** The document open on its card; null shows the list. */
+  card: DocumentCardData | null = null;
+  cardForm: FormGroup = new FormGroup({});
+  cardLines = new FormArray<FormGroup>([]);
+  cardLineColumns: DocumentLineColumn[] = [];
+  cardTotals: DocumentTotal[] = [];
+  cardBusy = false;
+  private cardOriginalLines = new Map<string, Record<string, unknown>>();
+  private cardSubs: Subscription[] = [];
+
+  readonly cardStatusColors: Record<string, string> = {
+    'Erp::Enum:DocumentStatus.Open': 'secondary',
+    'Erp::Enum:DocumentStatus.PendingApproval': 'warning',
+    'Erp::Enum:DocumentStatus.Released': 'primary',
+    'Erp::Enum:DocumentStatus.Posted': 'success',
+  };
+
+  /** Header and lines can be changed only while the document is open. */
+  get cardEditable(): boolean {
+    return !!this.card && this.card.status === DocumentStatus.Open && !this.card.posted && this.canUpdate;
+  }
+
+  get cardDirty(): boolean {
+    return this.cardForm.dirty || this.cardLines.dirty;
+  }
+
+  get canUpdate(): boolean {
+    return this.permissions.getGrantedPolicy(this.permissionPrefix + '.Update');
+  }
+
+  /** The card's action bar, following the document's status. */
+  get cardActions(): CardAction[] {
+    const card = this.card;
+    if (!card || card.posted) {
+      return [];
+    }
+
+    const status = card.status;
+    const update = this.permissionPrefix + '.Update';
+    const actions: CardAction[] = [
+      { key: 'save', labelKey: 'Erp::Save', icon: 'fas fa-save', cssClass: 'btn-primary', permission: update,
+        disabled: !this.cardEditable || !this.cardDirty },
+    ];
+    if (status === DocumentStatus.Open) {
+      actions.push(
+        { key: 'release', labelKey: 'Erp::Release', icon: 'fas fa-lock', permission: update },
+        { key: 'sendApprovalRequest', labelKey: 'Erp::SendApprovalRequest', icon: 'fas fa-paper-plane', cssClass: 'btn-outline-warning', permission: update },
+      );
+      if (this.mode === 'invoice') {
+        actions.push({ key: 'getSourceLines', labelKey: this.sourceLinesLabelKey, icon: 'fas fa-truck-ramp-box', cssClass: 'btn-outline-info', permission: update });
+      }
+    }
+    if (status === DocumentStatus.PendingApproval) {
+      actions.push({ key: 'cancelApprovalRequest', labelKey: 'Erp::CancelApprovalRequest', icon: 'fas fa-undo', cssClass: 'btn-outline-secondary', permission: update });
+    }
+    if (status === DocumentStatus.Released) {
+      actions.push({ key: 'reopen', labelKey: 'Erp::Reopen', icon: 'fas fa-lock-open', cssClass: 'btn-outline-secondary', permission: update });
+    }
+    if (this.makesOrders) {
+      actions.push({ key: 'makeOrder', labelKey: 'Erp::MakeOrder', icon: 'fas fa-file-signature', cssClass: 'btn-outline-success', permission: this.permissionPrefix + '.Create' });
+    } else if (status !== DocumentStatus.PendingApproval) {
+      actions.push({ key: 'runPosting', labelKey: 'Erp::Post', icon: 'fas fa-check-circle', cssClass: 'btn-success', permission: this.permissionPrefix + '.Post' });
+    }
+    if (status === DocumentStatus.Open) {
+      actions.push({ key: 'delete', labelKey: 'Erp::Delete', icon: 'fas fa-trash', cssClass: 'btn-outline-danger', permission: this.permissionPrefix + '.Delete' });
+    }
+    return actions;
+  }
+
+  /** Opens a document on its card, as a link to it (`?open=<id>`) does. */
+  openCard(row: TRow | null, event?: Event): void {
+    event?.stopPropagation();
+    if (!row?.id) {
+      return;
+    }
+    if (this.card?.id !== row.id) {
+      this.router.navigate([], { relativeTo: this.route, queryParams: { open: row.id }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
+    this.select(row, true);
+    this.reloadCard(row.id);
+  }
+
+  /** Back to the list; unsaved changes are confirmed first. */
+  closeCard(): void {
+    const leave = () => this.dropCard();
+    if (!this.cardEditable || !this.cardDirty) {
+      leave();
+      return;
+    }
+    this.confirmation
+      .warn('Erp::DiscardChangesConfirmation', 'Erp::AreYouSure')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(status => {
+        if (status === Confirmation.Status.confirm) {
+          leave();
+        }
+      });
+  }
+
+  /** Leaves the card without asking, e.g. once its document is gone. */
+  protected dropCard(): void {
+    this.card = null;
+    this.cardSubs.forEach(s => s.unsubscribe());
+    this.router.navigate([], { relativeTo: this.route, queryParams: { open: null }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  protected reloadCard(id: string): void {
+    this.cardBusy = true;
+    this.loadDocument(id)
+      .pipe(
+        finalize(() => (this.cardBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(document => this.showCard(document));
+  }
+
+  private showCard(document: DocumentCardData): void {
+    this.cardSubs.forEach(s => s.unsubscribe());
+    this.card = document;
+    this.selected = document as unknown as TRow;
+    this.selection = [this.selected];
+
+    const header: Record<string, unknown> = {};
+    for (const f of this.cardFields) {
+      const value = document[f.field];
+      header[f.field] = [
+        f.type === 'date' ? toDateInput(value) : (value ?? null),
+        f.maxLength ? Validators.maxLength(f.maxLength) : [],
+      ];
+    }
+    this.cardForm = this.fb.group(header);
+
+    this.cardOriginalLines = new Map();
+    const lines = (document.lines ?? [])
+      .slice()
+      .sort((a, b) => Number(a['lineNo']) - Number(b['lineNo']));
+    for (const line of lines) {
+      this.cardOriginalLines.set(String(line['id']), line);
+    }
+    this.cardLines = this.fb.array(lines.map(l => this.buildCardLine(this.toCardLine(l))));
+    this.cardLineColumns = this.buildCardLineColumns();
+
+    if (!this.cardEditable) {
+      this.cardForm.disable({ emitEvent: false });
+      this.cardLines.disable({ emitEvent: false });
+    }
+
+    this.recalculateCard();
+    this.cardSubs = [this.cardLines.valueChanges.subscribe(() => this.recalculateCard())];
+  }
+
+  addCardLine(): void {
+    this.cardLines.push(this.buildCardLine());
+    this.cardLines.markAsDirty();
+  }
+
+  removeCardLine(index: number): void {
+    this.cardLines.removeAt(index);
+    this.cardLines.markAsDirty();
+  }
+
+  /**
+   * A picked item or account fills the line; a changed quantity resets what is to be shipped
+   * (received) and invoiced to what is still outstanding.
+   */
+  onCardLineChange(change: DocumentLineChange): void {
+    this.applyLineChange(this.cardLines, change);
+    const line = this.cardLines.at(change.index) as FormGroup | undefined;
+    if (!line) {
+      return;
+    }
+    if (change.field === 'no' && change.item?.data && line.get('type')?.value === DocumentLineType.Item) {
+      const unit = change.item.data['baseUnitOfMeasureCode'];
+      if (unit) {
+        line.patchValue({ unitOfMeasureCode: unit });
+      }
+    }
+    if (change.field === 'quantity' && this.isOrderMode) {
+      const v = line.getRawValue() as DocumentCardLine;
+      line.patchValue({
+        qtyToShip: Math.max((Number(v.quantity) || 0) - (Number(v.quantityShipped) || 0), 0),
+        qtyToInvoice: Math.max((Number(v.quantity) || 0) - (Number(v.quantityInvoiced) || 0), 0),
+      });
+    }
+  }
+
+  /** Opens the lot and serial numbers of a saved item line on the card. */
+  openCardLine(index: number): void {
+    const v = this.cardLines.at(index)?.getRawValue() as DocumentCardLine | undefined;
+    if (!v?.id || v.type !== DocumentLineType.Item || !this.canTrack) {
+      return;
+    }
+    this.openTracking({ id: v.id, lineNo: index + 1, no: v.no, quantity: v.quantity } as DocumentLineRow);
+  }
+
+  /** Runs an action of the card's bar; changes are saved first, as leaving a field would. */
+  onCardAction(key: string): void {
+    const card = this.card;
+    if (!card?.id) {
+      return;
+    }
+    if (key === 'save') {
+      this.saveCard();
+      return;
+    }
+
+    const row = card as unknown as TRow;
+    const run = () => (key === 'getSourceLines' ? this.openSource(row) : this.act(key as DocumentAction, row));
+    if (key !== 'delete' && this.cardEditable && this.cardDirty) {
+      this.saveCard(run);
+    } else {
+      run();
+    }
+  }
+
+  saveCard(then?: () => void): void {
+    const card = this.card;
+    if (!card?.id || this.cardBusy || this.cardForm.invalid || this.cardLines.invalid) {
+      this.cardForm.markAllAsTouched();
+      this.cardLines.markAllAsTouched();
+      return;
+    }
+
+    const header = this.cardForm.getRawValue() as Record<string, unknown>;
+    for (const f of this.cardFields) {
+      if (f.type === 'readonly') {
+        delete header[f.field];
+      } else if (f.type === 'date' || header[f.field] === '') {
+        header[f.field] = header[f.field] || null;
+      }
+    }
+
+    const lines = (this.cardLines.getRawValue() as DocumentCardLine[])
+      .filter(l => l.id || l.no || l.description)
+      .map(l => this.fromCardLine(l, l.id ? this.cardOriginalLines.get(l.id) : undefined));
+
+    this.cardBusy = true;
+    this.updateDocument(card.id, { ...card, ...header, lines })
+      .pipe(
+        finalize(() => (this.cardBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.toaster.success('Erp::SavedSuccessfully');
+        this.table?.reload();
+        this.reloadCard(card.id as string);
+        then?.();
+      });
+  }
+
+  private recalculateCard(): void {
+    const totals = calculateDocumentTotals(
+      (this.cardLines.getRawValue() as DocumentCardLine[]).map(l => ({
+        quantity: Number(l.quantity) || 0,
+        unitPrice: Number(l.unitAmount) || 0,
+        lineDiscountPercent: Number(l.lineDiscountPercent) || 0,
+        vatPercent: Number(l.vatPercent) || 0,
+      })),
+    );
+    totals.lines.forEach((t, i) => {
+      const control = this.cardLines.at(i)?.get('lineAmount');
+      if (control && control.value !== t.lineAmount) {
+        control.setValue(t.lineAmount, { emitEvent: false });
+      }
+    });
+    this.cardTotals = [
+      { labelKey: 'Erp::TotalExclVat', value: totals.amountExclVat },
+      { labelKey: 'Erp::TotalVat', value: totals.vatAmount },
+      { labelKey: 'Erp::TotalInclVat', value: totals.amountInclVat, emphasis: true },
+    ];
+  }
+
+  private buildCardLine(value?: DocumentCardLine): FormGroup {
+    const v: DocumentCardLine = value ?? {
+      id: null,
+      type: DocumentLineType.Item,
+      no: '',
+      description: '',
+      locationCode: (this.card?.['locationCode'] as string) ?? null,
+      quantity: 0,
+      unitOfMeasureCode: null,
+      unitAmount: 0,
+      lineDiscountPercent: 0,
+      lineAmount: 0,
+      vatPercent: 0,
+      qtyToShip: 0,
+      quantityShipped: 0,
+      qtyToInvoice: 0,
+      quantityInvoiced: 0,
+    };
+    return this.fb.group({
+      ...v,
+      no: [v.no, Validators.maxLength(20)],
+      description: [v.description, Validators.maxLength(250)],
+      quantity: [v.quantity, Validators.min(0)],
+      unitAmount: [v.unitAmount, Validators.min(0)],
+      lineDiscountPercent: [v.lineDiscountPercent, [Validators.min(0), Validators.max(100)]],
+      qtyToShip: [v.qtyToShip, Validators.min(0)],
+      qtyToInvoice: [v.qtyToInvoice, Validators.min(0)],
+    });
+  }
+
+  /** The lines section: what the document is for, then what has been shipped (received) and invoiced. */
+  private buildCardLineColumns(): DocumentLineColumn[] {
+    const [type, no, description] = this.lineColumns;
+    const columns: DocumentLineColumn[] = [
+      type,
+      no,
+      description,
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', width: '120px', lookupEntity: 'location' },
+      { field: 'quantity', labelKey: 'Erp::Quantity', type: 'number', width: '100px', step: 1 },
+      { field: 'unitOfMeasureCode', labelKey: 'Erp::UnitOfMeasureCode', type: 'lookup', width: '110px', lookupEntity: 'unitOfMeasure' },
+      { field: 'unitAmount', labelKey: this.unitAmountLabelKey, type: 'currency', width: '130px', step: 0.01 },
+      { field: 'lineDiscountPercent', labelKey: 'Erp::LineDiscountPercent', type: 'number', width: '90px', step: 0.01 },
+      { field: 'lineAmount', labelKey: 'Erp::LineAmount', type: 'currency', width: '130px', readonly: true },
+    ];
+    if (this.mode === 'order') {
+      columns.push(
+        { field: 'qtyToShip', labelKey: this.qtyToShipLabelKey, type: 'number', width: '100px', step: 1 },
+        { field: 'quantityShipped', labelKey: this.shippedLabelKey, type: 'number', width: '100px', readonly: true },
+        { field: 'qtyToInvoice', labelKey: 'Erp::QtyToInvoice', type: 'number', width: '100px', step: 1 },
+        { field: 'quantityInvoiced', labelKey: 'Erp::QuantityInvoiced', type: 'number', width: '100px', readonly: true },
+      );
+    } else if (this.mode === 'blanket') {
+      columns.push({ field: 'quantityShipped', labelKey: 'Erp::QuantityOrdered', type: 'number', width: '100px', readonly: true });
+    }
+    return columns;
+  }
+
   readonly partySource = (term: string) => this.searchParties(term);
   readonly nameOf = (row: TRow) => this.partyName(row);
 
   ngOnInit(): void {
     this.partyFilter = this.route.snapshot.queryParamMap.get('partyId');
+    const open = this.route.snapshot.queryParamMap.get('open');
+    if (open) {
+      this.openCard({ id: open } as TRow);
+    }
     this.lineColumns = [
       {
         field: 'type',
@@ -376,6 +761,9 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
 
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.select(null);
+      if (this.card) {
+        this.dropCard();
+      }
       this.table?.reload();
     });
   }
@@ -408,7 +796,11 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
    * the number, which pointed into the other table.
    */
   onLineChange(change: DocumentLineChange): void {
-    const line = this.lines.at(change.index) as FormGroup | undefined;
+    this.applyLineChange(this.lines, change);
+  }
+
+  private applyLineChange(lines: FormArray, change: DocumentLineChange): void {
+    const line = lines.at(change.index) as FormGroup | undefined;
     if (!line) {
       return;
     }
@@ -426,17 +818,33 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     }
   }
 
-  select(row: TRow | null): void {
+  select(row: TRow | null, force = false): void {
+    if (
+      !force &&
+      row &&
+      this.selected &&
+      row.id === this.selected.id &&
+      row.status === this.selected.status
+    ) {
+      this.selected = row;
+      this.selection = [row];
+      return;
+    }
+
     this.selected = row;
     this.selection = row ? [row] : [];
     this.history = [];
     this.selectedLines = [];
+    this.linesSub?.unsubscribe();
+    this.historySub?.unsubscribe();
 
     const lines = row?.id ? this.loadLines(row.id) : null;
-    lines?.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => (this.selectedLines = result));
+    this.linesSub = lines
+      ?.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => (this.selectedLines = result));
 
     if (row?.id && this.canSeeApprovals) {
-      this.approvalEntries
+      this.historySub = this.approvalEntries
         .getList({ documentId: row.id, maxResultCount: 50, skipCount: 0 } as never)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(result => (this.history = result.items ?? []));
@@ -560,6 +968,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         });
         this.table?.reload();
         this.chatter?.load();
+        this.refreshCard(row.id as string);
       });
   }
 
@@ -605,7 +1014,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         this.toaster.success('Erp::LinesAdded');
         this.table?.reload();
         if (row) {
-          this.select(row);
+          this.select(row, true);
+          this.refreshCard(row.id as string);
         }
       });
   }
@@ -658,8 +1068,9 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         this.toaster.success('Erp::DocumentCreated', undefined, {
           messageLocalizationParams: [created.no ?? ''],
         });
-        this.select(created);
         this.table?.reload();
+        // A new document opens on its card, ready for its lines.
+        this.openCard(created);
       });
   }
 
@@ -681,9 +1092,22 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         if (action === 'delete' && this.selected?.id === id) {
           this.select(null);
         }
+        if (this.card?.id === id && (action === 'delete' || action === 'makeOrder')) {
+          // Deleted, or made into an order: back to the list, which shows where it went.
+          this.dropCard();
+        } else {
+          this.refreshCard(id);
+        }
         this.table?.reload();
         this.chatter?.load();
       });
+  }
+
+  /** Reloads the card when it shows this document. */
+  private refreshCard(id: string): void {
+    if (this.card?.id === id) {
+      this.reloadCard(id);
+    }
   }
 
   private successKey(action: DocumentAction, result: unknown): string {
@@ -716,6 +1140,11 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       unitAmount: [0, [Validators.required, Validators.min(0)]],
     });
   }
+}
+
+/** `2026-10-21T00:00:00` -> `2026-10-21`, as a date input takes it. */
+function toDateInput(value: unknown): string | null {
+  return typeof value === 'string' && value ? value.substring(0, 10) : null;
 }
 
 /** The record table the "No." of a document line points into, by line type. */

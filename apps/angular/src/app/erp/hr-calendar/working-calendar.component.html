@@ -1,0 +1,182 @@
+<erp-page-toolbar
+  title="Erp::Menu:WorkingCalendar"
+  breadcrumb="Erp::Menu:HumanResources"
+  icon="fas fa-calendar-check"
+  [showSearch]="false"
+  [showCreate]="false"
+>
+  <a class="btn btn-sm btn-outline-secondary" [routerLink]="['/erp/base-calendars']">
+    <i class="fas fa-calendar-days me-1"></i>{{ 'Erp::Menu:BaseCalendars' | abpLocalization }}
+  </a>
+</erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::WorkingCalendarHelp' | abpLocalization }}</p>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="row g-2 align-items-end mb-3" [formGroup]="filter">
+          <div class="col-sm-5">
+            <label class="form-label small mb-1" for="wc-calendar">{{ 'Erp::BaseCalendar' | abpLocalization }}</label>
+            <erp-lookup inputId="wc-calendar" formControlName="calendarCode" entity="baseCalendar"></erp-lookup>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label small mb-1" for="wc-employee">{{ 'Erp::Employee' | abpLocalization }}</label>
+            <erp-lookup inputId="wc-employee" formControlName="employeeNo" entity="employee"></erp-lookup>
+          </div>
+          <div class="col-sm-3 text-sm-end small text-muted">
+            @if (resolvedCode()) {
+              <span class="badge text-bg-light border font-monospace">{{ resolvedCode() }}</span>
+            } @else {
+              {{ 'Erp::NoCalendarEveryDayWorks' | abpLocalization }}
+            }
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="'Erp::Previous' | abpLocalization" (click)="move(-1)">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="thisMonth()">{{ 'Erp::Today' | abpLocalization }}</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="'Erp::Next' | abpLocalization" (click)="move(1)">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <h5 class="mb-0 ms-2 fw-bold">{{ monthDate() | date: 'MMMM yyyy' }}</h5>
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm text-primary ms-2" role="status"></span>
+          }
+          <span class="ms-auto small text-muted">
+            {{ 'Erp::WorkingDays' | abpLocalization }}: <strong>{{ monthWorkingDays() }}</strong>
+          </span>
+        </div>
+
+        <div class="erp-month-grid" role="grid">
+          @for (name of weekdays; track name) {
+            <div class="erp-month-grid__head" role="columnheader">{{ 'Erp::Enum:CalendarWeekday.' + name | abpLocalization }}</div>
+          }
+          @for (cell of cells(); track cell.key) {
+            <button
+              type="button"
+              role="gridcell"
+              class="erp-month-grid__day"
+              [class.erp-month-grid__day--out]="!cell.inMonth"
+              [class.erp-month-grid__day--off]="cell.nonworking"
+              [class.erp-month-grid__day--today]="cell.today"
+              [class.erp-month-grid__day--selected]="selected()?.key === cell.key"
+              [class.erp-month-grid__day--leave]="inPeriod(cell)"
+              [class.erp-month-grid__day--return]="isReturnDate(cell)"
+              [attr.aria-label]="cell.key + (cell.description ? ' ' + cell.description : '')"
+              [attr.aria-pressed]="selected()?.key === cell.key"
+              (click)="select(cell)"
+            >
+              <span class="erp-month-grid__number">{{ cell.day }}</span>
+              @if (cell.description) {
+                <span class="erp-month-grid__label">{{ cell.description }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 small text-muted mt-2">
+          <span><span class="erp-legend erp-legend--off"></span>{{ 'Erp::Nonworking' | abpLocalization }}</span>
+          <span><span class="erp-legend erp-legend--leave"></span>{{ 'Erp::LeavePeriod' | abpLocalization }}</span>
+          <span><span class="erp-legend erp-legend--return"></span>{{ 'Erp::ReturnDate' | abpLocalization }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    @if (selected(); as cell) {
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold text-secondary">
+          <i class="fas fa-calendar-day text-primary me-2"></i>{{ cell.key | date: 'fullDate' }}
+        </div>
+        <div class="card-body">
+          <p class="mb-2">
+            <span class="badge" [ngClass]="cell.nonworking ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis'">
+              {{ (cell.nonworking ? 'Erp::Nonworking' : 'Erp::WorkingDay') | abpLocalization }}
+            </span>
+            @if (cell.description) {
+              <span class="ms-1">{{ cell.description }}</span>
+            }
+          </p>
+          @if (canManage && resolvedCode()) {
+            <form [formGroup]="dateForm">
+              <label class="form-label small mb-1" for="wc-description">{{ 'Erp::Description' | abpLocalization }}</label>
+              <input id="wc-description" type="text" class="form-control form-control-sm mb-2" maxlength="250" formControlName="description" />
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="loading()" (click)="setStatus(true)">
+                  <i class="fas fa-ban me-1"></i>{{ 'Erp::MarkNonworking' | abpLocalization }}
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" [disabled]="loading()" (click)="setStatus(false)">
+                  <i class="fas fa-briefcase me-1"></i>{{ 'Erp::MarkWorking' | abpLocalization }}
+                </button>
+              </div>
+              <div class="form-text">{{ 'Erp::MarkDateHelp' | abpLocalization: resolvedCode() ?? '' }}</div>
+            </form>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-light fw-bold text-secondary">
+        <i class="fas fa-plane-departure text-primary me-2"></i>{{ 'Erp::LeaveDates' | abpLocalization }}
+      </div>
+      <div class="card-body">
+        <form [formGroup]="leave" (ngSubmit)="calculate()" class="row g-2 align-items-end">
+          <div class="col-7">
+            <label class="form-label small mb-1" for="wc-start">{{ 'Erp::StartDate' | abpLocalization }}</label>
+            <input id="wc-start" type="date" class="form-control form-control-sm" formControlName="startDate" />
+          </div>
+          <div class="col-5">
+            <label class="form-label small mb-1" for="wc-days">{{ 'Erp::WorkingDays' | abpLocalization }}</label>
+            <input id="wc-days" type="number" min="1" max="3650" step="1" class="form-control form-control-sm" formControlName="workingDays" />
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-sm btn-primary w-100" [disabled]="leave.invalid">
+              <i class="fas fa-calculator me-1"></i>{{ 'Erp::Calculate' | abpLocalization }}
+            </button>
+          </div>
+        </form>
+
+        @if (period(); as p) {
+          <dl class="row small mb-0 mt-3">
+            <dt class="col-6 text-muted fw-normal">{{ 'Erp::StartDate' | abpLocalization }}</dt>
+            <dd class="col-6 text-end">{{ p.startDate | date: 'mediumDate' }}</dd>
+            <dt class="col-6 text-muted fw-normal">{{ 'Erp::EndDate' | abpLocalization }}</dt>
+            <dd class="col-6 text-end fw-semibold">{{ p.endDate | date: 'mediumDate' }}</dd>
+            <dt class="col-6 text-muted fw-normal">{{ 'Erp::ReturnDate' | abpLocalization }}</dt>
+            <dd class="col-6 text-end fw-semibold text-primary">{{ p.returnDate | date: 'mediumDate' }}</dd>
+          </dl>
+          @if (p.nonworkingDates.length) {
+            <div class="small text-muted mt-2">{{ 'Erp::DaysSkipped' | abpLocalization }}</div>
+            <ul class="list-unstyled small mb-0">
+              @for (d of p.nonworkingDates; track d.date) {
+                <li>{{ d.date | date: 'EEE d MMM' }} <span class="text-muted">{{ d.description }}</span></li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-light fw-bold text-secondary">
+        <i class="fas fa-umbrella-beach text-primary me-2"></i>{{ 'Erp::NonworkingThisMonth' | abpLocalization }}
+      </div>
+      <ul class="list-group list-group-flush small">
+        @for (cell of monthNonworking(); track cell.key) {
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ cell.key | date: 'EEE d MMM' }}</span>
+            <span class="text-muted">{{ cell.description || ('Erp::Nonworking' | abpLocalization) }}</span>
+          </li>
+        } @empty {
+          <li class="list-group-item text-muted">{{ 'Erp::NoDataAvailable' | abpLocalization }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+</div>

@@ -49,6 +49,8 @@
             [lines]="lines"
             [columns]="lineColumns"
             [readonly]="readonly"
+            [openable]="openable"
+            (openLine)="openLine.emit($event)"
             (addLine)="addLine.emit()"
             (removeLine)="removeLine.emit($event)"
             (lineChange)="lineChange.emit($event)"

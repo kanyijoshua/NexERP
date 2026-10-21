@@ -27,13 +27,18 @@ export class RecordFormComponent implements OnChanges {
   private readonly collapsed = new Map<string, boolean>();
   private _sections: RecordSection[] = [];
   private _fieldsMap = new Map<string, RecordField[]>();
+  private _summaries = new Map<string, string>();
 
   ngOnChanges(): void {
     if (this.entity) {
       this._sections = visibleSections(this.entity, this.quick);
       this._fieldsMap.clear();
+      this._summaries.clear();
       for (const section of this._sections) {
         this._fieldsMap.set(section.key, fieldsOf(this.entity, section.key, this.quick));
+        if (this.isCollapsed(section)) {
+          this._summaries.set(section.key, this.computeSummary(section));
+        }
       }
     }
   }
@@ -51,7 +56,11 @@ export class RecordFormComponent implements OnChanges {
   }
 
   toggle(section: RecordSection): void {
-    this.collapsed.set(section.key, !this.isCollapsed(section));
+    const nextCollapsed = !this.isCollapsed(section);
+    this.collapsed.set(section.key, nextCollapsed);
+    if (nextCollapsed) {
+      this._summaries.set(section.key, this.computeSummary(section));
+    }
   }
 
   controlId(field: RecordField): string {
@@ -60,6 +69,16 @@ export class RecordFormComponent implements OnChanges {
 
   /** Values shown on a folded FastTab header: the key fields of the folded tab. */
   summary(section: RecordSection): string {
+    const cached = this._summaries.get(section.key);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const computed = this.computeSummary(section);
+    this._summaries.set(section.key, computed);
+    return computed;
+  }
+
+  private computeSummary(section: RecordSection): string {
     return this.fields(section)
       .map(f => this.display(f))
       .filter(text => !!text)

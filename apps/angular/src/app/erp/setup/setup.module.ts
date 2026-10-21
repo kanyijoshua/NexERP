@@ -7,6 +7,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ErpSharedModule } from '../erp-shared/erp-shared.module';
 import { ApprovalUserSetupComponent } from './approval-user-setup/approval-user-setup.component';
 import { DataExportComponent } from './data-export/data-export.component';
+import { DimensionsComponent } from './dimensions/dimensions.component';
 import { DocumentSetupComponent } from './document-setup/document-setup.component';
 import { GeneralLedgerSetupComponent } from './general-ledger-setup/general-ledger-setup.component';
 import { FaSetupComponent } from './fa-setup/fa-setup.component';
@@ -40,6 +41,12 @@ const routes: Routes = [
     component: GeneralLedgerSetupComponent,
     canActivate: [permissionGuard],
     data: { requiredPolicy: 'Erp.GeneralLedgerSetup' },
+  },
+  {
+    path: 'dimensions',
+    component: DimensionsComponent,
+    canActivate: [permissionGuard],
+    data: { requiredPolicy: 'Erp.Dimensions' },
   },
   {
     path: 'inventory',
@@ -165,6 +172,7 @@ const routes: Routes = [
     NoSeriesComponent,
     DocumentSetupComponent,
     GeneralLedgerSetupComponent,
+    DimensionsComponent,
     InventorySetupComponent,
     HumanResourcesSetupComponent,
     FaSetupComponent,

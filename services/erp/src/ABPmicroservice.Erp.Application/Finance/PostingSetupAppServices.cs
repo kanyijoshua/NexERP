@@ -227,6 +227,12 @@ public class GeneralLedgerSetupAppService : ErpAppService, IGeneralLedgerSetupAp
     {
         await EnsureDimensionExistsAsync(input.GlobalDimension1Code);
         await EnsureDimensionExistsAsync(input.GlobalDimension2Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension3Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension4Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension5Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension6Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension7Code);
+        await EnsureDimensionExistsAsync(input.ShortcutDimension8Code);
         await LazyServiceProvider.LazyGetRequiredService<Numbering.NoSeriesCodeValidator>().EnsureExistAsync(input.BankAccountNos);
 
         var setup = await _setupManager.GetAsync();

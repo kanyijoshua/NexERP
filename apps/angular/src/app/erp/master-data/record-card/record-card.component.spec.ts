@@ -4,7 +4,7 @@ import { CoreTestingModule } from '@abp/ng.core/testing';
 import { ThemeSharedTestingModule } from '@abp/ng.theme.shared/testing';
 import { DefaultQueueManager, PermissionService, QUEUE_MANAGER } from '@abp/ng.core';
 import { ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { RecordCardComponent } from './record-card.component';
 import { RecordEntity, RecordEntityRegistry } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
@@ -113,5 +113,28 @@ describe('RecordCardComponent', () => {
 
     expect(mockToaster.error).toHaveBeenCalledWith('Erp::RecordNotFound');
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/erp/test-entities']);
+  });
+
+  it('renders cached list record immediately and patches the existing form when server response arrives', () => {
+    const id = '3a241931-197b-9937-8caa-b30effb6c8d8';
+    const serverSubject = new Subject<any>();
+    spyOn(mockEntity, 'get').and.returnValue(serverSubject.asObservable());
+    registry.cacheRecord(mockEntity, { id, code: 'T001', name: 'Preview Name' });
+
+    fixture.detectChanges();
+
+    // Rendered immediately from cache while GET is still in flight
+    expect(component.form).not.toBeNull();
+    const initialFormInstance = component.form;
+    expect(component.form?.get('name')?.value).toBe('Preview Name');
+    expect(component.title).toBe('T001 · Preview Name');
+
+    // Server responds with fresh data; form instance is patched in-place without re-creating
+    serverSubject.next({ id, code: 'T001', name: 'Fresh Server Name' });
+    serverSubject.complete();
+
+    expect(component.form).toBe(initialFormInstance);
+    expect(component.form?.get('name')?.value).toBe('Fresh Server Name');
+    expect(component.title).toBe('T001 · Fresh Server Name');
   });
 });

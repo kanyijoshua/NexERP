@@ -8,6 +8,7 @@ import type { EmployeeStatus } from './employee-status.enum';
 export interface HumanResourcesSetupDto {
   employeeNos?: string;
   baseUnitOfMeasure?: string;
+  baseCalendarCode?: string;
 }
 
 export interface HumanResourceUnitOfMeasureDto extends CodeTableDto {
@@ -86,6 +87,7 @@ export interface EmployeeDto extends FullAuditedEntityDto<string> {
   applicationMethod: ApplicationMethod;
   unionMembershipNo?: string;
   privacyBlocked: boolean;
+  baseCalendarCode?: string;
 }
 
 export interface CreateUpdateEmployeeDto {
@@ -137,6 +139,7 @@ export interface CreateUpdateEmployeeDto {
   applicationMethod?: ApplicationMethod;
   unionMembershipNo?: string;
   privacyBlocked?: boolean;
+  baseCalendarCode?: string;
 }
 
 export interface GetEmployeeListInput extends PagedAndSortedResultRequestDto {

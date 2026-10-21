@@ -112,6 +112,9 @@ public class Employee : CompanyAggregateRoot, IHasNo
     /// <summary>Privacy Blocked.</summary>
     public bool PrivacyBlocked { get; private set; }
 
+    /// <summary>The employee's own working days, e.g. for shift work; blank uses the Human Resources Setup's calendar.</summary>
+    public string BaseCalendarCode { get; private set; }
+
     protected Employee() { }
 
     public Employee(Guid id, string no, string firstName, string lastName)
@@ -123,6 +126,9 @@ public class Employee : CompanyAggregateRoot, IHasNo
 
     /// <summary>"First Middle Last".</summary>
     public string FullName => string.Join(" ", new[] { FirstName, MiddleName, LastName }).Replace("  ", " ").Trim();
+
+    public void SetBaseCalendar(string baseCalendarCode) =>
+        BaseCalendarCode = CodeTableEntity.NormalizeCode(Check.Length(baseCalendarCode, nameof(baseCalendarCode), ErpDomainConsts.MaxCodeLength));
 
     public void SetNo(string no) =>
         No = Check.NotNullOrWhiteSpace(no, nameof(no), ErpDomainConsts.MaxNoLength).Trim();
@@ -272,7 +278,8 @@ public class EmployeeAbsence : CompanyEntity
         EmployeeNo = Check.NotNullOrWhiteSpace(employeeNo, nameof(employeeNo), ErpDomainConsts.MaxNoLength);
     }
 
-    public void Set(DateTime fromDate, DateTime? toDate, string causeOfAbsenceCode, string description, decimal quantity, string unitOfMeasureCode)
+    /// <param name="workingDays">The working days of the period by the employee's calendar; without one, every day counts.</param>
+    public void Set(DateTime fromDate, DateTime? toDate, string causeOfAbsenceCode, string description, decimal quantity, string unitOfMeasureCode, int? workingDays = null)
     {
         if ((toDate.HasValue && toDate.Value.Date < fromDate.Date) || quantity < 0)
         {
@@ -283,8 +290,8 @@ public class EmployeeAbsence : CompanyEntity
         ToDate = toDate?.Date;
         CauseOfAbsenceCode = CodeTableEntity.NormalizeCode(Check.Length(causeOfAbsenceCode, nameof(causeOfAbsenceCode), ErpDomainConsts.MaxCodeLength));
         Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
-        // One day per calendar day when no quantity is given.
-        Quantity = quantity > 0 ? quantity : ((ToDate ?? FromDate) - FromDate).Days + 1;
+        // Without a quantity: one per working day, or per calendar day when there is no calendar.
+        Quantity = quantity > 0 ? quantity : workingDays ?? ((ToDate ?? FromDate) - FromDate).Days + 1;
         UnitOfMeasureCode = CodeTableEntity.NormalizeCode(Check.Length(unitOfMeasureCode, nameof(unitOfMeasureCode), ErpDomainConsts.MaxUnitOfMeasureCodeLength));
     }
 }

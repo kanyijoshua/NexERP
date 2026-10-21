@@ -70,6 +70,8 @@ const routes: Routes = [
   masterData('employees', 'employee', 'Erp.Employees', 'HumanResources'),
   masterData('employee-absences', 'employeeAbsence', 'Erp.Employees', 'HumanResources'),
   masterData('causes-of-absence', 'causeOfAbsence', 'Erp.HumanResourcesSetup', 'HumanResources'),
+  masterData('base-calendars', 'baseCalendar', 'Erp.HumanResourcesSetup', 'HumanResources'),
+  masterData('base-calendar-changes', 'baseCalendarChange', 'Erp.HumanResourcesSetup', 'HumanResources'),
   masterData('qualifications', 'qualification', 'Erp.HumanResourcesSetup', 'HumanResources'),
   masterData('unions', 'union', 'Erp.HumanResourcesSetup', 'HumanResources'),
   masterData('employment-contracts', 'employmentContract', 'Erp.HumanResourcesSetup', 'HumanResources'),
@@ -315,6 +317,12 @@ const routes: Routes = [
     loadChildren: () => import('./service/service.module').then(m => m.ServiceModule),
     canActivate: [moduleGuard],
     data: { module: 'Service' },
+  },
+  {
+    path: 'working-calendar',
+    loadChildren: () => import('./hr-calendar/hr-calendar.module').then(m => m.HrCalendarModule),
+    canActivate: [moduleGuard],
+    data: { module: 'HumanResources' },
   },
   {
     path: 'crm',

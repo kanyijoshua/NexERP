@@ -16,6 +16,9 @@ public class HumanResourcesSetupDto
 
     [StringLength(ErpDomainConsts.MaxUnitOfMeasureCodeLength)]
     public string BaseUnitOfMeasure { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string BaseCalendarCode { get; set; }
 }
 
 public class HumanResourceUnitOfMeasureDto : CodeTableDto
@@ -107,6 +110,7 @@ public class EmployeeDto : FullAuditedEntityDto<Guid>
     public ApplicationMethod ApplicationMethod { get; set; }
     public string UnionMembershipNo { get; set; }
     public bool PrivacyBlocked { get; set; }
+    public string BaseCalendarCode { get; set; }
 }
 
 public class CreateUpdateEmployeeDto
@@ -243,6 +247,10 @@ public class CreateUpdateEmployeeDto
     public string UnionMembershipNo { get; set; }
 
     public bool PrivacyBlocked { get; set; }
+
+    /// <summary>Blank uses the Human Resources Setup's calendar.</summary>
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string BaseCalendarCode { get; set; }
 }
 
 public class GetEmployeeListInput : ErpPagedListInput

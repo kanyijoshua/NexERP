@@ -37,4 +37,20 @@ public enum ApproverLimitType
 
     /// <summary>Only the first approver up the chain with a sufficient amount limit.</summary>
     FirstQualifiedApprover = 2,
+
+    /// <summary>One named user, whatever the sender's chain and limits.</summary>
+    SpecificApprover = 3,
+}
+
+/// <summary>Who receives the approval requests of a workflow.</summary>
+public enum WorkflowApproverType
+{
+    /// <summary>The Approval User Setup chain, as the approver limit type says.</summary>
+    Approver = 0,
+
+    /// <summary>
+    /// The members of a workflow user group, in member sequence order. Members that share a
+    /// sequence number are asked at the same time and must all approve before the next sequence.
+    /// </summary>
+    WorkflowUserGroup = 1,
 }

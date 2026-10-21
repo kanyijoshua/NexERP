@@ -3,7 +3,7 @@ import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, Subscription } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 import { DocumentLineChange, DocumentLineColumn, DocumentLineColumnType } from '../models';
 import { RecordDialogService } from './record-dialog.service';
@@ -81,8 +81,11 @@ export class RecordPartComponent implements OnChanges {
   /** The header's values every line carries, e.g. `{ documentNo: 'PC-00001' }`. */
   private fixed: Record<string, unknown> = {};
   private readonly states = new WeakMap<FormGroup, RowState>();
+  private fieldsByName = new Map<string, RecordField>();
   /** The record whose lines are showing. */
   private loadedFor: string | null = null;
+  private loadedInlineLength = 0;
+  private loadSub?: Subscription;
 
   get count(): number {
     return this.rows.length;
@@ -90,6 +93,7 @@ export class RecordPartComponent implements OnChanges {
 
   ngOnChanges(): void {
     this.entity = this.registry.get(this.part.entity);
+    this.fieldsByName = new Map(this.entity.fields.map(f => [f.field, f]));
     this.fixed = this.part.newLine?.(this.record) ?? {};
 
     this.editable = !this.entity.readOnly && (!this.part.editable || this.part.editable(this.record));
@@ -99,10 +103,13 @@ export class RecordPartComponent implements OnChanges {
     this.gridColumns = this.buildColumns();
 
     // A re-read of the same record (its totals after a line changed, its status after an action)
-    // keeps the lines as they are typed; another record brings its own.
+    // keeps the lines as they are typed; another record brings its own. If the card rendered a
+    // list-row preview before GetAsync returned the inline child lines, load once those arrive.
     const key = `${this.part.entity}:${this.record['id']}`;
-    if (key !== this.loadedFor) {
+    const inlineLength = this.inlineCollectionLength(this.record);
+    if (key !== this.loadedFor || (this.rows.length === 0 && inlineLength > this.loadedInlineLength)) {
       this.loadedFor = key;
+      this.loadedInlineLength = inlineLength;
       this.load();
     } else {
       this.rows.controls.forEach(row => this.applyAccess(row));
@@ -142,13 +149,15 @@ export class RecordPartComponent implements OnChanges {
 
   /** Opens a saved line in the line entity's card, for the fields the grid does not show. */
   openLine(index: number): void {
-    const id = this.rows.at(index)?.get('id')?.value as string | undefined;
+    const row = this.rows.at(index);
+    const id = row?.get('id')?.value as string | undefined;
     if (!id) {
       return;
     }
 
+    const preview = this.registry.getCachedRecord(this.entity.key, id) ?? row.getRawValue();
     this.dialogs
-      .openCard(this.entity, { id, quick: false })
+      .openCard(this.entity, { id, record: preview, quick: false })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(result => {
         if (result) {
@@ -209,17 +218,31 @@ export class RecordPartComponent implements OnChanges {
 
   private load(): void {
     this.loading = true;
-    this.part
+    this.loadSub?.unsubscribe();
+    this.loadSub = this.part
       .lines(this.record)
       .pipe(
         finalize(() => (this.loading = false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(lines => {
+        this.registry.cacheRecords(this.entity, lines);
         this.rows.clear({ emitEvent: false });
         lines.forEach(line => this.rows.push(this.rowOf(line), { emitEvent: false }));
         this.updateTotals();
       });
+  }
+
+  private inlineCollectionLength(record: Record<string, any> | null | undefined): number {
+    if (!record) {
+      return 0;
+    }
+    for (const value of Object.values(record)) {
+      if (Array.isArray(value) && value.length > 0) {
+        return value.length;
+      }
+    }
+    return 0;
   }
 
   /** A line as a form row: every field of the line entity, the shown read-only values and its id. */
@@ -242,10 +265,9 @@ export class RecordPartComponent implements OnChanges {
   private applyAccess(row: FormGroup): void {
     const isNew = !row.get('id')?.value;
     const writable = isNew ? this.canCreate : this.canUpdate;
-    const fields = new Map(this.entity.fields.map(f => [f.field, f]));
 
     for (const [name, control] of Object.entries(row.controls)) {
-      const field = fields.get(name);
+      const field = this.fieldsByName.get(name);
       const enable = writable && !!field && field.type !== 'readonly' && (isNew || !field.createOnly);
       if (enable && control.disabled) {
         control.enable({ emitEvent: false });
@@ -331,6 +353,7 @@ export class RecordPartComponent implements OnChanges {
         options,
         lookupEntity: field!.lookupEntity,
         lookupValueField: field!.lookupValueField,
+        lookupDisplayField: field!.lookupDisplayField,
         readonly: !this.editable,
         width: column?.width ? `${column.width}px` : undefined,
       };

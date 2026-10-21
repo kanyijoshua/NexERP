@@ -45,9 +45,11 @@ public class HumanResourcesSetupAppService : ErpAppService, IHumanResourcesSetup
     {
         await _seriesValidator.EnsureExistAsync(input.EmployeeNos);
         await _codeTableChecker.EnsureExistsAsync<HumanResourceUnitOfMeasure>(input.BaseUnitOfMeasure);
+        await _codeTableChecker.EnsureExistsAsync<BaseCalendar>(input.BaseCalendarCode);
 
         var setup = await _setupManager.GetAsync();
         setup.Set(input.EmployeeNos, input.BaseUnitOfMeasure);
+        setup.SetBaseCalendar(input.BaseCalendarCode);
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<HumanResourcesSetup, HumanResourcesSetupDto>(setup);
@@ -267,6 +269,7 @@ public class EmployeeAppService
         await _codeTableChecker.EnsureExistsAsync<GroundsForTermination>(input.GroundsForTermCode);
         await _codeTableChecker.EnsureExistsAsync<EmployeePostingGroup>(input.EmployeePostingGroup);
         await _codeTableChecker.EnsureExistsAsync<SalespersonPurchaser>(input.SalespersPurchCode);
+        await _codeTableChecker.EnsureExistsAsync<BaseCalendar>(input.BaseCalendarCode);
     }
 
     private async Task EnsureNoIsUniqueAsync(string no, Guid? exceptId)
@@ -287,6 +290,7 @@ public class EmployeeAppService
         employee.SetEmployment(input.EmploymentDate, input.EmplymtContractCode, input.UnionCode);
         employee.SetStatus(input.Status, input.InactiveDate, input.TerminationDate, input.GroundsForTermCode);
         employee.SetPayment(input.EmployeePostingGroup, input.BankAccountNo, input.Iban, input.SalespersPurchCode);
+        employee.SetBaseCalendar(input.BaseCalendarCode);
         employee.SetAdditionalFields(
             input.Initials,
             input.SearchName,
@@ -415,7 +419,20 @@ public class EmployeeAbsenceAppService
 
         unit ??= (await _setupManager.GetAsync()).BaseUnitOfMeasure;
 
-        absence.Set(input.FromDate, input.ToDate, causeCode, description, input.Quantity, unit);
+        // A period without a quantity counts the employee's working days, not every day.
+        int? workingDays = null;
+        if (input.Quantity <= 0 && (!input.ToDate.HasValue || input.ToDate.Value.Date >= input.FromDate.Date))
+        {
+            var calendars = LazyServiceProvider.LazyGetRequiredService<BaseCalendarManager>();
+            var employee = await _employeeRepository.GetAsync(absence.EmployeeId);
+            var calendarCode = await calendars.ResolveCalendarCodeAsync(employee);
+            if (calendarCode != null)
+            {
+                workingDays = await calendars.CountWorkingDaysAsync(calendarCode, input.FromDate, input.ToDate ?? input.FromDate);
+            }
+        }
+
+        absence.Set(input.FromDate, input.ToDate, causeCode, description, input.Quantity, unit, workingDays);
     }
 }
 

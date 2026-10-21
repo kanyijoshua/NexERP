@@ -23,6 +23,14 @@ import {
   vatCalculationTypeOptions,
 } from '@proxy/finance';
 import {
+  BaseCalendarChangeDto,
+  BaseCalendarChangeService,
+  BaseCalendarService,
+  CalendarRecurringSystem,
+  CalendarWeekday,
+  CreateUpdateBaseCalendarChangeDto,
+  calendarRecurringSystemOptions,
+  calendarWeekdayOptions,
   CauseOfAbsenceService,
   CreateUpdateEmployeeAbsenceDto,
   CreateUpdateEmployeeDto,
@@ -42,7 +50,7 @@ import {
 } from '@proxy/human-resources';
 import { LocationService } from '@proxy/inventory';
 import { SalespersonPurchaserService } from '@proxy/sales';
-import { forkJoin, map } from 'rxjs';
+import { forkJoin, map, of } from 'rxjs';
 import { RecordEntity, RecordField } from '../erp-shared';
 import {
   ADDITIONAL_SECTION,
@@ -91,6 +99,8 @@ export class SetupEntities {
   private readonly hrUnits = inject(HumanResourceUnitOfMeasureService);
   private readonly employeePostingGroups = inject(EmployeePostingGroupService);
   private readonly causes = inject(CauseOfAbsenceService);
+  private readonly calendars = inject(BaseCalendarService);
+  private readonly calendarChanges = inject(BaseCalendarChangeService);
   private readonly qualifications = inject(QualificationService);
   private readonly unions = inject(UnionService);
   private readonly contracts = inject(EmploymentContractService);
@@ -456,6 +466,88 @@ export class SetupEntities {
     fields: [codeField('unitOfMeasureCode', 'Erp::UnitOfMeasureCode', 'hrUnitOfMeasure')],
   });
 
+  /** Working and nonworking days; the card lists its changes and opens the month view. */
+  readonly baseCalendar: RecordEntity = {
+    ...codeTableEntity(this.calendars, {
+      key: 'baseCalendar',
+      titleKey: 'Erp::BaseCalendar',
+      pluralKey: 'Erp::BaseCalendars',
+      icon: 'fas fa-calendar-days',
+      permission: 'Erp.HumanResourcesSetup',
+      route: '/erp/base-calendars',
+    }),
+    related: dto =>
+      of([
+        {
+          labelKey: 'Erp::Menu:WorkingCalendar',
+          icon: 'fas fa-calendar-check',
+          routerLink: ['/erp/working-calendar'],
+          queryParams: { calendar: dto.code },
+          permission: 'Erp.HumanResourcesSetup',
+        },
+      ]),
+    parts: [
+      {
+        entity: 'baseCalendarChange',
+        lines: dto =>
+          this.calendarChanges
+            .getList({ baseCalendarCode: dto.code, maxResultCount: 1000, skipCount: 0 })
+            .pipe(map(r => r.items ?? [])),
+        newLine: dto => ({
+          baseCalendarCode: dto.code,
+          recurringSystem: CalendarRecurringSystem.WeeklyRecurring,
+          day: CalendarWeekday.None,
+          nonworking: true,
+        }),
+        columns: ['recurringSystem', 'date', 'day', 'description', 'nonworking'],
+      },
+    ],
+  };
+
+  readonly baseCalendarChange: RecordEntity<BaseCalendarChangeDto, CreateUpdateBaseCalendarChangeDto> = {
+    key: 'baseCalendarChange',
+    titleKey: 'Erp::BaseCalendarChange',
+    pluralKey: 'Erp::BaseCalendarChanges',
+    icon: 'fas fa-calendar-xmark',
+    permission: 'Erp.HumanResourcesSetup',
+    listRoute: ['/erp/base-calendar-changes'],
+    columns: [
+      { field: 'baseCalendarCode', labelKey: 'Erp::BaseCalendarCode', width: 130 },
+      { field: 'recurringSystem', labelKey: 'Erp::RecurringSystem', type: 'select', width: 150, options: enumOptions(calendarRecurringSystemOptions, 'CalendarRecurringSystem') },
+      { field: 'date', labelKey: 'Erp::Date', type: 'date', width: 120 },
+      { field: 'day', labelKey: 'Erp::Day', type: 'select', width: 120, options: enumOptions(calendarWeekdayOptions, 'CalendarWeekday') },
+      { field: 'description', labelKey: 'Erp::Description', width: 220 },
+      { field: 'nonworking', labelKey: 'Erp::Nonworking', type: 'boolean', width: 110 },
+    ],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: [
+      codeField('baseCalendarCode', 'Erp::BaseCalendarCode', 'baseCalendar', undefined, { required: true }),
+      {
+        field: 'recurringSystem',
+        labelKey: 'Erp::RecurringSystem',
+        type: 'select',
+        required: true,
+        options: enumOptions(calendarRecurringSystemOptions, 'CalendarRecurringSystem'),
+        helpKey: 'Erp::RecurringSystemHelp',
+      },
+      { field: 'date', labelKey: 'Erp::Date', type: 'date' },
+      { field: 'day', labelKey: 'Erp::Day', type: 'select', options: enumOptions(calendarWeekdayOptions, 'CalendarWeekday') },
+      { field: 'description', labelKey: 'Erp::Description', type: 'text', maxLength: 250 },
+      { field: 'nonworking', labelKey: 'Erp::Nonworking', type: 'checkbox' },
+    ],
+    getList: query => this.calendarChanges.getList(query),
+    get: id => this.calendarChanges.get(id),
+    create: input => this.calendarChanges.create(input),
+    update: (id, input) => this.calendarChanges.update(id, input),
+    delete: id => this.calendarChanges.delete(id),
+    toItem: dto => ({
+      id: dto.id,
+      code: `${dto.baseCalendarCode ?? ''} ${dto.date?.substring(0, 10) ?? CalendarWeekday[dto.day] ?? ''}`.trim(),
+      name: dto.description ?? undefined,
+    }),
+    newRecord: () => ({ recurringSystem: CalendarRecurringSystem.None, day: CalendarWeekday.None, nonworking: true }),
+  };
+
   readonly qualification = codeTableEntity(this.qualifications, {
     key: 'qualification',
     titleKey: 'Erp::Qualification',
@@ -553,6 +645,7 @@ export class SetupEntities {
       codeField('groundsForTermCode', 'Erp::GroundsForTermCode', 'groundsForTermination', 'administration', { cardOnly: true }),
       codeField('emplymtContractCode', 'Erp::EmplymtContractCode', 'employmentContract', 'administration', { cardOnly: true }),
       codeField('unionCode', 'Erp::UnionCode', 'union', 'administration', { cardOnly: true }),
+      codeField('baseCalendarCode', 'Erp::BaseCalendarCode', 'baseCalendar', 'administration', { cardOnly: true, helpKey: 'Erp::EmployeeBaseCalendarHelp' }),
       { field: 'birthDate', labelKey: 'Erp::BirthDate', type: 'date', section: 'personal', cardOnly: true },
       { field: 'socialSecurityNo', labelKey: 'Erp::SocialSecurityNo', type: 'text', section: 'personal', maxLength: 40, cardOnly: true },
       codeField('employeePostingGroup', 'Erp::EmployeePostingGroup', 'employeePostingGroup', 'payments', { cardOnly: true }),
@@ -652,6 +745,8 @@ export class SetupEntities {
       this.hrUnitOfMeasure,
       this.employeePostingGroup,
       this.causeOfAbsence,
+      this.baseCalendar,
+      this.baseCalendarChange,
       this.qualification,
       this.union,
       this.employmentContract,

@@ -490,6 +490,22 @@ public static class ErpDbContextModelCreatingExtensions
             b.HasCompanyUniqueIndex("Code");
         });
 
+        builder.Entity<BaseCalendar>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "BaseCalendars", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasCompanyUniqueIndex("Code");
+        });
+
+        builder.Entity<BaseCalendarChange>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "BaseCalendarChanges", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.BaseCalendarCode).IsRequired().HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
+            b.HasIndex(x => new { x.CompanyId, x.BaseCalendarCode });
+        });
+
         builder.Entity<Qualification>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "Qualifications", ErpDbProperties.DbSchema);
@@ -681,6 +697,8 @@ public static class ErpDbContextModelCreatingExtensions
             b.ToTable(ErpDbProperties.DbTablePrefix + "Workflows", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
             b.HasCompanyUniqueIndex("Code");
+            b.Property(x => x.WorkflowUserGroupCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            b.Property(x => x.SpecificApproverUserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
             b.HasMany(x => x.Steps).WithOne().HasForeignKey(x => x.WorkflowId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -698,6 +716,7 @@ public static class ErpDbContextModelCreatingExtensions
             b.Property(x => x.ApproverUserName).HasMaxLength(ErpDomainConsts.MaxUserNameLength);
             b.Property(x => x.Comment).HasMaxLength(ErpDomainConsts.MaxCommentLength);
             b.Ignore(x => x.IsPending);
+            b.Ignore(x => x.WaitingSince);
             // "Requests to approve" and "pending entries of a document" are the two hot lookups.
             b.HasIndex(x => new { x.ApproverId, x.Status });
             b.HasIndex(x => new { x.DocumentKind, x.DocumentId });

@@ -19,11 +19,12 @@ import {
   RecurringMethod,
   StandardJournalService,
 } from '@proxy/finance';
+import { DimensionService, ShortcutDimensionSlotDto } from '@proxy/dimensions';
 import { BankAccountService } from '@proxy/cash-management';
 import { EmployeeService } from '@proxy/human-resources';
 import { VendorService } from '@proxy/purchasing';
 import { CustomerService } from '@proxy/sales';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
 import { DocumentLineChange, DocumentLineColumn, JournalBatch, LookupItem } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 
@@ -43,8 +44,6 @@ const ACCOUNT_KIND: Record<string, GenJournalAccountType> = {
 /** Line fields the journal grid does not show; a save sends them back unchanged. */
 const UNSHOWN_LINE_FIELDS = [
   'postingGroup',
-  'shortcutDimension1Code',
-  'shortcutDimension2Code',
   'salespersPurchCode',
   'sourceCode',
   'reasonCode',
@@ -59,6 +58,7 @@ const UNSHOWN_LINE_FIELDS = [
   'countryRegionCode',
   'paymentReference',
   'messageToRecipient',
+  'dimensionSetId',
 ] as const satisfies readonly (keyof GenJournalLineDto)[];
 
 function pick<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Pick<T, K> {
@@ -84,6 +84,7 @@ export class GeneralJournalComponent implements OnInit {
   private readonly journals = inject(GeneralJournalService);
   private readonly templateService = inject(JournalTemplateService);
   private readonly standardJournals = inject(StandardJournalService);
+  private readonly dimensionService = inject(DimensionService);
   private readonly glAccounts = inject(GlAccountService);
   private readonly customers = inject(CustomerService);
   private readonly vendors = inject(VendorService);
@@ -95,6 +96,7 @@ export class GeneralJournalComponent implements OnInit {
 
   templates: GenJournalTemplateDto[] = [];
   batchList: GenJournalBatchDto[] = [];
+  shortcutSlots: ShortcutDimensionSlotDto[] = [];
   selectedTemplateName: string | null = null;
   selectedBatchId: string | null = null;
 
@@ -148,7 +150,7 @@ export class GeneralJournalComponent implements OnInit {
     return this.batchList.map(b => ({ id: b.id!, name: b.name ?? '' }));
   }
 
-  /** The recurring columns only appear under a recurring template. */
+  /** The recurring columns only appear under a recurring template; configured dimensions (1..8) appear as lookup columns. */
   get lineColumns(): DocumentLineColumn[] {
     const columns: DocumentLineColumn[] = [
       { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', width: '140px' },
@@ -205,6 +207,21 @@ export class GeneralJournalComponent implements OnInit {
       },
       { field: 'appliesToDocNo', labelKey: 'Erp::AppliesToDocNo', type: 'text', width: '130px' },
     ];
+
+    for (const slot of this.shortcutSlots) {
+      if (!slot.dimensionCode) {
+        continue;
+      }
+      const field = `shortcutDimension${slot.slotNumber}Code`;
+      columns.push({
+        field,
+        labelKey: slot.dimensionName || `Erp::ShortcutDimension${slot.slotNumber}Code`,
+        type: 'lookup',
+        width: '135px',
+        lookupSource: term => this.searchDimensionValues(slot, term),
+        lookupAllowFreeText: true,
+      });
+    }
 
     if (this.isRecurring) {
       columns.push(
@@ -406,6 +423,13 @@ export class GeneralJournalComponent implements OnInit {
   }
 
   private load(): void {
+    this.dimensionService
+      .getShortcutSlots()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        this.shortcutSlots = res.items ?? [];
+      });
+
     this.templateService
       .getList()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -470,6 +494,14 @@ export class GeneralJournalComponent implements OnInit {
       vatProdPostingGroup: [line?.vatProdPostingGroup ?? null],
       currencyCode: [line?.currencyCode ?? null],
       appliesToDocNo: [line?.appliesToDocNo ?? '', Validators.maxLength(20)],
+      shortcutDimension1Code: [line?.shortcutDimension1Code ?? null, Validators.maxLength(20)],
+      shortcutDimension2Code: [line?.shortcutDimension2Code ?? null, Validators.maxLength(20)],
+      shortcutDimension3Code: [line?.shortcutDimension3Code ?? null, Validators.maxLength(20)],
+      shortcutDimension4Code: [line?.shortcutDimension4Code ?? null, Validators.maxLength(20)],
+      shortcutDimension5Code: [line?.shortcutDimension5Code ?? null, Validators.maxLength(20)],
+      shortcutDimension6Code: [line?.shortcutDimension6Code ?? null, Validators.maxLength(20)],
+      shortcutDimension7Code: [line?.shortcutDimension7Code ?? null, Validators.maxLength(20)],
+      shortcutDimension8Code: [line?.shortcutDimension8Code ?? null, Validators.maxLength(20)],
       // Shown only: the server works both out when the line is saved.
       vatAmount: [{ value: line?.vatAmount ?? 0, disabled: true }],
       amountLcy: [{ value: line?.amountLcy ?? 0, disabled: true }],
@@ -508,10 +540,30 @@ export class GeneralJournalComponent implements OnInit {
       vatProdPostingGroup: value.genPostingType ? value.vatProdPostingGroup || undefined : undefined,
       currencyCode: value.currencyCode || undefined,
       appliesToDocNo: value.appliesToDocNo?.trim() || undefined,
+      shortcutDimension1Code: value.shortcutDimension1Code?.trim() || undefined,
+      shortcutDimension2Code: value.shortcutDimension2Code?.trim() || undefined,
+      shortcutDimension3Code: value.shortcutDimension3Code?.trim() || undefined,
+      shortcutDimension4Code: value.shortcutDimension4Code?.trim() || undefined,
+      shortcutDimension5Code: value.shortcutDimension5Code?.trim() || undefined,
+      shortcutDimension6Code: value.shortcutDimension6Code?.trim() || undefined,
+      shortcutDimension7Code: value.shortcutDimension7Code?.trim() || undefined,
+      shortcutDimension8Code: value.shortcutDimension8Code?.trim() || undefined,
       recurringMethod: this.isRecurring ? value.recurringMethod : RecurringMethod.None,
       recurringFrequency: value.recurringFrequency || undefined,
       expirationDate: value.expirationDate || undefined,
     } as CreateUpdateGenJournalLineDto;
+  }
+
+  private searchDimensionValues(slot: ShortcutDimensionSlotDto, term: string): Observable<LookupItem[]> {
+    const q = (term ?? '').trim().toLowerCase();
+    const matches = (slot.values ?? [])
+      .filter(v => !q || (v.code ?? '').toLowerCase().includes(q) || (v.name ?? '').toLowerCase().includes(q))
+      .map(v => ({
+        id: v.id ?? v.code ?? '',
+        code: v.code ?? '',
+        name: v.name ?? undefined,
+      }));
+    return of(matches);
   }
 
   /**

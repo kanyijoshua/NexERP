@@ -84,6 +84,8 @@ export const ERP_ROUTE_MODULE: Record<string, string> = {
   'Erp::Menu:Employees': 'HumanResources',
   'Erp::Menu:EmployeeAbsences': 'HumanResources',
   'Erp::Menu:CausesOfAbsence': 'HumanResources',
+  'Erp::Menu:BaseCalendars': 'HumanResources',
+  'Erp::Menu:WorkingCalendar': 'HumanResources',
   'Erp::Menu:Qualifications': 'HumanResources',
   'Erp::Menu:Unions': 'HumanResources',
   'Erp::Menu:EmploymentContracts': 'HumanResources',
@@ -949,6 +951,24 @@ export const ERP_ROUTES: ABP.Route[] = [
     requiredPolicy: 'Erp.HumanResourcesSetup',
   },
   {
+    path: '/erp/working-calendar',
+    name: 'Erp::Menu:WorkingCalendar',
+    parentName: 'Erp::Menu:HumanResources',
+    iconClass: 'fas fa-calendar-check',
+    order: 3,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.HumanResourcesSetup',
+  },
+  {
+    path: '/erp/base-calendars',
+    name: 'Erp::Menu:BaseCalendars',
+    parentName: 'Erp::Menu:HumanResources',
+    iconClass: 'fas fa-calendar-days',
+    order: 3,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.HumanResourcesSetup',
+  },
+  {
     path: '/erp/qualifications',
     name: 'Erp::Menu:Qualifications',
     parentName: 'Erp::Menu:HumanResources',
@@ -1099,7 +1119,7 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 90,
     layout: eLayoutType.application,
     requiredPolicy:
-      'Erp.Modules || Erp.Theme || Erp.Profiles || Erp.GeneralLedgerSetup || Erp.InventorySetup || Erp.HumanResourcesSetup || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport || Erp.RapidStart',
+      'Erp.Modules || Erp.Theme || Erp.Profiles || Erp.GeneralLedgerSetup || Erp.Dimensions || Erp.InventorySetup || Erp.HumanResourcesSetup || Erp.NoSeries || Erp.SalesSetup || Erp.PurchaseSetup || Erp.Workflows || Erp.ApprovalUserSetup || Erp.WebServices || Erp.Webhooks || Erp.DataExport || Erp.RapidStart',
   },
   {
     path: '/erp/setup/modules',
@@ -1136,6 +1156,15 @@ export const ERP_ROUTES: ABP.Route[] = [
     order: 2,
     layout: eLayoutType.application,
     requiredPolicy: 'Erp.GeneralLedgerSetup',
+  },
+  {
+    path: '/erp/setup/dimensions',
+    name: 'Erp::Menu:Dimensions',
+    parentName: 'Erp::Menu:Setup',
+    iconClass: 'fas fa-cubes',
+    order: 2,
+    layout: eLayoutType.application,
+    requiredPolicy: 'Erp.Dimensions',
   },
   {
     path: '/erp/setup/inventory',

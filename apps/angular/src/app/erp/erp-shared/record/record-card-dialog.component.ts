@@ -4,10 +4,9 @@ import { Component, DestroyRef, Injector, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
-import { RecordEntity, RecordFact, recordPermission, recordToInput } from './record-entity';
-import { buildRecordForm } from './record-form';
+import { finalize } from 'rxjs/operators';
+import { RecordEntity, RecordEntityRegistry, RecordFact, recordPermission, recordToInput } from './record-entity';
+import { buildRecordForm, patchRecordForm } from './record-form';
 
 /** What a card dialog closed with. `null` when it was cancelled. */
 export interface RecordCardResult<TDto = any> {
@@ -19,6 +18,8 @@ export interface RecordCardResult<TDto = any> {
 export interface OpenCardOptions {
   /** Existing record; a new one when omitted. */
   id?: string | null;
+  /** Optional already-loaded record to render immediately while refreshing from the server. */
+  record?: Record<string, any> | null;
   /** What the user typed in the lookup, handed to `entity.newRecord`. */
   term?: string;
   /** The quick form: only the essential fields. Defaults to `true` for a new record. */
@@ -43,6 +44,7 @@ export function openRecordCardDialog<TDto = any>(
   const card = ref.componentInstance as RecordCardDialogComponent;
   card.entity = entity;
   card.id = options.id ?? null;
+  card.initialRecord = options.record ?? null;
   card.term = options.term ?? '';
   card.quick = options.quick ?? !options.id;
   card.values = options.values ?? {};
@@ -65,6 +67,7 @@ export function openRecordCardDialog<TDto = any>(
 })
 export class RecordCardDialogComponent implements OnInit {
   readonly modal = inject(NgbActiveModal);
+  private readonly registry = inject(RecordEntityRegistry, { optional: true });
   private readonly permissions = inject(PermissionService);
   private readonly toaster = inject(ToasterService);
   private readonly confirmation = inject(ConfirmationService);
@@ -72,6 +75,7 @@ export class RecordCardDialogComponent implements OnInit {
 
   entity!: RecordEntity;
   id: string | null = null;
+  initialRecord: Record<string, any> | null = null;
   term = '';
   quick = false;
   values: Record<string, unknown> = {};
@@ -82,26 +86,13 @@ export class RecordCardDialogComponent implements OnInit {
   canEdit = false;
   canDelete = false;
 
+  heading = '';
+  facts: RecordFact[] = [];
+  cardLink: string[] | null = null;
+  hasMoreFields = false;
+
   get isNew(): boolean {
     return !this.id;
-  }
-
-  /** "More fields" only makes sense when the quick form hides some. */
-  get hasMoreFields(): boolean {
-    return this.quick && this.entity.fields.some(f => f.cardOnly);
-  }
-
-  get heading(): string {
-    const item = this.record && !this.isNew ? this.entity.toItem(this.record) : null;
-    return item ? [item.code, item.name].filter(Boolean).join(' · ') : '';
-  }
-
-  get facts(): RecordFact[] {
-    return this.record && !this.isNew && this.entity.facts ? this.entity.facts(this.record) : [];
-  }
-
-  get cardLink(): string[] | null {
-    return this.id && this.entity.listRoute ? [...this.entity.listRoute, this.id] : null;
   }
 
   ngOnInit(): void {
@@ -110,20 +101,33 @@ export class RecordCardDialogComponent implements OnInit {
     );
     this.canDelete =
       !this.isNew && this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Delete'));
+    this.cardLink = this.id && this.entity.listRoute ? [...this.entity.listRoute, this.id] : null;
+    this.hasMoreFields = this.quick && this.entity.fields.some(f => f.cardOnly);
 
     if (this.isNew) {
       this.show({ ...this.entity.newRecord(this.term || undefined), ...this.values });
       return;
     }
 
-    this.isBusy = true;
+    const preview = this.initialRecord ?? this.registry?.getCachedRecord(this.entity.key, this.id);
+    if (preview) {
+      this.show(preview);
+    } else {
+      this.isBusy = true;
+    }
+
     this.entity
       .get(this.id!)
       .pipe(
         finalize(() => (this.isBusy = false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(record => this.show(record));
+      .subscribe(record => {
+        if (record) {
+          this.registry?.cacheRecord(this.entity, record);
+          this.show(record);
+        }
+      });
   }
 
   save(): void {
@@ -147,6 +151,7 @@ export class RecordCardDialogComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(record => {
+        this.registry?.cacheRecord(this.entity, record);
         this.toaster.success('Erp::SavedSuccessfully');
         this.modal.close({ record });
       });
@@ -173,6 +178,7 @@ export class RecordCardDialogComponent implements OnInit {
             takeUntilDestroyed(this.destroyRef),
           )
           .subscribe(() => {
+            this.registry?.invalidate(this.entity.key, id);
             this.toaster.success('Erp::DeletedSuccessfully');
             this.modal.close({ record, deleted: true });
           });
@@ -181,13 +187,25 @@ export class RecordCardDialogComponent implements OnInit {
 
   showAllFields(): void {
     this.quick = false;
+    this.hasMoreFields = false;
   }
 
   private show(record: Record<string, any>): void {
     this.record = record;
-    this.form = buildRecordForm(this.entity, record, {
-      isNew: this.isNew,
-      readonly: !this.canEdit,
-    });
+    const item = record && !this.isNew ? this.entity.toItem(record) : null;
+    this.heading = item ? [item.code, item.name].filter(Boolean).join(' · ') : '';
+    this.facts = record && !this.isNew && this.entity.facts ? this.entity.facts(record) : [];
+
+    if (this.form && !this.form.dirty) {
+      patchRecordForm(this.entity, this.form, record, {
+        isNew: this.isNew,
+        readonly: !this.canEdit,
+      });
+    } else if (!this.form) {
+      this.form = buildRecordForm(this.entity, record, {
+        isNew: this.isNew,
+        readonly: !this.canEdit,
+      });
+    }
   }
 }

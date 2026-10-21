@@ -226,6 +226,43 @@ public class PostingSetup_Tests : ErpApplicationTestBase
             setup.GlobalDimension2Code = "NOPE";
             (await Should.ThrowAsync<BusinessException>(() => _glSetup.UpdateAsync(setup))).Code
                 .ShouldBe(ErpErrorCodes.GeneralLedger.DimensionNotFound);
+
+            setup.GlobalDimension2Code = "PROJECT";
+            setup.ShortcutDimension3Code = "CUSTOMERGROUP";
+            setup.ShortcutDimension4Code = "AREA";
+            setup.ShortcutDimension5Code = "BUSINESSGROUP";
+            setup.ShortcutDimension6Code = "SALESPERSON";
+            setup.ShortcutDimension7Code = "PURCHASER";
+            setup.ShortcutDimension8Code = "CAMPAIGN";
+            var allEight = await _glSetup.UpdateAsync(setup);
+            allEight.GlobalDimension1Code.ShouldBe("DEPARTMENT");
+            allEight.GlobalDimension2Code.ShouldBe("PROJECT");
+            allEight.ShortcutDimension3Code.ShouldBe("CUSTOMERGROUP");
+            allEight.ShortcutDimension8Code.ShouldBe("CAMPAIGN");
+
+            var dimensionService = GetRequiredService<Dimensions.IDimensionAppService>();
+            var slots = await dimensionService.GetShortcutSlotsAsync();
+            slots.Items.Count.ShouldBe(8);
+            slots.Items[0].DimensionCode.ShouldBe("DEPARTMENT");
+            slots.Items[7].DimensionCode.ShouldBe("CAMPAIGN");
+
+            var resolvedSet = await dimensionService.ResolveDimensionSetAsync(
+                new Dimensions.ResolveDimensionSetInput
+                {
+                    ShortcutDimension1Code = "SALES",
+                    ShortcutDimension2Code = "VW",
+                    ShortcutDimension3Code = "LARGE",
+                    ShortcutDimension4Code = "10",
+                    ShortcutDimension5Code = "OFFICE",
+                    ShortcutDimension6Code = "PS",
+                    ShortcutDimension7Code = "AH",
+                    ShortcutDimension8Code = "WINTER",
+                }
+            );
+            resolvedSet.DimensionSetId.ShouldNotBe(Guid.Empty);
+            resolvedSet.Entries.Count.ShouldBe(8);
+            resolvedSet.ShortcutDimension3Code.ShouldBe("LARGE");
+            resolvedSet.ShortcutDimension8Code.ShouldBe("WINTER");
         });
     }
 

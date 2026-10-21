@@ -4,6 +4,7 @@ import {
   PurchaseDocumentService,
   PurchaseDocumentType,
   PurchaseHeaderDto,
+  PurchaseLineDto,
   VendorService,
 } from '@proxy/purchasing';
 import { Observable, map } from 'rxjs';
@@ -12,6 +13,9 @@ import { ItemTrackingSourceType } from '@proxy/inventory';
 import { ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
+  DocumentCardData,
+  DocumentCardField,
+  DocumentCardLine,
   DocumentLineRow,
   DocumentListBase,
   DocumentMode,
@@ -53,6 +57,7 @@ export class PurchaseDocumentsComponent extends DocumentListBase<PurchaseHeaderD
   readonly partyEntity = 'vendor';
   readonly externalDocumentNoLabelKey: string;
   readonly itemAmountField = 'unitCost' as const;
+  readonly cardFields: DocumentCardField[];
 
   constructor(
     private readonly documents: PurchaseDocumentService,
@@ -70,9 +75,78 @@ export class PurchaseDocumentsComponent extends DocumentListBase<PurchaseHeaderD
     const isReturn = this.documentType === PurchaseDocumentType.ReturnOrder || this.documentType === PurchaseDocumentType.CreditMemo;
     this.shipLabelKey = isReturn ? 'Erp::ShipReturn' : 'Erp::Receive';
     this.shippedLabelKey = isReturn ? 'Erp::QuantityReturned' : 'Erp::QuantityReceived';
+    this.qtyToShipLabelKey = isReturn ? 'Erp::QtyToShip' : 'Erp::QtyToReceive';
     this.sourceLinesLabelKey = isReturn ? 'Erp::GetReturnShipmentLines' : 'Erp::GetReceiptLines';
     // An invoice carries the vendor's invoice number; anything else the vendor's order number.
     this.externalDocumentNoLabelKey = this.mode === 'invoice' ? 'Erp::VendorInvoiceNo' : 'Erp::VendorOrderNo';
+
+    this.cardFields = [
+      { field: 'buyFromVendorNo', labelKey: 'Erp::Vendor', type: 'readonly' },
+      { field: 'buyFromVendorName', labelKey: 'Erp::Name', type: 'readonly' },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date' },
+      { field: 'documentDate', labelKey: 'Erp::DocumentDate', type: 'date' },
+      { field: 'dueDate', labelKey: 'Erp::DueDate', type: 'date' },
+      ...(this.mode === 'invoice'
+        ? [{ field: 'vendorInvoiceNo', labelKey: 'Erp::VendorInvoiceNo', type: 'text', maxLength: 35 } as DocumentCardField]
+        : [
+            { field: 'vendorOrderNo', labelKey: 'Erp::VendorOrderNo', type: 'text', maxLength: 35 } as DocumentCardField,
+            { field: 'expectedReceiptDate', labelKey: 'Erp::ExpectedReceiptDate', type: 'date' } as DocumentCardField,
+          ]),
+      { field: 'yourReference', labelKey: 'Erp::YourReference', type: 'text', maxLength: 35 },
+      { field: 'purchaserCode', labelKey: 'Erp::PurchaserCode', type: 'lookup', entity: 'salespersonPurchaser' },
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', entity: 'location' },
+      { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'lookup', entity: 'paymentTerms' },
+      { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', entity: 'currency' },
+    ];
+  }
+
+  protected loadDocument(id: string): Observable<DocumentCardData> {
+    return this.documents.get(id) as unknown as Observable<DocumentCardData>;
+  }
+
+  protected updateDocument(id: string, input: Record<string, unknown>): Observable<unknown> {
+    return this.documents.update(id, input as never);
+  }
+
+  protected toCardLine(raw: Record<string, unknown>): DocumentCardLine {
+    const l = raw as unknown as PurchaseLineDto;
+    return {
+      id: l.id ?? null,
+      type: l.type,
+      no: l.no ?? '',
+      description: l.description ?? '',
+      locationCode: l.locationCode ?? null,
+      quantity: l.quantity,
+      unitOfMeasureCode: l.unitOfMeasureCode ?? null,
+      unitAmount: l.directUnitCost,
+      lineDiscountPercent: l.lineDiscountPercent,
+      lineAmount: l.lineAmount,
+      vatPercent: l.vatPercent,
+      qtyToShip: l.qtyToReceive,
+      quantityShipped: l.quantityReceived,
+      qtyToInvoice: l.qtyToInvoice,
+      quantityInvoiced: l.quantityInvoiced,
+    };
+  }
+
+  protected fromCardLine(l: DocumentCardLine, original: Record<string, unknown> | undefined): Record<string, unknown> {
+    // Quantities to post only for saved lines: a new line starts with everything outstanding.
+    const toPost = this.isOrderMode && l.id ? { qtyToReceive: Number(l.qtyToShip) || 0, qtyToInvoice: Number(l.qtyToInvoice) || 0 } : {};
+    return {
+      ...(original ?? {}),
+      id: l.id ?? undefined,
+      type: l.type,
+      no: l.no,
+      description: l.description,
+      quantity: Number(l.quantity) || 0,
+      directUnitCost: Number(l.unitAmount) || 0,
+      lineDiscountPercent: Number(l.lineDiscountPercent) || 0,
+      unitOfMeasureCode: l.unitOfMeasureCode || undefined,
+      locationCode: l.locationCode || undefined,
+      qtyToReceive: undefined,
+      qtyToInvoice: undefined,
+      ...toPost,
+    };
   }
 
   protected getList = (query: ErpTableQuery) =>

@@ -278,6 +278,8 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<HumanResourceUnitOfMeasure>(),
             Define<EmployeePostingGroup>(),
             Define<CauseOfAbsence>(),
+            Define<BaseCalendar>(),
+            Define<BaseCalendarChange>(),
             Define<Qualification>(),
             Define<Union>(),
             Define<EmploymentContract>(),

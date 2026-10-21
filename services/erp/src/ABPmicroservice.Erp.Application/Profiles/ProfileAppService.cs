@@ -213,11 +213,36 @@ public class ProfileAppService : ErpAppService, IProfileAppService
             }
 
             var children = new List<RoleCenterNavItemDto>();
-            foreach (var link in menu.Links)
+            foreach (var link in menu.DirectLinks)
             {
                 if (await CanOpenAsync(link))
                 {
                     children.Add(ToItem(link.Route, link));
+                }
+            }
+
+            foreach (var subMenu in menu.SubMenus)
+            {
+                var subChildren = new List<RoleCenterNavItemDto>();
+                foreach (var link in subMenu.DirectLinks)
+                {
+                    if (await CanOpenAsync(link))
+                    {
+                        subChildren.Add(ToItem(link.Route, link));
+                    }
+                }
+
+                if (subChildren.Count > 0)
+                {
+                    children.Add(
+                        new RoleCenterNavItemDto
+                        {
+                            Key = subMenu.Key,
+                            DisplayName = L[subMenu.NameKey],
+                            Route = subChildren[0].Route,
+                            Children = subChildren,
+                        }
+                    );
                 }
             }
 

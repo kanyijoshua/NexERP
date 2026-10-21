@@ -45,7 +45,7 @@ export class RecordDialogService {
   }
 
   /** Emits the saved (or deleted) record, or `null` when the dialog was cancelled. */
-  openCard<TDto>(
+  openCard<TDto = any>(
     entity: RecordEntity,
     options: OpenCardOptions = {},
   ): Observable<RecordCardResult<TDto> | null> {

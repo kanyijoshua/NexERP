@@ -1,3 +1,66 @@
+@if (card) {
+  <erp-document-page
+    [title]="card.no ?? ''"
+    [subtitle]="titleKey"
+    [status]="'Erp::Enum:DocumentStatus.' + statusName(card.status)"
+    [statusColors]="cardStatusColors"
+    [headerForm]="cardForm"
+    [lines]="cardLines"
+    [lineColumns]="cardLineColumns"
+    [totals]="cardTotals"
+    [actions]="cardActions"
+    [readonly]="!cardEditable"
+    [busy]="cardBusy || !!busyId"
+    [showSide]="true"
+    [openable]="canTrack"
+    [currencyCode]="$any(card)['currencyCode']"
+    (addLine)="addCardLine()"
+    (removeLine)="removeCardLine($event)"
+    (lineChange)="onCardLineChange($event)"
+    (openLine)="openCardLine($event)"
+    (action)="onCardAction($event)"
+  >
+    <div smartButtons class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeCard()">
+        <i class="fas fa-arrow-left me-1"></i>{{ titleKey | abpLocalization }}
+      </button>
+      @if (card.postedDocumentNo) {
+        <span class="badge text-bg-light border fw-normal">
+          {{ 'Erp::PostedDocumentNo' | abpLocalization }}: <span class="font-monospace">{{ card.postedDocumentNo }}</span>
+        </span>
+      }
+    </div>
+
+    <div header [formGroup]="cardForm">
+      <div class="small fw-bold text-uppercase text-secondary mb-2">{{ 'Erp::General' | abpLocalization }}</div>
+      <div class="row g-3">
+        @for (f of cardFields; track f.field) {
+          <div class="col-sm-6 col-lg-4">
+            <label class="form-label small mb-1" [for]="'card-' + f.field">{{ f.labelKey | abpLocalization }}</label>
+            @switch (f.type) {
+              @case ('readonly') {
+                <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [value]="cardForm.get(f.field)?.value ?? ''" readonly tabindex="-1" />
+              }
+              @case ('date') {
+                <input [id]="'card-' + f.field" type="date" class="form-control form-control-sm" [formControlName]="f.field" />
+              }
+              @case ('lookup') {
+                <erp-lookup [inputId]="'card-' + f.field" [formControlName]="f.field" [entity]="f.entity!"></erp-lookup>
+              }
+              @default {
+                <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [formControlName]="f.field" [attr.maxlength]="f.maxLength ?? null" />
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div side>
+      <ng-container *ngTemplateOutlet="factboxes"></ng-container>
+    </div>
+  </erp-document-page>
+} @else {
 <erp-page-toolbar
   [title]="titleKey"
   [icon]="icon"
@@ -34,7 +97,8 @@
       selectionType="single"
       [selected]="selection"
       (rowClick)="select($event)"
-      (codeClick)="select($event)"
+      (codeClick)="openCard($event)"
+      (rowDblClick)="openCard($event)"
       (rowsChange)="onRowsChange($event.rows)"
     >
       <ng-template erpTableCol="no" let-row="row">
@@ -43,8 +107,9 @@
             class="erp-code-link fw-semibold font-monospace"
             role="button"
             tabindex="0"
-            (click)="select(row); $event.stopPropagation()"
-            (keydown.enter)="select(row); $event.stopPropagation()"
+            [title]="'Erp::OpenDocument' | abpLocalization"
+            (click)="openCard(row, $event)"
+            (keydown.enter)="openCard(row, $event)"
           >
             {{ row.no }}
           </a>
@@ -136,7 +201,9 @@
                   <i class="fas fa-file-invoice"></i>
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0 text-dark font-monospace">{{ row.no }}</h6>
+                  <h6 class="fw-bold mb-0 font-monospace">
+                    <a class="erp-code-link" role="button" tabindex="0" (click)="openCard(row, $event)" (keydown.enter)="openCard(row, $event)">{{ row.no }}</a>
+                  </h6>
                   @if (row.postedDocumentNo) {
                     <div class="mt-1">
                       <a
@@ -285,6 +352,23 @@
           </div>
         </div>
       }
+      <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-3" (click)="openCard(selected)">
+        <i class="fas fa-up-right-from-square me-1"></i>{{ 'Erp::OpenDocument' | abpLocalization }}
+      </button>
+      <ng-container *ngTemplateOutlet="factboxes"></ng-container>
+    } @else {
+      <div class="card border-0 shadow-sm p-4 text-center text-muted">
+        <i class="fas fa-mouse-pointer fa-2x mb-2 text-secondary"></i>
+        <p class="mb-0 small">{{ 'Erp::SelectADocument' | abpLocalization }}</p>
+      </div>
+    }
+  </div>
+</div>
+}
+
+<!-- Approval history, attachments and notes: beside the list and on the card. -->
+<ng-template #factboxes>
+  @if (selected) {
       @if (canSeeApprovals && history.length) {
         <div class="card border-0 shadow-sm mb-3">
           <div class="card-header bg-light fw-bold text-secondary">
@@ -319,14 +403,8 @@
         [entityId]="selected.id!"
         [entityNo]="selected.no!"
       ></app-chatter-widget>
-    } @else {
-      <div class="card border-0 shadow-sm p-4 text-center text-muted">
-        <i class="fas fa-mouse-pointer fa-2x mb-2 text-secondary"></i>
-        <p class="mb-0 small">{{ 'Erp::SelectADocument' | abpLocalization }}</p>
-      </div>
-    }
-  </div>
-</div>
+  }
+</ng-template>
 
 <abp-modal [(visible)]="isModalOpen" [busy]="isBusy" [options]="{ size: 'xl' }">
   <ng-template #abpHeader>

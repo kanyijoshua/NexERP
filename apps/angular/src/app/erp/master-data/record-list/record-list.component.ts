@@ -3,7 +3,7 @@ import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, tap } from 'rxjs';
 import {
   ErpExportColumn,
   ErpExportOptions,
@@ -51,6 +51,7 @@ export class RecordListComponent implements OnInit {
 
   entity!: RecordEntity;
   columns: ErpTableColumn[] = [];
+  cardColumns: RecordColumn[] = [];
   actions: ErpTableAction[] = [];
   source!: ErpTableSource<Record<string, any>>;
   initialSearch = '';
@@ -100,6 +101,7 @@ export class RecordListComponent implements OnInit {
     this.initialSearch = this.route.snapshot.queryParamMap.get('filter') ?? '';
 
     this.columns = toRecordTableColumns(this.entity.columns);
+    this.cardColumns = this.getCardColumns();
 
     const baseActions: ErpTableAction[] = [
       {
@@ -140,7 +142,8 @@ export class RecordListComponent implements OnInit {
     });
 
     this.actions = baseActions;
-    this.source = query => this.entity.getList(query);
+    this.source = query =>
+      this.entity.getList(query).pipe(tap(res => this.registry.cacheRecords(this.entity, res.items)));
 
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.table?.reload());
   }
@@ -299,13 +302,15 @@ export class RecordListComponent implements OnInit {
   }
 
   openCard(row: Record<string, any>): void {
-    this.router.navigate(this.cardLink(row));
+    this.registry.cacheRecord(this.entity, row);
+    this.router.navigate(this.cardLink(row), { state: { record: row } });
   }
 
   quickEdit(row: Record<string, any>, event?: Event): void {
     event?.stopPropagation();
+    this.registry.cacheRecord(this.entity, row);
     this.dialogs
-      .openCard(this.entity, { id: row['id'], quick: false })
+      .openCard(this.entity, { id: row['id'], record: row, quick: false })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(result => result && this.table?.reload());
   }

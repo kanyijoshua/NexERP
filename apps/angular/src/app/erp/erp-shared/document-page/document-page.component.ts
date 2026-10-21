@@ -65,10 +65,13 @@ export class DocumentPageComponent {
   @Input() showSide = false;
   @Input() linesTitleKey = 'Erp::Lines';
   @Input() currencyCode?: string;
+  /** Shows an open button per line (e.g. its item tracking). */
+  @Input() openable = false;
 
   @Output() addLine = new EventEmitter<void>();
   @Output() removeLine = new EventEmitter<number>();
   @Output() lineChange = new EventEmitter<DocumentLineChange>();
+  @Output() openLine = new EventEmitter<number>();
   /** Emits the action key, after the confirmation when `confirmKey` is set. */
   @Output() action = new EventEmitter<string>();
 

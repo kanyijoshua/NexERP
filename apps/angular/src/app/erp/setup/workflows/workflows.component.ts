@@ -10,12 +10,16 @@ import {
   ApproverLimitType,
   CreateUpdateWorkflowDto,
   CreateUpdateWorkflowStepDto,
+  WorkflowApproverType,
   WorkflowDto,
   WorkflowService,
-  WorkflowStepDto,
+  WorkflowTemplateDto,
+  WorkflowUserGroupService,
   approvalDocumentKindOptions,
   approverLimitTypeOptions,
+  workflowApproverTypeOptions,
 } from '@proxy/workflows';
+import { CodeTableDto } from '@proxy/companies';
 import { finalize } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
@@ -30,9 +34,6 @@ export interface FormWorkflowStep {
   eventName: string;
   conditionRule: string;
   responseAction: string;
-  approverLimitType?: ApproverLimitType;
-  specificApproverUserName?: string;
-  dueDays?: number;
 }
 
 export interface ConditionColumnOption {
@@ -64,13 +65,32 @@ const SALES_COLUMNS: ConditionColumnOption[] = [
   { field: 'LocationCode', label: 'Location Code', type: 'text' },
 ];
 
+/** Voucher, requisition and tender conditions are evaluated on the amount only. */
+const AMOUNT_COLUMNS: ConditionColumnOption[] = [{ field: 'Amount', label: 'Amount (Excl. VAT)', type: 'number' }];
+
+const DOCUMENT_LABELS: Record<ApprovalDocumentKind, string> = {
+  [ApprovalDocumentKind.SalesDocument]: 'sales document',
+  [ApprovalDocumentKind.PurchaseDocument]: 'purchase document',
+  [ApprovalDocumentKind.PaymentVoucher]: 'payment voucher',
+  [ApprovalDocumentKind.PurchaseRequisition]: 'purchase requisition',
+  [ApprovalDocumentKind.Tender]: 'tender',
+};
+
+/** Same wording as the server: the trigger event of a document kind. */
+export function requestedEventName(kind: ApprovalDocumentKind): string {
+  return `Approval of a ${DOCUMENT_LABELS[kind] ?? 'purchase document'} is requested.`;
+}
+
+const NOT_ACTED_ON_EVENT = 'An approval request is not acted on.';
+const AUTO_DELEGATE_RESPONSE = 'Delegate the request to the substitute, or to the approver\'s approver.';
+
 const WORKFLOW_EVENTS: string[] = [
-  'Approval of a purchase document is requested.',
-  'Approval of a sales document is requested.',
+  ...Object.values(DOCUMENT_LABELS).map(label => `Approval of a ${label} is requested.`),
   'An approval request is approved.',
   'An approval request is rejected.',
   'An approval request is canceled.',
   'An approval request is delegated.',
+  NOT_ACTED_ON_EVENT,
   'A document status is changed to Pending Approval.',
 ];
 
@@ -81,9 +101,13 @@ const WORKFLOW_RESPONSES: string[] = [
   'Reject all approval requests. Reopen the document.',
   'Cancel all approval requests. Reopen the document.',
   'Send the request to the substitute, or to the approver\'s approver.',
+  AUTO_DELEGATE_RESPONSE,
 ];
 
-/** Approval workflows.with dynamic conditions and approval sequences. */
+/**
+ * Approval workflows: who approves (approver chain, specific approver or workflow user group),
+ * dynamic conditions, the approval sequence, automatic delegation, templates and copies.
+ */
 @Component({
   selector: 'app-workflows',
   templateUrl: './workflows.component.html',
@@ -92,9 +116,14 @@ const WORKFLOW_RESPONSES: string[] = [
 export class WorkflowsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly userSetupService = inject(ApprovalUserSetupService);
+  private readonly userGroupService = inject(WorkflowUserGroupService);
 
   readonly documentKinds = approvalDocumentKindOptions;
   readonly limitTypes = approverLimitTypeOptions;
+  readonly approverTypes = workflowApproverTypeOptions;
+  readonly ApproverLimitType = ApproverLimitType;
+  readonly ApprovalDocumentKind = ApprovalDocumentKind;
+  readonly WorkflowApproverType = WorkflowApproverType;
   readonly workflowEvents = WORKFLOW_EVENTS;
   readonly workflowResponses = WORKFLOW_RESPONSES;
   readonly operators = ['>=', '>', '<=', '<', '=', '<>', 'contains'];
@@ -114,6 +143,17 @@ export class WorkflowsComponent implements OnInit {
   conditions: WorkflowCondition[] = [];
   formSteps: FormWorkflowStep[] = [];
   approvalUsers: ApprovalUserSetupDto[] = [];
+  userGroups: CodeTableDto[] = [];
+
+  // New from template
+  isTemplateModalOpen = false;
+  templates: WorkflowTemplateDto[] = [];
+  templateForm!: FormGroup;
+
+  // Copy
+  isCopyModalOpen = false;
+  copySource: WorkflowDto | null = null;
+  copyForm!: FormGroup;
 
   // Step editor state
   editingStepIndex: number | null = null;
@@ -130,11 +170,13 @@ export class WorkflowsComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadApprovalUsers();
+    this.loadUserGroups();
     this.companyService.companyChanged$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.load();
         this.loadApprovalUsers();
+        this.loadUserGroups();
       });
   }
 
@@ -158,8 +200,123 @@ export class WorkflowsComponent implements OnInit {
       });
   }
 
+  loadUserGroups(): void {
+    this.userGroupService
+      .getList({ maxResultCount: 1000, skipCount: 0 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => (this.userGroups = res.items ?? []));
+  }
+
   limitTypeName(workflow: WorkflowDto): string {
     return ApproverLimitType[workflow.approverLimitType ?? ApproverLimitType.ApproverChain];
+  }
+
+  /** What the Approvers column shows: the group, the specific approver or the limit type. */
+  approversLabel(workflow: WorkflowDto): string {
+    if (workflow.approverType === WorkflowApproverType.WorkflowUserGroup) {
+      return workflow.workflowUserGroupCode ?? '';
+    }
+    if (workflow.approverLimitType === ApproverLimitType.SpecificApprover) {
+      return workflow.specificApproverUserName ?? '';
+    }
+    return '';
+  }
+
+  approverTypeName(type: WorkflowApproverType | undefined): string {
+    return WorkflowApproverType[type ?? WorkflowApproverType.Approver];
+  }
+
+  get isGroupApproval(): boolean {
+    return this.form?.get('approverType')?.value === WorkflowApproverType.WorkflowUserGroup;
+  }
+
+  get needsSpecificApprover(): boolean {
+    return !this.isGroupApproval && this.form?.get('approverLimitType')?.value === ApproverLimitType.SpecificApprover;
+  }
+
+  // --- New from template / copy ---
+
+  openTemplates(): void {
+    this.templateForm = this.fb.group({
+      templateCode: ['', Validators.required],
+      code: ['', [Validators.required, Validators.maxLength(30)]],
+      description: ['', Validators.maxLength(250)],
+      workflowUserGroupCode: [''],
+    });
+    this.service
+      .getTemplates()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        this.templates = res.items ?? [];
+        this.isTemplateModalOpen = true;
+      });
+  }
+
+  get selectedTemplate(): WorkflowTemplateDto | undefined {
+    const code = this.templateForm?.get('templateCode')?.value;
+    return this.templates.find(t => t.code === code);
+  }
+
+  pickTemplate(template: WorkflowTemplateDto): void {
+    this.templateForm.patchValue({ templateCode: template.code, description: template.description });
+  }
+
+  createFromTemplate(): void {
+    const template = this.selectedTemplate;
+    const raw = this.templateForm.getRawValue();
+    const needsGroup = template?.approverType === WorkflowApproverType.WorkflowUserGroup;
+    if (this.templateForm.invalid || this.isBusy || (needsGroup && !raw.workflowUserGroupCode)) {
+      this.templateForm.markAllAsTouched();
+      return;
+    }
+
+    this.isBusy = true;
+    this.service
+      .newFromTemplate({
+        templateCode: raw.templateCode,
+        code: raw.code,
+        description: raw.description,
+        workflowUserGroupCode: needsGroup ? raw.workflowUserGroupCode : undefined,
+      })
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(created => {
+        this.isTemplateModalOpen = false;
+        this.toaster.success('Erp::SavedSuccessfully');
+        this.load();
+        this.openEdit(created);
+      });
+  }
+
+  openCopy(workflow: WorkflowDto): void {
+    this.copySource = workflow;
+    this.copyForm = this.fb.group({
+      code: [`${workflow.code}-COPY`.slice(0, 30), [Validators.required, Validators.maxLength(30)]],
+      description: [workflow.description ?? '', Validators.maxLength(250)],
+    });
+    this.isCopyModalOpen = true;
+  }
+
+  copy(): void {
+    if (!this.copySource?.id || this.copyForm.invalid || this.isBusy) {
+      this.copyForm?.markAllAsTouched();
+      return;
+    }
+
+    this.isBusy = true;
+    this.service
+      .copy(this.copySource.id, this.copyForm.getRawValue())
+      .pipe(
+        finalize(() => (this.isBusy = false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.isCopyModalOpen = false;
+        this.toaster.success('Erp::SavedSuccessfully');
+        this.load();
+      });
   }
 
   kindName(workflow: WorkflowDto): string {
@@ -202,7 +359,10 @@ export class WorkflowsComponent implements OnInit {
 
   get availableColumns(): ConditionColumnOption[] {
     const kind = this.form?.get('documentKind')?.value;
-    return kind === ApprovalDocumentKind.PurchaseDocument ? PURCHASE_COLUMNS : SALES_COLUMNS;
+    if (kind === ApprovalDocumentKind.PurchaseDocument) {
+      return PURCHASE_COLUMNS;
+    }
+    return kind === ApprovalDocumentKind.SalesDocument ? SALES_COLUMNS : AMOUNT_COLUMNS;
   }
 
   openCreate(): void {
@@ -211,7 +371,7 @@ export class WorkflowsComponent implements OnInit {
     this.editingStepIndex = null;
     this.form = this.buildForm();
     this.initConditions([]);
-    this.initDefaultSteps(ApprovalDocumentKind.PurchaseDocument, ApproverLimitType.DirectApprover);
+    this.initDefaultSteps(ApprovalDocumentKind.PurchaseDocument);
     this.isModalOpen = true;
   }
 
@@ -226,10 +386,9 @@ export class WorkflowsComponent implements OnInit {
   }
 
   onDocumentKindChange(kind: ApprovalDocumentKind): void {
-    // When document kind changes, update default steps event text if using default template
-    if (this.formSteps.length > 0 && this.formSteps[0].eventName.includes('document is requested')) {
-      const docLabel = kind === ApprovalDocumentKind.SalesDocument ? 'sales document' : 'purchase document';
-      this.formSteps[0].eventName = `Approval of a ${docLabel} is requested.`;
+    // The trigger step follows the document kind.
+    if (this.formSteps.length > 0 && /^Approval of an? .* is requested\.$/.test(this.formSteps[0].eventName)) {
+      this.formSteps[0].eventName = requestedEventName(kind);
     }
     // Filter conditions whose field is not in available columns
     const allowed = new Set(this.availableColumns.map(c => c.field));
@@ -350,19 +509,29 @@ export class WorkflowsComponent implements OnInit {
 
   // --- Approval Sequence / Steps ---
 
-  initDefaultSteps(kind: ApprovalDocumentKind, limitType: ApproverLimitType): void {
-    const doc = kind === ApprovalDocumentKind.SalesDocument ? 'sales document' : 'purchase document';
-    const limitLabel = ApproverLimitType[limitType] || 'DirectApprover';
+  /** What the first response says it creates, matching the server text. */
+  private describeApprovers(): string {
+    const raw = this.form?.getRawValue();
+    if (raw?.approverType === WorkflowApproverType.WorkflowUserGroup) {
+      return `workflow user group ${(raw.workflowUserGroupCode ?? '').toUpperCase()}`;
+    }
+    if (raw?.approverLimitType === ApproverLimitType.SpecificApprover) {
+      const user = this.approvalUsers.find(u => u.userId === raw.specificApproverUserId);
+      return `specific approver ${user?.userName ?? ''}`;
+    }
+    return ApproverLimitType[raw?.approverLimitType ?? ApproverLimitType.DirectApprover];
+  }
+
+  initDefaultSteps(kind: ApprovalDocumentKind): void {
     const condition = this.getConditionRuleSummary();
+    const delegateAfterDays = this.form?.get('delegateAfterDays')?.value ?? 0;
 
     this.formSteps = [
       {
         sequenceNo: 1,
-        eventName: `Approval of a ${doc} is requested.`,
+        eventName: requestedEventName(kind),
         conditionRule: condition,
-        responseAction: `Set the document status to Pending Approval. Create an approval request (${limitLabel}). Send the first request.`,
-        approverLimitType: limitType,
-        dueDays: this.form?.get('dueDays')?.value ?? 3,
+        responseAction: `Set the document status to Pending Approval. Create an approval request (${this.describeApprovers()}). Send the first request.`,
       },
       {
         sequenceNo: 2,
@@ -395,6 +564,15 @@ export class WorkflowsComponent implements OnInit {
         responseAction: 'Send the request to the substitute, or to the approver\'s approver.',
       },
     ];
+
+    if (delegateAfterDays > 0) {
+      this.formSteps.push({
+        sequenceNo: 7,
+        eventName: NOT_ACTED_ON_EVENT,
+        conditionRule: `Open for ${delegateAfterDays} day(s)`,
+        responseAction: AUTO_DELEGATE_RESPONSE,
+      });
+    }
   }
 
   initStepsFromWorkflow(workflow: WorkflowDto): void {
@@ -407,18 +585,15 @@ export class WorkflowsComponent implements OnInit {
           eventName: s.eventName ?? '',
           conditionRule: s.conditionRule ?? 'Always',
           responseAction: s.responseAction ?? '',
-          approverLimitType: workflow.approverLimitType,
-          dueDays: workflow.dueDays,
         }));
     } else {
-      this.initDefaultSteps(workflow.documentKind, workflow.approverLimitType);
+      this.initDefaultSteps(workflow.documentKind);
     }
   }
 
   resetToDefaults(): void {
     const kind = this.form?.get('documentKind')?.value ?? ApprovalDocumentKind.PurchaseDocument;
-    const limitType = this.form?.get('approverLimitType')?.value ?? ApproverLimitType.DirectApprover;
-    this.initDefaultSteps(kind, limitType);
+    this.initDefaultSteps(kind);
     this.editingStepIndex = null;
     this.toaster.info('Erp::WorkflowDefaultsRestored');
   }
@@ -430,8 +605,6 @@ export class WorkflowsComponent implements OnInit {
       eventName: this.workflowEvents[0],
       conditionRule: 'Always',
       responseAction: this.workflowResponses[0],
-      approverLimitType: this.form?.get('approverLimitType')?.value ?? ApproverLimitType.DirectApprover,
-      dueDays: 3,
     };
     this.formSteps.push(step);
     this.startEditingStep(this.formSteps.length - 1);
@@ -445,9 +618,6 @@ export class WorkflowsComponent implements OnInit {
       conditionPreset: ['custom'],
       conditionRule: [step.conditionRule, Validators.required],
       responseAction: [step.responseAction, Validators.required],
-      approverLimitType: [step.approverLimitType ?? ApproverLimitType.DirectApprover],
-      specificApproverUserName: [step.specificApproverUserName ?? ''],
-      dueDays: [step.dueDays ?? 3, [Validators.min(0), Validators.max(365)]],
     });
   }
 
@@ -464,9 +634,6 @@ export class WorkflowsComponent implements OnInit {
     step.eventName = val.eventName;
     step.conditionRule = val.conditionRule;
     step.responseAction = val.responseAction;
-    step.approverLimitType = val.approverLimitType;
-    step.specificApproverUserName = val.specificApproverUserName;
-    step.dueDays = val.dueDays;
     this.editingStepIndex = null;
   }
 
@@ -527,6 +694,19 @@ export class WorkflowsComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
+    if (this.isGroupApproval && !raw.workflowUserGroupCode) {
+      this.activeModalTab = 'general';
+      this.form.get('workflowUserGroupCode')?.markAsTouched();
+      this.toaster.warn('Erp::Erp:Approvals:00016');
+      return;
+    }
+    if (this.needsSpecificApprover && !raw.specificApproverUserId) {
+      this.activeModalTab = 'general';
+      this.form.get('specificApproverUserId')?.markAsTouched();
+      this.toaster.warn('Erp::Erp:Approvals:00018');
+      return;
+    }
+
     const stepsPayload: CreateUpdateWorkflowStepDto[] = this.formSteps.map(s => ({
       sequenceNo: s.sequenceNo,
       eventName: s.eventName,
@@ -541,6 +721,10 @@ export class WorkflowsComponent implements OnInit {
       minimumAmount: raw.minimumAmount,
       approverLimitType: raw.approverLimitType,
       dueDays: raw.dueDays,
+      approverType: raw.approverType,
+      workflowUserGroupCode: this.isGroupApproval ? raw.workflowUserGroupCode : undefined,
+      specificApproverUserId: this.needsSpecificApprover ? raw.specificApproverUserId : undefined,
+      delegateAfterDays: raw.delegateAfterDays ?? 0,
       steps: stepsPayload,
     };
 
@@ -583,6 +767,30 @@ export class WorkflowsComponent implements OnInit {
       });
   }
 
+  private refreshFirstResponse(): void {
+    const first = this.formSteps[0];
+    if (first?.responseAction.startsWith('Set the document status to Pending Approval. Create an approval request')) {
+      first.responseAction = `Set the document status to Pending Approval. Create an approval request (${this.describeApprovers()}). Send the first request.`;
+    }
+  }
+
+  /** Keeps the "not acted on" step in line with the delegate-after setting. */
+  private syncDelegateStep(days: number): void {
+    const index = this.formSteps.findIndex(s => s.eventName === NOT_ACTED_ON_EVENT);
+    if (days > 0 && index < 0) {
+      this.formSteps.push({
+        sequenceNo: this.formSteps.length + 1,
+        eventName: NOT_ACTED_ON_EVENT,
+        conditionRule: `Open for ${days} day(s)`,
+        responseAction: AUTO_DELEGATE_RESPONSE,
+      });
+    } else if (days > 0) {
+      this.formSteps[index].conditionRule = `Open for ${days} day(s)`;
+    } else if (index >= 0) {
+      this.removeStep(index);
+    }
+  }
+
   private buildForm(workflow?: WorkflowDto): FormGroup {
     const grp = this.fb.group({
       code: [
@@ -603,7 +811,24 @@ export class WorkflowsComponent implements OnInit {
         workflow?.dueDays ?? 3,
         [Validators.required, Validators.min(0), Validators.max(3650)],
       ],
+      approverType: [workflow?.approverType ?? WorkflowApproverType.Approver, Validators.required],
+      workflowUserGroupCode: [workflow?.workflowUserGroupCode ?? ''],
+      specificApproverUserId: [workflow?.specificApproverUserId ?? null],
+      delegateAfterDays: [
+        workflow?.delegateAfterDays ?? 0,
+        [Validators.required, Validators.min(0), Validators.max(365)],
+      ],
     });
+
+    // The first response names the approvers, so it follows these settings.
+    for (const name of ['approverType', 'approverLimitType', 'workflowUserGroupCode', 'specificApproverUserId']) {
+      grp.get(name)?.valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.refreshFirstResponse());
+    }
+    grp.get('delegateAfterDays')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(days => this.syncDelegateStep(days ?? 0));
 
     grp.get('documentKind')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))

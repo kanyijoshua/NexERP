@@ -35,6 +35,8 @@ export interface DocumentLineColumn {
   lookupSource?: LookupSource;
   /** `lookup` only, defaults to `'code'`. */
   lookupValueField?: 'code' | 'id';
+  /** `lookup` with `lookupValueField: 'id'`: control holding the display code for the id. */
+  lookupDisplayField?: string;
   /** `lookup` only, defaults to `false`. */
   lookupAllowFreeText?: boolean;
   /**

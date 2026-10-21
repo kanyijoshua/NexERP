@@ -196,6 +196,8 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<HumanResourceUnitOfMeasure, HumanResourceUnitOfMeasureDto>();
         CreateMap<EmployeePostingGroup, EmployeePostingGroupDto>();
         CreateMap<CauseOfAbsence, CauseOfAbsenceDto>();
+        CreateMap<BaseCalendar, CodeTableDto>();
+        CreateMap<BaseCalendarChange, BaseCalendarChangeDto>();
         CreateMap<Qualification, CodeTableDto>();
         CreateMap<Union, CodeTableDto>();
         CreateMap<EmploymentContract, CodeTableDto>();

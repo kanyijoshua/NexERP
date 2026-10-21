@@ -19,6 +19,9 @@ public class HumanResourcesSetup : CompanyEntity
     /// <summary>A Human Resource Unit of Measure code, e.g. "DAY".</summary>
     public string BaseUnitOfMeasure { get; private set; }
 
+    /// <summary>The company's working days: what absences and leave are counted in.</summary>
+    public string BaseCalendarCode { get; private set; }
+
     protected HumanResourcesSetup() { }
 
     public HumanResourcesSetup(Guid id)
@@ -31,6 +34,9 @@ public class HumanResourcesSetup : CompanyEntity
             : Check.Length(employeeNos.Trim(), nameof(employeeNos), ErpDomainConsts.MaxNoSeriesCodeLength);
         BaseUnitOfMeasure = CodeTableEntity.NormalizeCode(Check.Length(baseUnitOfMeasure, nameof(baseUnitOfMeasure), ErpDomainConsts.MaxUnitOfMeasureCodeLength));
     }
+
+    public void SetBaseCalendar(string baseCalendarCode) =>
+        BaseCalendarCode = CodeTableEntity.NormalizeCode(Check.Length(baseCalendarCode, nameof(baseCalendarCode), ErpDomainConsts.MaxCodeLength));
 }
 
 public class HumanResourcesSetupManager : DomainService

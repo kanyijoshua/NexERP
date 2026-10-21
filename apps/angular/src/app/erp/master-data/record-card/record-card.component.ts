@@ -4,7 +4,7 @@ import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/co
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Observable, Subscription, of } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import {
   RecordAction,
@@ -13,6 +13,7 @@ import {
   RecordFact,
   SmartButton,
   buildRecordForm,
+  patchRecordForm,
   recordPermission,
   recordToInput,
 } from '../../erp-shared';
@@ -55,6 +56,9 @@ export class RecordCardComponent implements OnInit {
   canEdit = false;
   canDelete = false;
 
+  private relatedLoadedFor: string | null = null;
+  private relatedSub?: Subscription;
+
   get createPermission(): string {
     return recordPermission(this.entity, 'Create');
   }
@@ -81,13 +85,29 @@ export class RecordCardComponent implements OnInit {
       .pipe(
         switchMap(params => {
           const id = params.get('id');
-          this.id = !id || id === NEW_RECORD_ID ? null : id;
+          const nextId = !id || id === NEW_RECORD_ID ? null : id;
+          if (nextId !== this.id) {
+            this.form = null;
+            this.record = null;
+            this.related = [];
+            this.relatedLoadedFor = null;
+          }
+          this.id = nextId;
+          if (this.id) {
+            const preview = this.getPreviewRecord(this.id);
+            if (preview) {
+              this.show(preview);
+            }
+          }
           return this.load();
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(record => {
         if (record) {
+          if (this.id) {
+            this.registry.cacheRecord(this.entity, record);
+          }
           this.show(record);
         }
       });
@@ -124,18 +144,19 @@ export class RecordCardComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(saved => {
+        this.registry.cacheRecord(this.entity, saved);
         this.toaster.success('Erp::SavedSuccessfully');
         if (this.isNew) {
           // The URL now names the record, so a refresh reopens it.
           this.router.navigate([...this.listRoute, saved.id], { replaceUrl: true });
         } else {
-          this.show(saved);
+          this.show(saved, true);
         }
       });
   }
 
   discard(): void {
-    this.show(this.record ?? this.entity.newRecord());
+    this.show(this.record ?? this.entity.newRecord(), true);
   }
 
   newRecord(): void {
@@ -162,6 +183,7 @@ export class RecordCardComponent implements OnInit {
             takeUntilDestroyed(this.destroyRef),
           )
           .subscribe(() => {
+            this.registry.invalidate(this.entity.key, id);
             this.toaster.success('Erp::DeletedSuccessfully');
             this.router.navigate(this.listRoute);
           });
@@ -193,8 +215,10 @@ export class RecordCardComponent implements OnInit {
       )
       .subscribe(reloaded => {
         if (reloaded) {
+          this.registry.cacheRecord(this.entity, reloaded);
           this.toaster.success('Erp::SavedSuccessfully');
-          this.show(reloaded);
+          this.relatedLoadedFor = null;
+          this.show(reloaded, true);
         }
       });
   }
@@ -208,6 +232,8 @@ export class RecordCardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(record => {
         if (!record) return;
+        this.registry.cacheRecord(this.entity, record);
+        this.relatedLoadedFor = null;
         if (this.form?.dirty) {
           this.record = record;
           this.updateComputedProperties();
@@ -255,22 +281,47 @@ export class RecordCardComponent implements OnInit {
     );
   }
 
-  private show(record: Record<string, any>): void {
+  private getPreviewRecord(id: string): Record<string, any> | null {
+    const stateRecord = typeof history !== 'undefined' ? (history.state?.record as Record<string, any> | undefined) : undefined;
+    if (stateRecord && stateRecord['id'] === id) {
+      return stateRecord;
+    }
+    return this.registry.getCachedRecord(this.entity.key, id);
+  }
+
+  private show(record: Record<string, any>, forceRebuild = false): void {
     this.record = record;
     this.canEdit = this.permissions.getGrantedPolicy(
       recordPermission(this.entity, this.isNew ? 'Create' : 'Update'),
     );
     this.canDelete =
       !this.isNew && this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Delete'));
-    this.form = buildRecordForm(this.entity, record, {
-      isNew: this.isNew,
-      readonly: !this.canEdit,
-    });
+
+    if (this.form && !forceRebuild && !this.form.dirty) {
+      patchRecordForm(this.entity, this.form, record, {
+        isNew: this.isNew,
+        readonly: !this.canEdit,
+      });
+    } else {
+      this.form = buildRecordForm(this.entity, record, {
+        isNew: this.isNew,
+        readonly: !this.canEdit,
+      });
+    }
     this.updateComputedProperties();
 
-    this.related = [];
-    if (!this.isNew && this.entity.related) {
-      this.entity
+    if (this.isNew || !this.entity.related) {
+      this.related = [];
+      this.relatedLoadedFor = null;
+      return;
+    }
+
+    const relatedKey = `${this.entity.key}:${this.id ?? record['id'] ?? ''}`;
+    if (this.relatedLoadedFor !== relatedKey) {
+      this.relatedLoadedFor = relatedKey;
+      this.related = [];
+      this.relatedSub?.unsubscribe();
+      this.relatedSub = this.entity
         .related(record)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(buttons => (this.related = buttons));

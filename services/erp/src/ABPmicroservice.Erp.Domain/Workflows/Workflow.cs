@@ -1,15 +1,16 @@
 using ABPmicroservice.Erp.Companies;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
 namespace ABPmicroservice.Erp.Workflows;
 
 /// <summary>
-/// Approval workflow definition., narrowed to the
-/// approval templates ("Sales Invoice Approval Workflow" and its siblings): the event condition
-/// is an amount threshold and the response is "Create an approval request" with an approver limit type.
+/// Approval workflow definition: the event condition is an amount threshold (plus optional
+/// condition rules on the trigger step) and the response is "Create an approval request" for
+/// the approvers the approver type and limit type select.
 /// </summary>
 public class Workflow : CompanyAggregateRoot
 {
@@ -28,6 +29,22 @@ public class Workflow : CompanyAggregateRoot
 
     /// <summary>Days an approver has to respond; sets the due date of each request. Zero means none.</summary>
     public int DueDays { get; private set; }
+
+    public WorkflowApproverType ApproverType { get; private set; }
+
+    /// <summary>The group whose members approve, when the approver type is a workflow user group.</summary>
+    public string WorkflowUserGroupCode { get; private set; }
+
+    /// <summary>The one approver, when the limit type is a specific approver.</summary>
+    public Guid? SpecificApproverUserId { get; private set; }
+
+    public string SpecificApproverUserName { get; private set; }
+
+    /// <summary>
+    /// An open request nobody has acted on for this many days is delegated automatically to the
+    /// approver's substitute (or their own approver). Zero means never.
+    /// </summary>
+    public int DelegateAfterDays { get; private set; }
 
     public Collection<WorkflowStep> Steps { get; private set; }
 
@@ -65,10 +82,77 @@ public class Workflow : CompanyAggregateRoot
     {
         Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
         DocumentKind = documentKind;
-        Category = documentKind == ApprovalDocumentKind.SalesDocument ? "SALES" : "PURCH";
+        Category = documentKind switch
+        {
+            ApprovalDocumentKind.SalesDocument => "SALES",
+            ApprovalDocumentKind.PaymentVoucher => "FINANCE",
+            ApprovalDocumentKind.PurchaseRequisition or ApprovalDocumentKind.Tender => "PROCUREMENT",
+            _ => "PURCH",
+        };
         MinimumAmount = Check.Range(minimumAmount, nameof(minimumAmount), 0m, decimal.MaxValue);
         ApproverLimitType = approverLimitType;
         DueDays = Check.Range(dueDays, nameof(dueDays), 0, 3650);
+    }
+
+    /// <summary>
+    /// Who the requests go to. A group needs its code, a specific approver needs the user;
+    /// whatever the other choice would need is cleared. Call after <see cref="Update"/>, which sets the limit type.
+    /// </summary>
+    public void SetApprovers(
+        WorkflowApproverType approverType,
+        string workflowUserGroupCode,
+        Guid? specificApproverUserId,
+        string specificApproverUserName
+    )
+    {
+        ApproverType = approverType;
+
+        if (approverType == WorkflowApproverType.WorkflowUserGroup)
+        {
+            if (workflowUserGroupCode.IsNullOrWhiteSpace())
+            {
+                throw new BusinessException(ErpErrorCodes.Approvals.WorkflowUserGroupRequired);
+            }
+
+            WorkflowUserGroupCode = CodeTableEntity.NormalizeCode(
+                Check.Length(workflowUserGroupCode, nameof(workflowUserGroupCode), ErpDomainConsts.MaxCodeLength));
+        }
+        else
+        {
+            WorkflowUserGroupCode = null;
+        }
+
+        if (approverType == WorkflowApproverType.Approver && ApproverLimitType == ApproverLimitType.SpecificApprover)
+        {
+            if (!specificApproverUserId.HasValue)
+            {
+                throw new BusinessException(ErpErrorCodes.Approvals.SpecificApproverRequired);
+            }
+
+            SpecificApproverUserId = specificApproverUserId;
+            SpecificApproverUserName = Check.Length(specificApproverUserName, nameof(specificApproverUserName), ErpDomainConsts.MaxUserNameLength);
+        }
+        else
+        {
+            SpecificApproverUserId = null;
+            SpecificApproverUserName = null;
+        }
+    }
+
+    public void SetDelegateAfterDays(int delegateAfterDays)
+    {
+        DelegateAfterDays = Check.Range(delegateAfterDays, nameof(delegateAfterDays), 0, 365);
+    }
+
+    /// <summary>A disabled duplicate under a new code, steps included.</summary>
+    public Workflow CopyAs(Guid id, string code, string description, Func<Guid> newId)
+    {
+        var copy = new Workflow(id, code, description.IsNullOrWhiteSpace() ? Description : description,
+            DocumentKind, MinimumAmount, ApproverLimitType, DueDays);
+        copy.SetApprovers(ApproverType, WorkflowUserGroupCode, SpecificApproverUserId, SpecificApproverUserName);
+        copy.SetDelegateAfterDays(DelegateAfterDays);
+        copy.SetSteps(Steps.OrderBy(s => s.SequenceNo).Select(s => (s.EventName, s.ConditionRule, s.ResponseAction)), newId);
+        return copy;
     }
 
     public void Enable() => Enabled = true;
@@ -83,16 +167,48 @@ public class Workflow : CompanyAggregateRoot
     {
         Steps.Clear();
 
-        var document = DocumentKind == ApprovalDocumentKind.SalesDocument ? "sales document" : "purchase document";
         var condition = MinimumAmount > 0m ? $"Amount >= {MinimumAmount:0.##}" : "Always";
 
-        AddStep(newId, $"Approval of a {document} is requested.", condition,
-            $"Set the document status to Pending Approval. Create an approval request ({ApproverLimitType}). Send the first request.");
+        AddStep(newId, RequestedEventName(DocumentKind), condition,
+            $"Set the document status to Pending Approval. Create an approval request ({DescribeApprovers()}). Send the first request.");
         AddStep(newId, "An approval request is approved.", "Pending approvals: more than 0", "Send the next approval request.");
         AddStep(newId, "An approval request is approved.", "Pending approvals: 0", "Release the document.");
         AddStep(newId, "An approval request is rejected.", "Always", "Reject all approval requests. Reopen the document.");
         AddStep(newId, "An approval request is canceled.", "Always", "Cancel all approval requests. Reopen the document.");
         AddStep(newId, "An approval request is delegated.", "Always", "Send the request to the substitute, or to the approver's approver.");
+
+        if (DelegateAfterDays > 0)
+        {
+            AddStep(newId, "An approval request is not acted on.", $"Open for {DelegateAfterDays} day(s)",
+                "Delegate the request to the substitute, or to the approver's approver.");
+        }
+    }
+
+    /// <summary>The trigger event of a document kind, as the first step shows it.</summary>
+    public static string RequestedEventName(ApprovalDocumentKind kind)
+    {
+        var document = kind switch
+        {
+            ApprovalDocumentKind.SalesDocument => "sales document",
+            ApprovalDocumentKind.PaymentVoucher => "payment voucher",
+            ApprovalDocumentKind.PurchaseRequisition => "purchase requisition",
+            ApprovalDocumentKind.Tender => "tender",
+            _ => "purchase document",
+        };
+
+        return $"Approval of a {document} is requested.";
+    }
+
+    private string DescribeApprovers()
+    {
+        if (ApproverType == WorkflowApproverType.WorkflowUserGroup)
+        {
+            return $"workflow user group {WorkflowUserGroupCode}";
+        }
+
+        return ApproverLimitType == ApproverLimitType.SpecificApprover
+            ? $"specific approver {SpecificApproverUserName}"
+            : ApproverLimitType.ToString();
     }
 
     public void SetSteps(System.Collections.Generic.IEnumerable<(string EventName, string ConditionRule, string ResponseAction)> steps, Func<Guid> newId)
@@ -196,6 +312,9 @@ public class ApprovalEntry : CompanyEntity
     internal void Reject(DateTime now, string comment = null) => SetStatus(ApprovalStatus.Rejected, now, comment);
 
     internal void Cancel(DateTime now) => SetStatus(ApprovalStatus.Canceled, now);
+
+    /// <summary>When the entry was last opened or delegated: what the delegate-after timeout counts from.</summary>
+    public DateTime WaitingSince => LastStatusChangeTime ?? CreationTime;
 
     internal void DelegateTo(Guid approverId, string approverUserName, DateTime now)
     {

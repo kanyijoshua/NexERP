@@ -149,4 +149,43 @@ describe('RoleNavBarComponent', () => {
     const sublinks = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.role-subbar__item'));
     expect(sublinks.map(s => s.textContent?.trim())).toEqual(['Link 2A']);
   });
+
+  it('switches sublinks to the matching area group when clicking a top-level direct link', () => {
+    navigation.profile.set({
+      ...ACCOUNTANT,
+      navigation: [
+        { key: '/erp/customers', displayName: 'Customers', route: '/erp/customers', children: [] },
+        {
+          key: 'finance',
+          displayName: 'Finance',
+          children: [{ key: '/erp/chart-of-accounts', displayName: 'Chart of Accounts', route: '/erp/chart-of-accounts', children: [] }],
+        },
+        {
+          key: 'sales',
+          displayName: 'Sales',
+          children: [
+            { key: '/erp/customers', displayName: 'Customers', route: '/erp/customers', children: [] },
+            { key: '/erp/sales-orders', displayName: 'Sales Orders', route: '/erp/sales-orders', children: [] },
+            {
+              key: 'sales-posted',
+              displayName: 'Sales Documents',
+              route: '/erp/posted-sales-invoices',
+              children: [
+                { key: '/erp/posted-sales-invoices', displayName: 'Posted Sales Invoices', route: '/erp/posted-sales-invoices', children: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const customerLink = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('a.role-bar__item');
+    customerLink?.click();
+    fixture.detectChanges();
+
+    const sublinks = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.role-subbar__item'));
+    expect(sublinks.map(s => s.textContent?.trim())).toEqual(['Customers', 'Sales Orders', 'Sales Documents']);
+    expect(sublinks[2].tagName).toBe('BUTTON');
+  });
 });

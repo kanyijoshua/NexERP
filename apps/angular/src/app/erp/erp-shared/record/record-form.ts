@@ -45,6 +45,44 @@ export function buildRecordForm(
   return new FormGroup(controls);
 }
 
+/**
+ * Updates an existing record form in-place without recreating controls or triggering unnecessary
+ * lookup re-resolutions for unchanged values.
+ */
+export function patchRecordForm(
+  entity: RecordEntity,
+  form: FormGroup,
+  record: Record<string, any> | null | undefined,
+  options: RecordFormOptions,
+): void {
+  for (const field of editableFields(entity)) {
+    const control = form.get(field.field);
+    if (!control) {
+      continue;
+    }
+    const raw = record?.[field.field];
+    const value = field.type === 'date' && typeof raw === 'string' ? raw.substring(0, 10) : raw;
+    const nextValue = value === undefined ? defaultValue(field) : value;
+    if (control.value !== nextValue) {
+      control.setValue(nextValue, { emitEvent: false });
+    }
+    const shouldDisable = !!options.readonly || (!!field.createOnly && !options.isNew);
+    if (shouldDisable && control.enabled) {
+      control.disable({ emitEvent: false });
+    } else if (!shouldDisable && control.disabled) {
+      control.enable({ emitEvent: false });
+    }
+    if (field.lookupDisplayField) {
+      const displayControl = form.get(field.lookupDisplayField);
+      const nextDisplay = record?.[field.lookupDisplayField] ?? null;
+      if (displayControl && displayControl.value !== nextDisplay) {
+        displayControl.setValue(nextDisplay, { emitEvent: false });
+      }
+    }
+  }
+  form.markAsPristine();
+}
+
 /** The sections that have at least one field to show, in declaration order. */
 export function visibleSections(entity: RecordEntity, quick: boolean): RecordSection[] {
   const fallback = entity.sections[0]?.key;

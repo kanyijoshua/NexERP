@@ -1,6 +1,7 @@
 import { PagedResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { finalize, map, shareReplay } from 'rxjs/operators';
 import { DocumentLineOption, LookupItem, SmartButton } from '../models';
 import { ErpTableColumn } from '../table/erp-table.models';
 
@@ -248,10 +249,18 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
  */
 @Injectable({ providedIn: 'root' })
 export class RecordEntityRegistry {
+  private static readonly CACHE_TTL_MS = 30_000;
+
   private readonly entities = new Map<string, RecordEntity>();
+  private readonly recordCache = new Map<string, Map<string, { dto: any; item: LookupItem; expiresAt: number }>>();
+  private readonly codeToIdCache = new Map<string, Map<string, string>>();
+  private readonly inFlightGet = new Map<string, Observable<LookupItem | null>>();
 
   register(...entities: RecordEntity[]): void {
-    entities.forEach(entity => this.entities.set(entity.key, entity));
+    entities.forEach(entity => {
+      this.entities.set(entity.key, entity);
+      this.invalidate(entity.key);
+    });
   }
 
   find(key: string | null | undefined): RecordEntity | undefined {
@@ -268,6 +277,124 @@ export class RecordEntityRegistry {
 
   get all(): RecordEntity[] {
     return [...this.entities.values()];
+  }
+
+  /** Caches a loaded DTO and its lookup item representation for instant card/lookup resolution. */
+  cacheRecord(entity: RecordEntity, dto: any): LookupItem | null {
+    if (!dto || typeof dto !== 'object') {
+      return null;
+    }
+    const item: LookupItem = { ...entity.toItem(dto), data: dto };
+    const id = (dto.id ?? item.id) as string | undefined;
+    if (id) {
+      let bucket = this.recordCache.get(entity.key);
+      if (!bucket) {
+        bucket = new Map();
+        this.recordCache.set(entity.key, bucket);
+      }
+      bucket.set(id, {
+        dto,
+        item,
+        expiresAt: Date.now() + RecordEntityRegistry.CACHE_TTL_MS,
+      });
+      if (item.code) {
+        let codeMap = this.codeToIdCache.get(entity.key);
+        if (!codeMap) {
+          codeMap = new Map();
+          this.codeToIdCache.set(entity.key, codeMap);
+        }
+        codeMap.set(item.code.toLowerCase(), id);
+      }
+    }
+    return item;
+  }
+
+  cacheRecords(entity: RecordEntity, dtos: readonly any[] | null | undefined): void {
+    if (!dtos?.length) {
+      return;
+    }
+    for (const dto of dtos) {
+      this.cacheRecord(entity, dto);
+    }
+  }
+
+  getCachedRecord(entityKey: string | null | undefined, id: string | null | undefined): any | null {
+    if (!entityKey || !id) {
+      return null;
+    }
+    const entry = this.recordCache.get(entityKey)?.get(id);
+    if (!entry) {
+      return null;
+    }
+    if (entry.expiresAt <= Date.now()) {
+      this.recordCache.get(entityKey)?.delete(id);
+      return null;
+    }
+    return entry.dto;
+  }
+
+  getCachedItem(entityKey: string | null | undefined, id: string | null | undefined): LookupItem | null {
+    if (!entityKey || !id) {
+      return null;
+    }
+    const entry = this.recordCache.get(entityKey)?.get(id);
+    if (!entry) {
+      return null;
+    }
+    if (entry.expiresAt <= Date.now()) {
+      this.recordCache.get(entityKey)?.delete(id);
+      return null;
+    }
+    return entry.item;
+  }
+
+  getCachedIdByCode(entityKey: string | null | undefined, code: string | null | undefined): string | null {
+    if (!entityKey || !code) {
+      return null;
+    }
+    const id = this.codeToIdCache.get(entityKey)?.get(code.toLowerCase());
+    if (!id) {
+      return null;
+    }
+    return this.getCachedRecord(entityKey, id) ? id : null;
+  }
+
+  invalidate(entityKey: string, id?: string | null): void {
+    if (id) {
+      this.recordCache.get(entityKey)?.delete(id);
+    } else {
+      this.recordCache.delete(entityKey);
+      this.codeToIdCache.delete(entityKey);
+    }
+  }
+
+  /**
+   * Resolves an entity record by ID into a `LookupItem`, serving from cache when available
+   * and deduplicating concurrent in-flight requests for the same ID.
+   */
+  resolveById(entity: RecordEntity, id: string): Observable<LookupItem | null> {
+    const cached = this.getCachedItem(entity.key, id);
+    if (cached) {
+      return of(cached);
+    }
+    const inflightKey = `${entity.key}:${id}`;
+    const existing = this.inFlightGet.get(inflightKey);
+    if (existing) {
+      return existing;
+    }
+    let completed = false;
+    const request$ = entity.get(id).pipe(
+      map(dto => (dto ? this.cacheRecord(entity, dto) : null)),
+      finalize(() => {
+        completed = true;
+        this.inFlightGet.delete(inflightKey);
+      }),
+      shareReplay(1),
+    );
+    if (!completed) {
+      this.inFlightGet.set(inflightKey, request$);
+    }
+    return request$;
   }
 }
 

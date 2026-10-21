@@ -22,7 +22,7 @@
           </select>
         </div>
       </div>
-      <div class="row align-items-center">
+      <div class="row align-items-center mb-2">
         <label class="col-sm-5 col-form-label" for="hr-base-unit">{{ 'Erp::BaseUnitOfMeasureHr' | abpLocalization }}</label>
         <div class="col-sm-7">
           <select id="hr-base-unit" class="form-select form-select-sm" formControlName="baseUnitOfMeasure">
@@ -31,6 +31,13 @@
               <option [ngValue]="u.code">{{ u.code }} — {{ u.description }}</option>
             }
           </select>
+        </div>
+      </div>
+      <div class="row align-items-center">
+        <label class="col-sm-5 col-form-label" for="hr-base-calendar">{{ 'Erp::BaseCalendarCode' | abpLocalization }}</label>
+        <div class="col-sm-7">
+          <erp-lookup inputId="hr-base-calendar" formControlName="baseCalendarCode" entity="baseCalendar"></erp-lookup>
+          <div class="form-text">{{ 'Erp::BaseCalendarCodeHelp' | abpLocalization }}</div>
         </div>
       </div>
     </div>

@@ -36,6 +36,13 @@ public class Dimension : CompanyAggregateRoot
         Name = Check.NotNullOrWhiteSpace(name, nameof(name), ErpDomainConsts.MaxNameLength);
     }
 
+    public void SetDescription(string description)
+    {
+        Description = Check.Length(description, nameof(description), ErpDomainConsts.MaxDescriptionLength);
+    }
+
+    public void SetBlocked(bool blocked) => Blocked = blocked;
+
     public void Block() => Blocked = true;
     public void Unblock() => Blocked = false;
 }

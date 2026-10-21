@@ -34,6 +34,17 @@ public class GeneralLedgerSetup_Tests
             .Code.ShouldBe(ErpErrorCodes.GeneralLedger.InvalidRoundingPrecision);
         Should.Throw<BusinessException>(() => setup.SetGlobalDimensions("area", "AREA"))
             .Code.ShouldBe(ErpErrorCodes.GeneralLedger.SameGlobalDimensions);
+
+        setup.SetGlobalDimensions("department", "project");
+        setup.SetShortcutDimensions("area", "customergroup", "businessgroup", "salesperson", "purchaser", "campaign");
+        setup.GetShortcutDimensionCodes().ShouldBe(
+            new[] { "DEPARTMENT", "PROJECT", "AREA", "CUSTOMERGROUP", "BUSINESSGROUP", "SALESPERSON", "PURCHASER", "CAMPAIGN" }
+        );
+        setup.GetShortcutDimensionCode(8).ShouldBe("CAMPAIGN");
+
+        // Any duplicate across the 8 slots (including Global 1/2 vs Shortcut 3..8) is refused.
+        Should.Throw<BusinessException>(() => setup.SetShortcutDimensions("department", null, null, null, null, null))
+            .Code.ShouldBe(ErpErrorCodes.GeneralLedger.SameGlobalDimensions);
     }
 
     [Fact]

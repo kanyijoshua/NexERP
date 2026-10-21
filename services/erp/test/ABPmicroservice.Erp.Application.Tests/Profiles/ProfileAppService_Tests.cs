@@ -181,6 +181,11 @@ public class ProfileAppService_Tests : ErpApplicationTestBase
             {
                 l[menu.NameKey].ResourceNotFound.ShouldBeFalse(menu.NameKey);
 
+                foreach (var subMenu in menu.SubMenus)
+                {
+                    l[subMenu.NameKey].ResourceNotFound.ShouldBeFalse(subMenu.NameKey);
+                }
+
                 foreach (var link in menu.Link != null ? [menu.Link] : menu.Links)
                 {
                     l[link.NameKey].ResourceNotFound.ShouldBeFalse(link.NameKey);

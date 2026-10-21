@@ -97,6 +97,13 @@ export interface CreateUpdateGenJournalLineDto {
   postingGroup?: string;
   shortcutDimension1Code?: string;
   shortcutDimension2Code?: string;
+  shortcutDimension3Code?: string;
+  shortcutDimension4Code?: string;
+  shortcutDimension5Code?: string;
+  shortcutDimension6Code?: string;
+  shortcutDimension7Code?: string;
+  shortcutDimension8Code?: string;
+  dimensionSetId?: string;
   salespersPurchCode?: string;
   sourceCode?: string;
   reasonCode?: string;
@@ -256,6 +263,13 @@ export interface GenJournalLineDto extends EntityDto<string> {
   postingGroup?: string;
   shortcutDimension1Code?: string;
   shortcutDimension2Code?: string;
+  shortcutDimension3Code?: string;
+  shortcutDimension4Code?: string;
+  shortcutDimension5Code?: string;
+  shortcutDimension6Code?: string;
+  shortcutDimension7Code?: string;
+  shortcutDimension8Code?: string;
+  dimensionSetId?: string;
   salespersPurchCode?: string;
   sourceCode?: string;
   reasonCode?: string;

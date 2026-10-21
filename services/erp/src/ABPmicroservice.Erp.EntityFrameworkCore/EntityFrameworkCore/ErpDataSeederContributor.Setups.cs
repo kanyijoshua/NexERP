@@ -246,10 +246,29 @@ public partial class ErpDataSeederContributor
             await Repo<HumanResourceUnitOfMeasure>().InsertAsync(new HumanResourceUnitOfMeasure(NewId(), "HOUR", "Hour", 0.125m));
         }
 
+        if (await IsEmptyAsync<BaseCalendar>())
+        {
+            await Repo<BaseCalendar>().InsertAsync(new BaseCalendar(NewId(), "STANDARD", "Standard working week"));
+            foreach (var day in new[] { CalendarWeekday.Saturday, CalendarWeekday.Sunday })
+            {
+                var weekend = new BaseCalendarChange(NewId(), "STANDARD");
+                weekend.Set(CalendarRecurringSystem.WeeklyRecurring, null, day, "Weekend", true);
+                await Repo<BaseCalendarChange>().InsertAsync(weekend);
+            }
+
+            foreach (var (month, dayOfMonth, name) in new[] { (1, 1, "New Year's Day"), (12, 25, "Christmas Day"), (12, 26, "Boxing Day") })
+            {
+                var holiday = new BaseCalendarChange(NewId(), "STANDARD");
+                holiday.Set(CalendarRecurringSystem.AnnualRecurring, new DateTime(2026, month, dayOfMonth), CalendarWeekday.None, name, true);
+                await Repo<BaseCalendarChange>().InsertAsync(holiday);
+            }
+        }
+
         if (await IsEmptyAsync<HumanResourcesSetup>())
         {
             var setup = new HumanResourcesSetup(NewId());
             setup.Set("EMP", "DAY");
+            setup.SetBaseCalendar("STANDARD");
             await Repo<HumanResourcesSetup>().InsertAsync(setup);
         }
 

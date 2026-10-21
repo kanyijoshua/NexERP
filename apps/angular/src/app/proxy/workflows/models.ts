@@ -2,6 +2,7 @@ import type { EntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { ApprovalDocumentKind } from './approval-document-kind.enum';
 import type { ApprovalStatus } from './approval-status.enum';
 import type { ApproverLimitType } from './approver-limit-type.enum';
+import type { WorkflowApproverType } from './workflow-approver-type.enum';
 
 export interface ApprovalCommentInput {
   comment?: string;
@@ -66,7 +67,34 @@ export interface CreateUpdateWorkflowDto {
   minimumAmount: number;
   approverLimitType: ApproverLimitType;
   dueDays: number;
+  approverType: WorkflowApproverType;
+  workflowUserGroupCode?: string;
+  specificApproverUserId?: string;
+  delegateAfterDays: number;
   steps?: CreateUpdateWorkflowStepDto[];
+}
+
+export interface CopyWorkflowDto {
+  code: string;
+  description?: string;
+}
+
+export interface NewWorkflowFromTemplateDto {
+  templateCode: string;
+  code: string;
+  description?: string;
+  workflowUserGroupCode?: string;
+}
+
+export interface WorkflowTemplateDto {
+  code?: string;
+  description?: string;
+  documentKind: ApprovalDocumentKind;
+  approverLimitType: ApproverLimitType;
+  approverType: WorkflowApproverType;
+  minimumAmount: number;
+  dueDays: number;
+  delegateAfterDays: number;
 }
 
 export interface GetApprovalEntriesInput extends PagedAndSortedResultRequestDto {
@@ -77,6 +105,7 @@ export interface GetApprovalEntriesInput extends PagedAndSortedResultRequestDto 
   onlyMine: boolean;
   sentByMe: boolean;
   documentId?: string;
+  onlyOverdue?: boolean;
 }
 
 export interface WorkflowDto extends EntityDto<string> {
@@ -88,6 +117,11 @@ export interface WorkflowDto extends EntityDto<string> {
   minimumAmount: number;
   approverLimitType: ApproverLimitType;
   dueDays: number;
+  approverType: WorkflowApproverType;
+  workflowUserGroupCode?: string;
+  specificApproverUserId?: string;
+  specificApproverUserName?: string;
+  delegateAfterDays: number;
   steps: WorkflowStepDto[];
 }
 

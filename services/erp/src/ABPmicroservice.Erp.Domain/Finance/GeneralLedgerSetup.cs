@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Companies;
 using Volo.Abp;
@@ -13,6 +15,7 @@ namespace ABPmicroservice.Erp.Finance;
 /// </summary>
 public class GeneralLedgerSetup : CompanyEntity
 {
+    public const int MaxShortcutDimensions = 8;
     public const decimal DefaultAmountRoundingPrecision = 0.01m;
     public const decimal DefaultUnitAmountRoundingPrecision = 0.00001m;
 
@@ -229,6 +232,69 @@ public class GeneralLedgerSetup : CompanyEntity
 
         GlobalDimension1Code = first;
         GlobalDimension2Code = second;
+        EnsureDistinctConfiguredDimensions();
+    }
+
+    /// <summary>
+    /// Sets Shortcut Dimensions 3 through 8 (Shortcut Dimensions 1 and 2 are the Global Dimensions 1 and 2).
+    /// Ensures no dimension code is assigned to more than one of the 8 slots.
+    /// </summary>
+    public void SetShortcutDimensions(
+        string shortcutDimension3Code,
+        string shortcutDimension4Code,
+        string shortcutDimension5Code,
+        string shortcutDimension6Code,
+        string shortcutDimension7Code,
+        string shortcutDimension8Code
+    )
+    {
+        ShortcutDimension3Code = Dimension(shortcutDimension3Code, nameof(shortcutDimension3Code));
+        ShortcutDimension4Code = Dimension(shortcutDimension4Code, nameof(shortcutDimension4Code));
+        ShortcutDimension5Code = Dimension(shortcutDimension5Code, nameof(shortcutDimension5Code));
+        ShortcutDimension6Code = Dimension(shortcutDimension6Code, nameof(shortcutDimension6Code));
+        ShortcutDimension7Code = Dimension(shortcutDimension7Code, nameof(shortcutDimension7Code));
+        ShortcutDimension8Code = Dimension(shortcutDimension8Code, nameof(shortcutDimension8Code));
+        EnsureDistinctConfiguredDimensions();
+    }
+
+    /// <summary>
+    /// Returns the 8 configured dimension codes in slot order (1..8), where slots 1 and 2 are Global Dimensions 1 and 2,
+    /// and slots 3..8 are Shortcut Dimensions 3..8.
+    /// </summary>
+    public IReadOnlyList<string> GetShortcutDimensionCodes() =>
+        new[]
+        {
+            GlobalDimension1Code,
+            GlobalDimension2Code,
+            ShortcutDimension3Code,
+            ShortcutDimension4Code,
+            ShortcutDimension5Code,
+            ShortcutDimension6Code,
+            ShortcutDimension7Code,
+            ShortcutDimension8Code,
+        };
+
+    /// <summary>Returns the dimension code configured for the 1-based shortcut slot (1..8).</summary>
+    public string GetShortcutDimensionCode(int slotNumber)
+    {
+        if (slotNumber is < 1 or > MaxShortcutDimensions)
+        {
+            throw new ArgumentOutOfRangeException(nameof(slotNumber));
+        }
+
+        return GetShortcutDimensionCodes()[slotNumber - 1];
+    }
+
+    private void EnsureDistinctConfiguredDimensions()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var code in GetShortcutDimensionCodes().Where(c => !c.IsNullOrWhiteSpace()))
+        {
+            if (!seen.Add(code))
+            {
+                throw new BusinessException(ErpErrorCodes.GeneralLedger.SameGlobalDimensions).WithData("code", code);
+            }
+        }
     }
 
     public void SetNumbering(string bankAccountNos)
@@ -270,12 +336,14 @@ public class GeneralLedgerSetup : CompanyEntity
         DateTime? allowDeferralPostingTo
     )
     {
-        ShortcutDimension3Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension3Code, nameof(shortcutDimension3Code), 20));
-        ShortcutDimension4Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension4Code, nameof(shortcutDimension4Code), 20));
-        ShortcutDimension5Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension5Code, nameof(shortcutDimension5Code), 20));
-        ShortcutDimension6Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension6Code, nameof(shortcutDimension6Code), 20));
-        ShortcutDimension7Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension7Code, nameof(shortcutDimension7Code), 20));
-        ShortcutDimension8Code = CodeTableEntity.NormalizeCode(Check.Length(shortcutDimension8Code, nameof(shortcutDimension8Code), 20));
+        SetShortcutDimensions(
+            shortcutDimension3Code,
+            shortcutDimension4Code,
+            shortcutDimension5Code,
+            shortcutDimension6Code,
+            shortcutDimension7Code,
+            shortcutDimension8Code
+        );
         VatTolerancePct = vatTolerancePct;
         ApplnRoundingPrecision = applnRoundingPrecision;
         EmuCurrency = emuCurrency;

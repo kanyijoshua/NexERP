@@ -180,6 +180,13 @@ public class GenJournalLineDto : EntityDto<Guid>
     public string PostingGroup { get; set; }
     public string ShortcutDimension1Code { get; set; }
     public string ShortcutDimension2Code { get; set; }
+    public string ShortcutDimension3Code { get; set; }
+    public string ShortcutDimension4Code { get; set; }
+    public string ShortcutDimension5Code { get; set; }
+    public string ShortcutDimension6Code { get; set; }
+    public string ShortcutDimension7Code { get; set; }
+    public string ShortcutDimension8Code { get; set; }
+    public Guid DimensionSetId { get; set; }
     public string SalespersPurchCode { get; set; }
     public string SourceCode { get; set; }
     public string ReasonCode { get; set; }
@@ -282,6 +289,13 @@ public class CreateUpdateGenJournalLineDto
 
     [StringLength(20)]
     public string ShortcutDimension2Code { get; set; }
+    public string ShortcutDimension3Code { get; set; }
+    public string ShortcutDimension4Code { get; set; }
+    public string ShortcutDimension5Code { get; set; }
+    public string ShortcutDimension6Code { get; set; }
+    public string ShortcutDimension7Code { get; set; }
+    public string ShortcutDimension8Code { get; set; }
+    public Guid DimensionSetId { get; set; }
 
     [StringLength(20)]
     public string SalespersPurchCode { get; set; }

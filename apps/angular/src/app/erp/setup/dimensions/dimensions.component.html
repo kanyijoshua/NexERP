@@ -1,0 +1,192 @@
+<erp-page-toolbar
+  title="Erp::Menu:Dimensions"
+  breadcrumb="Erp::Menu:Setup"
+  icon="fas fa-cubes"
+  [showSearch]="true"
+  permission="Erp.Dimensions.Create"
+  (create)="openCreate()"
+></erp-page-toolbar>
+
+<p class="text-muted">{{ 'Erp::DimensionsHelp' | abpLocalization }}</p>
+
+<erp-table
+  tableId="dimensions"
+  [source]="source"
+  [columns]="columns"
+  [actions]="actions"
+  (codeClick)="openEdit($event)"
+  (rowClick)="openEdit($event)"
+></erp-table>
+
+<abp-modal [(visible)]="isModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ (selected ? 'Erp::EditDimension' : 'Erp::NewDimension') | abpLocalization }}
+      @if (selected) {
+        <span class="text-muted">· {{ selected.code }}</span>
+      }
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    @if (form) {
+      <form [formGroup]="form" (ngSubmit)="save()" validateOnSubmit>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="dim-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+            <input
+              id="dim-code"
+              type="text"
+              class="form-control text-uppercase"
+              formControlName="code"
+              autofocus
+            />
+          </div>
+          <div class="col-md-8">
+            <label class="form-label" for="dim-name">{{ 'Erp::Name' | abpLocalization }} *</label>
+            <input id="dim-name" type="text" class="form-control" formControlName="name" />
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="dim-description">{{ 'Erp::Description' | abpLocalization }}</label>
+            <input id="dim-description" type="text" class="form-control" formControlName="description" />
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input id="dim-blocked" type="checkbox" class="form-check-input" formControlName="blocked" />
+              <label class="form-check-label" for="dim-blocked">{{ 'Erp::Blocked' | abpLocalization }}</label>
+            </div>
+          </div>
+        </div>
+      </form>
+    }
+  </ng-template>
+
+  <ng-template #abpFooter>
+    @if (selected) {
+      <button
+        type="button"
+        class="btn btn-outline-primary me-auto"
+        (click)="isModalOpen = false; openValues(selected)"
+      >
+        <i class="fas fa-list-ul me-1"></i>{{ 'Erp::DimensionValues' | abpLocalization }}
+      </button>
+    }
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="form?.invalid" (click)="save()">
+      {{ 'Erp::Save' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isValuesModalOpen" [busy]="isValuesBusy" [options]="{ size: 'lg' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title">
+      {{ 'Erp::DimensionValues' | abpLocalization }}
+      @if (activeDimension) {
+        <span class="text-muted">· {{ activeDimension.code }} ({{ activeDimension.name }})</span>
+      }
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form
+      *abpPermission="editingValue ? 'Erp.Dimensions.Update' : 'Erp.Dimensions.Create'"
+      [formGroup]="valueForm"
+      (ngSubmit)="saveValue()"
+      class="card bg-light border-0 mb-3"
+    >
+      <div class="card-body py-2 px-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small mb-1" for="dv-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+            <input
+              id="dv-code"
+              type="text"
+              class="form-control form-control-sm text-uppercase"
+              formControlName="code"
+            />
+          </div>
+          <div class="col-md-5">
+            <label class="form-label small mb-1" for="dv-name">{{ 'Erp::Name' | abpLocalization }} *</label>
+            <input id="dv-name" type="text" class="form-control form-control-sm" formControlName="name" />
+          </div>
+          <div class="col-md-2">
+            <div class="form-check mb-1">
+              <input id="dv-blocked" type="checkbox" class="form-check-input" formControlName="blocked" />
+              <label class="form-check-label small" for="dv-blocked">{{ 'Erp::Blocked' | abpLocalization }}</label>
+            </div>
+          </div>
+          <div class="col-md-2 text-end">
+            <button type="submit" class="btn btn-sm btn-primary me-1" [disabled]="valueForm.invalid || isValuesBusy">
+              <i class="fas" [class.fa-check]="editingValue" [class.fa-plus]="!editingValue"></i>
+              {{ (editingValue ? 'Erp::Save' : 'Erp::New') | abpLocalization }}
+            </button>
+            @if (editingValue) {
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEditValue()">
+                <i class="fas fa-times"></i>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 160px">{{ 'Erp::Code' | abpLocalization }}</th>
+            <th>{{ 'Erp::Name' | abpLocalization }}</th>
+            <th style="width: 110px" class="text-center">{{ 'Erp::Blocked' | abpLocalization }}</th>
+            <th style="width: 110px" class="text-end">{{ 'Erp::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (val of dimensionValues(); track val.id) {
+            <tr>
+              <td class="font-monospace fw-semibold">{{ val.code }}</td>
+              <td>{{ val.name }}</td>
+              <td class="text-center">
+                @if (val.blocked) {
+                  <span class="badge bg-secondary">{{ 'Erp::Yes' | abpLocalization }}</span>
+                } @else {
+                  <span class="text-muted">{{ 'Erp::No' | abpLocalization }}</span>
+                }
+              </td>
+              <td class="text-end">
+                <button
+                  *abpPermission="'Erp.Dimensions.Update'"
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary me-1"
+                  (click)="startEditValue(val)"
+                >
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button
+                  *abpPermission="'Erp.Dimensions.Delete'"
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="removeValue(val)"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                {{ 'Erp::NoRecordsFound' | abpLocalization }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" (click)="isValuesModalOpen = false">
+      {{ 'AbpUi::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

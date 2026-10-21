@@ -86,7 +86,7 @@
         </div>
 
         <div class="erp-record-card__details flex-grow-1 small text-muted my-2">
-          @for (col of getCardColumns(); track col.field) {
+          @for (col of cardColumns; track col.field) {
             @if (row[col.field] !== null && row[col.field] !== undefined && row[col.field] !== '') {
               <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light-subtle">
                 <span class="text-secondary text-truncate me-2">{{ col.labelKey | abpLocalization }}:</span>
@@ -137,7 +137,7 @@
               <i class="fas fa-trash-alt"></i>
             </button>
           </div>
-          <a class="btn btn-link btn-sm text-decoration-none p-0 d-flex align-items-center gap-1 text-primary fw-medium" [routerLink]="cardLink(row)" (click)="$event.stopPropagation()">
+          <a class="btn btn-link btn-sm text-decoration-none p-0 d-flex align-items-center gap-1 text-primary fw-medium" [routerLink]="cardLink(row)" [state]="{ record: row }" (click)="$event.stopPropagation()">
             <span>{{ 'Erp::OpenCard' | abpLocalization }}</span>
             <i class="fas fa-arrow-right small"></i>
           </a>

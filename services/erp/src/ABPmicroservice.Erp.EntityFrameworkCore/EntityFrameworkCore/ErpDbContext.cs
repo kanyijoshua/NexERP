@@ -96,6 +96,8 @@ public partial class ErpDbContext : AbpDbContext<ErpDbContext>
     public DbSet<HumanResourceUnitOfMeasure> HumanResourceUnitsOfMeasure { get; set; }
     public DbSet<EmployeePostingGroup> EmployeePostingGroups { get; set; }
     public DbSet<CauseOfAbsence> CausesOfAbsence { get; set; }
+    public DbSet<BaseCalendar> BaseCalendars { get; set; }
+    public DbSet<BaseCalendarChange> BaseCalendarChanges { get; set; }
     public DbSet<Qualification> Qualifications { get; set; }
     public DbSet<Union> Unions { get; set; }
     public DbSet<EmploymentContract> EmploymentContracts { get; set; }

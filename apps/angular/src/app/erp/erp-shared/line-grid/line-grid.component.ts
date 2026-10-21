@@ -116,6 +116,13 @@ export class LineGridComponent implements AfterViewInit {
     return typeof entity === 'function' ? entity(row) : (entity ?? null);
   }
 
+  lookupDisplayText(row: FormGroup, column: DocumentLineColumn): string | null {
+    if (!column.lookupDisplayField) {
+      return null;
+    }
+    return (row.get(column.lookupDisplayField)?.value as string | null) ?? null;
+  }
+
   isNumeric(column: DocumentLineColumn): boolean {
     return column.type === 'number' || column.type === 'currency';
   }

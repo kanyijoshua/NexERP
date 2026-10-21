@@ -7,6 +7,7 @@ export * from './approval-user-setup.service';
 export * from './approver-limit-type.enum';
 export * from './base-tables.models';
 export * from './models';
+export * from './workflow-approver-type.enum';
 export * from './workflow-user-group-member.service';
 export * from './workflow-user-group.service';
 export * from './workflow.service';

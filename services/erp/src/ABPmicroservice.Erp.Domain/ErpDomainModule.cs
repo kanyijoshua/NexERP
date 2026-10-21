@@ -30,6 +30,7 @@ public class ErpDomainModule : AbpModule
         context.Services.AddTransient<JobQueue.IJobHandler, FixedAssets.CalculateDepreciationJobHandler>();
         context.Services.AddTransient<JobQueue.IJobHandler, Manufacturing.CalculatePlanJobHandler>();
         context.Services.AddTransient<JobQueue.IJobHandler, ServiceManagement.ServiceContractInvoicingJobHandler>();
+        context.Services.AddTransient<JobQueue.IJobHandler, Workflows.DelegateApprovalRequestsJobHandler>();
 
         // The standard report catalog asks for every report at once, and the conventional
         // registrar exposes a class only under the interface that shares its name.

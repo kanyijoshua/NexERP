@@ -24,8 +24,9 @@ public class ApprovalRequestResult
 }
 
 /// <summary>
-/// Runs approval requests, together with the approval responses of the workflow engine: create the approver chain, send, approve,
-/// reject, delegate and cancel, moving the document between Open, Pending Approval and Released.
+/// Runs approval requests, together with the approval responses of the workflow engine: select the approvers
+/// (approver chain, specific approver or workflow user group), send, approve, reject, delegate (also automatically
+/// after the workflow's delegate-after period) and cancel, moving the document between Open, Pending Approval and Released.
 /// </summary>
 public class ApprovalsManager : DomainService
 {
@@ -122,41 +123,40 @@ public class ApprovalsManager : DomainService
             throw new BusinessException(ErpErrorCodes.Approvals.UserNotInApprovalSetup).WithData("user", senderUserId);
         }
 
-        var approvers = BuildApproverChain(workflow.ApproverLimitType, kind, amount, sender, setups);
+        var approvers = await SelectApproversAsync(workflow, kind, amount, sender, setups);
         var now = Clock.Now;
         var dueDate = workflow.DueDays > 0 ? now.Date.AddDays(workflow.DueDays) : (DateTime?)null;
 
         var entries = approvers
-            .Select((approver, index) => new ApprovalEntry(
-                GuidGenerator.Create(), kind, document.Id, document.No, workflow.Code, index + 1,
-                sender.UserId, sender.UserName, approver.UserId, approver.UserName, amount, dueDate))
+            .Select(a => new ApprovalEntry(
+                GuidGenerator.Create(), kind, document.Id, document.No, workflow.Code, a.SequenceNo,
+                sender.UserId, sender.UserName, a.Approver.UserId, a.Approver.UserName, amount, dueDate))
             .ToList();
 
         document.SendForApproval();
 
         // The sender heads the chain only when their own limit covers the amount: nothing to wait for.
-        var autoApproved = approvers.Count == 1 && approvers[0].UserId == sender.UserId;
+        var autoApproved = workflow.ApproverType == WorkflowApproverType.Approver
+            && approvers.Count == 1
+            && approvers[0].Approver.UserId == sender.UserId;
+        var first = OpenFirstSequence(entries, now);
         if (autoApproved)
         {
             entries[0].Approve(now, "Approved automatically: within the sender's own approval limit.");
             document.Release();
-        }
-        else
-        {
-            entries[0].Open(now);
         }
 
         await _entryRepository.InsertManyAsync(entries);
         await UpdateDocumentAsync(kind, document);
         await LogAsync(kind, document, autoApproved
             ? $"{sender.UserName} sent the document for approval; it was within their own limit and was released."
-            : $"{sender.UserName} sent the document for approval to {approvers[0].UserName}.");
+            : $"{sender.UserName} sent the document for approval to {JoinNames(first)}.");
 
         return new ApprovalRequestResult
         {
             AutoApproved = autoApproved,
             ApproverCount = approvers.Count,
-            FirstApproverUserName = approvers[0].UserName,
+            FirstApproverUserName = first[0].ApproverUserName,
         };
     }
 
@@ -174,11 +174,23 @@ public class ApprovalsManager : DomainService
 
         var document = await GetDocumentAsync(entry.DocumentKind, entry.DocumentId);
 
+        // Approvers asked at the same time must all approve before the next sequence is asked.
+        var stillOpen = waiting.Where(e => e.Status == ApprovalStatus.Open).ToList();
+        if (stillOpen.Count > 0)
+        {
+            await LogAsync(entry.DocumentKind, document, $"{entry.ApproverUserName} approved. Still waiting for {JoinNames(stillOpen)}.");
+            return;
+        }
+
         if (waiting.Count > 0)
         {
-            waiting[0].Open(now);
-            await _entryRepository.UpdateAsync(waiting[0]);
-            await LogAsync(entry.DocumentKind, document, $"{entry.ApproverUserName} approved. The request moved on to {waiting[0].ApproverUserName}.");
+            var next = OpenFirstSequence(waiting, now);
+            foreach (var opened in next)
+            {
+                await _entryRepository.UpdateAsync(opened);
+            }
+
+            await LogAsync(entry.DocumentKind, document, $"{entry.ApproverUserName} approved. The request moved on to {JoinNames(next)}.");
             return;
         }
 
@@ -211,12 +223,54 @@ public class ApprovalsManager : DomainService
     {
         var entry = await GetOpenEntryForAsync(entryId, userId);
 
+        if (!await TryDelegateAsync(entry, null))
+        {
+            throw new BusinessException(ErpErrorCodes.Approvals.NoSubstituteOrApprover).WithData("user", entry.ApproverUserName);
+        }
+    }
+
+    /// <summary>
+    /// Delegates every open request whose workflow has a delegate-after period that has run out without
+    /// the approver acting. Requests whose approver has nobody to pass them to stay where they are.
+    /// Returns how many were delegated.
+    /// </summary>
+    public async Task<int> DelegateOverdueRequestsAsync()
+    {
+        var periods = (await _workflowRepository.GetListAsync(w => w.DelegateAfterDays > 0))
+            .ToDictionary(w => w.Code, w => w.DelegateAfterDays);
+        if (periods.Count == 0)
+        {
+            return 0;
+        }
+
+        var now = Clock.Now;
+        var delegated = 0;
+        foreach (var entry in await _entryRepository.GetListAsync(e => e.Status == ApprovalStatus.Open))
+        {
+            if (entry.WorkflowCode == null
+                || !periods.TryGetValue(entry.WorkflowCode, out var days)
+                || entry.WaitingSince.AddDays(days) > now)
+            {
+                continue;
+            }
+
+            if (await TryDelegateAsync(entry, $"No response within {days} day(s)."))
+            {
+                delegated++;
+            }
+        }
+
+        return delegated;
+    }
+
+    private async Task<bool> TryDelegateAsync(ApprovalEntry entry, string reason)
+    {
         var approverSetup = await _userSetupRepository.FirstOrDefaultAsync(s => s.UserId == entry.ApproverId);
         var targetId = approverSetup?.SubstituteUserId ?? approverSetup?.ApproverUserId;
         var target = targetId.HasValue ? await _userSetupRepository.FirstOrDefaultAsync(s => s.UserId == targetId.Value) : null;
         if (target == null)
         {
-            throw new BusinessException(ErpErrorCodes.Approvals.NoSubstituteOrApprover).WithData("user", entry.ApproverUserName);
+            return false;
         }
 
         var from = entry.ApproverUserName;
@@ -224,7 +278,9 @@ public class ApprovalsManager : DomainService
         await _entryRepository.UpdateAsync(entry);
 
         var document = await GetDocumentAsync(entry.DocumentKind, entry.DocumentId);
-        await LogAsync(entry.DocumentKind, document, $"The approval request was delegated from {from} to {target.UserName}.");
+        await LogAsync(entry.DocumentKind, document,
+            $"The approval request was delegated from {from} to {target.UserName}.{(reason == null ? "" : " " + reason)}");
+        return true;
     }
 
     /// <summary>Withdraws a request. Only its sender or an approval administrator may do so.</summary>
@@ -254,6 +310,78 @@ public class ApprovalsManager : DomainService
         await UpdateDocumentAsync(kind, document);
         await LogAsync(kind, document, "The approval request was canceled and the document was reopened.");
     }
+
+    /// <summary>
+    /// The approvers of a request with their sequence numbers. Entries that share a sequence number
+    /// are asked at the same time.
+    /// </summary>
+    private async Task<List<(int SequenceNo, ApprovalUserSetup Approver)>> SelectApproversAsync(
+        Workflow workflow,
+        ApprovalDocumentKind kind,
+        decimal amount,
+        ApprovalUserSetup sender,
+        IReadOnlyDictionary<Guid, ApprovalUserSetup> setups
+    )
+    {
+        if (workflow.ApproverType == WorkflowApproverType.WorkflowUserGroup)
+        {
+            var members = await LazyServiceProvider.LazyGetRequiredService<IRepository<WorkflowUserGroupMember, Guid>>()
+                .GetListAsync(m => m.WorkflowUserGroupCode == workflow.WorkflowUserGroupCode);
+            if (members.Count == 0)
+            {
+                throw new BusinessException(ErpErrorCodes.Approvals.WorkflowUserGroupEmpty).WithData("group", workflow.WorkflowUserGroupCode);
+            }
+
+            // Group members are kept by user name; the approval setup knows the user ids.
+            var byName = setups.Values
+                .GroupBy(s => s.UserName.Trim().ToUpperInvariant())
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var approvers = new List<(int, ApprovalUserSetup)>();
+            foreach (var member in members.OrderBy(m => m.SequenceNo).ThenBy(m => m.UserName))
+            {
+                if (!byName.TryGetValue(member.UserName, out var setup))
+                {
+                    throw new BusinessException(ErpErrorCodes.Approvals.UserNotInApprovalSetup).WithData("user", member.UserName);
+                }
+
+                approvers.Add((member.SequenceNo, setup));
+            }
+
+            return approvers;
+        }
+
+        if (workflow.ApproverLimitType == ApproverLimitType.SpecificApprover)
+        {
+            if (!workflow.SpecificApproverUserId.HasValue || !setups.TryGetValue(workflow.SpecificApproverUserId.Value, out var specific))
+            {
+                throw new BusinessException(ErpErrorCodes.Approvals.UserNotInApprovalSetup)
+                    .WithData("user", workflow.SpecificApproverUserName ?? workflow.SpecificApproverUserId?.ToString());
+            }
+
+            return new List<(int, ApprovalUserSetup)> { (1, specific) };
+        }
+
+        return BuildApproverChain(workflow.ApproverLimitType, kind, amount, sender, setups)
+            .Select((approver, index) => (index + 1, approver))
+            .ToList();
+    }
+
+    /// <summary>Opens every entry of the lowest sequence number and returns them.</summary>
+    private static List<ApprovalEntry> OpenFirstSequence(IReadOnlyCollection<ApprovalEntry> entries, DateTime now)
+    {
+        var sequenceNo = entries.Min(e => e.SequenceNo);
+        var first = entries.Where(e => e.SequenceNo == sequenceNo).ToList();
+        foreach (var entry in first)
+        {
+            entry.Open(now);
+        }
+
+        return first;
+    }
+
+    private static string JoinNames(IEnumerable<ApprovalEntry> entries) =>
+        string.Join(", ", entries.Select(e => e.ApproverUserName));
 
     /// <summary>
     /// Builds the list of approvers, in order: the approver chain, the direct approver, or the

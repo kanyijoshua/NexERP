@@ -5,6 +5,7 @@ import {
   SalesDocumentService,
   SalesDocumentType,
   SalesHeaderDto,
+  SalesLineDto,
 } from '@proxy/sales';
 import { Observable, map } from 'rxjs';
 import { DocumentLineType } from '@proxy/documents';
@@ -12,6 +13,9 @@ import { ItemTrackingSourceType } from '@proxy/inventory';
 import { ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
+  DocumentCardData,
+  DocumentCardField,
+  DocumentCardLine,
   DocumentLineRow,
   DocumentListBase,
   DocumentMode,
@@ -53,6 +57,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
   readonly partyEntity = 'customer';
   readonly externalDocumentNoLabelKey = 'Erp::ExternalDocumentNo';
   readonly itemAmountField = 'unitPrice' as const;
+  readonly cardFields: DocumentCardField[];
 
   constructor(
     private readonly documents: SalesDocumentService,
@@ -71,6 +76,68 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
     this.shipLabelKey = isReturn ? 'Erp::ReceiveReturn' : 'Erp::Ship';
     this.shippedLabelKey = isReturn ? 'Erp::QuantityReturned' : 'Erp::QuantityShipped';
     this.sourceLinesLabelKey = isReturn ? 'Erp::GetReturnReceiptLines' : 'Erp::GetShipmentLines';
+    this.qtyToShipLabelKey = isReturn ? 'Erp::QtyToReceive' : 'Erp::QtyToShip';
+
+    this.cardFields = [
+      { field: 'sellToCustomerNo', labelKey: 'Erp::Customer', type: 'readonly' },
+      { field: 'sellToCustomerName', labelKey: 'Erp::Name', type: 'readonly' },
+      { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date' },
+      { field: 'dueDate', labelKey: 'Erp::DueDate', type: 'date' },
+      ...(this.mode === 'invoice' ? [] : [{ field: 'shipmentDate', labelKey: 'Erp::ShipmentDate', type: 'date' } as DocumentCardField]),
+      { field: 'externalDocumentNo', labelKey: 'Erp::ExternalDocumentNo', type: 'text', maxLength: 35 },
+      { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', entity: 'location' },
+      { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'lookup', entity: 'paymentTerms' },
+      { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', entity: 'currency' },
+    ];
+  }
+
+  protected loadDocument(id: string): Observable<DocumentCardData> {
+    return this.documents.get(id) as unknown as Observable<DocumentCardData>;
+  }
+
+  protected updateDocument(id: string, input: Record<string, unknown>): Observable<unknown> {
+    return this.documents.update(id, input as never);
+  }
+
+  protected toCardLine(raw: Record<string, unknown>): DocumentCardLine {
+    const l = raw as unknown as SalesLineDto;
+    return {
+      id: l.id ?? null,
+      type: l.type,
+      no: l.no ?? '',
+      description: l.description ?? '',
+      locationCode: l.locationCode ?? null,
+      quantity: l.quantity,
+      unitOfMeasureCode: l.unitOfMeasureCode ?? null,
+      unitAmount: l.unitPrice,
+      lineDiscountPercent: l.lineDiscountPercent,
+      lineAmount: l.lineAmount,
+      vatPercent: l.vatPercent,
+      qtyToShip: l.qtyToShip,
+      quantityShipped: l.quantityShipped,
+      qtyToInvoice: l.qtyToInvoice,
+      quantityInvoiced: l.quantityInvoiced,
+    };
+  }
+
+  protected fromCardLine(l: DocumentCardLine, original: Record<string, unknown> | undefined): Record<string, unknown> {
+    // Quantities to post only for saved lines: a new line starts with everything outstanding.
+    const toPost = this.isOrderMode && l.id ? { qtyToShip: Number(l.qtyToShip) || 0, qtyToInvoice: Number(l.qtyToInvoice) || 0 } : {};
+    return {
+      ...(original ?? {}),
+      id: l.id ?? undefined,
+      type: l.type,
+      no: l.no,
+      description: l.description,
+      quantity: Number(l.quantity) || 0,
+      unitPrice: Number(l.unitAmount) || 0,
+      lineDiscountPercent: Number(l.lineDiscountPercent) || 0,
+      unitOfMeasureCode: l.unitOfMeasureCode || undefined,
+      locationCode: l.locationCode || undefined,
+      qtyToShip: undefined,
+      qtyToInvoice: undefined,
+      ...toPost,
+    };
   }
 
   protected getList = (query: ErpTableQuery) =>

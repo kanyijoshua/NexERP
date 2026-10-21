@@ -168,7 +168,13 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
     return term =>
       entity
         .getList({ filter: term, skipCount: 0, maxResultCount: this.dropdownLimit + 1 })
-        .pipe(map(result => (result.items ?? []).map(dto => this.toItem(entity, dto))));
+        .pipe(
+          map(result => {
+            const items = result.items ?? [];
+            this.registry.cacheRecords(entity, items);
+            return items.map(dto => this.toItem(entity, dto));
+          }),
+        );
   }
 
   // ---- ControlValueAccessor -------------------------------------------------------------
@@ -259,8 +265,10 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
           return;
         }
         if (result.deleted) {
+          this.registry.invalidate(entity.key, (result.record as { id?: string } | null)?.id);
           this.clear();
         } else {
+          this.registry.cacheRecord(entity, result.record);
           this.refresh(this.toItem(entity, result.record));
         }
         this.cdr.markForCheck();
@@ -290,6 +298,7 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
     this.actionSubscription?.unsubscribe();
     this.actionSubscription = record$.subscribe(record => {
       if (record) {
+        this.registry.cacheRecord(entity, record);
         this.select(this.toItem(entity, record));
       }
       this.inputRef.nativeElement.focus();
@@ -376,7 +385,7 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
 
   private readonly resolveByEntity = (id: string): Observable<LookupItem | null> => {
     const entity = this.recordEntity;
-    return entity ? entity.get(id).pipe(map(dto => this.toItem(entity, dto))) : of(null);
+    return entity ? this.registry.resolveById(entity, id) : of(null);
   };
 
   /** The id of the current value; a code value is looked up by its code. */
@@ -387,10 +396,16 @@ export class LookupComponent implements ControlValueAccessor, OnDestroy {
     if (this.selectedItem?.id) {
       return of(this.selectedItem.id);
     }
+    const cachedId = this.registry.getCachedIdByCode(entity.key, this.value);
+    if (cachedId) {
+      return of(cachedId);
+    }
     const code = (this.value ?? '').toLowerCase();
     return entity.getList({ filter: this.value ?? '', skipCount: 0, maxResultCount: 20 }).pipe(
       map(result => {
-        const dto = (result.items ?? []).find(r => entity.toItem(r).code.toLowerCase() === code);
+        const items = result.items ?? [];
+        this.registry.cacheRecords(entity, items);
+        const dto = items.find(r => entity.toItem(r).code.toLowerCase() === code);
         return dto?.id ?? null;
       }),
       catchError(() => of(null)),

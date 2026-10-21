@@ -106,6 +106,8 @@ public static class ErpEntityPermissions
         ["HumanResourceUnitOfMeasure"] = ErpPermissions.HumanResourcesSetup.Default,
         ["EmployeePostingGroup"] = ErpPermissions.HumanResourcesSetup.Default,
         ["CauseOfAbsence"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["BaseCalendar"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["BaseCalendarChange"] = ErpPermissions.HumanResourcesSetup.Default,
         ["Qualification"] = ErpPermissions.HumanResourcesSetup.Default,
         ["Union"] = ErpPermissions.HumanResourcesSetup.Default,
         ["EmploymentContract"] = ErpPermissions.HumanResourcesSetup.Default,

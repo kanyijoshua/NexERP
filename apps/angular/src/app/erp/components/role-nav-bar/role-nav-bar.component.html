@@ -38,9 +38,31 @@
           </button>
           <mat-menu #menu="matMenu" class="role-bar__panel">
             @for (link of item.children; track link.key) {
-              <a mat-menu-item [routerLink]="link.route" routerLinkActive="role-bar__link--active">
-                {{ link.displayName }}
-              </a>
+              @if (isMenu(link)) {
+                <button
+                  mat-menu-item
+                  type="button"
+                  [matMenuTriggerFor]="nestedMenu"
+                  [class.role-bar__link--active]="isSublinkActive(link)"
+                >
+                  {{ link.displayName }}
+                </button>
+                <mat-menu #nestedMenu="matMenu" class="role-bar__panel">
+                  @for (child of link.children; track child.key) {
+                    <a
+                      mat-menu-item
+                      [routerLink]="child.route"
+                      routerLinkActive="role-bar__link--active"
+                    >
+                      {{ child.displayName }}
+                    </a>
+                  }
+                </mat-menu>
+              } @else {
+                <a mat-menu-item [routerLink]="link.route" routerLinkActive="role-bar__link--active">
+                  {{ link.displayName }}
+                </a>
+              }
             }
           </mat-menu>
         } @else {
@@ -48,6 +70,7 @@
             class="role-bar__item"
             [routerLink]="item.route"
             routerLinkActive="role-bar__item--active"
+            (click)="selectDirectLink(item)"
           >
             {{ item.displayName }}
           </a>

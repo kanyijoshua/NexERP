@@ -5,7 +5,16 @@
   [showSearch]="false"
   permission="Erp.Workflows.Manage"
   (create)="openCreate()"
-></erp-page-toolbar>
+>
+  <button
+    *abpPermission="'Erp.Workflows.Manage'"
+    type="button"
+    class="btn btn-sm btn-outline-primary"
+    (click)="openTemplates()"
+  >
+    <i class="fas fa-clone me-1"></i> {{ 'Erp::NewWorkflowFromTemplate' | abpLocalization }}
+  </button>
+</erp-page-toolbar>
 
 <p class="text-muted">{{ 'Erp::WorkflowsHelp' | abpLocalization }}</p>
 
@@ -19,10 +28,11 @@
           <th>{{ 'Erp::Description' | abpLocalization }}</th>
           <th>{{ 'Erp::AppliesTo' | abpLocalization }}</th>
           <th class="text-end">{{ 'Erp::MinimumAmount' | abpLocalization }}</th>
-          <th>{{ 'Erp::ApproverLimitType' | abpLocalization }}</th>
+          <th>{{ 'Erp::ApproverType' | abpLocalization }}</th>
           <th class="text-end">{{ 'Erp::DueDays' | abpLocalization }}</th>
+          <th class="text-end">{{ 'Erp::DelegateAfterDays' | abpLocalization }}</th>
           <th class="text-center">{{ 'Erp::Enabled' | abpLocalization }}</th>
-          <th class="text-end" style="width: 110px"></th>
+          <th class="text-end" style="width: 140px"></th>
         </tr>
       </thead>
       <tbody>
@@ -55,11 +65,21 @@
             </td>
             <td class="text-end font-monospace">{{ w.minimumAmount ? (w.minimumAmount | erpAmount) : ('Erp::AnyAmount' | abpLocalization) }}</td>
             <td>
-              <span class="badge bg-info-subtle text-info border border-info-subtle">
-                {{ 'Erp::Enum:ApproverLimitType.' + limitTypeName(w) | abpLocalization }}
-              </span>
+              @if (w.approverType === WorkflowApproverType.WorkflowUserGroup) {
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                  {{ 'Erp::Enum:WorkflowApproverType.WorkflowUserGroup' | abpLocalization }}
+                </span>
+              } @else {
+                <span class="badge bg-info-subtle text-info border border-info-subtle">
+                  {{ 'Erp::Enum:ApproverLimitType.' + limitTypeName(w) | abpLocalization }}
+                </span>
+              }
+              @if (approversLabel(w)) {
+                <span class="small text-muted ms-1 font-monospace">{{ approversLabel(w) }}</span>
+              }
             </td>
             <td class="text-end">{{ w.dueDays || '—' }}</td>
+            <td class="text-end">{{ w.delegateAfterDays || '—' }}</td>
             <td class="text-center">
               <div class="form-check form-switch mb-0 d-inline-flex justify-content-center">
                 <input
@@ -75,6 +95,14 @@
             <td class="text-end">
               <div class="d-inline-flex align-items-center gap-1 justify-content-end">
                 <ng-container *abpPermission="'Erp.Workflows.Manage'">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary erp-action-btn"
+                    [title]="'Erp::CopyWorkflow' | abpLocalization"
+                    (click)="openCopy(w)"
+                  >
+                    <i class="fas fa-copy"></i>
+                  </button>
                   <button
                     type="button"
                     class="btn btn-sm btn-outline-primary erp-action-btn"
@@ -100,7 +128,7 @@
           @if (expandedId === w.id) {
             <tr class="table-light">
               <td></td>
-              <td colspan="8" class="p-3">
+              <td colspan="9" class="p-3">
                 <div class="card border shadow-none">
                   <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
                     <span class="fw-bold small text-uppercase text-secondary">
@@ -147,7 +175,7 @@
         }
         @if (!loading && workflows.length === 0) {
           <tr>
-            <td colspan="9" class="text-center text-muted py-4">{{ 'Erp::NoDataAvailable' | abpLocalization }}</td>
+            <td colspan="10" class="text-center text-muted py-4">{{ 'Erp::NoDataAvailable' | abpLocalization }}</td>
           </tr>
         }
       </tbody>
@@ -246,14 +274,61 @@
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold" for="wf-limit">{{ 'Erp::ApproverLimitType' | abpLocalization }} *</label>
-                <select id="wf-limit" class="form-select" formControlName="approverLimitType">
-                  @for (o of limitTypes; track o.value) {
-                    <option [ngValue]="o.value">{{ 'Erp::Enum:ApproverLimitType.' + o.key | abpLocalization }}</option>
+                <label class="form-label fw-semibold" for="wf-approver-type">{{ 'Erp::ApproverType' | abpLocalization }} *</label>
+                <select id="wf-approver-type" class="form-select" formControlName="approverType">
+                  @for (o of approverTypes; track o.value) {
+                    <option [ngValue]="o.value">{{ 'Erp::Enum:WorkflowApproverType.' + o.key | abpLocalization }}</option>
                   }
                 </select>
-                <div class="form-text small">{{ 'Erp::ApproverLimitTypeHelp' | abpLocalization }}</div>
+                <div class="form-text small">{{ 'Erp::ApproverTypeHelp' | abpLocalization }}</div>
               </div>
+
+              @if (isGroupApproval) {
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold" for="wf-group">{{ 'Erp::WorkflowUserGroup' | abpLocalization }} *</label>
+                  <select
+                    id="wf-group"
+                    class="form-select"
+                    formControlName="workflowUserGroupCode"
+                    [class.is-invalid]="form.get('workflowUserGroupCode')?.touched && !form.get('workflowUserGroupCode')?.value"
+                  >
+                    <option value=""></option>
+                    @for (g of userGroups; track g.id) {
+                      <option [value]="g.code">{{ g.code }}{{ g.description ? ' - ' + g.description : '' }}</option>
+                    }
+                  </select>
+                </div>
+              } @else {
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold" for="wf-limit">{{ 'Erp::ApproverLimitType' | abpLocalization }} *</label>
+                  <select id="wf-limit" class="form-select" formControlName="approverLimitType">
+                    @for (o of limitTypes; track o.value) {
+                      <option [ngValue]="o.value">{{ 'Erp::Enum:ApproverLimitType.' + o.key | abpLocalization }}</option>
+                    }
+                  </select>
+                  <div class="form-text small">{{ 'Erp::ApproverLimitTypeHelp' | abpLocalization }}</div>
+                </div>
+              }
+            </div>
+
+            @if (needsSpecificApprover) {
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="wf-specific">{{ 'Erp::SpecificApprover' | abpLocalization }} *</label>
+                <select
+                  id="wf-specific"
+                  class="form-select"
+                  formControlName="specificApproverUserId"
+                  [class.is-invalid]="form.get('specificApproverUserId')?.touched && !form.get('specificApproverUserId')?.value"
+                >
+                  <option [ngValue]="null"></option>
+                  @for (u of approvalUsers; track u.id) {
+                    <option [ngValue]="u.userId">{{ u.userName }}</option>
+                  }
+                </select>
+              </div>
+            }
+
+            <div class="row">
 
               <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold" for="wf-due">{{ 'Erp::DueDays' | abpLocalization }}</label>
@@ -262,6 +337,15 @@
                   <span class="input-group-text text-muted">days</span>
                 </div>
                 <div class="form-text small">{{ 'Erp::DueDaysHelp' | abpLocalization }}</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold" for="wf-delegate">{{ 'Erp::DelegateAfterDays' | abpLocalization }}</label>
+                <div class="input-group">
+                  <input id="wf-delegate" type="number" min="0" max="365" step="1" class="form-control" formControlName="delegateAfterDays" />
+                  <span class="input-group-text text-muted">{{ 'Erp::Days' | abpLocalization }}</span>
+                </div>
+                <div class="form-text small">{{ 'Erp::DelegateAfterDaysHelp' | abpLocalization }}</div>
               </div>
             </div>
 
@@ -487,30 +571,6 @@
                     </select>
                   </div>
 
-                  <div class="row mb-3">
-                    <div class="col-md-4">
-                      <label class="form-label fw-semibold small">Approver Type</label>
-                      <select class="form-select form-select-sm" formControlName="approverLimitType">
-                        @for (lt of limitTypes; track lt.value) {
-                          <option [ngValue]="lt.value">{{ 'Erp::Enum:ApproverLimitType.' + lt.key | abpLocalization }}</option>
-                        }
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label fw-semibold small">Specific Approver</label>
-                      <select class="form-select form-select-sm" formControlName="specificApproverUserName">
-                        <option value="">(Inherit / From Chain)</option>
-                        @for (u of approvalUsers; track u.id) {
-                          <option [value]="u.userName">{{ u.userName }}</option>
-                        }
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label fw-semibold small">Days to Respond</label>
-                      <input type="number" min="0" class="form-control form-control-sm" formControlName="dueDays" />
-                    </div>
-                  </div>
-
                   <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEditingStep()">Cancel</button>
                     <button type="button" class="btn btn-sm btn-primary" (click)="saveEditingStep()">
@@ -613,5 +673,112 @@
         <abp-button iconClass="fa fa-check" [disabled]="form?.invalid || isBusy" (click)="save()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
       </div>
     </div>
+  </ng-template>
+</abp-modal>
+
+<!-- New from template -->
+<abp-modal [(visible)]="isTemplateModalOpen" [busy]="isBusy" [options]="{ size: 'lg' }">
+  <ng-template #abpHeader>
+    <h5 class="modal-title mb-0">
+      <i class="fas fa-clone text-primary me-2"></i>{{ 'Erp::WorkflowTemplates' | abpLocalization }}
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    @if (templateForm) {
+      <p class="text-muted small">{{ 'Erp::WorkflowTemplateHelp' | abpLocalization }}</p>
+      <div class="list-group mb-3">
+        @for (t of templates; track t.code) {
+          <button
+            type="button"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            [class.active]="templateForm.get('templateCode')?.value === t.code"
+            (click)="pickTemplate(t)"
+          >
+            <span>
+              <span class="fw-semibold">{{ t.description }}</span>
+              <span class="d-block small font-monospace opacity-75">{{ t.code }}</span>
+            </span>
+            <span class="d-flex gap-1 flex-wrap justify-content-end">
+              <span class="badge bg-light text-dark border">{{ 'Erp::Enum:ApprovalDocumentKind.' + ApprovalDocumentKind[t.documentKind] | abpLocalization }}</span>
+              <span class="badge bg-light text-dark border">
+                @if (t.approverType === WorkflowApproverType.WorkflowUserGroup) {
+                  {{ 'Erp::Enum:WorkflowApproverType.WorkflowUserGroup' | abpLocalization }}
+                } @else {
+                  {{ 'Erp::Enum:ApproverLimitType.' + ApproverLimitType[t.approverLimitType] | abpLocalization }}
+                }
+              </span>
+            </span>
+          </button>
+        }
+      </div>
+
+      <form [formGroup]="templateForm" (ngSubmit)="createFromTemplate()">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold" for="tpl-code">{{ 'Erp::Code' | abpLocalization }} *</label>
+            <input id="tpl-code" type="text" class="form-control text-uppercase" formControlName="code" />
+          </div>
+          <div class="col-md-8 mb-3">
+            <label class="form-label fw-semibold" for="tpl-description">{{ 'Erp::Description' | abpLocalization }}</label>
+            <input id="tpl-description" type="text" class="form-control" formControlName="description" />
+          </div>
+        </div>
+        @if (selectedTemplate?.approverType === WorkflowApproverType.WorkflowUserGroup) {
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="tpl-group">{{ 'Erp::WorkflowUserGroup' | abpLocalization }} *</label>
+            <select id="tpl-group" class="form-select" formControlName="workflowUserGroupCode">
+              <option value=""></option>
+              @for (g of userGroups; track g.id) {
+                <option [value]="g.code">{{ g.code }}{{ g.description ? ' - ' + g.description : '' }}</option>
+              }
+            </select>
+          </div>
+        }
+      </form>
+    }
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button
+      iconClass="fa fa-check"
+      [disabled]="templateForm?.invalid || isBusy || (selectedTemplate?.approverType === WorkflowApproverType.WorkflowUserGroup && !templateForm.get('workflowUserGroupCode')?.value)"
+      (click)="createFromTemplate()"
+    >
+      {{ 'Erp::New' | abpLocalization }}
+    </abp-button>
+  </ng-template>
+</abp-modal>
+
+<!-- Copy workflow -->
+<abp-modal [(visible)]="isCopyModalOpen" [busy]="isBusy">
+  <ng-template #abpHeader>
+    <h5 class="modal-title mb-0">
+      <i class="fas fa-copy text-primary me-2"></i>{{ 'Erp::CopyWorkflow' | abpLocalization }}
+      @if (copySource) {
+        <span class="badge bg-secondary-subtle text-secondary ms-2">{{ copySource.code }}</span>
+      }
+    </h5>
+  </ng-template>
+
+  <ng-template #abpBody>
+    @if (copyForm) {
+      <form [formGroup]="copyForm" (ngSubmit)="copy()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="copy-code">{{ 'Erp::NewCode' | abpLocalization }} *</label>
+          <input id="copy-code" type="text" class="form-control text-uppercase" formControlName="code" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="copy-description">{{ 'Erp::Description' | abpLocalization }}</label>
+          <input id="copy-description" type="text" class="form-control" formControlName="description" />
+        </div>
+      </form>
+    }
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-outline-secondary" abpClose>{{ 'AbpUi::Cancel' | abpLocalization }}</button>
+    <abp-button iconClass="fa fa-check" [disabled]="copyForm?.invalid || isBusy" (click)="copy()">{{ 'Erp::Save' | abpLocalization }}</abp-button>
   </ng-template>
 </abp-modal>

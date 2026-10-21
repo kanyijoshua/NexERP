@@ -1,4 +1,4 @@
-import type { CreateUpdateWorkflowDto, WorkflowDto } from './models';
+import type { CopyWorkflowDto, CreateUpdateWorkflowDto, NewWorkflowFromTemplateDto, WorkflowDto, WorkflowTemplateDto } from './models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { ListResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -9,6 +9,15 @@ import { Injectable } from '@angular/core';
 export class WorkflowService {
   apiName = 'Erp';
   
+
+  copy = (id: string, input: CopyWorkflowDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, WorkflowDto>({
+      method: 'POST',
+      url: `/api/erp/workflow/${id}/copy`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
 
   create = (input: CreateUpdateWorkflowDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, WorkflowDto>({
@@ -58,6 +67,23 @@ export class WorkflowService {
     },
     { apiName: this.apiName,...config });
   
+
+  getTemplates = (config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ListResultDto<WorkflowTemplateDto>>({
+      method: 'GET',
+      url: '/api/erp/workflow/templates',
+    },
+    { apiName: this.apiName,...config });
+
+
+  newFromTemplate = (input: NewWorkflowFromTemplateDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, WorkflowDto>({
+      method: 'POST',
+      url: '/api/erp/workflow/new-from-template',
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
 
   update = (id: string, input: CreateUpdateWorkflowDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, WorkflowDto>({

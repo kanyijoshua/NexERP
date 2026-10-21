@@ -42,6 +42,12 @@ public class ApprovalEntryAppService : ErpAppService, IApprovalEntryAppService
             .WhereIf(input.OnlyMine, e => e.ApproverId == userId)
             .WhereIf(input.SentByMe, e => e.SenderId == userId);
 
+        if (input.OnlyOverdue)
+        {
+            var today = Clock.Now.Date;
+            query = query.Where(e => e.Status == ApprovalStatus.Open && e.DueDate != null && e.DueDate < today);
+        }
+
         var term = input.Filter?.Trim().ToLower();
         query = query.WhereIf(
             !term.IsNullOrEmpty(),

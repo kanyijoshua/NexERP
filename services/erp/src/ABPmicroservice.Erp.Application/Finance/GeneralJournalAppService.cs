@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Companies;
+using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Numbering;
 using ABPmicroservice.Erp.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -130,9 +131,9 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
             .OrderBy(l => l.LineNo)
             .ToList();
 
-        return new ListResultDto<GenJournalLineDto>(
-            ObjectMapper.Map<List<GenJournalLine>, List<GenJournalLineDto>>(lines)
-        );
+        var dtos = ObjectMapper.Map<List<GenJournalLine>, List<GenJournalLineDto>>(lines);
+        await PopulateLineShortcutDimensionsAsync(dtos);
+        return new ListResultDto<GenJournalLineDto>(dtos);
     }
 
     [Authorize(ErpPermissions.Journals.Create)]
@@ -166,7 +167,9 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         await ApplyOptionalFieldsAsync(line, batch, input, documentNo);
 
         await _lineRepository.InsertAsync(line, autoSave: true);
-        return ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
+        var dto = ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
+        await PopulateLineShortcutDimensionsAsync(new List<GenJournalLineDto> { dto });
+        return dto;
     }
 
     [Authorize(ErpPermissions.Journals.Update)]
@@ -179,7 +182,9 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
         await ApplyOptionalFieldsAsync(line, batch, input, input.DocumentNo);
 
         await _lineRepository.UpdateAsync(line, autoSave: true);
-        return ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
+        var dto = ObjectMapper.Map<GenJournalLine, GenJournalLineDto>(line);
+        await PopulateLineShortcutDimensionsAsync(new List<GenJournalLineDto> { dto });
+        return dto;
     }
 
     [Authorize(ErpPermissions.Journals.Delete)]
@@ -326,8 +331,72 @@ public class GeneralJournalAppService : ErpAppService, IGeneralJournalAppService
             input.MessageToRecipient
         );
 
+        await ApplyDimensionsAsync(line, input);
         await ApplyCurrencyAsync(line, input);
         await ApplyVatAsync(line, input);
+    }
+
+    private async Task ApplyDimensionsAsync(GenJournalLine line, CreateUpdateGenJournalLineDto input)
+    {
+        var hasAnyShortcut = !input.ShortcutDimension1Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension2Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension3Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension4Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension5Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension6Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension7Code.IsNullOrWhiteSpace()
+            || !input.ShortcutDimension8Code.IsNullOrWhiteSpace();
+
+        var existingSetId = input.DimensionSetId != Guid.Empty ? input.DimensionSetId : line.DimensionSetId;
+        if (!hasAnyShortcut && existingSetId == Guid.Empty)
+        {
+            return;
+        }
+
+        var dimensionManagement = LazyServiceProvider.LazyGetRequiredService<DimensionManagement>();
+        var (setId, _) = await dimensionManagement.ResolveShortcutDimensionsAsync(
+            new[]
+            {
+                input.ShortcutDimension1Code,
+                input.ShortcutDimension2Code,
+                input.ShortcutDimension3Code,
+                input.ShortcutDimension4Code,
+                input.ShortcutDimension5Code,
+                input.ShortcutDimension6Code,
+                input.ShortcutDimension7Code,
+                input.ShortcutDimension8Code,
+            },
+            existingSetId
+        );
+
+        line.SetDimensionSet(setId);
+    }
+
+    private async Task PopulateLineShortcutDimensionsAsync(List<GenJournalLineDto> dtos)
+    {
+        var setIds = dtos.Where(d => d.DimensionSetId != Guid.Empty).Select(d => d.DimensionSetId).Distinct().ToList();
+        if (setIds.Count == 0)
+        {
+            return;
+        }
+
+        var dimensionManagement = LazyServiceProvider.LazyGetRequiredService<DimensionManagement>();
+        var resolved = await dimensionManagement.GetShortcutDimensionValuesBySetIdsAsync(setIds);
+
+        foreach (var dto in dtos)
+        {
+            if (dto.DimensionSetId != Guid.Empty && resolved.TryGetValue(dto.DimensionSetId, out var slots))
+            {
+                dto.ShortcutDimension1Code ??= slots[0];
+                dto.ShortcutDimension2Code ??= slots[1];
+                dto.ShortcutDimension3Code = slots[2];
+                dto.ShortcutDimension4Code = slots[3];
+                dto.ShortcutDimension5Code = slots[4];
+                dto.ShortcutDimension6Code = slots[5];
+                dto.ShortcutDimension7Code = slots[6];
+                dto.ShortcutDimension8Code = slots[7];
+            }
+        }
     }
 
     /// <summary>The line's currency and its rate on the posting date, so the LCY amount shows at once.</summary>

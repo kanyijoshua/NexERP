@@ -38,6 +38,8 @@ public class DimensionValue : CompanyEntity
         Name = Check.NotNullOrWhiteSpace(name, nameof(name), ErpDomainConsts.MaxNameLength);
     }
 
+    public void SetBlocked(bool blocked) => Blocked = blocked;
+
     public void Block() => Blocked = true;
     public void Unblock() => Blocked = false;
 }

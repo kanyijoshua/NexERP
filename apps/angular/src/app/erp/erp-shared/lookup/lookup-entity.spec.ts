@@ -232,12 +232,19 @@ describe('LookupComponent with a record entity', () => {
     flush();
   }));
 
-  it('shows the code of an id value by reading the record', () => {
+  it('shows the code of an id value by reading the record and caches subsequent lookups', () => {
+    const getSpy = spyOn(entity, 'get').and.callThrough();
     host.valueField = 'id';
     fixture.detectChanges();
     host.control.setValue('id-3');
 
     expect(fixture.nativeElement.querySelector('input').value).toBe('U3');
+    expect(getSpy).toHaveBeenCalledTimes(1);
+
+    host.control.setValue(null);
+    host.control.setValue('id-3');
+    expect(fixture.nativeElement.querySelector('input').value).toBe('U3');
+    expect(getSpy).toHaveBeenCalledTimes(1);
   });
 
   it('renders the full-list button always and the open-card button once there is a value', () => {

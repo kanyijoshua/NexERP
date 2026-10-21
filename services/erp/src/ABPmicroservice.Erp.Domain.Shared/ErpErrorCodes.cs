@@ -42,12 +42,20 @@ public static class ErpErrorCodes
         public const string WorkflowCodeAlreadyExists = Prefix + ":Approvals:00013";
         public const string UserSetupAlreadyExists = Prefix + ":Approvals:00014";
         public const string NoWorkflowApplies = Prefix + ":Approvals:00015";
+        public const string WorkflowUserGroupRequired = Prefix + ":Approvals:00016";
+        public const string WorkflowUserGroupEmpty = Prefix + ":Approvals:00017";
+        public const string SpecificApproverRequired = Prefix + ":Approvals:00018";
+        public const string WorkflowTemplateNotFound = Prefix + ":Approvals:00019";
+        public const string WorkflowUserGroupNotFound = Prefix + ":Approvals:00020";
     }
 
     public static class Dimensions
     {
         public const string DimensionCodeAlreadyExists = Prefix + ":Dimensions:00001";
         public const string DimensionValueCodeAlreadyExists = Prefix + ":Dimensions:00002";
+        public const string DimensionBlocked = Prefix + ":Dimensions:00003";
+        public const string DimensionValueNotFound = Prefix + ":Dimensions:00004";
+        public const string DimensionValueBlocked = Prefix + ":Dimensions:00005";
     }
 
     public static class Journals
@@ -340,6 +348,11 @@ public static class ErpErrorCodes
         public const string EmployeeBlocked = Prefix + ":HumanResources:00004";
         public const string PostingGroupNotFound = Prefix + ":HumanResources:00005";
         public const string CannotDeleteWithEntries = Prefix + ":HumanResources:00006";
+        public const string CalendarChangeNeedsDate = Prefix + ":HumanResources:00007";
+        public const string CalendarChangeNeedsDay = Prefix + ":HumanResources:00008";
+        public const string BaseCalendarNotFound = Prefix + ":HumanResources:00009";
+        public const string CalendarHasNoWorkingDays = Prefix + ":HumanResources:00010";
+        public const string WorkingDaysMustBePositive = Prefix + ":HumanResources:00011";
     }
 
     public static class Querying
