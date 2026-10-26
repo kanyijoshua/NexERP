@@ -9,10 +9,11 @@ export class PensionSetupService {
   apiName = 'Erp';
 
 
-  get = (config?: Partial<Rest.Config>) =>
+  get = (schemeCode?: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PensionSetupDto>({
       method: 'GET',
       url: '/api/erp/pension-setup',
+      params: { schemeCode },
     },
     { apiName: this.apiName,...config });
 

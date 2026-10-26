@@ -114,6 +114,13 @@ public static class ErpEntityPermissions
         ["GroundsForTermination"] = ErpPermissions.HumanResourcesSetup.Default,
         ["Employee"] = ErpPermissions.Employees.Default,
         ["EmployeeAbsence"] = ErpPermissions.Employees.Default,
+        ["LeaveType"] = ErpPermissions.HumanResourcesSetup.Default,
+        ["LeaveApplication"] = ErpPermissions.LeaveManagement.Default,
+        ["LeaveLedgerEntry"] = ErpPermissions.LeaveManagement.Default,
+        ["ItemCharge"] = ErpPermissions.ItemCharges.Default,
+        ["ItemChargeAssignment"] = ErpPermissions.ItemCharges.Default,
+        ["EmailTemplate"] = ErpPermissions.DocumentEmailing.Default,
+        ["SentEmailLog"] = ErpPermissions.DocumentEmailing.Default,
 
         // Collaboration
         ["KanbanStage"] = ErpPermissions.Kanban.Default,

@@ -19,6 +19,23 @@ public enum ValueEntryType
     DirectCost = 0,
     Revaluation = 1,
     Rounding = 2,
+    ItemCharge = 3,
+}
+
+/// <summary>How an item charge (landed cost) is split across receipt or shipment lines.</summary>
+public enum ItemChargeAllocationMethod
+{
+    Equally = 0,
+    ByAmount = 1,
+    ByWeight = 2,
+    ByVolume = 3,
+}
+
+/// <summary>Whether an item charge assignment originates from a purchase or a sale.</summary>
+public enum ItemChargeSourceType
+{
+    PurchaseLine = 0,
+    SalesLine = 1,
 }
 
 /// <summary>The kind of item journal a template is for.</summary>

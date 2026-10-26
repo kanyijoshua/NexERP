@@ -946,18 +946,24 @@ public static class ErpDbContextModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "DocumentNotes", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            // Every record card reads its chatter by record when it opens.
+            b.HasIndex(x => new { x.CompanyId, x.EntityType, x.EntityId });
         });
 
         builder.Entity<ActivityStreamEntry>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "ActivityStreamEntries", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            // Every record card reads its chatter by record when it opens.
+            b.HasIndex(x => new { x.CompanyId, x.EntityType, x.EntityId });
         });
 
         builder.Entity<DocumentActivityTask>(b =>
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "DocumentActivityTasks", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            // Every record card reads its chatter by record when it opens.
+            b.HasIndex(x => new { x.CompanyId, x.EntityType, x.EntityId });
         });
 
         builder.Entity<KanbanStage>(b =>
@@ -1054,5 +1060,6 @@ public static class ErpDbContextModelCreatingExtensions
         builder.ConfigureErpProjects();
         builder.ConfigureErpManufacturing();
         builder.ConfigureErpServiceManagement();
+        builder.ConfigureErpEverydayOperations();
     }
 }

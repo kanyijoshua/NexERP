@@ -192,7 +192,7 @@ public class PensionInterestEngine : DomainService
     public async Task<List<InterestAllocationLine>> CalculateAsync(PensionInterestRate rate)
     {
         var scheme = await _schemeManager.GetAsync(rate.SchemeCode);
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(rate.SchemeCode);
         var names = (await _members.GetListAsync(m => m.SchemeCode == rate.SchemeCode)).ToDictionary(m => m.No, m => m.FullName, StringComparer.Ordinal);
 
         var entries = await _entries.GetListAsync(e => e.SchemeCode == rate.SchemeCode && e.PostingDate <= rate.EndDate);
@@ -258,7 +258,7 @@ public class PensionInterestEngine : DomainService
             throw new BusinessException(ErpErrorCodes.Pensions.NothingToPost).WithData("documentNo", rate.SchemeCode);
         }
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(rate.SchemeCode);
         var memberFunds = setup.Require(setup.MemberFundsAccountNo, "Member Funds Account No.");
         var interestAccount = setup.Require(setup.InterestAccountNo, "Interest Account No.");
         var totalInterest = lines.Sum(l => l.Interest);

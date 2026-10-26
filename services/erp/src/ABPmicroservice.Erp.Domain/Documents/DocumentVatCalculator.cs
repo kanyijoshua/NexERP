@@ -70,6 +70,7 @@ public class DocumentVatCalculator : DomainService
         {
             DocumentLineType.Item => (await _itemRepository.FirstOrDefaultAsync(i => i.No == no))?.VatProdPostingGroup,
             DocumentLineType.GLAccount => (await _glAccountRepository.FirstOrDefaultAsync(a => a.No == no))?.VatProdPostingGroup,
+            DocumentLineType.ChargeItem => (await LazyServiceProvider.LazyGetRequiredService<IRepository<ItemCharge, Guid>>().FirstOrDefaultAsync(c => c.Code == no))?.VatProdPostingGroup,
             _ => null,
         };
     }

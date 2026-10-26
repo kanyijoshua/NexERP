@@ -9,6 +9,7 @@ export interface HumanResourcesSetupDto {
   employeeNos?: string;
   baseUnitOfMeasure?: string;
   baseCalendarCode?: string;
+  leaveApplicationNos?: string;
 }
 
 export interface HumanResourceUnitOfMeasureDto extends CodeTableDto {

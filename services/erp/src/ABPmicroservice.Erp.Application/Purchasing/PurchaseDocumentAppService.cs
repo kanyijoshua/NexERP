@@ -280,6 +280,31 @@ public class PurchaseDocumentAppService
         return await MapToGetOutputDtoAsync(header);
     }
 
+    [Authorize(ErpPermissions.PurchaseDocuments.Post)]
+    public async Task<PurchasePostingResultDto> RunPrepaymentPostingAsync(Guid id)
+    {
+        // A prepayment invoice releases the order, so it passes the same approval rule as posting.
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, await GetEntityByIdAsync(id));
+
+        var invoice = await _purchasePostingEngine.PostPrepaymentAsync(id, creditMemo: false);
+        return new PurchasePostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = invoice.No,
+        };
+    }
+
+    [Authorize(ErpPermissions.PurchaseDocuments.Post)]
+    public async Task<PurchasePostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id)
+    {
+        var crMemo = await _purchasePostingEngine.PostPrepaymentAsync(id, creditMemo: true);
+        return new PurchasePostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = crMemo.No,
+        };
+    }
+
     private const ApprovalDocumentKind ApprovalKind = ApprovalDocumentKind.PurchaseDocument;
 
     private Guid GetUserId()
@@ -435,6 +460,10 @@ public class PurchaseDocumentAppService
 
         foreach (var lineInput in input.Lines)
         {
+            if (lineInput.Type == DocumentLineType.ChargeItem)
+            {
+                await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<ItemCharge>(lineInput.No);
+            }
             var (directUnitCost, discount) = await CostOfAsync(header, lineInput);
             var existing = lineInput.Id.HasValue ? header.Lines.FirstOrDefault(l => l.Id == lineInput.Id.Value) : null;
             var line = existing != null
@@ -469,8 +498,14 @@ public class PurchaseDocumentAppService
             {
                 line.SetDeferralCode(lineInput.DeferralCode);
             }
+            // Once a prepayment is invoiced the line keeps its percentage; a credit memo frees it again.
+            if (lineInput.PrepaymentPct.HasValue && line.PrepmtAmtInv == 0m)
+            {
+                line.SetPrepaymentPct(lineInput.PrepaymentPct.Value);
+            }
             await SetVariantAndUnitAsync(line, lineInput.VariantCode);
         }
+        header.RecalculateTotals();
     }
 
     /// <summary>The variant of an item line and how many base units one unit of its unit of measure holds.</summary>

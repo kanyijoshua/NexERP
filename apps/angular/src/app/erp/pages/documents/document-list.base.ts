@@ -30,8 +30,10 @@ import {
 } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
-import { ItemTrackingLineService, ItemTrackingSourceType } from '@proxy/inventory';
+import { ItemChargeAssignmentService, ItemChargeSourceType, ItemTrackingLineService, ItemTrackingSourceType } from '@proxy/inventory';
+import { DocumentEmailService, EmailDeliveryStatus, EmailDocumentType } from '@proxy/emailing';
 import { itemTrackingLinesFor } from '../../master-data/warehouse-entities';
+import { itemChargeAssignmentsFor, sendDocumentEmail } from '../../master-data/everyday-operations-entities';
 
 /** The fields the list page needs from a sales or purchase header. */
 export interface DocumentRow {
@@ -63,7 +65,15 @@ export interface NewDocumentInput {
 }
 
 export type DocumentAction =
-  'release' | 'reopen' | 'sendApprovalRequest' | 'cancelApprovalRequest' | 'runPosting' | 'delete' | 'makeOrder';
+  | 'release'
+  | 'reopen'
+  | 'sendApprovalRequest'
+  | 'cancelApprovalRequest'
+  | 'runPosting'
+  | 'delete'
+  | 'makeOrder'
+  | 'runPrepaymentPosting'
+  | 'runPrepaymentCreditMemoPosting';
 
 /**
  * How a kind of document is posted:
@@ -88,6 +98,8 @@ export interface DocumentLineRow {
   sourceNo?: string;
   /** An item line, which can carry lot and serial numbers. */
   isItem?: boolean;
+  /** A charge (item) line, whose cost is assigned to receipts or shipments. */
+  isCharge?: boolean;
 }
 
 /** A posted shipment (receipt) line still waiting for an invoice. */
@@ -121,15 +133,28 @@ export interface PostingResult {
   shipmentNo?: string;
 }
 
+/** What posting a prepayment invoice or credit memo returns. */
+interface PrepaymentResult {
+  invoiceNo?: string;
+}
+
 /** A header field on the document card's General section. */
 export interface DocumentCardField {
   field: string;
   labelKey: string;
-  type: 'text' | 'date' | 'lookup' | 'readonly';
+  type: 'text' | 'date' | 'lookup' | 'readonly' | 'number';
   /** `lookup` only: the record entity looked up, e.g. `location`. */
   entity?: string;
   maxLength?: number;
 }
+
+/** The prepayment fields on an order's card: the percentage and what has been prepaid. */
+export const PREPAYMENT_FIELDS: DocumentCardField[] = [
+  { field: 'prepaymentPct', labelKey: 'Erp::PrepaymentPct', type: 'number' },
+  { field: 'prepmtInvoicedAmount', labelKey: 'Erp::PrepmtInvoicedAmount', type: 'readonly' },
+  { field: 'prepmtDeductedAmount', labelKey: 'Erp::PrepmtDeductedAmount', type: 'readonly' },
+  { field: 'lastPrepmtInvoiceNo', labelKey: 'Erp::LastPrepmtInvoiceNo', type: 'readonly' },
+];
 
 /** A sales or purchase header as the card loads it: every field, with its lines. */
 export type DocumentCardData = Record<string, unknown> & DocumentRow & { lines?: Record<string, unknown>[] };
@@ -174,6 +199,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   private readonly permissions = inject(PermissionService);
   private readonly dialogs = inject(RecordDialogService);
   private readonly trackingLines = inject(ItemTrackingLineService);
+  private readonly chargeAssignments = inject(ItemChargeAssignmentService);
+  private readonly documentEmails = inject(DocumentEmailService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -259,6 +286,12 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
 
   /** Where the lots and serial numbers of this page's lines are kept. */
   protected trackingSourceType: ItemTrackingSourceType | null = null;
+  /** Where the charge lines of this page assign their cost from. */
+  protected chargeSourceType: ItemChargeSourceType | null = null;
+  /** How this page's documents are emailed; not at all when null. */
+  protected emailDocumentType: EmailDocumentType | null = null;
+  /** Orders can invoice a prepayment before anything ships. */
+  protected supportsPrepayment = false;
 
   get canTrack(): boolean {
     return this.trackingSourceType !== null;
@@ -273,6 +306,34 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       .openList(itemTrackingLinesFor(this.trackingLines, this.trackingSourceType, line.id, line.no))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
+  }
+
+  /** Opens the receipts or shipments a charge line's cost is assigned to. */
+  openCharges(line: DocumentLineRow): void {
+    if (this.chargeSourceType === null || !line.id) {
+      return;
+    }
+    itemChargeAssignmentsFor(this.chargeAssignments, this.dialogs, this.chargeSourceType, line.id, `${line.no ?? ''} ${line.description ?? ''}`.trim())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
+  /** Emails the document on the card to its customer or vendor. */
+  sendEmail(row: TRow): void {
+    if (this.emailDocumentType === null || !row.id) {
+      return;
+    }
+    sendDocumentEmail(this.documentEmails, this.dialogs, this.emailDocumentType, row.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(log => {
+        // A mail server that refused the message is logged, not thrown: say so here.
+        if (log?.status === EmailDeliveryStatus.Failed) {
+          this.toaster.error('Erp::EmailSendFailed', undefined, { messageLocalizationParams: [log.errorMessage ?? ''] });
+        } else {
+          this.toaster.success('Erp::EmailSent', undefined, { messageLocalizationParams: [log?.recipientEmail ?? ''] });
+        }
+        this.chatter?.load();
+      });
   }
 
   isPostOpen = false;
@@ -431,6 +492,20 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     if (status === DocumentStatus.Released) {
       actions.push({ key: 'reopen', labelKey: 'Erp::Reopen', icon: 'fas fa-lock-open', cssClass: 'btn-outline-secondary', permission: update });
     }
+    if (this.supportsPrepayment && status !== DocumentStatus.PendingApproval) {
+      const post = this.permissionPrefix + '.Post';
+      const prepaid = Number(card['prepmtInvoicedAmount']) || 0;
+      const deducted = Number(card['prepmtDeductedAmount']) || 0;
+      if (Number(card['prepaymentPct']) > 0) {
+        actions.push({ key: 'runPrepaymentPosting', labelKey: 'Erp::PostPrepaymentInvoice', icon: 'fas fa-hand-holding-dollar', cssClass: 'btn-outline-success', permission: post });
+      }
+      if (prepaid > deducted) {
+        actions.push({ key: 'runPrepaymentCreditMemoPosting', labelKey: 'Erp::PostPrepaymentCreditMemo', icon: 'fas fa-file-circle-minus', cssClass: 'btn-outline-secondary', permission: post });
+      }
+    }
+    if (this.emailDocumentType !== null) {
+      actions.push({ key: 'sendEmail', labelKey: 'Erp::SendByEmail', icon: 'fas fa-envelope', cssClass: 'btn-outline-primary', permission: 'Erp.DocumentEmailing.Send' });
+    }
     if (this.makesOrders) {
       actions.push({ key: 'makeOrder', labelKey: 'Erp::MakeOrder', icon: 'fas fa-file-signature', cssClass: 'btn-outline-success', permission: this.permissionPrefix + '.Create' });
     } else if (status !== DocumentStatus.PendingApproval) {
@@ -499,7 +574,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     for (const f of this.cardFields) {
       const value = document[f.field];
       header[f.field] = [
-        f.type === 'date' ? toDateInput(value) : (value ?? null),
+        f.type === 'date' ? toDateInput(value) : f.type === 'number' ? Number(value) || 0 : (value ?? null),
         f.maxLength ? Validators.maxLength(f.maxLength) : [],
       ];
     }
@@ -559,13 +634,18 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     }
   }
 
-  /** Opens the lot and serial numbers of a saved item line on the card. */
+  /** Opens the lot and serial numbers of a saved item line, or the assignment of a charge line. */
   openCardLine(index: number): void {
     const v = this.cardLines.at(index)?.getRawValue() as DocumentCardLine | undefined;
-    if (!v?.id || v.type !== DocumentLineType.Item || !this.canTrack) {
+    if (!v?.id) {
       return;
     }
-    this.openTracking({ id: v.id, lineNo: index + 1, no: v.no, quantity: v.quantity } as DocumentLineRow);
+    const line = { id: v.id, lineNo: index + 1, no: v.no, description: v.description, quantity: v.quantity } as DocumentLineRow;
+    if (v.type === DocumentLineType.ChargeItem) {
+      this.openCharges(line);
+    } else if (v.type === DocumentLineType.Item && this.canTrack) {
+      this.openTracking(line);
+    }
   }
 
   /** Runs an action of the card's bar; changes are saved first, as leaving a field would. */
@@ -580,7 +660,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     }
 
     const row = card as unknown as TRow;
-    const run = () => (key === 'getSourceLines' ? this.openSource(row) : this.act(key as DocumentAction, row));
+    const run = () =>
+      key === 'getSourceLines' ? this.openSource(row) : key === 'sendEmail' ? this.sendEmail(row) : this.act(key as DocumentAction, row);
     if (key !== 'delete' && this.cardEditable && this.cardDirty) {
       this.saveCard(run);
     } else {
@@ -600,6 +681,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     for (const f of this.cardFields) {
       if (f.type === 'readonly') {
         delete header[f.field];
+      } else if (f.type === 'number') {
+        header[f.field] = Number(header[f.field]) || 0;
       } else if (f.type === 'date' || header[f.field] === '') {
         header[f.field] = header[f.field] || null;
       }
@@ -885,14 +968,17 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       return;
     }
 
-    if (action === 'runPosting' || action === 'delete' || action === 'makeOrder') {
+    const isPrepayment = action === 'runPrepaymentPosting' || action === 'runPrepaymentCreditMemoPosting';
+    if (action === 'runPosting' || action === 'delete' || action === 'makeOrder' || isPrepayment) {
       this.confirmation
         .warn(
           action === 'delete'
             ? 'Erp::ItemWillBeDeletedMessage'
             : action === 'makeOrder'
               ? 'Erp::MakeOrderConfirmation'
-              : 'Erp::PostDocumentConfirmation',
+              : isPrepayment
+                ? 'Erp::PostPrepaymentConfirmation'
+                : 'Erp::PostDocumentConfirmation',
           'Erp::AreYouSure',
         )
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1086,7 +1172,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       .subscribe(result => {
         this.toaster.success(this.successKey(action, result), undefined, {
           messageLocalizationParams: [
-            (result as ApprovalRequestResultDto)?.firstApproverUserName ?? '',
+            (result as ApprovalRequestResultDto)?.firstApproverUserName ?? (result as PrepaymentResult)?.invoiceNo ?? '',
           ],
         });
         if (action === 'delete' && this.selected?.id === id) {
@@ -1126,6 +1212,10 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         return 'Erp::DocumentPosted';
       case 'makeOrder':
         return 'Erp::OrderMade';
+      case 'runPrepaymentPosting':
+        return 'Erp::PrepaymentInvoicePosted';
+      case 'runPrepaymentCreditMemoPosting':
+        return 'Erp::PrepaymentCreditMemoPosted';
       default:
         return 'Erp::DeletedSuccessfully';
     }
@@ -1154,6 +1244,8 @@ export function lineEntityOf(type: DocumentLineType | null | undefined): string 
       return 'item';
     case DocumentLineType.GLAccount:
       return 'glAccount';
+    case DocumentLineType.ChargeItem:
+      return 'itemCharge';
     default:
       return null;
   }

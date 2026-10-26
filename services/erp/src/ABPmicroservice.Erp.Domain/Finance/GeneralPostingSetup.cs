@@ -27,6 +27,8 @@ public class GeneralPostingSetup : CompanyEntity
 
     public string COGSAccountNo { get; private set; }
     public string InventoryAdjmtAccountNo { get; private set; }
+    public string SalesPrepaymentsAccountNo { get; private set; }
+    public string PurchPrepaymentsAccountNo { get; private set; }
 
     protected GeneralPostingSetup() { }
 
@@ -79,6 +81,12 @@ public class GeneralPostingSetup : CompanyEntity
     {
         COGSAccountNo = PostingAccount.Normalize(cogsAccountNo, nameof(cogsAccountNo));
         InventoryAdjmtAccountNo = PostingAccount.Normalize(inventoryAdjmtAccountNo, nameof(inventoryAdjmtAccountNo));
+    }
+
+    public void SetPrepaymentAccounts(string salesPrepaymentsAccountNo, string purchPrepaymentsAccountNo)
+    {
+        SalesPrepaymentsAccountNo = PostingAccount.Normalize(salesPrepaymentsAccountNo, nameof(salesPrepaymentsAccountNo));
+        PurchPrepaymentsAccountNo = PostingAccount.Normalize(purchPrepaymentsAccountNo, nameof(purchPrepaymentsAccountNo));
     }
 
     /// <summary>"DOMESTIC / RETAIL", or "/ RETAIL" for the blank business group, as messages show it.</summary>

@@ -7,6 +7,7 @@ import { GeneralLedgerSetupDto, GeneralLedgerSetupService, RoundingType, roundin
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
+import { DimensionStateService } from '../../services/dimension-state.service';
 
 /**
  * General Ledger Setup. the company's allowed posting dates,
@@ -23,6 +24,7 @@ export class GeneralLedgerSetupComponent implements OnInit {
   private readonly dimensionService = inject(DimensionService);
   private readonly noSeriesService = inject(NoSeriesService);
   private readonly companyService = inject(CompanyService);
+  private readonly dimensionState = inject(DimensionStateService);
   private readonly toaster = inject(ToasterService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -33,17 +35,17 @@ export class GeneralLedgerSetupComponent implements OnInit {
   readonly saving = signal(false);
 
   readonly globalDimensionControls = [
-    { control: 'globalDimension1Code', labelKey: 'Erp::GlobalDimension1Code', slot: 1 },
-    { control: 'globalDimension2Code', labelKey: 'Erp::GlobalDimension2Code', slot: 2 },
+    { control: 'globalDimension1Code', labelKey: 'Erp::Setup:GlobalDimension1Code', slot: 1 },
+    { control: 'globalDimension2Code', labelKey: 'Erp::Setup:GlobalDimension2Code', slot: 2 },
   ] as const;
 
   readonly shortcutDimensionControls = [
-    { control: 'shortcutDimension3Code', labelKey: 'Erp::ShortcutDimension3Code', slot: 3 },
-    { control: 'shortcutDimension4Code', labelKey: 'Erp::ShortcutDimension4Code', slot: 4 },
-    { control: 'shortcutDimension5Code', labelKey: 'Erp::ShortcutDimension5Code', slot: 5 },
-    { control: 'shortcutDimension6Code', labelKey: 'Erp::ShortcutDimension6Code', slot: 6 },
-    { control: 'shortcutDimension7Code', labelKey: 'Erp::ShortcutDimension7Code', slot: 7 },
-    { control: 'shortcutDimension8Code', labelKey: 'Erp::ShortcutDimension8Code', slot: 8 },
+    { control: 'shortcutDimension3Code', labelKey: 'Erp::Setup:ShortcutDimension3Code', slot: 3 },
+    { control: 'shortcutDimension4Code', labelKey: 'Erp::Setup:ShortcutDimension4Code', slot: 4 },
+    { control: 'shortcutDimension5Code', labelKey: 'Erp::Setup:ShortcutDimension5Code', slot: 5 },
+    { control: 'shortcutDimension6Code', labelKey: 'Erp::Setup:ShortcutDimension6Code', slot: 6 },
+    { control: 'shortcutDimension7Code', labelKey: 'Erp::Setup:ShortcutDimension7Code', slot: 7 },
+    { control: 'shortcutDimension8Code', labelKey: 'Erp::Setup:ShortcutDimension8Code', slot: 8 },
   ] as const;
 
   readonly form = this.fb.group({
@@ -144,6 +146,7 @@ export class GeneralLedgerSetupComponent implements OnInit {
       )
       .subscribe(setup => {
         this.reset(setup);
+        this.dimensionState.reload();
         this.toaster.success('Erp::SavedSuccessfully');
       });
   }

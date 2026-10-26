@@ -383,6 +383,38 @@ public partial class ErpPermissions
         public const string Execute = Default + ".Execute";
     }
 
+    public static class LeaveManagement
+    {
+        public const string Default = GroupName + ".LeaveManagement";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Approve = Default + ".Approve";
+        public const string Post = Default + ".Post";
+    }
+
+    public static class ItemCharges
+    {
+        public const string Default = GroupName + ".ItemCharges";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+        public const string Assign = Default + ".Assign";
+    }
+
+    public static class DocumentEmailing
+    {
+        public const string Default = GroupName + ".DocumentEmailing";
+        public const string ManageTemplates = Default + ".ManageTemplates";
+        public const string Send = Default + ".Send";
+    }
+
+    public static class ChangeLog
+    {
+        public const string Default = GroupName + ".ChangeLog";
+        public const string Manage = Default + ".Manage";
+    }
+
     public static string[] GetAll()
     {
         return ReflectionHelper.GetPublicConstantsRecursively(typeof(ErpPermissions));

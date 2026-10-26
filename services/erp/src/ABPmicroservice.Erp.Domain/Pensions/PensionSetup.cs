@@ -10,8 +10,10 @@ using Volo.Abp.Domain.Services;
 namespace ABPmicroservice.Erp.Pensions;
 
 /// <summary>
-/// Pension Setup: one row per company with the number series and G/L accounts the pension
-/// processes use, and the dimension whose values are the schemes.
+/// Pension Setup: the number series, G/L accounts and options of one scheme. Every scheme has its
+/// own; the row without a scheme belongs to the company and holds the dimension whose values are
+/// the schemes. A scheme's setup starts as a copy of the company row, so the company row is also
+/// the template for new schemes.
 /// <para>
 /// The system this module is modelled on keeps each scheme in a company of its own. Here every
 /// scheme of an administrator lives in one company and is a value of one dimension, so the
@@ -21,7 +23,10 @@ namespace ABPmicroservice.Erp.Pensions;
 /// </summary>
 public class PensionSetup : CompanyEntity
 {
-    /// <summary>The dimension whose values are the schemes, e.g. "SCHEME".</summary>
+    /// <summary>The scheme this setup is for; blank on the company row.</summary>
+    public string SchemeCode { get; private set; }
+
+    /// <summary>The dimension whose values are the schemes, e.g. "SCHEME". Kept on the company row only.</summary>
     public string SchemeDimensionCode { get; private set; }
 
     public string MemberNos { get; private set; }
@@ -52,11 +57,42 @@ public class PensionSetup : CompanyEntity
 
     protected PensionSetup() { }
 
-    public PensionSetup(Guid id)
-        : base(id) { }
+    public PensionSetup(Guid id, string schemeCode = null)
+        : base(id)
+    {
+        SchemeCode = CodeTableEntity.NormalizeCode(Check.Length(schemeCode, nameof(schemeCode), ErpDomainConsts.MaxCodeLength));
+    }
+
+    /// <summary>A setup of one scheme, as opposed to the company row.</summary>
+    public bool IsSchemeSetup => SchemeCode != null;
+
+    /// <summary>A new scheme's setup: everything this one has, except the scheme dimension, which is the company's.</summary>
+    public PensionSetup CopyFor(Guid id, string schemeCode)
+    {
+        var copy = new PensionSetup(id, schemeCode);
+        copy.SetNumbering(MemberNos, SponsorNos, ContributionNos, InterestBatchNos, ExitNos);
+        copy.SetAccounts(MemberFundsAccountNo, ContributionAccrualAccountNo, InterestAccountNo, BenefitsPayableAccountNo, TaxAccountNo);
+        copy.SetOptions(AllowContributionDuplication, NoOfDaysInAYear);
+        copy.SetPensionPayroll(PensionerNos, PayrollNos, PensionsPaidAccountNo);
+        copy.SetBenefitCalculationNumbering(BenefitCalculationNos);
+        copy.SetMemberAdministration(TransfersInAccountNo, ExcessContributionAllocation, LifeCertificateFrequencyMonths, IncrementNos);
+        copy.SetPensionerDefaults(DefaultPayModeCode, TrivialPensionLimit);
+        return copy;
+    }
+
+    /// <summary>Follows the scheme when its code changes, which is allowed only while nothing uses it.</summary>
+    internal void RenameScheme(string schemeCode)
+    {
+        SchemeCode = CodeTableEntity.NormalizeCode(Check.NotNullOrWhiteSpace(schemeCode, nameof(schemeCode), ErpDomainConsts.MaxCodeLength));
+    }
 
     public void SetSchemeDimension(string schemeDimensionCode)
     {
+        if (IsSchemeSetup)
+        {
+            throw new BusinessException(ErpErrorCodes.Pensions.SchemeDimensionOnCompanySetup).WithData("scheme", SchemeCode);
+        }
+
         SchemeDimensionCode = CodeTableEntity.NormalizeCode(
             Check.Length(schemeDimensionCode, nameof(schemeDimensionCode), ErpDomainConsts.MaxDimensionCodeLength)
         );
@@ -168,7 +204,9 @@ public class PensionSetup : CompanyEntity
     public string Require(string accountNo, string field)
     {
         return accountNo.IsNullOrWhiteSpace()
-            ? throw new BusinessException(ErpErrorCodes.PostingSetup.AccountMissing).WithData("field", field).WithData("setup", "Pension Setup")
+            ? throw new BusinessException(ErpErrorCodes.PostingSetup.AccountMissing)
+                .WithData("field", field)
+                .WithData("setup", IsSchemeSetup ? $"Pension Setup of scheme {SchemeCode}" : "Pension Setup")
             : accountNo;
     }
 
@@ -188,11 +226,44 @@ public class PensionSetupManager : DomainService
         _repository = repository;
     }
 
-    /// <summary>The current company's setup, created blank on first use.</summary>
-    public async Task<PensionSetup> GetAsync()
+    /// <summary>The company row: the scheme dimension, and the template of new schemes. Created blank on first use.</summary>
+    public async Task<PensionSetup> GetCompanyAsync()
     {
-        return await _repository.FirstOrDefaultAsync()
+        return await _repository.FirstOrDefaultAsync(s => s.SchemeCode == null)
             ?? await _repository.InsertAsync(new PensionSetup(GuidGenerator.Create()), autoSave: true);
+    }
+
+    /// <summary>
+    /// The setup of a scheme. A scheme without one yet gets a copy of the company row, so a scheme
+    /// that existed before schemes had setups of their own keeps posting as it did.
+    /// </summary>
+    public async Task<PensionSetup> GetAsync(string schemeCode)
+    {
+        var code = CodeTableEntity.NormalizeCode(schemeCode);
+        if (code == null)
+        {
+            throw new BusinessException(ErpErrorCodes.Pensions.SchemeRequired);
+        }
+
+        return await _repository.FirstOrDefaultAsync(s => s.SchemeCode == code)
+            ?? await _repository.InsertAsync((await GetCompanyAsync()).CopyFor(GuidGenerator.Create(), code), autoSave: true);
+    }
+
+    /// <summary>A scheme's code changed: its setup goes with it.</summary>
+    public async Task RenameSchemeAsync(string oldCode, string newCode)
+    {
+        var setup = await _repository.FirstOrDefaultAsync(s => s.SchemeCode == oldCode);
+        if (setup != null && oldCode != newCode)
+        {
+            setup.RenameScheme(newCode);
+            await _repository.UpdateAsync(setup, autoSave: true);
+        }
+    }
+
+    /// <summary>A scheme was deleted: so is its setup.</summary>
+    public async Task DeleteSchemeAsync(string schemeCode)
+    {
+        await _repository.DeleteAsync(s => s.SchemeCode == schemeCode, autoSave: true);
     }
 }
 
@@ -361,7 +432,7 @@ public class PensionSchemeManager : DomainService
     /// <summary>The dimension the schemes are values of; the setup must name it.</summary>
     public async Task<Dimension> GetSchemeDimensionAsync()
     {
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetCompanyAsync();
         var code = setup.Require(setup.SchemeDimensionCode, "Scheme Dimension Code");
 
         return await _dimensions.FirstOrDefaultAsync(d => d.Code == code)

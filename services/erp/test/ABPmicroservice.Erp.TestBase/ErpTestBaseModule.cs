@@ -4,6 +4,7 @@ using Volo.Abp;
 using Volo.Abp.Authorization;
 using Volo.Abp.Autofac;
 using Volo.Abp.Data;
+using Volo.Abp.Emailing;
 using Volo.Abp.Modularity;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.Settings;
@@ -30,6 +31,9 @@ public class ErpTestBaseModule : AbpModule
         });
         context.Services.Replace(ServiceDescriptor.Singleton<ISettingManagementStore, InMemorySettingManagementStore>());
         context.Services.Replace(ServiceDescriptor.Singleton<IDynamicSettingDefinitionStore, NullDynamicSettingDefinitionStore>());
+
+        // Document emails are logged but never leave the test run.
+        context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)

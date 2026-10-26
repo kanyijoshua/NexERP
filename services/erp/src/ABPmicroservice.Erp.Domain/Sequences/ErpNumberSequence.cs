@@ -53,6 +53,8 @@ public static class ErpSequenceNames
     public const string ServiceLedgerEntry = "SERVLEDG";
     public const string WarrantyLedgerEntry = "WARRLEDG";
     public const string ResourceLedgerEntry = "RESLEDG";
+    public const string LeaveLedgerEntry = "LEAVELEDG";
+    public const string ChangeLogEntry = "CHANGELOG";
 
     /// <summary>
     /// Groups the entries written by one posting run,

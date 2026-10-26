@@ -444,6 +444,8 @@ export interface GeneralPostingSetupDto extends FullAuditedEntityDto<string> {
   purchDiscountAccountNo?: string;
   cogsAccountNo?: string;
   inventoryAdjmtAccountNo?: string;
+  salesPrepaymentsAccountNo?: string;
+  purchPrepaymentsAccountNo?: string;
 }
 
 export interface CreateUpdateGeneralPostingSetupDto {
@@ -457,6 +459,8 @@ export interface CreateUpdateGeneralPostingSetupDto {
   purchDiscountAccountNo?: string;
   cogsAccountNo?: string;
   inventoryAdjmtAccountNo?: string;
+  salesPrepaymentsAccountNo?: string;
+  purchPrepaymentsAccountNo?: string;
 }
 
 export interface InventoryPostingSetupDto extends FullAuditedEntityDto<string> {

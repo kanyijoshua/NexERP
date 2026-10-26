@@ -353,6 +353,15 @@ public static class ErpErrorCodes
         public const string BaseCalendarNotFound = Prefix + ":HumanResources:00009";
         public const string CalendarHasNoWorkingDays = Prefix + ":HumanResources:00010";
         public const string WorkingDaysMustBePositive = Prefix + ":HumanResources:00011";
+        public const string LeaveTypeNotFound = Prefix + ":HumanResources:00012";
+        public const string InsufficientLeaveBalance = Prefix + ":HumanResources:00013";
+        public const string LeaveGenderMismatch = Prefix + ":HumanResources:00014";
+        public const string LeaveApplicationNotOpen = Prefix + ":HumanResources:00015";
+        public const string LeaveApplicationNotReleased = Prefix + ":HumanResources:00016";
+        public const string LeaveApplicationNotPosted = Prefix + ":HumanResources:00017";
+        public const string InvalidRecallDays = Prefix + ":HumanResources:00018";
+        public const string LeaveOverlap = Prefix + ":HumanResources:00019";
+        public const string NegativeLeaveDays = Prefix + ":HumanResources:00020";
     }
 
     public static class Querying
@@ -410,6 +419,8 @@ public static class ErpErrorCodes
         public const string DeductionsExceedPension = Prefix + ":Pensions:00038";
         public const string BankBranchNotFound = Prefix + ":Pensions:00039";
         public const string PayItemInUse = Prefix + ":Pensions:00040";
+        public const string SchemeRequired = Prefix + ":Pensions:00041";
+        public const string SchemeDimensionOnCompanySetup = Prefix + ":Pensions:00042";
     }
 
     public static class Academics
@@ -621,5 +632,31 @@ public static class ErpErrorCodes
         public const string JobQueueCannotRunInProcessJob = Prefix + ":JobQueue:00004";
         public const string JobQueueHandlerNotFound = Prefix + ":JobQueue:00005";
         public const string JobQueueCannotDeleteInProcessJob = Prefix + ":JobQueue:00006";
+    }
+
+    public static class ItemCharges
+    {
+        public const string NotFound = Prefix + ":ItemCharges:00001";
+        public const string AssignmentAlreadyPosted = Prefix + ":ItemCharges:00002";
+        public const string QuantityExceeded = Prefix + ":ItemCharges:00003";
+        public const string TargetEntryNotFound = Prefix + ":ItemCharges:00004";
+        public const string LineMustBeChargeItem = Prefix + ":ItemCharges:00005";
+        public const string NotFullyAssigned = Prefix + ":ItemCharges:00006";
+    }
+
+    public static class Emailing
+    {
+        public const string TemplateCodeAlreadyExists = Prefix + ":Emailing:00001";
+        public const string RecipientEmailRequired = Prefix + ":Emailing:00002";
+        public const string TemplateNotFound = Prefix + ":Emailing:00003";
+        public const string DocumentNotFound = Prefix + ":Emailing:00004";
+        public const string SendFailed = Prefix + ":Emailing:00005";
+    }
+
+    public static class Auditing
+    {
+        public const string ChangeLogTableAlreadyExists = Prefix + ":Auditing:00001";
+        public const string UnknownTable = Prefix + ":Auditing:00002";
+        public const string UnknownField = Prefix + ":Auditing:00003";
     }
 }

@@ -95,7 +95,9 @@ public class GeneralPostingSetupAppService
             input.PurchCreditMemoAccountNo,
             input.PurchDiscountAccountNo,
             input.COGSAccountNo,
-            input.InventoryAdjmtAccountNo
+            input.InventoryAdjmtAccountNo,
+            input.SalesPrepaymentsAccountNo,
+            input.PurchPrepaymentsAccountNo
         );
 
         var bus = PostingGroupBase.NormalizeCode(input.GenBusPostingGroup);
@@ -112,6 +114,7 @@ public class GeneralPostingSetupAppService
         setup.SetSalesAccounts(input.SalesAccountNo, input.SalesCreditMemoAccountNo, input.SalesDiscountAccountNo);
         setup.SetPurchaseAccounts(input.PurchAccountNo, input.PurchCreditMemoAccountNo, input.PurchDiscountAccountNo);
         setup.SetInventoryAccounts(input.COGSAccountNo, input.InventoryAdjmtAccountNo);
+        setup.SetPrepaymentAccounts(input.SalesPrepaymentsAccountNo, input.PurchPrepaymentsAccountNo);
     }
 }
 

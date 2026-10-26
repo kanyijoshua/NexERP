@@ -9,7 +9,8 @@ import {
 } from '@proxy/sales';
 import { Observable, map } from 'rxjs';
 import { DocumentLineType } from '@proxy/documents';
-import { ItemTrackingSourceType } from '@proxy/inventory';
+import { ItemChargeSourceType, ItemTrackingSourceType } from '@proxy/inventory';
+import { EmailDocumentType } from '@proxy/emailing';
 import { ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
@@ -20,6 +21,7 @@ import {
   DocumentListBase,
   DocumentMode,
   NewDocumentInput,
+  PREPAYMENT_FIELDS,
   OpenSourceLine,
   PostingLine,
   PostingResult,
@@ -33,6 +35,14 @@ const SALES_PAGES: Record<SalesDocumentType, { titleKey: string; icon: string; m
   [SalesDocumentType.CreditMemo]: { titleKey: 'Erp::SalesCreditMemos', icon: 'fas fa-file-circle-minus', mode: 'invoice' },
   [SalesDocumentType.BlanketOrder]: { titleKey: 'Erp::SalesBlanketOrders', icon: 'fas fa-file-contract', mode: 'blanket' },
   [SalesDocumentType.ReturnOrder]: { titleKey: 'Erp::SalesReturnOrders', icon: 'fas fa-rotate-left', mode: 'order' },
+};
+
+/** The documents that can be emailed to the customer, as the email templates know them. */
+const EMAIL_TYPES: Partial<Record<SalesDocumentType, EmailDocumentType>> = {
+  [SalesDocumentType.Quote]: EmailDocumentType.SalesQuote,
+  [SalesDocumentType.Order]: EmailDocumentType.SalesOrder,
+  [SalesDocumentType.Invoice]: EmailDocumentType.SalesInvoice,
+  [SalesDocumentType.CreditMemo]: EmailDocumentType.SalesCreditMemo,
 };
 
 /**
@@ -66,11 +76,14 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
   ) {
     super();
     this.trackingSourceType = ItemTrackingSourceType.SalesLine;
+    this.chargeSourceType = ItemChargeSourceType.SalesLine;
     this.documentType = (route.snapshot.data['documentType'] as SalesDocumentType) ?? SalesDocumentType.Invoice;
     const page = SALES_PAGES[this.documentType];
     this.titleKey = page.titleKey;
     this.icon = page.icon;
     this.mode = page.mode;
+    this.emailDocumentType = EMAIL_TYPES[this.documentType] ?? null;
+    this.supportsPrepayment = this.documentType === SalesDocumentType.Order;
 
     const isReturn = this.documentType === SalesDocumentType.ReturnOrder || this.documentType === SalesDocumentType.CreditMemo;
     this.shipLabelKey = isReturn ? 'Erp::ReceiveReturn' : 'Erp::Ship';
@@ -88,6 +101,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
       { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', entity: 'location' },
       { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'lookup', entity: 'paymentTerms' },
       { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', entity: 'currency' },
+      ...(this.supportsPrepayment ? PREPAYMENT_FIELDS : []),
     ];
   }
 
@@ -134,6 +148,8 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
       lineDiscountPercent: Number(l.lineDiscountPercent) || 0,
       unitOfMeasureCode: l.unitOfMeasureCode || undefined,
       locationCode: l.locationCode || undefined,
+      // The header's prepayment % applies to every line not prepaid yet.
+      prepaymentPct: undefined,
       qtyToShip: undefined,
       qtyToInvoice: undefined,
       ...toPost,
@@ -209,6 +225,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
           quantityInvoiced: l.quantityInvoiced,
           sourceNo: l.shipmentNo,
           isItem: l.type === DocumentLineType.Item,
+          isCharge: l.type === DocumentLineType.ChargeItem,
         })),
       ),
     );

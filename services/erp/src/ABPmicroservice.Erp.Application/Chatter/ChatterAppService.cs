@@ -12,6 +12,9 @@ namespace ABPmicroservice.Erp.Chatter;
 [Authorize(ErpPermissions.Chatter.Default)]
 public class ChatterAppService : ErpAppService, IChatterAppService
 {
+    /// <summary>The newest activity entries a record's chatter shows.</summary>
+    public const int MaxActivityEntries = 200;
+
     private readonly IRepository<DocumentNote, Guid> _noteRepository;
     private readonly IRepository<ActivityStreamEntry, Guid> _activityStreamRepository;
     private readonly IRepository<DocumentActivityTask, Guid> _taskRepository;
@@ -29,14 +32,13 @@ public class ChatterAppService : ErpAppService, IChatterAppService
 
     public async Task<ListResultDto<DocumentNoteDto>> GetNotesAsync(ChatterEntityInput input)
     {
-        var notes = await _noteRepository.GetListAsync(n =>
-            n.EntityType == input.EntityType && n.EntityId == input.EntityId
-        );
+        // Every card asks for this when it opens: filtered and sorted by the database, on its index.
+        var query = (await _noteRepository.GetQueryableAsync())
+            .Where(n => n.EntityType == input.EntityType && n.EntityId == input.EntityId)
+            .OrderByDescending(n => n.CreationTime);
 
         return new ListResultDto<DocumentNoteDto>(
-            ObjectMapper.Map<List<DocumentNote>, List<DocumentNoteDto>>(
-                notes.OrderByDescending(n => n.CreationTime).ToList()
-            )
+            ObjectMapper.Map<List<DocumentNote>, List<DocumentNoteDto>>(await AsyncExecuter.ToListAsync(query))
         );
     }
 
@@ -58,27 +60,26 @@ public class ChatterAppService : ErpAppService, IChatterAppService
 
     public async Task<ListResultDto<ActivityStreamEntryDto>> GetActivityStreamAsync(ChatterEntityInput input)
     {
-        var entries = await _activityStreamRepository.GetListAsync(a =>
-            a.EntityType == input.EntityType && a.EntityId == input.EntityId
-        );
+        // The stream only grows; a card shows its most recent part.
+        var query = (await _activityStreamRepository.GetQueryableAsync())
+            .Where(a => a.EntityType == input.EntityType && a.EntityId == input.EntityId)
+            .OrderByDescending(a => a.CreationTime)
+            .Take(MaxActivityEntries);
 
         return new ListResultDto<ActivityStreamEntryDto>(
-            ObjectMapper.Map<List<ActivityStreamEntry>, List<ActivityStreamEntryDto>>(
-                entries.OrderByDescending(a => a.CreationTime).ToList()
-            )
+            ObjectMapper.Map<List<ActivityStreamEntry>, List<ActivityStreamEntryDto>>(await AsyncExecuter.ToListAsync(query))
         );
     }
 
     public async Task<ListResultDto<DocumentActivityTaskDto>> GetTasksAsync(ChatterEntityInput input)
     {
-        var tasks = await _taskRepository.GetListAsync(t =>
-            t.EntityType == input.EntityType && t.EntityId == input.EntityId
-        );
+        var query = (await _taskRepository.GetQueryableAsync())
+            .Where(t => t.EntityType == input.EntityType && t.EntityId == input.EntityId)
+            .OrderBy(t => t.Completed)
+            .ThenBy(t => t.DueDate);
 
         return new ListResultDto<DocumentActivityTaskDto>(
-            ObjectMapper.Map<List<DocumentActivityTask>, List<DocumentActivityTaskDto>>(
-                tasks.OrderBy(t => t.Completed).ThenBy(t => t.DueDate).ToList()
-            )
+            ObjectMapper.Map<List<DocumentActivityTask>, List<DocumentActivityTaskDto>>(await AsyncExecuter.ToListAsync(query))
         );
     }
 

@@ -41,7 +41,7 @@ public class PensionSponsorAppService
         await CheckCreatePolicyAsync();
         await ValidateAsync(input);
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(input.SchemeCode);
         var no = (await _noSeriesManager.ResolveNoAsync(setup.SponsorNos, input.No, Clock.Now)).ToUpperInvariant();
         await EnsureNoIsUniqueAsync(no, null);
 
@@ -169,7 +169,7 @@ public class PensionMemberAppService
         var sponsor = await GetSponsorAsync(input.SponsorNo);
         var scheme = await _schemeManager.GetOpenAsync(sponsor.SchemeCode);
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(scheme.Code);
         var no = (await _noSeriesManager.ResolveNoAsync(setup.MemberNos, input.No, Clock.Now)).ToUpperInvariant();
         await EnsureNoIsUniqueAsync(no, null);
 
@@ -371,7 +371,7 @@ public class PensionContributionAppService
         var sponsor = await GetSponsorAsync(input.SponsorNo);
         await _schemeManager.GetOpenAsync(sponsor.SchemeCode);
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(sponsor.SchemeCode);
         var postingDate = input.PostingDate == default ? Clock.Now.Date : input.PostingDate;
         var no = (await _noSeriesManager.ResolveNoAsync(setup.ContributionNos, input.No, postingDate)).ToUpperInvariant();
 
@@ -673,7 +673,7 @@ public class MemberExitAppService
         var member = await GetMemberAsync(input.MemberNo);
         var exitDate = input.ExitDate == default ? Clock.Now.Date : input.ExitDate;
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(member.SchemeCode);
         var no = (await _noSeriesManager.ResolveNoAsync(setup.ExitNos, input.No, exitDate)).ToUpperInvariant();
 
         if (await Repository.AnyAsync(x => x.No == no))

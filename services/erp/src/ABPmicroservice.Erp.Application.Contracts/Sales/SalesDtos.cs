@@ -207,6 +207,11 @@ public class SalesHeaderDto : FullAuditedEntityDto<Guid>
     public string QuoteNo { get; set; }
     public string LastShippingNo { get; set; }
     public string LastPostingNo { get; set; }
+    public decimal PrepaymentPct { get; set; }
+    public decimal PrepmtInvoicedAmount { get; set; }
+    public decimal PrepmtDeductedAmount { get; set; }
+    public string LastPrepmtInvoiceNo { get; set; }
+    public string LastPrepmtCrMemoNo { get; set; }
     public List<SalesLineDto> Lines { get; set; } = new();
 }
 
@@ -246,6 +251,10 @@ public class SalesLineDto : EntityDto<Guid>
     public string DeferralCode { get; set; }
     public string ProjectNo { get; set; }
     public string ProjectTaskNo { get; set; }
+    public decimal PrepaymentPct { get; set; }
+    public decimal PrepmtLineAmount { get; set; }
+    public decimal PrepmtAmtInv { get; set; }
+    public decimal PrepmtAmtDeducted { get; set; }
 }
 
 public class CreateUpdateSalesHeaderDto
@@ -267,6 +276,7 @@ public class CreateUpdateSalesHeaderDto
     public string ShipToCountryRegionCode { get; set; }
     public string ShipToContact { get; set; }
     public DateTime? ShipmentDate { get; set; }
+    public decimal PrepaymentPct { get; set; }
     public List<SalesLineInputDto> Lines { get; set; } = new();
 }
 
@@ -298,6 +308,8 @@ public class SalesLineInputDto
 
     /// <summary>On an order: how much the next posting invoices. Blank invoices everything shipped.</summary>
     public decimal? QtyToInvoice { get; set; }
+
+    public decimal? PrepaymentPct { get; set; }
 }
 
 public class GetSalesDocumentListInput : ErpPagedListInput

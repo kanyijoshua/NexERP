@@ -1,9 +1,11 @@
 using ABPmicroservice.Erp.Attachments;
+using ABPmicroservice.Erp.Auditing;
 using ABPmicroservice.Erp.CashManagement;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
 using ABPmicroservice.Erp.Exporting;
+using ABPmicroservice.Erp.Emailing;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Integration;
@@ -19,6 +21,7 @@ using ABPmicroservice.Erp.Purchasing;
 using ABPmicroservice.Erp.Reporting;
 using ABPmicroservice.Erp.Sales;
 using ABPmicroservice.Erp.Workflows;
+using System.Linq;
 using AutoMapper;
 
 namespace ABPmicroservice.Erp;
@@ -39,7 +42,13 @@ public class ErpApplicationAutoMapperProfile : Profile
             .ForMember(d => d.LineCount, o => o.Ignore())
             .ForMember(d => d.Balance, o => o.Ignore())
             .ForMember(d => d.Recurring, o => o.Ignore());
-        CreateMap<GenJournalLine, GenJournalLineDto>();
+        CreateMap<GenJournalLine, GenJournalLineDto>()
+            .ForMember(d => d.ShortcutDimension3Code, o => o.Ignore())
+            .ForMember(d => d.ShortcutDimension4Code, o => o.Ignore())
+            .ForMember(d => d.ShortcutDimension5Code, o => o.Ignore())
+            .ForMember(d => d.ShortcutDimension6Code, o => o.Ignore())
+            .ForMember(d => d.ShortcutDimension7Code, o => o.Ignore())
+            .ForMember(d => d.ShortcutDimension8Code, o => o.Ignore());
         CreateMap<GLRegister, GLRegisterDto>();
         CreateMap<StandardGeneralJournal, StandardJournalDto>().ForMember(d => d.LineCount, o => o.Ignore());
         CreateMap<ReversalResult, ReversalResultDto>();
@@ -50,6 +59,8 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ItemCategory, ItemCategoryDto>();
         CreateMap<UnitOfMeasure, UnitOfMeasureDto>();
         CreateMap<ItemLedgerEntry, ItemLedgerEntryDto>();
+        CreateMap<ItemCharge, ItemChargeDto>();
+        CreateMap<ItemChargeAssignment, ItemChargeAssignmentDto>();
 
         // Sales
         CreateMap<Customer, CustomerDto>();
@@ -205,10 +216,23 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<Employee, EmployeeDto>();
         CreateMap<EmployeeLedgerEntry, EmployeeLedgerEntryDto>();
         CreateMap<EmployeeAbsence, EmployeeAbsenceDto>();
+        CreateMap<LeaveType, LeaveTypeDto>();
+        CreateMap<LeaveLedgerEntry, LeaveLedgerEntryDto>();
+        CreateMap<LeaveApplication, LeaveApplicationDto>();
 
         // Dimensions
         CreateMap<Dimension, DimensionDto>();
         CreateMap<DimensionValue, DimensionValueDto>();
+
+        // Change log
+        CreateMap<ChangeLogTable, ChangeLogTableDto>().ForMember(d => d.TrackedFields, o => o.MapFrom(s => s.GetTrackedFields().ToList()));
+        CreateMap<ChangeLogEntry, ChangeLogEntryDto>();
+
+        // Document emailing
+        CreateMap<EmailTemplate, EmailTemplateDto>();
+        CreateMap<SentEmailLog, SentEmailLogDto>();
+        CreateMap<DocumentEmailAttachment, DocumentEmailAttachmentDto>();
+        CreateMap<DocumentEmailPreview, DocumentEmailPreviewDto>();
 
         // Workflows
         CreateMap<Workflow, WorkflowDto>();

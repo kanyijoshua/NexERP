@@ -493,6 +493,7 @@ public class ApprovalsManager : DomainService
             ApprovalDocumentKind.PaymentVoucher => await _paymentVoucherRepository.GetAsync(documentId),
             ApprovalDocumentKind.PurchaseRequisition => await LazyServiceProvider.LazyGetRequiredService<IRepository<PurchaseRequisition, Guid>>().GetAsync(documentId),
             ApprovalDocumentKind.Tender => await LazyServiceProvider.LazyGetRequiredService<IRepository<TenderHeader, Guid>>().GetAsync(documentId),
+            ApprovalDocumentKind.LeaveApplication => await LazyServiceProvider.LazyGetRequiredService<IRepository<HumanResources.LeaveApplication, Guid>>().GetAsync(documentId),
             _ => await _purchaseHeaderRepository.GetAsync(documentId),
         };
     }
@@ -517,6 +518,10 @@ public class ApprovalsManager : DomainService
                 await LazyServiceProvider.LazyGetRequiredService<IRepository<TenderHeader, Guid>>().UpdateAsync((TenderHeader)document);
                 break;
 
+            case ApprovalDocumentKind.LeaveApplication:
+                await LazyServiceProvider.LazyGetRequiredService<IRepository<HumanResources.LeaveApplication, Guid>>().UpdateAsync((HumanResources.LeaveApplication)document);
+                break;
+
             default:
                 await _purchaseHeaderRepository.UpdateAsync((PurchaseHeader)document);
                 break;
@@ -534,6 +539,7 @@ public class ApprovalsManager : DomainService
                 ApprovalDocumentKind.PaymentVoucher => nameof(PaymentVoucherHeader),
                 ApprovalDocumentKind.PurchaseRequisition => nameof(PurchaseRequisition),
                 ApprovalDocumentKind.Tender => nameof(TenderHeader),
+                ApprovalDocumentKind.LeaveApplication => nameof(HumanResources.LeaveApplication),
                 _ => nameof(PurchaseHeader),
             },
             document.Id,

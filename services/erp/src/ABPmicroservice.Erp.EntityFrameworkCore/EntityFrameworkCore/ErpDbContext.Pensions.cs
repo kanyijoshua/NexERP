@@ -52,7 +52,9 @@ public static class ErpPensionsModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "PensionSetups", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
-            b.HasCompanyUniqueIndex();
+            b.Property(x => x.SchemeCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
+            // One setup per scheme, and one company row (blank scheme): nulls count as equal here.
+            b.HasCompanyUniqueIndex(nameof(PensionSetup.SchemeCode));
         });
 
         builder.Entity<PensionScheme>(b =>

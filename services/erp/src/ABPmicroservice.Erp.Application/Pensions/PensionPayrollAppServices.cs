@@ -43,7 +43,7 @@ public class PensionerAppService
         await CheckCreatePolicyAsync();
 
         var (scheme, name, member) = await ResolveAsync(input);
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(scheme);
         var startDate = input.StartDate == default ? Clock.Now.Date : input.StartDate;
         var no = (await _noSeriesManager.ResolveNoAsync(setup.PensionerNos, input.No, startDate)).ToUpperInvariant();
 
@@ -237,7 +237,7 @@ public class PensionPayrollAppService
         await CheckCreatePolicyAsync();
 
         var scheme = await _schemeManager.GetAsync(input.SchemeCode);
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(scheme.Code);
         var postingDate = input.PostingDate == default ? Clock.Now.Date : input.PostingDate;
         var no = (await _noSeriesManager.ResolveNoAsync(setup.PayrollNos, input.No, postingDate)).ToUpperInvariant();
 

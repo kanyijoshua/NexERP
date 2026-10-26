@@ -76,6 +76,7 @@ export interface CreateUpdateSalesHeaderDto {
   shipToCountryRegionCode?: string;
   shipToContact?: string;
   shipmentDate?: string;
+  prepaymentPct?: number;
   lines: SalesLineInputDto[];
 }
 
@@ -179,6 +180,11 @@ export interface SalesHeaderDto extends FullAuditedEntityDto<string> {
   quoteNo?: string;
   lastShippingNo?: string;
   lastPostingNo?: string;
+  prepaymentPct: number;
+  prepmtInvoicedAmount: number;
+  prepmtDeductedAmount: number;
+  lastPrepmtInvoiceNo?: string;
+  lastPrepmtCrMemoNo?: string;
   lines: SalesLineDto[];
 }
 
@@ -217,6 +223,10 @@ export interface SalesLineDto extends EntityDto<string> {
   deferralCode?: string;
   projectNo?: string;
   projectTaskNo?: string;
+  prepaymentPct: number;
+  prepmtLineAmount: number;
+  prepmtAmtInv: number;
+  prepmtAmtDeducted: number;
 }
 
 export interface SalesLineInputDto {
@@ -236,6 +246,7 @@ export interface SalesLineInputDto {
   deferralCode?: string;
   projectNo?: string;
   projectTaskNo?: string;
+  prepaymentPct?: number;
 }
 
 export interface SalesReceivablesSetupDto {

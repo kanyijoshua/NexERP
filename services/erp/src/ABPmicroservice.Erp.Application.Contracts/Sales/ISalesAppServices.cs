@@ -68,6 +68,12 @@ public interface ISalesDocumentAppService
 
     /// <summary>Appends the lines of another sales document. Routed as POST .../{id}/copy-lines-from.</summary>
     Task<SalesHeaderDto> CopyLinesFromAsync(Guid id, CopyDocumentLinesInput input);
+
+    /// <summary>Posts a Prepayment Invoice from a Sales Order. Routed as POST .../{id}/run-prepayment-posting.</summary>
+    Task<SalesPostingResultDto> RunPrepaymentPostingAsync(Guid id);
+
+    /// <summary>Posts a Prepayment Credit Memo from a Sales Order. Routed as POST .../{id}/run-prepayment-credit-memo-posting.</summary>
+    Task<SalesPostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id);
 }
 
 public interface IPostedSalesShipmentAppService

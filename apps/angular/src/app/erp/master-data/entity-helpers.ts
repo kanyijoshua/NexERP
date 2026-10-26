@@ -1,6 +1,7 @@
 import { PagedResultDto } from '@abp/ng.core';
-import { Observable } from 'rxjs';
+import { Observable, filter, map } from 'rxjs';
 import { DocumentLineOption, RecordAction, RecordColumn, RecordEntity, RecordField, RecordSection } from '../erp-shared';
+import { RecordDialogService } from '../erp-shared/record/record-dialog.service';
 
 /** Enum options labelled `Erp::Enum:<EnumName>.<Member>`. */
 export function enumOptions(
@@ -155,4 +156,49 @@ export function postingGroupEntity<TDto extends { id?: string; code?: string; de
     columns: account ? [{ field: account.field, labelKey: account.labelKey, width: 160 }] : [],
     fields: [...(account ? [accountField(account.field, account.labelKey, 'general', true)] : []), ...extraFields],
   });
+}
+
+export interface InputDialogOptions<TInput> {
+  titleKey: string;
+  icon: string;
+  /** Full permission name of the action. */
+  permission: string;
+  fields: RecordField[];
+  /** Values the form starts with. */
+  values?: Partial<TInput>;
+  /** Runs the action with what was entered. */
+  submit(input: TInput): Observable<unknown>;
+}
+
+/**
+ * Asks for the input of an action (days to recall, an approver's comment) in the record card
+ * dialog, then runs it. Emits what the action returned; completes without a value when cancelled, so a
+ * card action that returns it reloads only after a real run.
+ */
+export function runWithInput<TInput, TResult = unknown>(
+  dialogs: RecordDialogService,
+  options: InputDialogOptions<TInput>,
+): Observable<TResult> {
+  const entity: RecordEntity<any, TInput> = {
+    key: 'actionInput',
+    titleKey: options.titleKey,
+    pluralKey: options.titleKey,
+    icon: options.icon,
+    permission: options.permission,
+    editPermission: options.permission,
+    columns: [],
+    sections: [{ key: 'general', labelKey: 'Erp::General' }],
+    fields: options.fields,
+    getList: () => { throw new Error('An input dialog has no list.'); },
+    get: () => { throw new Error('An input dialog has no records.'); },
+    create: input => options.submit(input).pipe(map(result => result ?? {})),
+    update: () => { throw new Error('An input dialog has no records.'); },
+    delete: () => { throw new Error('An input dialog has no records.'); },
+    toItem: () => ({ code: '' }),
+    newRecord: () => ({ ...(options.values ?? {}) }),
+  };
+  return dialogs.openCard<TResult>(entity, { quick: false }).pipe(
+    filter(result => !!result),
+    map(result => result!.record),
+  );
 }

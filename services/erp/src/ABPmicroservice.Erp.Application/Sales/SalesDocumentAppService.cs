@@ -244,6 +244,36 @@ public class SalesDocumentAppService
         return await MapToGetOutputDtoAsync(await Flow.CopyLinesAsync(id, input.SourceDocumentId));
     }
 
+    [Authorize(ErpPermissions.SalesDocuments.Post)]
+    public async Task<SalesPostingResultDto> RunPrepaymentPostingAsync(Guid id)
+    {
+        // A prepayment invoice releases the order, so it passes the same checks as posting.
+        var toPost = await GetEntityByIdAsync(id);
+        await _approvalsManager.EnsureCanReleaseAsync(ApprovalKind, toPost);
+        if (toPost.Status == DocumentStatus.Open)
+        {
+            await EnsureWithinCreditLimitAsync(toPost);
+        }
+
+        var invoice = await _salesPostingEngine.PostPrepaymentAsync(id, creditMemo: false);
+        return new SalesPostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = invoice.No,
+        };
+    }
+
+    [Authorize(ErpPermissions.SalesDocuments.Post)]
+    public async Task<SalesPostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id)
+    {
+        var crMemo = await _salesPostingEngine.PostPrepaymentAsync(id, creditMemo: true);
+        return new SalesPostingResultDto
+        {
+            Document = await MapToGetOutputDtoAsync(await GetEntityByIdAsync(id)),
+            InvoiceNo = crMemo.No,
+        };
+    }
+
     private SalesDocumentFlow Flow => LazyServiceProvider.LazyGetRequiredService<SalesDocumentFlow>();
 
     [Authorize(ErpPermissions.SalesDocuments.Update)]
@@ -339,6 +369,7 @@ public class SalesDocumentAppService
         );
         header.SetShipmentDate(input.ShipmentDate);
         header.SetCustomerPriceGroup(customer.CustomerPriceGroup);
+        header.SetPrepayment(input.PrepaymentPct != 0m ? input.PrepaymentPct : customer.PrepaymentPct);
     }
 
     /// <summary>
@@ -384,6 +415,10 @@ public class SalesDocumentAppService
 
         foreach (var lineInput in input.Lines)
         {
+            if (lineInput.Type == DocumentLineType.ChargeItem)
+            {
+                await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<ItemCharge>(lineInput.No);
+            }
             var (unitPrice, discount) = await PriceOfAsync(header, lineInput);
             var existing = lineInput.Id.HasValue ? header.Lines.FirstOrDefault(l => l.Id == lineInput.Id.Value) : null;
             var line = existing != null
@@ -396,7 +431,13 @@ public class SalesDocumentAppService
             await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<ABPmicroservice.Erp.Finance.DeferralTemplate>(lineInput.DeferralCode);
             line.SetDeferralCode(lineInput.DeferralCode);
             line.SetProject(lineInput.ProjectNo, lineInput.ProjectTaskNo);
+            // Once a prepayment is invoiced the line keeps its percentage; a credit memo frees it again.
+            if (lineInput.PrepaymentPct.HasValue && line.PrepmtAmtInv == 0m)
+            {
+                line.SetPrepaymentPct(lineInput.PrepaymentPct.Value);
+            }
         }
+        header.RecalculateTotals();
     }
 
     /// <summary>The variant of an item line and how many base units one unit of its unit of measure holds.</summary>

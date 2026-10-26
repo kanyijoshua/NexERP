@@ -10,8 +10,13 @@ namespace ABPmicroservice.Erp.Pensions;
 
 // ---------------------------------------------------------------------------- Setup
 
+/// <summary>The setup of one scheme, or of the company when <see cref="SchemeCode"/> is blank.</summary>
 public class PensionSetupDto
 {
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string SchemeCode { get; set; }
+
+    /// <summary>The company's: shown on a scheme's setup too, but changed only on the company's.</summary>
     [StringLength(ErpDomainConsts.MaxDimensionCodeLength)]
     public string SchemeDimensionCode { get; set; }
 
@@ -82,7 +87,8 @@ public class PensionSetupDto
 
 public interface IPensionSetupAppService : IApplicationService
 {
-    Task<PensionSetupDto> GetAsync();
+    /// <summary>The setup of a scheme; the company's when no scheme is given. Routed as GET ...?schemeCode=.</summary>
+    Task<PensionSetupDto> GetAsync(string schemeCode = null);
 
     Task<PensionSetupDto> UpdateAsync(PensionSetupDto input);
 }

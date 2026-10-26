@@ -109,6 +109,8 @@ export class RequestsToApproveComponent implements OnInit {
         return ['/erp/purchase-requisitions'];
       case ApprovalDocumentKind.Tender:
         return ['/erp/tenders'];
+      case ApprovalDocumentKind.LeaveApplication:
+        return ['/erp/leave-applications'];
       default:
         return ['/erp/sales-invoices'];
     }

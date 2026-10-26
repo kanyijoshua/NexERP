@@ -82,6 +82,7 @@ import { CrmEntities } from './crm-entities';
 import { ProjectEntities } from './project-entities';
 import { ManufacturingEntities } from './manufacturing-entities';
 import { ServiceEntities } from './service-entities';
+import { EverydayOperationsEntities } from './everyday-operations-entities';
 import { reorderPolicyOptions, replenishmentSystemOptions } from '@proxy/manufacturing';
 import { ItemUnitOfMeasureService, ItemVariantService, costingMethodOptions, CostingMethod } from '@proxy/inventory';
 import { ProcurementEntities } from './procurement-entities';
@@ -204,6 +205,7 @@ export class MasterDataEntities {
   private readonly projectEntities = inject(ProjectEntities);
   private readonly manufacturingEntities = inject(ManufacturingEntities);
   private readonly serviceEntities = inject(ServiceEntities);
+  private readonly everydayOperations = inject(EverydayOperationsEntities);
   private readonly itemVariants = inject(ItemVariantService);
   private readonly itemUnits = inject(ItemUnitOfMeasureService);
   private readonly customerLedgerEntries = inject(CustomerLedgerEntryService);
@@ -425,6 +427,8 @@ export class MasterDataEntities {
         cardOnly: true,
       },
       { field: 'inventory', labelKey: 'Erp::Inventory', type: 'readonly' },
+      { field: 'netWeight', labelKey: 'Erp::NetWeight', type: 'number', min: 0, cardOnly: true },
+      { field: 'unitVolume', labelKey: 'Erp::UnitVolume', type: 'number', min: 0, cardOnly: true },
       { field: 'unitPrice', labelKey: 'Erp::UnitPrice', type: 'currency', section: 'prices', min: 0 },
       { field: 'unitCost', labelKey: 'Erp::UnitCost', type: 'currency', section: 'costs', min: 0, cardOnly: true },
       { field: 'genProdPostingGroup', labelKey: 'Erp::GenProdPostingGroup', type: 'lookup', lookupEntity: 'genProdPostingGroup', section: 'costs', cardOnly: true },
@@ -459,7 +463,7 @@ export class MasterDataEntities {
     delete: id => this.items.delete(id),
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
     // An item needs a number and a unit of measure, so there is no one-click "Create 'term'".
-    newRecord: term => ({ description: term ?? '', type: ItemType.Inventory, unitPrice: 0, unitCost: 0, costingMethod: CostingMethod.Fifo }),
+    newRecord: term => ({ description: term ?? '', type: ItemType.Inventory, unitPrice: 0, unitCost: 0, netWeight: 0, unitVolume: 0, costingMethod: CostingMethod.Fifo }),
     related: dto =>
       of([
         {
@@ -889,9 +893,11 @@ export class MasterDataEntities {
       accountField('salesAccountNo', 'Erp::SalesAccount', 'sales'),
       accountField('salesCreditMemoAccountNo', 'Erp::SalesCreditMemoAccount', 'sales'),
       accountField('salesDiscountAccountNo', 'Erp::SalesDiscountAccount', 'sales'),
+      accountField('salesPrepaymentsAccountNo', 'Erp::SalesPrepaymentsAccount', 'sales'),
       accountField('purchAccountNo', 'Erp::PurchAccount', 'purchases'),
       accountField('purchCreditMemoAccountNo', 'Erp::PurchCreditMemoAccount', 'purchases'),
       accountField('purchDiscountAccountNo', 'Erp::PurchDiscountAccount', 'purchases'),
+      accountField('purchPrepaymentsAccountNo', 'Erp::PurchPrepaymentsAccount', 'purchases'),
       accountField('cogsAccountNo', 'Erp::COGSAccount', 'inventory'),
       accountField('inventoryAdjmtAccountNo', 'Erp::InventoryAdjmtAccount', 'inventory'),
     ],
@@ -976,6 +982,7 @@ export class MasterDataEntities {
       ...this.projectEntities.all,
       ...this.manufacturingEntities.all,
       ...this.serviceEntities.all,
+      ...this.everydayOperations.all,
     ];
   }
 }

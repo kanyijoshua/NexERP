@@ -6,7 +6,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ErpTableComponent } from '../table/erp-table.component';
 import { ErpTableColumn, ErpTableSource } from '../table/erp-table.models';
 import { openRecordCardDialog } from './record-card-dialog.component';
-import { RecordEntity, recordPermission, toRecordTableColumns } from './record-entity';
+import { RecordEntity, RecordListAction, recordPermission, toRecordTableColumns } from './record-entity';
 
 type Row = Record<string, any>;
 
@@ -45,10 +45,13 @@ export class RecordListDialogComponent implements OnInit {
 
   canCreate = false;
   canDelete = false;
+  listActions: RecordListAction[] = [];
+  runningAction = false;
 
   ngOnInit(): void {
     this.canCreate = this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Create'));
     this.canDelete = this.permissions.getGrantedPolicy(recordPermission(this.entity, 'Delete'));
+    this.listActions = (this.entity.listActions ?? []).filter(a => !a.permission || this.permissions.getGrantedPolicy(a.permission));
     this.columns = toRecordTableColumns(this.entity.columns);
     this.source = query => this.entity.getList(query);
   }
@@ -126,6 +129,33 @@ export class RecordListDialogComponent implements OnInit {
             this.toaster.success('Erp::DeletedSuccessfully');
             this.table?.reload();
           });
+      });
+  }
+
+  /** A toolbar action of the table, e.g. "Suggest Allocation"; the list reloads after it. */
+  runListAction(action: RecordListAction): void {
+    const go = () => {
+      this.runningAction = true;
+      action.run().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.toaster.success('Erp::SavedSuccessfully');
+          this.table?.reload();
+        },
+        error: () => (this.runningAction = false),
+        complete: () => (this.runningAction = false),
+      });
+    };
+    if (!action.confirmKey) {
+      go();
+      return;
+    }
+    this.confirmation
+      .warn(action.confirmKey, action.labelKey)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(status => {
+        if (status === Confirmation.Status.confirm) {
+          go();
+        }
       });
   }
 

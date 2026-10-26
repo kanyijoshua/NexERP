@@ -164,6 +164,12 @@ public class PurchasePostingEngine : DomainService
         // the document instead of leaving half of it posted.
         var plans = await PlanLinesAsync(header, vendor, toReceive.Union(toInvoice).ToList());
 
+        // A charge line is only invoiced once it is assigned to the receipts it adds cost to.
+        foreach (var line in toInvoice.Where(l => l.Type == DocumentLineType.ChargeItem))
+        {
+            await ItemCharges.EnsureFullyAssignedAsync(ItemChargeSourceType.PurchaseLine, line.Id, line.QtyToInvoice);
+        }
+
         // As on a sales document: the vendor entry keeps the currency, the G/L and the item costs
         // get LCY, and the vendor's LCY is the sum of the converted G/L lines.
         var currencyCode = await CurrencyManager.NormalizeAsync(header.CurrencyCode);
@@ -219,6 +225,185 @@ public class PurchasePostingEngine : DomainService
         }
 
         return new PurchasePostingResult { Invoice = postedHeader, Receipt = received.Receipt };
+    }
+
+    /// <summary>
+    /// Posts a Prepayment Invoice (or Prepayment Credit Memo when <paramref name="creditMemo"/> is true)
+    /// from an open or released Purchase Order based on the lines' <see cref="PurchaseLine.PrepmtLineAmount"/>.
+    /// </summary>
+    public async Task<PostedPurchaseHeader> PostPrepaymentAsync(Guid purchaseHeaderId, bool creditMemo = false)
+    {
+        var header = await _purchaseHeaderRepository.GetAsync(purchaseHeaderId, includeDetails: true);
+        if (header.Posted)
+        {
+            throw new DocumentAlreadyPostedException(header.No);
+        }
+        header.EnsureNotClosed();
+        if (header.DocumentType != PurchaseDocumentType.Order)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.DocumentTypeCannotBePosted)
+                .WithData("documentType", header.DocumentType.ToString())
+                .WithData("documentNo", header.No);
+        }
+
+        await _glSetupManager.CheckPostingDateAsync(header.PostingDate);
+        var vendor = await _vendorRepository.GetAsync(header.VendorId);
+
+        var linesToPost = header.Lines
+            .Select(line =>
+            {
+                var delta = creditMemo
+                    ? line.PrepmtAmtInv - line.PrepmtAmtDeducted
+                    : line.PrepmtLineAmount - line.PrepmtAmtInv;
+                return (Line: line, Amount: delta);
+            })
+            .Where(x => x.Amount > 0m && !x.Line.No.IsNullOrWhiteSpace())
+            .ToList();
+
+        if (linesToPost.Count == 0)
+        {
+            throw new BusinessException(ErpErrorCodes.Documents.NothingToPost).WithData("documentNo", header.No);
+        }
+
+        // Posting a prepayment releases an open order, as posting the order itself does.
+        if (header.Status == DocumentStatus.Open)
+        {
+            header.Release();
+        }
+
+        var currencyCode = await CurrencyManager.NormalizeAsync(header.CurrencyCode);
+        var factor = await CurrencyManager.GetCurrencyFactorAsync(currencyCode, header.PostingDate);
+        decimal Lcy(decimal amount) => CurrencyExchangeRateManager.ToLcy(amount, factor);
+
+        var sign = creditMemo ? -1m : 1m;
+        var docType = creditMemo ? GLEntryDocumentType.CreditMemo : GLEntryDocumentType.Invoice;
+        var postedDocNo = await DerivedNoAsync(
+            creditMemo ? "PPPCM" : "PPPINV",
+            header,
+            _postedPurchaseHeaderRepository,
+            x => x.OrderNo == header.No
+        );
+
+        var lineItems = new List<(PurchaseLine Line, decimal Amount, LineVat Vat, string PrepmtAccountNo, VatPostingSetup VatSetup)>();
+        foreach (var (line, amount) in linesToPost)
+        {
+            var vatSetup = line.VatBusPostingGroup == null && line.VatProdPostingGroup == null
+                ? null
+                : await _postingSetupManager.GetVatPostingSetupAsync(line.VatBusPostingGroup, line.VatProdPostingGroup);
+            var prodGroup = await GetLineGenProdPostingGroupAsync(line);
+            var prepmtAccountNo = prodGroup != null
+                ? await _postingSetupManager.GetPurchasePrepaymentAccountAsync(vendor.GenBusPostingGroup, prodGroup)
+                : line.No;
+            var vat = LineVat.Calculate(amount, line.VatCalculationType, line.VatPercent);
+            lineItems.Add((line, amount, vat, prepmtAccountNo, vatSetup));
+        }
+
+        var totalAmount = lineItems.Sum(i => i.Amount);
+        var totalAmountIncludingVat = lineItems.Sum(i => i.Vat.AmountIncludingVat);
+        var vendorLcy = lineItems.Sum(i =>
+            Lcy(Cost(i.Line, i.Amount))
+            + (i.VatSetup == null || i.Line.VatCalculationType == VatCalculationType.ReverseChargeVat ? 0m : Lcy(i.Vat.Amount)));
+
+        var register = await _registerManager.OpenAsync(header.PostingDate, SourceCode, postedDocNo);
+        var context = new GLPostingContext(register, SourceCode);
+
+        var postedHeader = new PostedPurchaseHeader(
+            GuidGenerator.Create(),
+            postedDocNo,
+            header.No,
+            header.VendorId,
+            header.BuyFromVendorNo,
+            header.BuyFromVendorName,
+            header.PostingDate,
+            header.DueDate ?? header.PostingDate.AddDays(ErpDomainConsts.DefaultPaymentDueDays),
+            totalAmount,
+            totalAmountIncludingVat
+        );
+        postedHeader.SetDetails(creditMemo, header.No, currencyCode, header.VendorInvoiceNo);
+
+        foreach (var (line, amount, vat, prepmtAccountNo, _) in lineItems)
+        {
+            var postedLine = new PostedPurchaseLine(
+                GuidGenerator.Create(),
+                postedHeader.Id,
+                line.LineNo,
+                DocumentLineType.GLAccount.ToString(),
+                prepmtAccountNo,
+                $"Prepayment - {line.Description}",
+                1m,
+                amount,
+                amount
+            );
+            postedLine.SetDetails(0m, line.UnitOfMeasureCode, line.VatPercent, vat.Amount, vat.AmountIncludingVat);
+            postedLine.SetSource(line.LineNo, null, null);
+            postedHeader.Lines.Add(postedLine);
+        }
+
+        await _postedPurchaseHeaderRepository.InsertAsync(postedHeader);
+
+        var vendorLine = new GenJournalLine(
+            GuidGenerator.Create(),
+            Guid.Empty,
+            1,
+            header.PostingDate,
+            docType,
+            postedDocNo,
+            GenJournalAccountType.Vendor,
+            header.BuyFromVendorNo,
+            $"{(creditMemo ? "Purchase Prepmt. Cr. Memo" : "Purchase Prepmt. Invoice")} {postedDocNo}",
+            -sign * totalAmountIncludingVat
+        );
+        if (currencyCode != null)
+        {
+            vendorLine.SetCurrency(currencyCode, factor);
+            vendorLine.SetAmountLcy(-sign * vendorLcy);
+        }
+
+        await _genJnlPostLine.PostLineAsync(vendorLine, context, header.DueDate);
+
+        foreach (var (line, amount, vat, prepmtAccountNo, vatSetup) in lineItems)
+        {
+            var cost = Lcy(Cost(line, amount));
+            if (cost != 0m)
+            {
+                await _genJnlPostLine.PostGLDirectAsync(
+                    prepmtAccountNo,
+                    header.PostingDate,
+                    docType,
+                    postedDocNo,
+                    $"Prepayment - {line.Description}",
+                    sign * cost,
+                    header.BuyFromVendorNo,
+                    context: context
+                );
+            }
+
+            if (vatSetup != null)
+            {
+                await _genJnlPostLine.PostVatAsync(
+                    vatSetup,
+                    VatEntryType.Purchase,
+                    sign * Lcy(vat.Base),
+                    sign * Lcy(vat.Amount),
+                    header.PostingDate,
+                    header.PostingDate,
+                    docType,
+                    postedDocNo,
+                    header.BuyFromVendorNo,
+                    $"Prepayment - {line.Description}",
+                    context
+                );
+            }
+
+            line.RecordPrepaymentInvoiced(creditMemo ? -amount : amount);
+        }
+
+        await _registerManager.CloseAsync(register);
+
+        header.RecordPrepaymentPosting(postedDocNo, creditMemo);
+        await _purchaseHeaderRepository.UpdateAsync(header);
+
+        return postedHeader;
     }
 
     /// <summary>
@@ -361,15 +546,24 @@ public class PurchasePostingEngine : DomainService
             .Select(line =>
             {
                 var amount = line.AmountToInvoice(line.QtyToInvoice);
-                return (Line: line, Quantity: line.QtyToInvoice, Amount: amount, Vat: LineVat.Calculate(amount, line.VatCalculationType, line.VatPercent));
+                var deductAmt = header.DocumentType == PurchaseDocumentType.Order ? line.PrepmtAmtToDeduct(line.QtyToInvoice) : 0m;
+                var netAmount = amount - deductAmt;
+                return (
+                    Line: line,
+                    Quantity: line.QtyToInvoice,
+                    Amount: amount,
+                    DeductAmt: deductAmt,
+                    NetAmount: netAmount,
+                    Vat: LineVat.Calculate(netAmount, line.VatCalculationType, line.VatPercent)
+                );
             })
             .ToList();
         var posting = invoiced.Where(i => plans.ContainsKey(i.Line.Id)).ToList();
 
-        var totalAmount = posting.Sum(i => i.Amount);
+        var totalAmount = posting.Sum(i => i.NetAmount);
         var totalAmountIncludingVat = posting.Sum(i => i.Vat.AmountIncludingVat);
         var vendorLcy = posting.Sum(i =>
-            Lcy(Cost(i.Line, i.Amount))
+            Lcy(Cost(i.Line, i.NetAmount))
             + (plans[i.Line.Id].VatSetup == null || i.Line.VatCalculationType == VatCalculationType.ReverseChargeVat ? 0m : Lcy(i.Vat.Amount)));
 
         // 1. Create Posted Purchase Invoice
@@ -387,8 +581,9 @@ public class PurchasePostingEngine : DomainService
         );
         postedHeader.SetDetails(header.IsReturn, header.IsOrderType ? header.No : null, currencyCode, header.VendorInvoiceNo);
 
-        foreach (var (line, quantity, amount, vat) in invoiced.Where(i => !i.Line.No.IsNullOrWhiteSpace()))
+        foreach (var (line, quantity, amount, deductAmt, _, vat) in invoiced.Where(i => !i.Line.No.IsNullOrWhiteSpace()))
         {
+            var fullVat = LineVat.Calculate(amount, line.VatCalculationType, line.VatPercent);
             var postedLine = new PostedPurchaseLine(
                 GuidGenerator.Create(),
                 postedHeader.Id,
@@ -400,9 +595,27 @@ public class PurchasePostingEngine : DomainService
                 line.DirectUnitCost,
                 amount
             );
-            postedLine.SetDetails(line.LineDiscountPercent, line.UnitOfMeasureCode, line.VatPercent, vat.Amount, vat.AmountIncludingVat);
+            postedLine.SetDetails(line.LineDiscountPercent, line.UnitOfMeasureCode, line.VatPercent, deductAmt > 0m ? vat.Amount : fullVat.Amount, deductAmt > 0m ? vat.AmountIncludingVat : fullVat.AmountIncludingVat);
             postedLine.SetSource(header.IsOrderType ? line.LineNo : null, line.ReceiptNo, line.ReceiptLineNo);
             postedHeader.Lines.Add(postedLine);
+
+            if (deductAmt > 0m && plans.TryGetValue(line.Id, out var deductPlan))
+            {
+                var deductionLine = new PostedPurchaseLine(
+                    GuidGenerator.Create(),
+                    postedHeader.Id,
+                    line.LineNo * 1000 + 1,
+                    DocumentLineType.GLAccount.ToString(),
+                    deductPlan.PrepaymentAccountNo ?? deductPlan.AccountNo,
+                    $"Prepayment Deduction - {line.Description}",
+                    -1m,
+                    deductAmt,
+                    -deductAmt
+                );
+                deductionLine.SetDetails(0m, line.UnitOfMeasureCode, line.VatPercent, 0m, -deductAmt);
+                deductionLine.SetSource(line.LineNo, null, null);
+                postedHeader.Lines.Add(deductionLine);
+            }
         }
 
         await _postedPurchaseHeaderRepository.InsertAsync(postedHeader);
@@ -433,7 +646,7 @@ public class PurchasePostingEngine : DomainService
         await _genJnlPostLine.PostLineAsync(vendorLine, context, header.DueDate);
 
         // 3. Per line: the actual cost of the goods, the debit account and VAT
-        foreach (var (line, quantity, amount, vat) in posting)
+        foreach (var (line, quantity, amount, deductAmt, _, vat) in posting)
         {
             var plan = plans[line.Id];
             var cost = Lcy(Cost(line, amount));
@@ -445,16 +658,23 @@ public class PurchasePostingEngine : DomainService
 
             if (cost != 0m)
             {
-                await _genJnlPostLine.PostGLDirectAsync(
-                    plan.AccountNo,
-                    header.PostingDate,
-                    documentType,
-                    postedDocNo,
-                    line.Description,
-                    sign * cost,
-                    header.BuyFromVendorNo,
-                    context: context
-                );
+                if (line.Type == DocumentLineType.ChargeItem)
+                {
+                    await PostItemChargeAsync(header, line, quantity, sign * cost, plan, postedDocNo, documentType, context);
+                }
+                else
+                {
+                    await _genJnlPostLine.PostGLDirectAsync(
+                        plan.AccountNo,
+                        header.PostingDate,
+                        documentType,
+                        postedDocNo,
+                        line.Description,
+                        sign * cost,
+                        header.BuyFromVendorNo,
+                        context: context
+                    );
+                }
 
                 if (line.ProjectNo != null)
                 {
@@ -491,6 +711,25 @@ public class PurchasePostingEngine : DomainService
                 }
             }
 
+            if (deductAmt > 0m)
+            {
+                var deductLcy = Lcy(Cost(line, deductAmt));
+                if (deductLcy != 0m)
+                {
+                    await _genJnlPostLine.PostGLDirectAsync(
+                        plan.PrepaymentAccountNo ?? plan.AccountNo,
+                        header.PostingDate,
+                        documentType,
+                        postedDocNo,
+                        $"Prepayment Deduction - {line.Description}",
+                        -sign * deductLcy,
+                        header.BuyFromVendorNo,
+                        context: context
+                    );
+                }
+                line.RecordPrepaymentDeducted(deductAmt);
+            }
+
             if (plan.VatSetup != null)
             {
                 await _genJnlPostLine.PostVatAsync(
@@ -509,7 +748,7 @@ public class PurchasePostingEngine : DomainService
             }
         }
 
-        foreach (var (line, quantity, _, _) in invoiced)
+        foreach (var (line, quantity, _, _, _, _) in invoiced)
         {
             line.RecordInvoiced(quantity);
         }
@@ -659,8 +898,85 @@ public class PurchasePostingEngine : DomainService
         public PurchaseLine Line { get; init; }
         public Item Item { get; init; }
         public string AccountNo { get; init; }
+        public string PrepaymentAccountNo { get; init; }
         public VatPostingSetup VatSetup { get; init; }
         public bool FixedAsset { get; init; }
+    }
+
+    private ItemChargeManager ItemCharges => LazyServiceProvider.LazyGetRequiredService<ItemChargeManager>();
+
+    /// <summary>
+    /// A charge line's cost goes onto the receipts it is assigned to. The debit follows the cost:
+    /// the inventory account for stock, so the G/L keeps agreeing with the inventory value, and the
+    /// charge's purchase account for anything that is not stock.
+    /// </summary>
+    private async Task PostItemChargeAsync(
+        PurchaseHeader header,
+        PurchaseLine line,
+        decimal quantity,
+        decimal costLcy,
+        LinePlan plan,
+        string postedDocNo,
+        GLEntryDocumentType documentType,
+        GLPostingContext context
+    )
+    {
+        var postings = await ItemCharges.PostAssignmentsAsync(
+            ItemChargeSourceType.PurchaseLine,
+            line.Id,
+            quantity,
+            costLcy,
+            postedDocNo,
+            header.PostingDate
+        );
+
+        var byAccount = new Dictionary<string, decimal>();
+        foreach (var posting in postings)
+        {
+            var item = await _itemRepository.GetAsync(posting.Entry.ItemId);
+            var accountNo = item.Type == ItemType.Inventory
+                ? await _postingSetupManager.GetInventoryAccountAsync(item.InventoryPostingGroup, posting.Entry.LocationCode)
+                : plan.AccountNo;
+            byAccount[accountNo] = byAccount.GetValueOrDefault(accountNo) + posting.AmountLcy;
+        }
+
+        // A charge with nothing assigned (zero quantity invoiced) still books what it cost.
+        if (postings.Count == 0)
+        {
+            byAccount[plan.AccountNo] = costLcy;
+        }
+
+        foreach (var (accountNo, amount) in byAccount.Where(x => x.Value != 0m))
+        {
+            await _genJnlPostLine.PostGLDirectAsync(
+                accountNo,
+                header.PostingDate,
+                documentType,
+                postedDocNo,
+                line.Description,
+                amount,
+                header.BuyFromVendorNo,
+                context: context
+            );
+        }
+    }
+
+    private async Task<string> GetLineGenProdPostingGroupAsync(PurchaseLine line)
+    {
+        if (line.Type == DocumentLineType.Item)
+        {
+            var item = await _itemRepository.FirstOrDefaultAsync(i => i.No == line.No)
+                ?? throw new BusinessException(ErpErrorCodes.Items.ItemNotFound).WithData("no", line.No);
+            return item.GenProdPostingGroup;
+        }
+
+        if (line.Type == DocumentLineType.ChargeItem)
+        {
+            var charge = await LazyServiceProvider.LazyGetRequiredService<ItemChargeManager>().GetByCodeAsync(line.No);
+            return charge.GenProdPostingGroup;
+        }
+
+        return line.GenProdPostingGroup;
     }
 
     /// <summary>
@@ -674,7 +990,7 @@ public class PurchasePostingEngine : DomainService
 
         foreach (var line in lines)
         {
-            if (line.Type is not (DocumentLineType.Item or DocumentLineType.GLAccount or DocumentLineType.FixedAsset))
+            if (line.Type is not (DocumentLineType.Item or DocumentLineType.GLAccount or DocumentLineType.FixedAsset or DocumentLineType.ChargeItem))
             {
                 continue;
             }
@@ -683,9 +999,28 @@ public class PurchasePostingEngine : DomainService
                 ? null
                 : await _postingSetupManager.GetVatPostingSetupAsync(line.VatBusPostingGroup, line.VatProdPostingGroup);
 
+            var hasUndeductedPrepmt = line.PrepmtAmtInv > line.PrepmtAmtDeducted;
+
             if (line.Type == DocumentLineType.GLAccount)
             {
-                plans[line.Id] = new LinePlan { Line = line, AccountNo = line.No, VatSetup = vatSetup };
+                plans[line.Id] = new LinePlan { Line = line, AccountNo = line.No, PrepaymentAccountNo = line.No, VatSetup = vatSetup };
+                continue;
+            }
+
+            if (line.Type == DocumentLineType.ChargeItem)
+            {
+                var charge = await LazyServiceProvider.LazyGetRequiredService<ItemChargeManager>().GetByCodeAsync(line.No);
+                var chargeAccountNo = await _postingSetupManager.GetPurchaseAccountAsync(vendor.GenBusPostingGroup, charge.GenProdPostingGroup, header.IsReturn);
+                var chargePrepmtAccountNo = hasUndeductedPrepmt && charge.GenProdPostingGroup != null
+                    ? await _postingSetupManager.GetPurchasePrepaymentAccountAsync(vendor.GenBusPostingGroup, charge.GenProdPostingGroup)
+                    : chargeAccountNo;
+                plans[line.Id] = new LinePlan
+                {
+                    Line = line,
+                    AccountNo = chargeAccountNo,
+                    PrepaymentAccountNo = chargePrepmtAccountNo,
+                    VatSetup = vatSetup,
+                };
                 continue;
             }
 
@@ -702,8 +1037,18 @@ public class PurchasePostingEngine : DomainService
             var accountNo = item.Type == ItemType.Inventory
                 ? await _postingSetupManager.GetInventoryAccountAsync(item.InventoryPostingGroup, line.LocationCode ?? header.LocationCode)
                 : await _postingSetupManager.GetPurchaseAccountAsync(vendor.GenBusPostingGroup, item.GenProdPostingGroup, header.IsReturn);
+            var prepmtAccountNo = hasUndeductedPrepmt && item.GenProdPostingGroup != null
+                ? await _postingSetupManager.GetPurchasePrepaymentAccountAsync(vendor.GenBusPostingGroup, item.GenProdPostingGroup)
+                : accountNo;
 
-            plans[line.Id] = new LinePlan { Line = line, Item = item, AccountNo = accountNo, VatSetup = vatSetup };
+            plans[line.Id] = new LinePlan
+            {
+                Line = line,
+                Item = item,
+                AccountNo = accountNo,
+                PrepaymentAccountNo = prepmtAccountNo,
+                VatSetup = vatSetup,
+            };
         }
 
         return plans;

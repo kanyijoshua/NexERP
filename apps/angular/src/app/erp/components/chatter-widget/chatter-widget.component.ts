@@ -1,4 +1,4 @@
-import { Component, DestroyRef, Input, OnChanges, inject } from '@angular/core';
+import { Component, DestroyRef, Input, OnChanges, inject, SimpleChanges } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatterService } from '@proxy/chatter';
 import { forkJoin } from 'rxjs';
@@ -92,7 +92,11 @@ export class ChatterWidgetComponent implements OnChanges {
 
   constructor(private readonly chatterService: ChatterService) {}
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    // The card hands in a fresh record object after every save; only another record needs a reload.
+    if (!changes['entityType'] && !changes['entityId']) {
+      return;
+    }
     if (this.entityType && this.entityId) {
       this.load();
     } else {

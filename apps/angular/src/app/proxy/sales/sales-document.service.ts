@@ -109,6 +109,20 @@ export class SalesDocumentService {
     },
     { apiName: this.apiName,...config });
 
+  runPrepaymentCreditMemoPosting = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesPostingResultDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/run-prepayment-credit-memo-posting`,
+    },
+    { apiName: this.apiName,...config });
+
+  runPrepaymentPosting = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesPostingResultDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/run-prepayment-posting`,
+    },
+    { apiName: this.apiName,...config });
+
   makeOrder = (id: string, input: MakeOrderInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, SalesHeaderDto>({
       method: 'POST',

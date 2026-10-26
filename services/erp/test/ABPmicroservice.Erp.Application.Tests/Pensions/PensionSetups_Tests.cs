@@ -55,6 +55,52 @@ public class PensionSetups_Tests : ErpApplicationTestBase
     }
 
     [Fact]
+    public async Task Each_Scheme_Posts_By_Its_Own_Setup()
+    {
+        await InCompanyAsync(DefaultCompanyName, async () =>
+        {
+            await _schemes.CreateAsync(new CreateUpdatePensionSchemeDto { Code = "ALPHA", Description = "Alpha Pension Scheme" });
+            await _schemes.CreateAsync(new CreateUpdatePensionSchemeDto { Code = "BETA", Description = "Beta Pension Scheme" });
+
+            // A new scheme starts with the company's setup, and shows the company's scheme dimension.
+            var company = await _setup.GetAsync();
+            company.SchemeCode.ShouldBeNull();
+            var beta = await _setup.GetAsync("BETA");
+            beta.SchemeCode.ShouldBe("BETA");
+            beta.MemberFundsAccountNo.ShouldBe(company.MemberFundsAccountNo);
+            beta.SchemeDimensionCode.ShouldBe(company.SchemeDimensionCode);
+
+            beta.MemberFundsAccountNo = "2330";
+            await _setup.UpdateAsync(beta);
+            (await _setup.GetAsync("ALPHA")).MemberFundsAccountNo.ShouldBe(company.MemberFundsAccountNo);
+            (await _setup.GetAsync()).MemberFundsAccountNo.ShouldBe(company.MemberFundsAccountNo);
+
+            var glEntries = GetRequiredService<IRepository<GLEntry, Guid>>();
+            foreach (var (scheme, account) in new[] { ("ALPHA", company.MemberFundsAccountNo), ("BETA", "2330") })
+            {
+                var sponsor = await _sponsors.CreateAsync(new CreateUpdatePensionSponsorDto { Name = $"{scheme} Sponsor", SchemeCode = scheme, EmployeeRatePct = 5m, EmployerRatePct = 10m });
+                var member = await _members.CreateAsync(new CreateUpdatePensionMemberDto
+                {
+                    SponsorNo = sponsor.No,
+                    FirstName = "Wanjiru",
+                    LastName = scheme,
+                    Gender = MemberGender.Female,
+                    DateOfBirth = new DateTime(1985, 6, 1),
+                    JoinSchemeDate = new DateTime(2020, 1, 1),
+                    CurrentSalary = 100000m,
+                });
+
+                var schedule = await PostMonthAsync(sponsor, member, new DateTime(2026, 1, 1), 100000m);
+                var entries = await glEntries.GetListAsync(e => e.DocumentNo == schedule.No);
+                entries.ShouldContain(e => e.GLAccountNo == account, $"{scheme} posts member funds to {account}");
+            }
+
+            var unknown = await Should.ThrowAsync<BusinessException>(() => _setup.GetAsync("NOSUCH"));
+            unknown.Code.ShouldBe(ErpErrorCodes.PostingSetup.CodeNotFound);
+        });
+    }
+
+    [Fact]
     public async Task A_Payroll_Pays_Earnings_And_Takes_Deductions_And_Posts_Them_To_Their_Accounts()
     {
         await InCompanyAsync(DefaultCompanyName, async () =>
@@ -330,7 +376,7 @@ public class PensionSetups_Tests : ErpApplicationTestBase
             calculation.Trivial.ShouldBeFalse();
 
             // Below the trivial pension limit, all of it is paid as a lump sum.
-            var setup = await _setup.GetAsync();
+            var setup = await _setup.GetAsync("SIGMADB");
             setup.TrivialPensionLimit = 50000m;
             await _setup.UpdateAsync(setup);
 

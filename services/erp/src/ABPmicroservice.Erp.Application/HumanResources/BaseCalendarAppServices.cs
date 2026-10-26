@@ -135,7 +135,7 @@ public class BaseCalendarAppService
         return await _calendarManager.ResolveCalendarCodeAsync(employee);
     }
 
-    private static CalendarDateDto Map(CalendarDate date) => new()
+    internal static CalendarDateDto Map(CalendarDate date) => new()
     {
         Date = date.Date,
         Weekday = date.Weekday,

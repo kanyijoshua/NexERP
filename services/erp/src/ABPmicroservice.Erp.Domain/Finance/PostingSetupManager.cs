@@ -89,6 +89,20 @@ public class PostingSetupManager : DomainService
             : Required(setup, setup.PurchAccountNo, "Purch. Account");
     }
 
+    /// <summary>The prepayment liability account for a sales prepayment line.</summary>
+    public async Task<string> GetSalesPrepaymentAccountAsync(string genBusPostingGroup, string genProdPostingGroup)
+    {
+        var setup = await GetGeneralPostingSetupAsync(genBusPostingGroup, genProdPostingGroup);
+        return Required(setup, setup.SalesPrepaymentsAccountNo, "Sales Prepayments Account");
+    }
+
+    /// <summary>The prepayment asset account for a purchase prepayment line.</summary>
+    public async Task<string> GetPurchasePrepaymentAccountAsync(string genBusPostingGroup, string genProdPostingGroup)
+    {
+        var setup = await GetGeneralPostingSetupAsync(genBusPostingGroup, genProdPostingGroup);
+        return Required(setup, setup.PurchPrepaymentsAccountNo, "Purch. Prepayments Account");
+    }
+
     /// <summary>The VAT Posting Setup of a business and product VAT group; either may be blank.</summary>
     public async Task<VatPostingSetup> GetVatPostingSetupAsync(string vatBusPostingGroup, string vatProdPostingGroup)
     {

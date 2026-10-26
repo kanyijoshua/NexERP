@@ -34,6 +34,7 @@ export class HumanResourcesSetupComponent implements OnInit {
 
   readonly form = this.fb.group({
     employeeNos: this.fb.control<string | null>(null),
+    leaveApplicationNos: this.fb.control<string | null>(null),
     baseUnitOfMeasure: this.fb.control<string | null>(null),
     baseCalendarCode: this.fb.control<string | null>(null),
   });
@@ -49,6 +50,7 @@ export class HumanResourcesSetupComponent implements OnInit {
     this.setupService
       .update({
         employeeNos: value.employeeNos || undefined,
+        leaveApplicationNos: value.leaveApplicationNos || undefined,
         baseUnitOfMeasure: value.baseUnitOfMeasure || undefined,
         baseCalendarCode: value.baseCalendarCode || undefined,
       })
@@ -83,6 +85,7 @@ export class HumanResourcesSetupComponent implements OnInit {
   private reset(setup: HumanResourcesSetupDto): void {
     this.form.reset({
       employeeNos: setup.employeeNos ?? null,
+      leaveApplicationNos: setup.leaveApplicationNos ?? null,
       baseUnitOfMeasure: setup.baseUnitOfMeasure ?? null,
       baseCalendarCode: setup.baseCalendarCode ?? null,
     });

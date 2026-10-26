@@ -1,5 +1,5 @@
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { Component, DestroyRef, Input, OnChanges, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Input, OnChanges, inject, signal, SimpleChanges } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DocumentAttachmentDto, DocumentAttachmentFileType, DocumentAttachmentService } from '@proxy/attachments';
 import { Observable, concatMap, finalize, from, toArray } from 'rxjs';
@@ -60,7 +60,11 @@ export class AttachmentsWidgetComponent implements OnChanges {
   readonly attachments = signal<DocumentAttachmentDto[]>([]);
   readonly busy = signal(false);
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    // The card hands in a fresh record object after every save; only another record needs a reload.
+    if (!changes['entityType'] && !changes['entityId']) {
+      return;
+    }
     if (this.entityType && this.entityId) {
       this.load();
     } else {

@@ -273,7 +273,7 @@ public class PensionerAdministrator : DomainService
     /// <summary>Records proof that the pensioner is alive; a pension stopped for want of it is paid again.</summary>
     public async Task RecordLifeCertificateAsync(Pensioner pensioner, DateTime date)
     {
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(pensioner.SchemeCode);
         pensioner.RecordLifeCertificate(date, setup.LifeCertificateFrequencyMonths);
         await _changes.InsertAsync(
             new PensionerChangeEntry(GuidGenerator.Create(), pensioner, PensionerChangeType.LifeCertificate, date, null, _currentUser.UserName)
@@ -299,7 +299,7 @@ public class PensionerAdministrator : DomainService
     /// </summary>
     public async Task<int> SuspendOverdueAsync(string schemeCode, DateTime asOf)
     {
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(schemeCode);
         if (setup.LifeCertificateFrequencyMonths <= 0)
         {
             return 0;

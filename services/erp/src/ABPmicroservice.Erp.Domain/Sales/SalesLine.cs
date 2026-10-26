@@ -97,6 +97,47 @@ public class SalesLine : Entity<Guid>
 
     public string ProjectTaskNo { get; private set; }
 
+    public decimal PrepaymentPct { get; private set; }
+
+    public decimal PrepmtLineAmount { get; private set; }
+
+    public decimal PrepmtAmtInv { get; private set; }
+
+    public decimal PrepmtAmtDeducted { get; private set; }
+
+    public void SetPrepaymentPct(decimal prepaymentPct)
+    {
+        PrepaymentPct = Math.Clamp(prepaymentPct, 0m, 100m);
+        RecalculateAmounts();
+    }
+
+    internal void RecordPrepaymentInvoiced(decimal amount)
+    {
+        PrepmtAmtInv += amount;
+    }
+
+    internal void RecordPrepaymentDeducted(decimal amount)
+    {
+        PrepmtAmtDeducted += amount;
+    }
+
+    public decimal PrepmtAmtToDeduct(decimal quantityToInvoice)
+    {
+        var remaining = PrepmtAmtInv - PrepmtAmtDeducted;
+        if (remaining <= 0m || quantityToInvoice <= 0m)
+        {
+            return 0m;
+        }
+
+        if (quantityToInvoice >= Quantity - QuantityInvoiced)
+        {
+            return remaining;
+        }
+
+        var portion = DocumentAmounts.Portion(PrepmtAmtInv, Quantity, QuantityInvoiced, quantityToInvoice);
+        return Math.Min(remaining, Math.Max(0m, portion));
+    }
+
     public void SetProject(string projectNo, string projectTaskNo)
     {
         ProjectNo = CodeTableEntity.NormalizeCode(Check.Length(projectNo, nameof(projectNo), ErpDomainConsts.MaxNoLength));
@@ -322,6 +363,7 @@ public class SalesLine : Entity<Guid>
         var gross = Quantity * UnitPrice;
         var discount = gross * (LineDiscountPercent / 100m);
         LineAmount = Math.Round(gross - discount, 2, MidpointRounding.AwayFromZero);
+        PrepmtLineAmount = Math.Round(LineAmount * (PrepaymentPct / 100m), 2, MidpointRounding.AwayFromZero);
 
         // Without a VAT setup the rate is zero, which is the same as no VAT.
         var vat = LineVat.Calculate(LineAmount, VatCalculationType, VatPercent);

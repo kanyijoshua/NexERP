@@ -19,6 +19,9 @@ public class HumanResourcesSetupDto
 
     [StringLength(ErpDomainConsts.MaxCodeLength)]
     public string BaseCalendarCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoSeriesCodeLength)]
+    public string LeaveApplicationNos { get; set; }
 }
 
 public class HumanResourceUnitOfMeasureDto : CodeTableDto

@@ -240,6 +240,10 @@ public class PurchaseHeaderDto : FullAuditedEntityDto<Guid>
     public string CancelledBy { get; set; }
     public string LastReceivingNo { get; set; }
     public string LastPostingNo { get; set; }
+    public decimal PrepmtInvoicedAmount { get; set; }
+    public decimal PrepmtDeductedAmount { get; set; }
+    public string LastPrepmtInvoiceNo { get; set; }
+    public string LastPrepmtCrMemoNo { get; set; }
 }
 
 public class PurchaseLineDto : EntityDto<Guid>
@@ -284,6 +288,10 @@ public class PurchaseLineDto : EntityDto<Guid>
     public int? BlanketOrderLineNo { get; set; }
     public string VariantCode { get; set; }
     public decimal QtyPerUnitOfMeasure { get; set; }
+    public decimal PrepaymentPct { get; set; }
+    public decimal PrepmtLineAmount { get; set; }
+    public decimal PrepmtAmtInv { get; set; }
+    public decimal PrepmtAmtDeducted { get; set; }
 }
 
 public class CreateUpdatePurchaseHeaderDto
@@ -475,6 +483,7 @@ public class PurchaseLineInputDto
     public string TaxGroupCode { get; set; }
     public string GenBusPostingGroup { get; set; }
     public string GenProdPostingGroup { get; set; }
+    public decimal? PrepaymentPct { get; set; }
 }
 
 public class GetPurchaseDocumentListInput : ErpPagedListInput

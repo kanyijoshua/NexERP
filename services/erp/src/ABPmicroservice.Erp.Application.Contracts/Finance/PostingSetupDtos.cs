@@ -72,6 +72,8 @@ public class GeneralPostingSetupDto : FullAuditedEntityDto<Guid>
     public string PurchDiscountAccountNo { get; set; }
     public string COGSAccountNo { get; set; }
     public string InventoryAdjmtAccountNo { get; set; }
+    public string SalesPrepaymentsAccountNo { get; set; }
+    public string PurchPrepaymentsAccountNo { get; set; }
 }
 
 public class CreateUpdateGeneralPostingSetupDto
@@ -107,6 +109,12 @@ public class CreateUpdateGeneralPostingSetupDto
 
     [StringLength(ErpDomainConsts.MaxNoLength)]
     public string InventoryAdjmtAccountNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string SalesPrepaymentsAccountNo { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string PurchPrepaymentsAccountNo { get; set; }
 }
 
 public class InventoryPostingSetupDto : FullAuditedEntityDto<Guid>

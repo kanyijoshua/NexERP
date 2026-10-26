@@ -11,11 +11,15 @@ using Volo.Abp.Domain.Repositories;
 
 namespace ABPmicroservice.Erp.Pensions;
 
-/// <summary>Pension Setup: one record per company, created on first read.</summary>
+/// <summary>
+/// Pension Setup: one per scheme, plus the company's, which holds the scheme dimension and is what
+/// a new scheme's setup is copied from. Each is created on first read.
+/// </summary>
 [Authorize(ErpPermissions.PensionSetup.Default)]
 public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
 {
     private readonly PensionSetupManager _setupManager;
+    private readonly PensionSchemeManager _schemeManager;
     private readonly IRepository<PensionSetup, Guid> _repository;
     private readonly IRepository<Dimension, Guid> _dimensions;
     private readonly NoSeriesCodeValidator _seriesValidator;
@@ -23,6 +27,7 @@ public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
 
     public PensionSetupAppService(
         PensionSetupManager setupManager,
+        PensionSchemeManager schemeManager,
         IRepository<PensionSetup, Guid> repository,
         IRepository<Dimension, Guid> dimensions,
         NoSeriesCodeValidator seriesValidator,
@@ -30,15 +35,16 @@ public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
     )
     {
         _setupManager = setupManager;
+        _schemeManager = schemeManager;
         _repository = repository;
         _dimensions = dimensions;
         _seriesValidator = seriesValidator;
         _relations = relations;
     }
 
-    public async Task<PensionSetupDto> GetAsync()
+    public async Task<PensionSetupDto> GetAsync(string schemeCode = null)
     {
-        return ObjectMapper.Map<PensionSetup, PensionSetupDto>(await _setupManager.GetAsync());
+        return await MapAsync(await FindAsync(schemeCode));
     }
 
     [Authorize(ErpPermissions.PensionSetup.Update)]
@@ -53,14 +59,17 @@ public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
             input.TaxAccountNo
         );
 
-        var dimensionCode = CodeTableEntity.NormalizeCode(input.SchemeDimensionCode);
-        if (dimensionCode != null && !await _dimensions.AnyAsync(d => d.Code == dimensionCode))
+        var setup = await FindAsync(input.SchemeCode);
+        if (!setup.IsSchemeSetup)
         {
-            throw new BusinessException(ErpErrorCodes.PostingSetup.CodeNotFound).WithData("table", "Dimension").WithData("code", dimensionCode);
-        }
+            var dimensionCode = CodeTableEntity.NormalizeCode(input.SchemeDimensionCode);
+            if (dimensionCode != null && !await _dimensions.AnyAsync(d => d.Code == dimensionCode))
+            {
+                throw new BusinessException(ErpErrorCodes.PostingSetup.CodeNotFound).WithData("table", "Dimension").WithData("code", dimensionCode);
+            }
 
-        var setup = await _setupManager.GetAsync();
-        setup.SetSchemeDimension(input.SchemeDimensionCode);
+            setup.SetSchemeDimension(input.SchemeDimensionCode);
+        }
         setup.SetNumbering(input.MemberNos, input.SponsorNos, input.ContributionNos, input.InterestBatchNos, input.ExitNos);
         setup.SetAccounts(
             input.MemberFundsAccountNo,
@@ -86,7 +95,31 @@ public class PensionSetupAppService : ErpAppService, IPensionSetupAppService
         setup.SetPensionerDefaults(input.DefaultPayModeCode, input.TrivialPensionLimit);
 
         await _repository.UpdateAsync(setup, autoSave: true);
-        return ObjectMapper.Map<PensionSetup, PensionSetupDto>(setup);
+        return await MapAsync(setup);
+    }
+
+    /// <summary>The setup of a scheme that exists; the company's when no scheme is given.</summary>
+    private async Task<PensionSetup> FindAsync(string schemeCode)
+    {
+        if (schemeCode.IsNullOrWhiteSpace())
+        {
+            return await _setupManager.GetCompanyAsync();
+        }
+
+        var scheme = await _schemeManager.GetAsync(schemeCode);
+        return await _setupManager.GetAsync(scheme.Code);
+    }
+
+    /// <summary>A scheme's setup shows the company's scheme dimension, which it does not hold itself.</summary>
+    private async Task<PensionSetupDto> MapAsync(PensionSetup setup)
+    {
+        var dto = ObjectMapper.Map<PensionSetup, PensionSetupDto>(setup);
+        if (setup.IsSchemeSetup)
+        {
+            dto.SchemeDimensionCode = (await _setupManager.GetCompanyAsync()).SchemeDimensionCode;
+        }
+
+        return dto;
     }
 }
 
@@ -107,18 +140,21 @@ public class PensionSchemeAppService
         IPensionSchemeAppService
 {
     private readonly PensionSchemeManager _schemeManager;
+    private readonly PensionSetupManager _setupManager;
     private readonly IRepository<PensionMember, Guid> _members;
     private readonly IRepository<PensionSponsor, Guid> _sponsors;
 
     public PensionSchemeAppService(
         IRepository<PensionScheme, Guid> repository,
         PensionSchemeManager schemeManager,
+        PensionSetupManager setupManager,
         IRepository<PensionMember, Guid> members,
         IRepository<PensionSponsor, Guid> sponsors
     )
         : base(repository)
     {
         _schemeManager = schemeManager;
+        _setupManager = setupManager;
         _members = members;
         _sponsors = sponsors;
     }
@@ -156,6 +192,8 @@ public class PensionSchemeAppService
 
         var dto = await base.CreateAsync(input);
         await _schemeManager.EnsureDimensionValueAsync(await Repository.GetAsync(dto.Id));
+        // The new scheme's setup starts as a copy of the company's.
+        await _setupManager.GetAsync(dto.Code);
         return dto;
     }
 
@@ -170,8 +208,10 @@ public class PensionSchemeAppService
             throw new BusinessException(ErpErrorCodes.Pensions.SchemeInUse).WithData("scheme", existing.Code);
         }
 
+        var oldCode = existing.Code;
         var dto = await base.UpdateAsync(id, input);
         await _schemeManager.EnsureDimensionValueAsync(await Repository.GetAsync(id));
+        await _setupManager.RenameSchemeAsync(oldCode, dto.Code);
         return dto;
     }
 
@@ -186,6 +226,7 @@ public class PensionSchemeAppService
         }
 
         await Repository.DeleteAsync(id, autoSave: true);
+        await _setupManager.DeleteSchemeAsync(scheme.Code);
     }
 
     private async Task<bool> IsInUseAsync(string schemeCode)

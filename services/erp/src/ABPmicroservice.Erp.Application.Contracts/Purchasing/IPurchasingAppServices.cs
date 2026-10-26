@@ -75,6 +75,12 @@ public interface IPurchaseDocumentAppService
 
     /// <summary>Cancels an order (LPO) before anything has been received or invoiced on it.</summary>
     Task<PurchaseHeaderDto> CancelOrderAsync(Guid id, CloseCancelPurchaseOrderInput input);
+
+    /// <summary>Posts a Prepayment Invoice from a Purchase Order. Routed as POST .../{id}/run-prepayment-posting.</summary>
+    Task<PurchasePostingResultDto> RunPrepaymentPostingAsync(Guid id);
+
+    /// <summary>Posts a Prepayment Credit Memo from a Purchase Order. Routed as POST .../{id}/run-prepayment-credit-memo-posting.</summary>
+    Task<PurchasePostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id);
 }
 
 public interface IPostedPurchaseReceiptAppService

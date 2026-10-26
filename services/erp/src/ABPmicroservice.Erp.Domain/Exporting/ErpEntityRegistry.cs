@@ -10,6 +10,7 @@ using ABPmicroservice.Erp.HumanResources;
 using ABPmicroservice.Erp.Chatter;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Dimensions;
+using ABPmicroservice.Erp.Emailing;
 using ABPmicroservice.Erp.Finance;
 using ABPmicroservice.Erp.FixedAssets;
 using ABPmicroservice.Erp.Inventory;
@@ -286,6 +287,15 @@ public class ErpEntityRegistry : ISingletonDependency
             Define<GroundsForTermination>(),
             Define<Employee>(),
             Define<EmployeeAbsence>(),
+            Define<LeaveType>(),
+            Define<LeaveApplication>(),
+            Define<LeaveLedgerEntry>(),
+
+            // Item charges and document emailing
+            Define<ItemCharge>(),
+            Define<ItemChargeAssignment>(),
+            Define<EmailTemplate>(),
+            Define<SentEmailLog>(),
 
             // Base tables: setup, sub-ledgers and registers
             Define<SourceCode>(),

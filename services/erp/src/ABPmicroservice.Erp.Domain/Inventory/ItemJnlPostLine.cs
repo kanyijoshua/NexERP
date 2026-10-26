@@ -276,6 +276,56 @@ public class ItemJnlPostLine : DomainService
     }
 
     /// <summary>
+    /// Posts an item charge (landed cost such as freight, customs duty, or insurance) to an existing
+    /// item ledger entry, creating a <see cref="ValueEntry"/> of type <see cref="ValueEntryType.ItemCharge"/>
+    /// and increasing the entry's actual cost and the item's unit cost.
+    /// </summary>
+    public async Task<ValueEntry> PostLandedCostAsync(
+        ItemLedgerEntry entry,
+        decimal landedCostAmount,
+        string documentNo,
+        DateTime postingDate,
+        Guid dimensionSetId = default
+    )
+    {
+        var roundedCost = RoundCost(landedCostAmount);
+        var valueEntry = new ValueEntry(
+            GuidGenerator.Create(),
+            entry.Id,
+            entry.ItemId,
+            entry.ItemNo,
+            postingDate,
+            documentNo,
+            entry.Quantity,
+            roundedCost,
+            dimensionSetId,
+            costAmountExpected: 0m,
+            invoicedQuantity: 0m
+        ) { EntryNo = await EntryNos.NextAsync(ErpSequenceNames.ValueEntry) }
+            .WithDetails(ValueEntryType.ItemCharge, entry.LocationCode, entry.VariantCode);
+
+        await _valueEntryRepository.InsertAsync(valueEntry, autoSave: true);
+
+        entry.AddLandedCost(roundedCost);
+        await _itemLedgerEntryRepository.UpdateAsync(entry, autoSave: true);
+
+        // Only the part of the receipt still in stock raises the item's cost; what has already left
+        // was costed when it left (entries already applied are not re-costed).
+        if (entry.Positive && roundedCost != 0m && entry.RemainingQuantity > 0m && entry.Quantity != 0m)
+        {
+            var item = await _itemRepository.GetAsync(entry.ItemId);
+            var onHandShare = roundedCost * entry.RemainingQuantity / entry.Quantity;
+            if (item.Inventory > 0m)
+            {
+                item.Revalue(Math.Round(item.UnitCost + onHandShare / item.Inventory, 5, MidpointRounding.AwayFromZero));
+                await _itemRepository.UpdateAsync(item, autoSave: true);
+            }
+        }
+
+        return valueEntry;
+    }
+
+    /// <summary>
     /// Revalues the stock of an item on hand at a location (all locations when blank) to
     /// <paramref name="newUnitCost"/>: a revaluation value entry per open inbound entry for the
     /// difference on what is left of it. Returns the total change in value.

@@ -6,6 +6,7 @@ export enum ApprovalDocumentKind {
   PaymentVoucher = 2,
   PurchaseRequisition = 3,
   Tender = 4,
+  LeaveApplication = 5,
 }
 
 export const approvalDocumentKindOptions = mapEnumToOptions(ApprovalDocumentKind);

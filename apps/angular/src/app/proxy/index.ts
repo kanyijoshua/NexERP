@@ -1,11 +1,13 @@
 import * as Academics from './academics';
 import * as Attachments from './attachments';
+import * as Auditing from './auditing';
 import * as CashManagement from './cash-management';
 import * as Chatter from './chatter';
 import * as Companies from './companies';
 import * as Crm from './crm';
 import * as Dimensions from './dimensions';
 import * as Documents from './documents';
+import * as Emailing from './emailing';
 import * as Exporting from './exporting';
 import * as FixedAssets from './fixed-assets';
 import * as Finance from './finance';
@@ -26,5 +28,5 @@ import * as Reporting from './reporting';
 import * as Sales from './sales';
 import * as ServiceManagement from './service-management';
 import * as Workflows from './workflows';
-export { Academics, Attachments, CashManagement, Chatter, Companies, Crm, Dimensions, Documents, Exporting, FixedAssets, Finance, HumanResources, Integration, Inventory, JobQueue, Kanban, Manufacturing, Numbering, Pensions, Pricing, Procurement, Projects, Purchasing, RapidStart, Reporting, Sales, ServiceManagement, Workflows };
+export { Academics, Attachments, Auditing, CashManagement, Chatter, Companies, Crm, Dimensions, Documents, Emailing, Exporting, FixedAssets, Finance, HumanResources, Integration, Inventory, JobQueue, Kanban, Manufacturing, Numbering, Pensions, Pricing, Procurement, Projects, Purchasing, RapidStart, Reporting, Sales, ServiceManagement, Workflows };
 

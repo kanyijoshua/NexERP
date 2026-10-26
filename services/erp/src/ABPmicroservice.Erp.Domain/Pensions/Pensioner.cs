@@ -637,7 +637,7 @@ public class PensionPayrollEngine : DomainService
         await _glSetupManager.CheckPostingDateAsync(header.PostingDate);
         var (lines, pensioners) = await CheckAsync(header);
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(header.SchemeCode);
         var pensionsPaid = setup.Require(setup.PensionsPaidAccountNo, "Pensions Paid Account No.");
         var benefitsPayable = setup.Require(setup.BenefitsPayableAccountNo, "Benefits Payable Account No.");
         var gross = lines.Sum(l => l.GrossPension);
@@ -810,7 +810,7 @@ public class PensionPaymentManager : DomainService
 
         EnsureNotRaised(exit.No, exit.PaymentVoucherNo);
 
-        var voucher = await CreateAsync(ExitSourceType, exit.No, date, exit.MemberName, $"Exit benefit {exit.No} {exit.MemberNo}", exit.NetPayable);
+        var voucher = await CreateAsync(exit.SchemeCode, ExitSourceType, exit.No, date, exit.MemberName, $"Exit benefit {exit.No} {exit.MemberNo}", exit.NetPayable);
 
         exit.PaymentVoucherNo = voucher.No;
         await _exits.UpdateAsync(exit, autoSave: true);
@@ -827,21 +827,21 @@ public class PensionPaymentManager : DomainService
         EnsureNotRaised(payroll.No, payroll.PaymentVoucherNo);
 
         var narration = $"Pensions {payroll.PayPeriod:MMM yyyy} {payroll.SchemeCode}";
-        var voucher = await CreateAsync(PayrollSourceType, payroll.No, date, $"Pensioners {payroll.SchemeCode}", narration, payroll.TotalNet);
+        var voucher = await CreateAsync(payroll.SchemeCode, PayrollSourceType, payroll.No, date, $"Pensioners {payroll.SchemeCode}", narration, payroll.TotalNet);
 
         payroll.PaymentVoucherNo = voucher.No;
         await _payrolls.UpdateAsync(payroll, autoSave: true);
         return voucher;
     }
 
-    private async Task<PaymentVoucherHeader> CreateAsync(string sourceType, string sourceNo, DateTime date, string payee, string narration, decimal amount)
+    private async Task<PaymentVoucherHeader> CreateAsync(string schemeCode, string sourceType, string sourceNo, DateTime date, string payee, string narration, decimal amount)
     {
         if (amount <= 0m)
         {
             throw new BusinessException(ErpErrorCodes.Pensions.NothingToPost).WithData("documentNo", sourceNo);
         }
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(schemeCode);
         var benefitsPayable = setup.Require(setup.BenefitsPayableAccountNo, "Benefits Payable Account No.");
 
         return await _voucherFactory.CreateAsync(

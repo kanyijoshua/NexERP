@@ -292,7 +292,7 @@ public class DefinedBenefitCalculator : DomainService
             throw new BusinessException(ErpErrorCodes.Pensions.NothingToPost).WithData("documentNo", calculation.No);
         }
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(member.SchemeCode);
         string voucherNo = null;
         if (calculation.LumpSum > 0m)
         {
@@ -335,7 +335,7 @@ public class DefinedBenefitCalculator : DomainService
     /// <summary>The scheme's factors for the member's age at retirement, the salary history and the trivial pension limit.</summary>
     private async Task<DefinedBenefitTerms> GetTermsAsync(PensionMember member, PensionScheme scheme, DateTime retirementDate)
     {
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(member.SchemeCode);
         var age = member.DateOfBirth.HasValue ? PensionBenefitCalculation.YearsBetween(member.DateOfBirth.Value, retirementDate) : 0m;
 
         return new DefinedBenefitTerms

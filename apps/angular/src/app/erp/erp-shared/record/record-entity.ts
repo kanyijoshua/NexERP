@@ -46,6 +46,8 @@ export interface RecordField {
   lookupValueField?: 'code' | 'id';
   /** `lookup` with `lookupValueField: 'id'`: DTO property holding the code to show for the id. */
   lookupDisplayField?: string;
+  /** `lookup` only: allow typed code if not in predefined lookup list. */
+  lookupAllowFreeText?: boolean;
   /** Localization key of a hint under the field. */
   helpKey?: string;
   /** Localization key of the placeholder. */
@@ -195,6 +197,8 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   icon: string;
   /** Permission prefix; `.Create`, `.Update` and `.Delete` are appended. */
   permission: string;
+  /** One permission for New, Edit and Delete, for a table that has no separate ones. */
+  editPermission?: string;
   /** Route of the list page; the card page is `[...listRoute, id]`. */
   listRoute?: string[];
   /**
@@ -405,6 +409,10 @@ export function recordPermission(entity: RecordEntity, action?: 'Create' | 'Upda
   if ((action && entity.readOnly) || (action === 'Create' && entity.noCreate)) {
     // Never granted, so every create, edit and delete affordance stays hidden.
     return READ_ONLY_PERMISSION;
+  }
+
+  if (action && entity.editPermission) {
+    return entity.editPermission;
   }
 
   return action ? `${entity.permission}.${action}` : entity.permission;

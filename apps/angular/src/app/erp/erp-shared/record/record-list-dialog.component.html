@@ -2,6 +2,11 @@
   <h5 class="modal-title me-auto">
     <i [class]="entity.icon + ' text-primary me-2'"></i>{{ (selectable ? 'Erp::SelectFrom' : 'Erp::AllRecordsOf') | abpLocalization: (entity.pluralKey | abpLocalization) }}
   </h5>
+  @for (action of listActions; track action.key) {
+    <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="runningAction" (click)="runListAction(action)">
+      <i [class]="action.icon + ' me-1'"></i>{{ action.labelKey | abpLocalization }}
+    </button>
+  }
   @if (canCreate) {
     <button type="button" class="btn btn-sm btn-primary" (click)="createNew()">
       <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}

@@ -104,6 +104,7 @@
                     [entity]="field.lookupEntity"
                     [valueField]="field.lookupValueField || 'code'"
                     [displayText]="displayTextOf(field)"
+                    [allowFreeText]="!!field.lookupAllowFreeText"
                     (selected)="onLookupSelected(field, $event)"
                   ></erp-lookup>
                 }

@@ -36,6 +36,8 @@ export interface CreateUpdateItemDto {
   leadTimeCalculation?: string;
   standardCost?: number;
   vendorNo?: string;
+  netWeight?: number;
+  unitVolume?: number;
 }
 
 export interface CreateUpdateUnitOfMeasureDto {
@@ -108,6 +110,8 @@ export interface ItemDto extends FullAuditedEntityDto<string> {
   leadTimeCalculation?: string;
   standardCost?: number;
   vendorNo?: string;
+  netWeight?: number;
+  unitVolume?: number;
   lastDirectCost: number;
 }
 

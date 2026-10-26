@@ -219,7 +219,19 @@ public class EmployeeListReport : EmployeeReportBase
         Date(result, "employmentDate", "Employment Date");
         Text(result, "contractCode", "Emplymt. Contract Code");
         Text(result, "statisticsGroupCode", "Statistics Group Code");
-        Text(result, "dimension1", "Global Dimension 1 Code");
+        var dim1Label = "Global Dimension 1 Code";
+        var glSetupManager = LazyServiceProvider.LazyGetService<ABPmicroservice.Erp.Finance.GeneralLedgerSetupManager>();
+        var dimRepo = LazyServiceProvider.LazyGetService<IRepository<ABPmicroservice.Erp.Dimensions.Dimension, Guid>>();
+        if (glSetupManager != null && dimRepo != null)
+        {
+            var setup = await glSetupManager.GetAsync();
+            if (!setup.GlobalDimension1Code.IsNullOrWhiteSpace())
+            {
+                var dim = await dimRepo.FirstOrDefaultAsync(d => d.Code == setup.GlobalDimension1Code);
+                dim1Label = dim?.Name ?? setup.GlobalDimension1Code;
+            }
+        }
+        Text(result, "dimension1", dim1Label);
 
         foreach (var employee in await GetEmployeesAsync(request))
         {

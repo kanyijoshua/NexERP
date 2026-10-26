@@ -41,7 +41,7 @@ public class PensionBenefitCalculationAppService
 
         var member = await GetMemberAsync(input.MemberNo);
         var date = input.CalculationDate == default ? Clock.Now.Date : input.CalculationDate;
-        var no = (await _noSeriesManager.ResolveNoAsync((await _setupManager.GetAsync()).BenefitCalculationNos, input.No, date)).ToUpperInvariant();
+        var no = (await _noSeriesManager.ResolveNoAsync((await _setupManager.GetAsync(member.SchemeCode)).BenefitCalculationNos, input.No, date)).ToUpperInvariant();
 
         if (await Repository.AnyAsync(x => x.No == no))
         {

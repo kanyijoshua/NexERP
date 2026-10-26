@@ -57,6 +57,7 @@ public class ItemAppService
         item.SetCostingMethod(input.CostingMethod);
         item.SetItemTrackingCode(input.ItemTrackingCode);
         item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
+        item.SetMeasures(input.NetWeight, input.UnitVolume);
 
         await Repository.InsertAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
@@ -107,6 +108,7 @@ public class ItemAppService
         item.SetCostingMethod(input.CostingMethod);
         item.SetItemTrackingCode(input.ItemTrackingCode);
         item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
+        item.SetMeasures(input.NetWeight, input.UnitVolume);
     }
 
     /// <summary>A posting group on the card must exist; blank means none.</summary>

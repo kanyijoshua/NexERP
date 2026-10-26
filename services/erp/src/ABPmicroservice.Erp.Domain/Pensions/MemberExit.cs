@@ -502,7 +502,7 @@ public class MemberExitEngine : DomainService
             throw new BusinessException(ErpErrorCodes.Pensions.NothingToPost).WithData("documentNo", exit.No);
         }
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(exit.SchemeCode);
         var memberFunds = setup.Require(setup.MemberFundsAccountNo, "Member Funds Account No.");
         var benefitsPayable = setup.Require(setup.BenefitsPayableAccountNo, "Benefits Payable Account No.");
         var taxAccount = exit.TaxOnLumpsum == 0m ? null : setup.Require(setup.TaxAccountNo, "Tax Account No.");

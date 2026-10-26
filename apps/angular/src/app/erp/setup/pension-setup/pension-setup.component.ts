@@ -2,11 +2,14 @@ import { ToasterService } from '@abp/ng.theme.shared';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DimensionDto, DimensionService } from '@proxy/dimensions';
 import { NoSeriesDto, NoSeriesService } from '@proxy/numbering';
 import {
   ExcessContributionAllocation,
   PensionSetupDto,
+  PensionSchemeDto,
+  PensionSchemeService,
   PensionSetupService,
   PensionerPayModeDto,
   PensionerPayModeService,
@@ -16,8 +19,9 @@ import { finalize, forkJoin } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
 /**
- * Pension Setup: the dimension whose values are the schemes, the number series and the G/L
- * accounts the pension processes post to.
+ * Pension Setup of one scheme (`?scheme=`): the number series, the G/L accounts and the options
+ * that scheme posts by. Without a scheme it is the company's: the dimension whose values are the
+ * schemes, and what a new scheme's setup is copied from.
  */
 @Component({
   selector: 'app-pension-setup',
@@ -30,6 +34,9 @@ export class PensionSetupComponent implements OnInit {
   private readonly noSeriesService = inject(NoSeriesService);
   private readonly dimensionService = inject(DimensionService);
   private readonly payModeService = inject(PensionerPayModeService);
+  private readonly schemeService = inject(PensionSchemeService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly companyService = inject(CompanyService);
   private readonly toaster = inject(ToasterService);
   private readonly destroyRef = inject(DestroyRef);
@@ -37,6 +44,9 @@ export class PensionSetupComponent implements OnInit {
   readonly series = signal<NoSeriesDto[]>([]);
   readonly dimensions = signal<DimensionDto[]>([]);
   readonly payModes = signal<PensionerPayModeDto[]>([]);
+  readonly schemes = signal<PensionSchemeDto[]>([]);
+  /** The scheme whose setup is shown; null is the company's. */
+  readonly schemeCode = signal<string | null>(null);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly allocationOptions = excessContributionAllocationOptions;
@@ -92,13 +102,32 @@ export class PensionSetupComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.schemeCode.set(this.route.snapshot.queryParamMap.get('scheme') || null);
     this.load();
-    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+    this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.schemeCode.set(null);
+      this.load();
+    });
+  }
+
+  /** Shows another scheme's setup; it is in the address, so the scheme card can link to it. */
+  selectScheme(code: string | null): void {
+    this.schemeCode.set(code || null);
+    this.router.navigate([], { relativeTo: this.route, queryParams: { scheme: code || null }, replaceUrl: true });
+    this.loading.set(true);
+    this.setupService
+      .get(code || undefined)
+      .pipe(
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(setup => this.show(setup));
   }
 
   save(): void {
     const value = this.form.getRawValue();
     const input: PensionSetupDto = {
+      schemeCode: this.schemeCode() ?? undefined,
       schemeDimensionCode: value.schemeDimensionCode || undefined,
       memberNos: value.memberNos || undefined,
       sponsorNos: value.sponsorNos || undefined,
@@ -140,7 +169,8 @@ export class PensionSetupComponent implements OnInit {
   private load(): void {
     this.loading.set(true);
     forkJoin({
-      setup: this.setupService.get(),
+      setup: this.setupService.get(this.schemeCode() ?? undefined),
+      schemes: this.schemeService.getList({ maxResultCount: 1000, skipCount: 0 }),
       series: this.noSeriesService.getList({ maxResultCount: 1000, skipCount: 0 } as never),
       dimensions: this.dimensionService.getList(),
       payModes: this.payModeService.getList({ maxResultCount: 1000, skipCount: 0 }),
@@ -149,7 +179,8 @@ export class PensionSetupComponent implements OnInit {
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(({ setup, series, dimensions, payModes }) => {
+      .subscribe(({ setup, schemes, series, dimensions, payModes }) => {
+        this.schemes.set(schemes.items ?? []);
         this.series.set(series.items ?? []);
         this.dimensions.set(dimensions.items ?? []);
         this.payModes.set(payModes.items ?? []);
@@ -158,6 +189,13 @@ export class PensionSetupComponent implements OnInit {
   }
 
   private show(setup: PensionSetupDto): void {
+    // The scheme dimension is the company's; a scheme's setup only shows it.
+    const dimension = this.form.controls.schemeDimensionCode;
+    if (setup.schemeCode) {
+      dimension.disable({ emitEvent: false });
+    } else {
+      dimension.enable({ emitEvent: false });
+    }
     this.form.reset({
       schemeDimensionCode: setup.schemeDimensionCode ?? null,
       memberNos: setup.memberNos ?? null,

@@ -1,5 +1,5 @@
 import { ABP, ListService } from '@abp/ng.core';
-import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
+import { Confirmation, ConfirmationService } from '@abp/ng.theme.shared';
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -14,7 +14,7 @@ import { finalize, map } from 'rxjs';
 import { ErpTableAction, ErpTableColumn, ErpTableCrudBase } from '../../erp-shared';
 
 /**
- * Financial Dimensions and their Dimension Values (Business Central-style Dimensions setup).
+ * Financial dimensions and their dimension values.
  */
 @Component({
   selector: 'app-dimensions',
@@ -27,7 +27,6 @@ export class DimensionsComponent extends ErpTableCrudBase<DimensionDto, CreateDi
 
   private readonly service = inject(DimensionService);
   private readonly fb = inject(FormBuilder);
-  private readonly toaster = inject(ToasterService);
   private readonly confirmationService = inject(ConfirmationService);
 
   override readonly columns: ErpTableColumn<DimensionDto>[] = [

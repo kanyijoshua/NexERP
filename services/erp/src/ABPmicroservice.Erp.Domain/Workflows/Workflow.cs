@@ -87,6 +87,7 @@ public class Workflow : CompanyAggregateRoot
             ApprovalDocumentKind.SalesDocument => "SALES",
             ApprovalDocumentKind.PaymentVoucher => "FINANCE",
             ApprovalDocumentKind.PurchaseRequisition or ApprovalDocumentKind.Tender => "PROCUREMENT",
+            ApprovalDocumentKind.LeaveApplication => "HR",
             _ => "PURCH",
         };
         MinimumAmount = Check.Range(minimumAmount, nameof(minimumAmount), 0m, decimal.MaxValue);
@@ -193,6 +194,7 @@ public class Workflow : CompanyAggregateRoot
             ApprovalDocumentKind.PaymentVoucher => "payment voucher",
             ApprovalDocumentKind.PurchaseRequisition => "purchase requisition",
             ApprovalDocumentKind.Tender => "tender",
+            ApprovalDocumentKind.LeaveApplication => "leave application",
             _ => "purchase document",
         };
 

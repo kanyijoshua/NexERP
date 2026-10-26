@@ -180,6 +180,7 @@ public partial class ErpDataSeederContributor : IDataSeedContributor, ITransient
                     await SeedProjectsAsync();
                     await SeedManufacturingAsync();
                     await SeedServiceManagementAsync();
+                    await SeedEverydayOperationsAsync();
 
                     if (company.Id == defaultCompany.Id)
                     {

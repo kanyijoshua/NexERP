@@ -296,6 +296,26 @@ public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvi
         jobQueue.AddChild(ErpPermissions.JobQueue.Manage, L("Permission:Erp:JobQueue:Manage"));
         jobQueue.AddChild(ErpPermissions.JobQueue.Execute, L("Permission:Erp:JobQueue:Execute"));
 
+        var leaveMgmt = erpGroup.AddPermission(ErpPermissions.LeaveManagement.Default, L("Permission:Erp:LeaveManagement"));
+        leaveMgmt.AddChild(ErpPermissions.LeaveManagement.Create, L("Permission:Erp:LeaveManagement:Create"));
+        leaveMgmt.AddChild(ErpPermissions.LeaveManagement.Update, L("Permission:Erp:LeaveManagement:Update"));
+        leaveMgmt.AddChild(ErpPermissions.LeaveManagement.Delete, L("Permission:Erp:LeaveManagement:Delete"));
+        leaveMgmt.AddChild(ErpPermissions.LeaveManagement.Approve, L("Permission:Erp:LeaveManagement:Approve"));
+        leaveMgmt.AddChild(ErpPermissions.LeaveManagement.Post, L("Permission:Erp:LeaveManagement:Post"));
+
+        var itemCharges = erpGroup.AddPermission(ErpPermissions.ItemCharges.Default, L("Permission:Erp:ItemCharges"));
+        itemCharges.AddChild(ErpPermissions.ItemCharges.Create, L("Permission:Erp:ItemCharges:Create"));
+        itemCharges.AddChild(ErpPermissions.ItemCharges.Update, L("Permission:Erp:ItemCharges:Update"));
+        itemCharges.AddChild(ErpPermissions.ItemCharges.Delete, L("Permission:Erp:ItemCharges:Delete"));
+        itemCharges.AddChild(ErpPermissions.ItemCharges.Assign, L("Permission:Erp:ItemCharges:Assign"));
+
+        var docEmailing = erpGroup.AddPermission(ErpPermissions.DocumentEmailing.Default, L("Permission:Erp:DocumentEmailing"));
+        docEmailing.AddChild(ErpPermissions.DocumentEmailing.ManageTemplates, L("Permission:Erp:DocumentEmailing:ManageTemplates"));
+        docEmailing.AddChild(ErpPermissions.DocumentEmailing.Send, L("Permission:Erp:DocumentEmailing:Send"));
+
+        var changeLog = erpGroup.AddPermission(ErpPermissions.ChangeLog.Default, L("Permission:Erp:ChangeLog"));
+        changeLog.AddChild(ErpPermissions.ChangeLog.Manage, L("Permission:Erp:ChangeLog:Manage"));
+
         DefineBaseTables(erpGroup);
         DefineFinanceOperations(erpGroup);
 

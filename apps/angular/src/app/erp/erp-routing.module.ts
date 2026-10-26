@@ -47,6 +47,13 @@ const routes: Routes = [
   masterData('items', 'item', 'Erp.Items', 'Inventory'),
   masterData('units-of-measure', 'unitOfMeasure', 'Erp.UnitsOfMeasure', 'Inventory'),
   masterData('item-categories', 'itemCategory', 'Erp.ItemCategories', 'Inventory'),
+  masterData('item-charges', 'itemCharge', 'Erp.ItemCharges', 'Inventory'),
+  masterData('item-charge-assignments', 'itemChargeAssignment', 'Erp.ItemCharges', 'Inventory'),
+  // Emailing and the change log belong to the core, which is always on.
+  masterData('email-templates', 'emailTemplate', 'Erp.DocumentEmailing', ''),
+  masterData('sent-emails', 'sentEmail', 'Erp.DocumentEmailing', ''),
+  masterData('change-log-tables', 'changeLogTable', 'Erp.ChangeLog.Manage', ''),
+  masterData('change-log-entries', 'changeLogEntry', 'Erp.ChangeLog', ''),
   // Posting groups and the setups that turn them into G/L accounts.
   masterData('gen-bus-posting-groups', 'genBusPostingGroup', 'Erp.PostingSetup', 'Finance'),
   masterData('gen-prod-posting-groups', 'genProdPostingGroup', 'Erp.PostingSetup', 'Finance'),
@@ -69,6 +76,9 @@ const routes: Routes = [
   masterData('salespeople-purchasers', 'salespersonPurchaser', 'Erp.SalespeoplePurchasers', 'Sales'),
   masterData('employees', 'employee', 'Erp.Employees', 'HumanResources'),
   masterData('employee-absences', 'employeeAbsence', 'Erp.Employees', 'HumanResources'),
+  masterData('leave-types', 'leaveType', 'Erp.HumanResourcesSetup', 'HumanResources'),
+  masterData('leave-applications', 'leaveApplication', 'Erp.LeaveManagement', 'HumanResources'),
+  masterData('leave-ledger-entries', 'leaveLedgerEntry', 'Erp.LeaveManagement', 'HumanResources'),
   masterData('causes-of-absence', 'causeOfAbsence', 'Erp.HumanResourcesSetup', 'HumanResources'),
   masterData('base-calendars', 'baseCalendar', 'Erp.HumanResourcesSetup', 'HumanResources'),
   masterData('base-calendar-changes', 'baseCalendarChange', 'Erp.HumanResourcesSetup', 'HumanResources'),

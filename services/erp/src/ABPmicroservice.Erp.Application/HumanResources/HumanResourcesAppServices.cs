@@ -44,12 +44,14 @@ public class HumanResourcesSetupAppService : ErpAppService, IHumanResourcesSetup
     public async Task<HumanResourcesSetupDto> UpdateAsync(HumanResourcesSetupDto input)
     {
         await _seriesValidator.EnsureExistAsync(input.EmployeeNos);
+        await _seriesValidator.EnsureExistAsync(input.LeaveApplicationNos);
         await _codeTableChecker.EnsureExistsAsync<HumanResourceUnitOfMeasure>(input.BaseUnitOfMeasure);
         await _codeTableChecker.EnsureExistsAsync<BaseCalendar>(input.BaseCalendarCode);
 
         var setup = await _setupManager.GetAsync();
         setup.Set(input.EmployeeNos, input.BaseUnitOfMeasure);
         setup.SetBaseCalendar(input.BaseCalendarCode);
+        setup.SetLeaveApplicationNos(input.LeaveApplicationNos);
 
         await _repository.UpdateAsync(setup, autoSave: true);
         return ObjectMapper.Map<HumanResourcesSetup, HumanResourcesSetupDto>(setup);

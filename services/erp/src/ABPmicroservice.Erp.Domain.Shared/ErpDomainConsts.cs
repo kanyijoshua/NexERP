@@ -14,6 +14,11 @@ public static class ErpDomainConsts
     public const int MaxCountryRegionCodeLength = 10;
     public const int MaxPhoneLength = 30;
     public const int MaxEmailLength = 80;
+
+    /// <summary>A document email's To or Cc: one or more addresses separated by commas.</summary>
+    public const int MaxEmailRecipientsLength = 256;
+    public const int MaxEmailSubjectLength = 250;
+    public const int MaxEmailBodyLength = 8000;
     public const int MaxCodeLength = 20;
     public const int MaxCurrencyCodeLength = 10;
     public const int MaxPaymentTermsCodeLength = 10;

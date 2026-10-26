@@ -3,6 +3,7 @@ using ABPmicroservice.Erp.RapidStart;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Domain;
 using Volo.Abp.Modularity;
+using Volo.Abp.Emailing;
 using Volo.Abp.SettingManagement;
 
 namespace ABPmicroservice.Erp;
@@ -10,6 +11,7 @@ namespace ABPmicroservice.Erp;
 [DependsOn(typeof(AbpDddDomainModule))]
 [DependsOn(typeof(ErpDomainSharedModule))]
 [DependsOn(typeof(AbpSettingManagementDomainModule))]
+[DependsOn(typeof(AbpEmailingModule))]
 public class ErpDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)

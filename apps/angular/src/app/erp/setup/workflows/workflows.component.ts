@@ -74,6 +74,7 @@ const DOCUMENT_LABELS: Record<ApprovalDocumentKind, string> = {
   [ApprovalDocumentKind.PaymentVoucher]: 'payment voucher',
   [ApprovalDocumentKind.PurchaseRequisition]: 'purchase requisition',
   [ApprovalDocumentKind.Tender]: 'tender',
+  [ApprovalDocumentKind.LeaveApplication]: 'leave application',
 };
 
 /** Same wording as the server: the trigger event of a document kind. */

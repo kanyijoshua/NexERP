@@ -31,6 +31,8 @@ public class ItemDto : FullAuditedEntityDto<Guid>
     public string LeadTimeCalculation { get; set; }
     public decimal StandardCost { get; set; }
     public string VendorNo { get; set; }
+    public decimal NetWeight { get; set; }
+    public decimal UnitVolume { get; set; }
     public decimal LastDirectCost { get; set; }
 }
 
@@ -60,6 +62,8 @@ public class CreateUpdateItemDto
     public string LeadTimeCalculation { get; set; }
     public decimal StandardCost { get; set; }
     public string VendorNo { get; set; }
+    public decimal NetWeight { get; set; }
+    public decimal UnitVolume { get; set; }
 }
 
 public class GetItemListInput : ErpPagedListInput

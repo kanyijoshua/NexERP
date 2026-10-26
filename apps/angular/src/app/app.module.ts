@@ -1,4 +1,4 @@
-import { CoreModule, provideAbpCore, withOptions } from '@abp/ng.core';
+import { CoreModule, LocalizationService, provideAbpCore, withOptions } from '@abp/ng.core';
 import { provideAbpOAuth } from '@abp/ng.oauth';
 import { OAuthStorage } from 'angular-oauth2-oidc';
 import { provideSettingManagementConfig } from '@abp/ng.setting-management/config';
@@ -18,6 +18,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { APP_ROUTE_PROVIDER } from './route.provider';
 import { CompanyInterceptor } from './erp/services/company.interceptor';
+import { ErpLocalizationService } from './erp/services/erp-localization.service';
 
 export function oAuthStorageFactory(): OAuthStorage {
   return typeof window !== 'undefined' && window.localStorage
@@ -47,6 +48,8 @@ export function oAuthStorageFactory(): OAuthStorage {
         registerLocaleFn: registerLocale(),
       })
     ),
+    // After the core: an enum value without a text shows its name in words, not its key.
+    { provide: LocalizationService, useClass: ErpLocalizationService },
     provideAbpOAuth(),
     // Use persistent browser localStorage instead of MemoryTokenStorageService so that
     // auth tokens and user sessions are retained synchronously across page reloads (F5).

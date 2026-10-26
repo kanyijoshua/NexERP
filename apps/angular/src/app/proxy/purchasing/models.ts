@@ -198,6 +198,10 @@ export interface PurchaseHeaderDto extends FullAuditedEntityDto<string> {
   taxAreaCode?: string;
   taxLiable: boolean;
   prepaymentPct: number;
+  prepmtInvoicedAmount: number;
+  prepmtDeductedAmount: number;
+  lastPrepmtInvoiceNo?: string;
+  lastPrepmtCrMemoNo?: string;
   yourReference?: string;
   vendorInvoiceNo?: string;
   totalAmount: number;
@@ -300,6 +304,10 @@ export interface PurchaseLineDto extends EntityDto<string> {
   blanketOrderLineNo?: number;
   variantCode?: string;
   qtyPerUnitOfMeasure: number;
+  prepaymentPct: number;
+  prepmtLineAmount: number;
+  prepmtAmtInv: number;
+  prepmtAmtDeducted: number;
 }
 
 export interface PurchaseLineInputDto {
@@ -325,6 +333,7 @@ export interface PurchaseLineInputDto {
   taxGroupCode?: string;
   genBusPostingGroup?: string;
   genProdPostingGroup?: string;
+  prepaymentPct?: number;
 }
 
 export interface PurchasesPayablesSetupDto {

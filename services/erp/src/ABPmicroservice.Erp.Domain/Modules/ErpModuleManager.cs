@@ -3,12 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Companies;
+using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp;
+using Volo.Abp.Caching;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
 using Volo.Abp.Guids;
+using Volo.Abp.Uow;
 
 namespace ABPmicroservice.Erp.Modules;
+
+[Serializable]
+public class ErpModuleStatesCacheItem
+{
+    public Dictionary<string, bool> Stored { get; set; } = new();
+}
 
 /// <summary>
 /// Which modules this company runs.
@@ -23,17 +32,23 @@ public class ErpModuleManager : DomainService
     private readonly IRepository<ErpModuleState, Guid> _stateRepository;
     private readonly ICurrentCompany _currentCompany;
     private readonly IGuidGenerator _guidGenerator;
+    private readonly IDistributedCache<ErpModuleStatesCacheItem> _cache;
 
     public ErpModuleManager(
         IRepository<ErpModuleState, Guid> stateRepository,
         ICurrentCompany currentCompany,
-        IGuidGenerator guidGenerator
+        IGuidGenerator guidGenerator,
+        IDistributedCache<ErpModuleStatesCacheItem> cache
     )
     {
         _stateRepository = stateRepository;
         _currentCompany = currentCompany;
         _guidGenerator = guidGenerator;
+        _cache = cache;
     }
+
+    // The cache is tenant-aware: ABP prefixes the key with the current tenant id.
+    private string CacheKey => $"modules:{_currentCompany.Id}";
 
     /// <summary>Every module with the state it stands at in this company.</summary>
     public async Task<IReadOnlyDictionary<string, bool>> GetStatesAsync()
@@ -45,10 +60,19 @@ public class ErpModuleManager : DomainService
             return ErpModuleRegistry.All.ToDictionary(m => m.Code, _ => true, StringComparer.OrdinalIgnoreCase);
         }
 
-        // Two columns, read without change tracking: this runs on every page's navigation.
-        var query = await _stateRepository.GetQueryableAsync();
-        var stored = await AsyncExecuter.ToListAsync(query.Select(s => new { s.ModuleCode, s.Enabled }));
-        var byCode = stored.ToDictionary(s => s.ModuleCode, s => s.Enabled, StringComparer.OrdinalIgnoreCase);
+        // Every API request of a switchable module asks this, so the stored switches are cached
+        // for a minute per company; switching a module clears it.
+        var cached = await _cache.GetOrAddAsync(
+            CacheKey,
+            async () =>
+            {
+                var query = await _stateRepository.GetQueryableAsync();
+                var stored = await AsyncExecuter.ToListAsync(query.Select(s => new { s.ModuleCode, s.Enabled }));
+                return new ErpModuleStatesCacheItem { Stored = stored.ToDictionary(s => s.ModuleCode, s => s.Enabled) };
+            },
+            () => new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1) }
+        );
+        var byCode = new Dictionary<string, bool>(cached.Stored, StringComparer.OrdinalIgnoreCase);
 
         return ErpModuleRegistry.All.ToDictionary(
             m => m.Code,
@@ -124,12 +148,17 @@ public class ErpModuleManager : DomainService
                 new ErpModuleState(_guidGenerator.Create(), module.Code, enabled),
                 autoSave: true
             );
-
-            return;
+        }
+        else
+        {
+            existing.SetEnabled(enabled);
+            await _stateRepository.UpdateAsync(existing, autoSave: true);
         }
 
-        existing.SetEnabled(enabled);
-        await _stateRepository.UpdateAsync(existing, autoSave: true);
+        // Cleared now and again once the change is committed, so no request caches the old switch.
+        var key = CacheKey;
+        await _cache.RemoveAsync(key);
+        LazyServiceProvider.LazyGetRequiredService<IUnitOfWorkManager>().Current?.OnCompleted(() => _cache.RemoveAsync(key));
     }
 
     private static void EnsureDependenciesAreOn(ErpModuleDefinition module, IReadOnlyDictionary<string, bool> states)

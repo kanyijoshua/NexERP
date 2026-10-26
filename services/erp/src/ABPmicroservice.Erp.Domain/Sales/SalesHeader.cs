@@ -77,6 +77,12 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
     /// <summary>The last invoice (or credit memo) posted from this order.</summary>
     public string LastPostingNo { get; private set; }
 
+    public decimal PrepaymentPct { get; private set; }
+    public decimal PrepmtInvoicedAmount { get; private set; }
+    public decimal PrepmtDeductedAmount { get; private set; }
+    public string LastPrepmtInvoiceNo { get; private set; }
+    public string LastPrepmtCrMemoNo { get; private set; }
+
     public Collection<SalesLine> Lines { get; private set; }
 
     /// <summary>An order or return order: shipped and invoiced in parts rather than in one go.</summary>
@@ -207,6 +213,17 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         QuoteNo = Check.Length(quoteNo, nameof(quoteNo), ErpDomainConsts.MaxDocumentNoLength);
     }
 
+    public void SetPrepayment(decimal prepaymentPct)
+    {
+        EnsureNotPosted();
+        PrepaymentPct = Math.Clamp(prepaymentPct, 0m, 100m);
+        foreach (var line in Lines.Where(l => l.PrepmtAmtInv == 0m))
+        {
+            line.SetPrepaymentPct(PrepaymentPct);
+        }
+        RecalculateTotals();
+    }
+
     public SalesLine AddLine(
         Guid lineId,
         DocumentLineType type,
@@ -233,6 +250,11 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
             lineDiscountPercent,
             unitOfMeasureCode
         );
+
+        if (PrepaymentPct > 0m)
+        {
+            line.SetPrepaymentPct(PrepaymentPct);
+        }
 
         Lines.Add(line);
         RecalculateTotals();
@@ -321,6 +343,8 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
             line.ResetQuantitiesToPost();
         }
 
+        RecalculateTotals();
+
         if (IsCompletelyInvoiced && postingNo != null)
         {
             MarkPosted(postingNo);
@@ -341,6 +365,21 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
     {
         TotalAmount = Lines.Sum(l => l.LineAmount);
         TotalAmountIncludingVat = Lines.Sum(l => l.LineAmountIncludingVat);
+        PrepmtInvoicedAmount = Lines.Sum(l => l.PrepmtAmtInv);
+        PrepmtDeductedAmount = Lines.Sum(l => l.PrepmtAmtDeducted);
+    }
+
+    internal void RecordPrepaymentPosting(string documentNo, bool creditMemo)
+    {
+        if (creditMemo)
+        {
+            LastPrepmtCrMemoNo = documentNo;
+        }
+        else
+        {
+            LastPrepmtInvoiceNo = documentNo;
+        }
+        RecalculateTotals();
     }
 
     public bool HasLines => Lines.Count > 0;

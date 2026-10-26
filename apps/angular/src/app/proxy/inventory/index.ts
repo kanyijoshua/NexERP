@@ -21,3 +21,7 @@ export * from './transfer-line.service';
 export * from './transfer-order.service';
 export * from './warehouse.enums';
 export * from './warehouse.models';
+export * from './item-charge-assignment.service';
+export * from './item-charge.enums';
+export * from './item-charge.models';
+export * from './item-charge.service';

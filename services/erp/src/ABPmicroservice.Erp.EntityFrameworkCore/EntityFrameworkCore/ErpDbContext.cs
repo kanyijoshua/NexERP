@@ -288,6 +288,7 @@ public partial class ErpDbContext : AbpDbContext<ErpDbContext>
         GuardLedgerEntries();
 
         // Collected before saving, while the change tracker still says what each row is doing.
+        await RecordChangeLogAsync(cancellationToken);
         var changes = CollectEntityChanges();
 
         var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
@@ -300,6 +301,7 @@ public partial class ErpDbContext : AbpDbContext<ErpDbContext>
     {
         GuardLedgerEntries();
 
+        RecordChangeLog();
         var changes = CollectEntityChanges();
         var result = base.SaveChanges(acceptAllChangesOnSuccess);
 

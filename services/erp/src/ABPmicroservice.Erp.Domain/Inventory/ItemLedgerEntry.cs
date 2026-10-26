@@ -166,4 +166,15 @@ public class ItemLedgerEntry : LedgerEntryBase
     {
         UnitCost = unitCost;
     }
+
+    /// <summary>Adds an item charge (landed cost: freight, duty, insurance) to the entry's actual cost and unit cost.</summary>
+    internal void AddLandedCost(decimal landedCostAmount)
+    {
+        CostAmountActual += landedCostAmount;
+        if (Quantity != 0m)
+        {
+            var notInvoiced = Math.Abs(Quantity) - Math.Abs(InvoicedQuantity);
+            UnitCost = Math.Round((notInvoiced * ExpectedUnitCost + Math.Abs(CostAmountActual)) / Math.Abs(Quantity), 5, MidpointRounding.AwayFromZero);
+        }
+    }
 }

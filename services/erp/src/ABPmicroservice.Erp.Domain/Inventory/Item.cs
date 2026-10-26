@@ -204,6 +204,18 @@ public class Item : CompanyAggregateRoot, IHasNo
     /// <summary>A revaluation sets the cost of the stock on hand.</summary>
     internal void Revalue(decimal unitCost) => UnitCost = unitCost;
 
+    /// <summary>Net weight of one base unit; item charges can be split by it.</summary>
+    public decimal NetWeight { get; private set; }
+
+    /// <summary>Volume of one base unit; item charges can be split by it.</summary>
+    public decimal UnitVolume { get; private set; }
+
+    public void SetMeasures(decimal netWeight, decimal unitVolume)
+    {
+        NetWeight = Math.Max(0m, netWeight);
+        UnitVolume = Math.Max(0m, unitVolume);
+    }
+
     public void SetVatProdPostingGroup(string vatProdPostingGroup) =>
         VatProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatProdPostingGroup, nameof(vatProdPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
 }

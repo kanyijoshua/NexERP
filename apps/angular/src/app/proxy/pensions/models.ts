@@ -31,6 +31,7 @@ import type { PensionFactorType } from './pension-factor-type.enum';
 import type { PensionableSalaryBasis } from './pensionable-salary-basis.enum';
 
 export interface PensionSetupDto {
+  schemeCode?: string;
   schemeDimensionCode?: string;
   memberNos?: string;
   sponsorNos?: string;

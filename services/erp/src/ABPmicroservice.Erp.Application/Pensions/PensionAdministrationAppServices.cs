@@ -352,7 +352,7 @@ public class PensionIncrementAppService
         await CheckCreatePolicyAsync();
 
         var scheme = await _schemeManager.GetAsync(input.SchemeCode);
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(scheme.Code);
         var effective = input.EffectiveDate == default ? Clock.Now.Date : input.EffectiveDate;
         var no = (await _noSeriesManager.ResolveNoAsync(setup.IncrementNos, input.No, effective)).ToUpperInvariant();
 

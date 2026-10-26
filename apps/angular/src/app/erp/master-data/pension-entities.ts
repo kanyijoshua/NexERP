@@ -60,7 +60,7 @@ import {
   pensionSchemeTypeOptions,
   pensionTransactionTypeOptions,
 } from '@proxy/pensions';
-import { EMPTY, forkJoin, map } from 'rxjs';
+import { EMPTY, forkJoin, map, of } from 'rxjs';
 import { RecordEntity, RecordField } from '../erp-shared';
 import { codeField, codeTableEntity, enumOptions } from './entity-helpers';
 
@@ -195,6 +195,17 @@ export class PensionEntities {
         run: dto => this.pensioners.suspendOverdue({ schemeCode: dto.code! }),
       },
     ];
+    // Each scheme posts by a setup of its own.
+    this.pensionScheme.related = dto =>
+      of([
+        {
+          labelKey: 'Erp::PensionSetup',
+          icon: 'fas fa-sliders',
+          routerLink: ['/erp/setup/pension-setup'],
+          queryParams: { scheme: dto.code },
+          permission: SETUP_PERMISSION,
+        },
+      ]);
     // Factor tables replace the formula's flat early retirement cut and commutation factor for the ages they cover.
     this.pensionScheme.parts = [
       {

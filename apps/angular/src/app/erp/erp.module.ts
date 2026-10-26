@@ -7,6 +7,7 @@ import { ErpRoutingModule } from './erp-routing.module';
 import { ErpSharedModule } from './erp-shared/erp-shared.module';
 import { RecordEntityRegistry } from './erp-shared/record/record-entity';
 import { MasterDataEntities } from './master-data/master-data-entities';
+import { DimensionStateService } from './services/dimension-state.service';
 
 import { SalesDocumentsComponent } from './pages/sales-documents/sales-documents.component';
 import { PurchaseDocumentsComponent } from './pages/purchase-documents/purchase-documents.component';
@@ -21,7 +22,11 @@ import { PurchaseDocumentsComponent } from './pages/purchase-documents/purchase-
 
 export class ErpModule {
   // Every ERP page is below this module, so registering here makes the tables known to any lookup.
-  constructor(registry: RecordEntityRegistry, entities: MasterDataEntities) {
-    registry.register(...entities.all);
+  constructor(
+    registry: RecordEntityRegistry,
+    entities: MasterDataEntities,
+    dimensionState: DimensionStateService,
+  ) {
+    registry.register(...entities.all, ...dimensionState.buildEntities());
   }
 }

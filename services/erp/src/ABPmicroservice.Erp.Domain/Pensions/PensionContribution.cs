@@ -343,7 +343,7 @@ public class PensionContributionEngine : DomainService
     /// </summary>
     private async Task<Func<ContributionAmounts, decimal, decimal[]>> GetSplitterAsync(PensionContributionHeader header, decimal employeeRate, decimal employerRate)
     {
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(header.SchemeCode);
         var limit = header.ContributionMode == PensionContributionMode.TransferIn ? null : await _limitManager.GetLimitAsync(header.ContributionPeriod);
 
         return (amounts, alreadyUsed) => ContributionSplitter.Split(
@@ -373,7 +373,7 @@ public class PensionContributionEngine : DomainService
         await _glSetupManager.CheckPostingDateAsync(header.PostingDate);
         var (lines, members) = await CheckAsync(header);
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(header.SchemeCode);
         var memberFunds = setup.Require(setup.MemberFundsAccountNo, "Member Funds Account No.");
         var sponsor = await GetSponsorAsync(header.SponsorNo);
         var dimensionSetId = await _schemeManager.GetDimensionSetIdAsync(header.SchemeCode);
@@ -527,7 +527,7 @@ public class PensionContributionEngine : DomainService
             }
         }
 
-        var setup = await _setupManager.GetAsync();
+        var setup = await _setupManager.GetAsync(header.SchemeCode);
         if (!setup.AllowContributionDuplication && header.ContributionMode == PensionContributionMode.Normal)
         {
             var other = await _headers.FirstOrDefaultAsync(h =>

@@ -245,7 +245,7 @@ public class PensionAdministration_Tests : ErpApplicationTestBase
                 await _vesting.CreateAsync(new CreateUpdatePensionVestingScaleDto { SponsorNo = sponsor.No, FromServiceYears = from, EmployerVestedPct = pct });
             }
 
-            var setup = await _setup.GetAsync();
+            var setup = await _setup.GetAsync(sponsor.SchemeCode);
             setup.TransfersInAccountNo = "2330";
             await _setup.UpdateAsync(setup);
 
