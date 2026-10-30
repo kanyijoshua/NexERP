@@ -213,6 +213,12 @@ public class SalesHeader : CompanyAggregateRoot, IApprovalDocument
         QuoteNo = Check.Length(quoteNo, nameof(quoteNo), ErpDomainConsts.MaxDocumentNoLength);
     }
 
+    /// <summary>The responsibility center the document belongs to; users working for another center do not see it.</summary>
+    public string ResponsibilityCenter { get; private set; }
+
+    public void SetResponsibilityCenter(string responsibilityCenter) =>
+        ResponsibilityCenter = CodeTableEntity.NormalizeCode(Check.Length(responsibilityCenter, nameof(responsibilityCenter), 10));
+
     public void SetPrepayment(decimal prepaymentPct)
     {
         EnsureNotPosted();

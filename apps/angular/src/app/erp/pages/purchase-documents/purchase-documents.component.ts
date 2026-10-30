@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   PurchaseDocumentService,
@@ -8,10 +8,13 @@ import {
   VendorService,
 } from '@proxy/purchasing';
 import { Observable, map } from 'rxjs';
-import { DocumentLineType } from '@proxy/documents';
+import { DocumentLineType, DocumentStatus } from '@proxy/documents';
+import { InsertStandardLinesInput } from '@proxy/sales';
+import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
+import { runWithInput } from '../../master-data/entity-helpers';
 import { ItemChargeSourceType, ItemTrackingSourceType } from '@proxy/inventory';
 import { EmailDocumentType } from '@proxy/emailing';
-import { ErpTableQuery, LookupItem } from '../../erp-shared';
+import { DocumentAction as CardAction, ErpTableQuery, LookupItem } from '../../erp-shared';
 import {
   DocumentAction,
   DocumentCardData,
@@ -67,6 +70,7 @@ export class PurchaseDocumentsComponent extends DocumentListBase<PurchaseHeaderD
   readonly externalDocumentNoLabelKey: string;
   readonly itemAmountField = 'unitCost' as const;
   readonly cardFields: DocumentCardField[];
+  private readonly recordDialogs = inject(RecordDialogService);
 
   constructor(
     private readonly documents: PurchaseDocumentService,
@@ -109,6 +113,7 @@ export class PurchaseDocumentsComponent extends DocumentListBase<PurchaseHeaderD
       { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', entity: 'location' },
       { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'lookup', entity: 'paymentTerms' },
       { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', entity: 'currency' },
+      { field: 'responsibilityCenter', labelKey: 'Erp::ResponsibilityCenter', type: 'lookup', entity: 'responsibilityCenter' },
       ...(this.supportsPrepayment ? PREPAYMENT_FIELDS : []),
     ];
   }
@@ -207,6 +212,22 @@ export class PurchaseDocumentsComponent extends DocumentListBase<PurchaseHeaderD
         lineDiscountPercent: 0,
       })),
     } as never);
+  }
+
+  protected override extraCardActions(card: DocumentCardData): CardAction[] {
+    return card.status === DocumentStatus.Open
+      ? [{ key: 'insertStandardLines', labelKey: 'Erp::GetStandardLines', icon: 'fas fa-repeat', cssClass: 'btn-outline-secondary', permission: 'Erp.PurchaseDocuments.Update' }]
+      : [];
+  }
+
+  protected override runExtraCardAction(_key: string, row: PurchaseHeaderDto): Observable<string> {
+    return runWithInput<InsertStandardLinesInput>(this.recordDialogs, {
+      titleKey: 'Erp::GetStandardLines',
+      icon: 'fas fa-repeat',
+      permission: 'Erp.PurchaseDocuments.Update',
+      fields: [{ field: 'code', labelKey: 'Erp::StandardCode', type: 'lookup', lookupEntity: 'standardPurchaseCode', required: true }],
+      submit: input => this.documents.insertStandardLines(row.id!, input),
+    }).pipe(map(() => 'Erp::StandardLinesInserted'));
   }
 
   protected run(action: DocumentAction, id: string): Observable<unknown> {

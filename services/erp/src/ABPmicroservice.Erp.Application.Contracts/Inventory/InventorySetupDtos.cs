@@ -15,6 +15,12 @@ public class LocationDto : CodeTableDto
     public string PhoneNo { get; set; }
     public string Contact { get; set; }
     public bool UseAsInTransit { get; set; }
+    public bool BinMandatory { get; set; }
+    public bool RequirePutAway { get; set; }
+    public bool RequirePick { get; set; }
+    public string ReceiptBinCode { get; set; }
+    public string ShipmentBinCode { get; set; }
+    public string DefaultBinCode { get; set; }
 }
 
 public class CreateUpdateLocationDto : CreateUpdateCodeTableDto
@@ -38,6 +44,18 @@ public class CreateUpdateLocationDto : CreateUpdateCodeTableDto
     public string Contact { get; set; }
 
     public bool UseAsInTransit { get; set; }
+    public bool BinMandatory { get; set; }
+    public bool RequirePutAway { get; set; }
+    public bool RequirePick { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string ReceiptBinCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string ShipmentBinCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string DefaultBinCode { get; set; }
 }
 
 /// <summary>Inventory Setup.</summary>

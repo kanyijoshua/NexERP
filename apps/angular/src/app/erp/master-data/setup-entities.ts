@@ -393,6 +393,7 @@ export class SetupEntities {
     sections: [
       { key: 'general', labelKey: 'Erp::General' },
       { key: 'contact', labelKey: 'Erp::AddressAndContact' },
+      { key: 'warehouse', labelKey: 'Erp::Warehouse', collapsed: true },
     ],
     fields: [
       { field: 'address', labelKey: 'Erp::Address', type: 'text', section: 'contact', maxLength: 100, wide: true, cardOnly: true },
@@ -402,7 +403,14 @@ export class SetupEntities {
       { field: 'contact', labelKey: 'Erp::Contact', type: 'text', section: 'contact', maxLength: 100, cardOnly: true },
       { field: 'phoneNo', labelKey: 'Erp::PhoneNo', type: 'text', section: 'contact', maxLength: 30, cardOnly: true },
       { field: 'useAsInTransit', labelKey: 'Erp::UseAsInTransit', type: 'checkbox', cardOnly: true },
+      { field: 'binMandatory', labelKey: 'Erp::BinMandatory', type: 'checkbox', section: 'warehouse', cardOnly: true, helpKey: 'Erp::BinMandatoryHelp' },
+      { field: 'requirePutAway', labelKey: 'Erp::RequirePutAway', type: 'checkbox', section: 'warehouse', cardOnly: true },
+      { field: 'requirePick', labelKey: 'Erp::RequirePick', type: 'checkbox', section: 'warehouse', cardOnly: true },
+      { field: 'receiptBinCode', labelKey: 'Erp::ReceiptBinCode', type: 'lookup', lookupEntity: 'bin', section: 'warehouse', cardOnly: true },
+      { field: 'shipmentBinCode', labelKey: 'Erp::ShipmentBinCode', type: 'lookup', lookupEntity: 'bin', section: 'warehouse', cardOnly: true },
+      { field: 'defaultBinCode', labelKey: 'Erp::DefaultBinCode', type: 'lookup', lookupEntity: 'bin', section: 'warehouse', cardOnly: true },
     ],
+    defaults: { useAsInTransit: false, binMandatory: false, requirePutAway: false, requirePick: false },
   });
 
   readonly salespersonPurchaser = codeTableEntity(this.salespeople, {

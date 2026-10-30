@@ -216,6 +216,29 @@ public class Item : CompanyAggregateRoot, IHasNo
         UnitVolume = Math.Max(0m, unitVolume);
     }
 
+    /// <summary>How often the item is counted; physical inventory orders can pick the items that are due.</summary>
+    public string PhysInvtCountingPeriodCode { get; private set; }
+
+    public DateTime? LastCountingDate { get; private set; }
+
+    /// <summary>When the item is next due for counting; set from the counting period each time it is counted.</summary>
+    public DateTime? NextCountingDate { get; private set; }
+
+    public void SetCountingPeriod(string countingPeriodCode, DateTime? nextCountingDate)
+    {
+        PhysInvtCountingPeriodCode = CodeTableEntity.NormalizeCode(Check.Length(countingPeriodCode, nameof(countingPeriodCode), ErpDomainConsts.MaxCodeLength));
+        NextCountingDate = PhysInvtCountingPeriodCode == null ? null : nextCountingDate?.Date;
+    }
+
+    /// <summary>The item was counted: it is next due a year's share of counts later.</summary>
+    internal void RecordCount(DateTime countingDate, int countFrequencyPerYear)
+    {
+        LastCountingDate = countingDate.Date;
+        NextCountingDate = PhysInvtCountingPeriodCode == null || countFrequencyPerYear <= 0
+            ? null
+            : countingDate.Date.AddDays(Math.Max(1, (int)Math.Round(365m / countFrequencyPerYear, MidpointRounding.AwayFromZero)));
+    }
+
     public void SetVatProdPostingGroup(string vatProdPostingGroup) =>
         VatProdPostingGroup = CodeTableEntity.NormalizeCode(Check.Length(vatProdPostingGroup, nameof(vatProdPostingGroup), ErpDomainConsts.MaxPostingGroupLength));
 }

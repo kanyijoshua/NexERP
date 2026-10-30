@@ -308,6 +308,8 @@ export interface PurchaseLineDto extends EntityDto<string> {
   prepmtLineAmount: number;
   prepmtAmtInv: number;
   prepmtAmtDeducted: number;
+  dropShipment: boolean;
+  salesOrderNo?: string;
 }
 
 export interface PurchaseLineInputDto {

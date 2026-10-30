@@ -8,3 +8,7 @@ export * from './interaction-log-entry.service';
 export * from './marketing-setup.service';
 export * from './opportunity.service';
 export * from './pipeline-stage.service';
+export * from './marketing.models';
+export * from './segment.service';
+export * from './segment-line.service';
+export * from './campaign-mailing.service';

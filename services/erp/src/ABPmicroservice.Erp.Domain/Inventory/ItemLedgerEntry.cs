@@ -139,6 +139,13 @@ public class ItemLedgerEntry : LedgerEntryBase
         CostAmountActual = invoiced ? Math.Round(Quantity * unitCost, 2, MidpointRounding.AwayFromZero) : 0m;
     }
 
+    /// <summary>The cost adjustment found what the entry really cost: its unit cost and actual cost change, nothing else.</summary>
+    internal void Recost(decimal unitCost)
+    {
+        UnitCost = unitCost;
+        CostAmountActual = Math.Round(Quantity * unitCost, 2, MidpointRounding.AwayFromZero);
+    }
+
     /// <summary>Takes <paramref name="quantity"/> (unsigned) off what is left to apply.</summary>
     internal void Apply(decimal quantity)
     {

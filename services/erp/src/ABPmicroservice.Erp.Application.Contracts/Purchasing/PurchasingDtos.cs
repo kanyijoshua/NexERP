@@ -292,6 +292,8 @@ public class PurchaseLineDto : EntityDto<Guid>
     public decimal PrepmtLineAmount { get; set; }
     public decimal PrepmtAmtInv { get; set; }
     public decimal PrepmtAmtDeducted { get; set; }
+    public bool DropShipment { get; set; }
+    public string SalesOrderNo { get; set; }
 }
 
 public class CreateUpdatePurchaseHeaderDto

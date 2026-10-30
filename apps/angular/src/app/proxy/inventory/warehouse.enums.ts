@@ -22,6 +22,8 @@ export enum ItemTrackingSourceType {
   PurchaseLine = 1,
   ItemJournalLine = 2,
   TransferLine = 3,
+  AssemblyLine = 4,
+  AssemblyOrder = 5,
 }
 
 export const itemTrackingSourceTypeOptions = mapEnumToOptions(ItemTrackingSourceType);

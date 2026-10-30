@@ -374,6 +374,20 @@ public class PurchaseLine : Entity<Guid>
         ProjectTaskNo = ProjectNo == null ? null : CodeTableEntity.NormalizeCode(Check.Length(projectTaskNo, nameof(projectTaskNo), ErpDomainConsts.MaxNoLength));
     }
 
+    /// <summary>Received for a sales order line and shipped to its customer at the same time; it never enters stock.</summary>
+    public bool DropShipment { get; private set; }
+
+    public string SalesOrderNo { get; private set; }
+
+    public Guid? SalesOrderLineId { get; private set; }
+
+    public void LinkToSalesOrder(string salesOrderNo, Guid? salesOrderLineId)
+    {
+        DropShipment = salesOrderLineId.HasValue;
+        SalesOrderNo = salesOrderLineId.HasValue ? salesOrderNo : null;
+        SalesOrderLineId = salesOrderLineId;
+    }
+
     public void SetDeferralCode(string deferralCode)
     {
         DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxDeferralTemplateCodeLength));

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using ABPmicroservice.Erp.Documents;
 using Volo.Abp.Application.Dtos;
@@ -31,6 +32,24 @@ public class SalesPostingResultDto
 
     /// <summary>The posted shipment or return receipt number; null when nothing was shipped.</summary>
     public string ShipmentNo { get; set; }
+}
+
+public class MakeDropShipmentOrderInput
+{
+    /// <summary>The vendor that delivers the drop shipment lines.</summary>
+    [Required]
+    [StringLength(ErpDomainConsts.MaxNoLength)]
+    public string VendorNo { get; set; }
+
+    /// <summary>The purchase order's date; blank is today.</summary>
+    public DateTime? OrderDate { get; set; }
+}
+
+public class DropShipmentOrderResultDto
+{
+    public Guid PurchaseOrderId { get; set; }
+    public string PurchaseOrderNo { get; set; }
+    public int LineCount { get; set; }
 }
 
 public class MakeOrderInput

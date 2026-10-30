@@ -144,6 +144,37 @@ public class SalesLine : Entity<Guid>
         ProjectTaskNo = ProjectNo == null ? null : CodeTableEntity.NormalizeCode(Check.Length(projectTaskNo, nameof(projectTaskNo), ErpDomainConsts.MaxNoLength));
     }
 
+    /// <summary>The goods go from the vendor straight to the customer; the line ships when its purchase order line is received.</summary>
+    public bool DropShipment { get; private set; }
+
+    public string PurchaseOrderNo { get; private set; }
+
+    public Guid? PurchaseOrderLineId { get; private set; }
+
+    public void SetDropShipment(string documentNo, bool dropShipment)
+    {
+        if (dropShipment == DropShipment)
+        {
+            return;
+        }
+
+        if (PurchaseOrderLineId.HasValue || QuantityShipped != 0m || Type != Documents.DocumentLineType.Item)
+        {
+            throw new BusinessException(ErpErrorCodes.Inventory.DropShipmentLinked)
+                .WithData("documentNo", documentNo)
+                .WithData("lineNo", LineNo)
+                .WithData("purchaseOrderNo", PurchaseOrderNo ?? "");
+        }
+
+        DropShipment = dropShipment;
+    }
+
+    public void LinkToPurchaseOrder(string purchaseOrderNo, Guid? purchaseOrderLineId)
+    {
+        PurchaseOrderNo = purchaseOrderLineId.HasValue ? purchaseOrderNo : null;
+        PurchaseOrderLineId = purchaseOrderLineId;
+    }
+
     public void SetDeferralCode(string deferralCode)
     {
         DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxDeferralTemplateCodeLength));

@@ -150,6 +150,71 @@ public class ErpApplicationAutoMapperProfile : Profile
         CreateMap<ServiceManagement.ServiceLedgerEntry, ServiceManagement.ServiceLedgerEntryDto>();
         CreateMap<ServiceManagement.WarrantyLedgerEntry, ServiceManagement.WarrantyLedgerEntryDto>();
 
+        // Bins, warehouse documents, reservations, physical inventory orders and assembly
+        CreateMap<Bin, BinDto>();
+        CreateMap<WarehouseEntry, WarehouseEntryDto>();
+        CreateMap<WarehouseActivityHeader, WarehouseActivityDto>();
+        CreateMap<WarehouseActivityLine, WarehouseActivityLineDto>();
+        CreateMap<ReservationEntry, ReservationEntryDto>();
+        CreateMap<PhysInvtCountingPeriod, PhysInvtCountingPeriodDto>();
+        CreateMap<PhysInvtOrderHeader, PhysInvtOrderDto>()
+            .ForMember(d => d.LineCount, o => o.MapFrom(s => s.Lines.Count))
+            .ForMember(d => d.RecordedLineCount, o => o.MapFrom(s => s.Lines.Count(l => l.Recorded)));
+        CreateMap<PhysInvtOrderLine, PhysInvtOrderLineDto>();
+        CreateMap<AssemblyBomComponent, AssemblyBomComponentDto>();
+        CreateMap<AssemblyHeader, AssemblyOrderDto>();
+        CreateMap<AssemblyLine, AssemblyLineDto>();
+
+        // Payment files and direct debits, consolidation, intercompany, cost accounting, standard codes
+        CreateMap<DirectDebitMandate, DirectDebitMandateDto>();
+        CreateMap<DirectDebitCollection, DirectDebitCollectionDto>()
+            .ForMember(d => d.EntryCount, o => o.MapFrom(s => s.Entries.Count))
+            .ForMember(d => d.TotalAmount, o => o.MapFrom(s => s.Entries.Sum(e => e.Amount)));
+        CreateMap<DirectDebitCollectionEntry, DirectDebitCollectionEntryDto>();
+        CreateMap<BusinessUnit, BusinessUnitDto>();
+        CreateMap<Intercompany.ICPartner, Intercompany.ICPartnerDto>();
+        CreateMap<Intercompany.ICOutboxTransaction, Intercompany.ICOutboxTransactionDto>();
+        CreateMap<Intercompany.ICInboxTransaction, Intercompany.ICInboxTransactionDto>();
+        CreateMap<Intercompany.ICInboxLine, Intercompany.ICInboxLineDto>();
+        CreateMap<CostAccounting.CostType, CostAccounting.CostTypeDto>();
+        CreateMap<CostAccounting.CostCenter, CostAccounting.CostCenterDto>();
+        CreateMap<CostAccounting.CostObject, CostAccounting.CostObjectDto>();
+        CreateMap<CostAccounting.CostEntry, CostAccounting.CostEntryDto>();
+        CreateMap<CostAccounting.CostRegister, CostAccounting.CostRegisterDto>();
+        CreateMap<CostAccounting.CostAllocationSource, CostAccounting.CostAllocationSourceDto>()
+            .ForMember(d => d.TotalShare, o => o.MapFrom(s => s.Targets.Sum(t => t.Share)));
+        CreateMap<CostAccounting.CostAllocationTarget, CostAccounting.CostAllocationTargetDto>();
+        CreateMap<StandardSalesCode, StandardSalesCodeDto>().ForMember(d => d.LineCount, o => o.MapFrom(s => s.Lines.Count));
+        CreateMap<StandardSalesLine, StandardSalesLineDto>();
+        CreateMap<StandardCustomerSalesCode, StandardCustomerSalesCodeDto>();
+        CreateMap<StandardPurchaseCode, StandardPurchaseCodeDto>().ForMember(d => d.LineCount, o => o.MapFrom(s => s.Lines.Count));
+        CreateMap<StandardPurchaseLine, StandardPurchaseLineDto>();
+        CreateMap<StandardVendorPurchaseCode, StandardVendorPurchaseCodeDto>();
+
+        // Recruitment and appraisals, subscriptions, point of sale, maintenance, quality, fleet, marketing
+        CreateMap<JobVacancy, JobVacancyDto>();
+        CreateMap<JobApplicant, JobApplicantDto>();
+        CreateMap<AppraisalPeriod, AppraisalPeriodDto>();
+        CreateMap<Appraisal, AppraisalDto>();
+        CreateMap<AppraisalLine, AppraisalLineDto>();
+        CreateMap<Subscriptions.SubscriptionPlan, Subscriptions.SubscriptionPlanDto>();
+        CreateMap<Subscriptions.CustomerSubscription, Subscriptions.CustomerSubscriptionDto>();
+        CreateMap<PointOfSale.PosTerminal, PointOfSale.PosTerminalDto>();
+        CreateMap<PointOfSale.PosSession, PointOfSale.PosSessionDto>();
+        CreateMap<PointOfSale.PosOrder, PointOfSale.PosOrderDto>();
+        CreateMap<PointOfSale.PosOrderLine, PointOfSale.PosOrderLineDto>();
+        CreateMap<MaintenanceManagement.MaintenanceTeam, MaintenanceManagement.MaintenanceTeamDto>();
+        CreateMap<MaintenanceManagement.MaintenanceEquipment, MaintenanceManagement.MaintenanceEquipmentDto>();
+        CreateMap<MaintenanceManagement.MaintenanceRequest, MaintenanceManagement.MaintenanceRequestDto>();
+        CreateMap<Quality.QualityControlPoint, Quality.QualityControlPointDto>();
+        CreateMap<Quality.QualityCheck, Quality.QualityCheckDto>();
+        CreateMap<Fleet.Vehicle, Fleet.VehicleDto>();
+        CreateMap<Fleet.VehicleLogEntry, Fleet.VehicleLogEntryDto>();
+        CreateMap<Fleet.VehicleContract, Fleet.VehicleContractDto>();
+        CreateMap<Crm.Segment, Crm.SegmentDto>().ForMember(d => d.ContactCount, o => o.MapFrom(s => s.Lines.Count));
+        CreateMap<Crm.SegmentLine, Crm.SegmentLineDto>();
+        CreateMap<Crm.CampaignMailingEntry, Crm.CampaignMailingEntryDto>();
+
         // Manufacturing
         CreateMap<Manufacturing.WorkCenter, Manufacturing.WorkCenterDto>();
         CreateMap<Manufacturing.MachineCenter, Manufacturing.MachineCenterDto>();

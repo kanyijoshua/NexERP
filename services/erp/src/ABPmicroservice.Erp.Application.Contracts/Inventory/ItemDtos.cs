@@ -34,6 +34,9 @@ public class ItemDto : FullAuditedEntityDto<Guid>
     public decimal NetWeight { get; set; }
     public decimal UnitVolume { get; set; }
     public decimal LastDirectCost { get; set; }
+    public string PhysInvtCountingPeriodCode { get; set; }
+    public DateTime? LastCountingDate { get; set; }
+    public DateTime? NextCountingDate { get; set; }
 }
 
 public class CreateUpdateItemDto
@@ -64,6 +67,11 @@ public class CreateUpdateItemDto
     public string VendorNo { get; set; }
     public decimal NetWeight { get; set; }
     public decimal UnitVolume { get; set; }
+
+    /// <summary>The counting period; a new one sets the next counting date from today unless a date is given.</summary>
+    public string PhysInvtCountingPeriodCode { get; set; }
+
+    public DateTime? NextCountingDate { get; set; }
 }
 
 public class GetItemListInput : ErpPagedListInput

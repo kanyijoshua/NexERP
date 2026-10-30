@@ -144,7 +144,7 @@ public class HomeAppService_Tests : ErpApplicationTestBase
         );
     }
 
-    private static readonly string[] DependentsOfSales = [ErpModuleRegistry.Crm, ErpModuleRegistry.Projects, ErpModuleRegistry.Service];
+    private static readonly string[] DependentsOfSales = [ErpModuleRegistry.Crm, ErpModuleRegistry.Projects, ErpModuleRegistry.Service, ErpModuleRegistry.Intercompany, ErpModuleRegistry.Subscriptions, ErpModuleRegistry.PointOfSale];
 
     [Fact]
     public async Task An_Amount_Cue_Is_Marked_As_Money()

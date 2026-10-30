@@ -127,6 +127,7 @@ public class ProjectManager : DomainService
                     Description = description,
                     Quantity = line.Quantity,
                     UnitCost = item.UnitCost,
+                    CostPostedToGL = true,
                     LocationCode = line.LocationCode,
                 });
                 var cost = Math.Round(entries.Sum(e => Math.Abs(e.Quantity) * e.UnitCost), 2);

@@ -302,6 +302,15 @@ public static class ErpErrorCodes
         public const string VoucherNosMissing = Prefix + ":CashManagement:00017";
         public const string DeductionCodeInUse = Prefix + ":CashManagement:00018";
         public const string InvalidVoucherAccountType = Prefix + ":CashManagement:00019";
+        public const string PaymentBankAccountMissing = Prefix + ":CashManagement:00020";
+        public const string NothingToExport = Prefix + ":CashManagement:00021";
+        public const string PaymentBalAccountNotBank = Prefix + ":CashManagement:00022";
+        public const string MandateNotFound = Prefix + ":CashManagement:00023";
+        public const string MandateInvalid = Prefix + ":CashManagement:00024";
+        public const string CollectionStatusWrong = Prefix + ":CashManagement:00025";
+        public const string NothingToCollect = Prefix + ":CashManagement:00026";
+        public const string MandateCodeExists = Prefix + ":CashManagement:00027";
+        public const string CustomerBankAccountMissing = Prefix + ":CashManagement:00028";
     }
 
     public static class Inventory
@@ -327,6 +336,32 @@ public static class ErpErrorCodes
         public const string DuplicateSerialNo = Prefix + ":Inventory:00019";
         public const string CannotChangeCostingMethod = Prefix + ":Inventory:00020";
         public const string LocationIsInTransit = Prefix + ":Inventory:00021";
+        public const string BinRequired = Prefix + ":Inventory:00022";
+        public const string BinNotFound = Prefix + ":Inventory:00023";
+        public const string BinBlocked = Prefix + ":Inventory:00024";
+        public const string InsufficientBinContent = Prefix + ":Inventory:00025";
+        public const string PickRequired = Prefix + ":Inventory:00026";
+        public const string WarehouseDocumentRegistered = Prefix + ":Inventory:00027";
+        public const string NothingToHandle = Prefix + ":Inventory:00028";
+        public const string QtyToHandleTooLarge = Prefix + ":Inventory:00029";
+        public const string NothingToPutAway = Prefix + ":Inventory:00030";
+        public const string NothingToPick = Prefix + ":Inventory:00031";
+        public const string ReservedForOtherDocument = Prefix + ":Inventory:00032";
+        public const string NothingToReserve = Prefix + ":Inventory:00033";
+        public const string PhysInvtOrderFinished = Prefix + ":Inventory:00034";
+        public const string PhysInvtLineNotRecorded = Prefix + ":Inventory:00035";
+        public const string AssemblyBomMissing = Prefix + ":Inventory:00036";
+        public const string AssemblyOrderFinished = Prefix + ":Inventory:00037";
+        public const string AssemblyQuantityTooLarge = Prefix + ":Inventory:00038";
+        public const string AssemblyBomRecursive = Prefix + ":Inventory:00039";
+        public const string DropShipmentShipsWithPurchase = Prefix + ":Inventory:00040";
+        public const string NothingToDropShip = Prefix + ":Inventory:00041";
+        public const string BinHasContent = Prefix + ":Inventory:00042";
+        public const string PhysInvtOrderHasNoLines = Prefix + ":Inventory:00043";
+        public const string BinsNotUsed = Prefix + ":Inventory:00044";
+        public const string SameBin = Prefix + ":Inventory:00045";
+        public const string PhysInvtLocationLocked = Prefix + ":Inventory:00046";
+        public const string DropShipmentLinked = Prefix + ":Inventory:00047";
     }
 
     public static class Purchasing
@@ -362,6 +397,12 @@ public static class ErpErrorCodes
         public const string InvalidRecallDays = Prefix + ":HumanResources:00018";
         public const string LeaveOverlap = Prefix + ":HumanResources:00019";
         public const string NegativeLeaveDays = Prefix + ":HumanResources:00020";
+        public const string ApplicantStageInvalid = Prefix + ":HumanResources:00021";
+        public const string VacancyNotOpen = Prefix + ":HumanResources:00022";
+        public const string AppraisalStatusInvalid = Prefix + ":HumanResources:00023";
+        public const string AppraisalScoreInvalid = Prefix + ":HumanResources:00024";
+        public const string AppraisalHasNoLines = Prefix + ":HumanResources:00025";
+        public const string AppraisalPeriodClosed = Prefix + ":HumanResources:00026";
     }
 
     public static class Querying
@@ -557,6 +598,8 @@ public static class ErpErrorCodes
         public const string NoContact = Prefix + ":Crm:00011";
         public const string CampaignNotFound = Prefix + ":Crm:00012";
         public const string AlreadyTargeted = Prefix + ":Crm:00013";
+        public const string SegmentHasNoLines = Prefix + ":Crm:00014";
+        public const string SegmentNotFound = Prefix + ":Crm:00015";
     }
 
     public static class Projects
@@ -658,5 +701,84 @@ public static class ErpErrorCodes
         public const string ChangeLogTableAlreadyExists = Prefix + ":Auditing:00001";
         public const string UnknownTable = Prefix + ":Auditing:00002";
         public const string UnknownField = Prefix + ":Auditing:00003";
+    }
+
+    public static class Consolidation
+    {
+        public const string BusinessUnitCompanyMissing = Prefix + ":Consolidation:00001";
+        public const string NothingToConsolidate = Prefix + ":Consolidation:00002";
+        public const string ConsolidationAccountMissing = Prefix + ":Consolidation:00003";
+        public const string PeriodAlreadyConsolidated = Prefix + ":Consolidation:00004";
+        public const string BusinessUnitCodeExists = Prefix + ":Consolidation:00005";
+    }
+
+    public static class Intercompany
+    {
+        public const string PartnerNotFound = Prefix + ":Intercompany:00001";
+        public const string PartnerCompanyMissing = Prefix + ":Intercompany:00002";
+        public const string InboxTransactionHandled = Prefix + ":Intercompany:00003";
+        public const string PartnerVendorMissing = Prefix + ":Intercompany:00004";
+        public const string PartnerCustomerMissing = Prefix + ":Intercompany:00005";
+        public const string ICLineAccountMissing = Prefix + ":Intercompany:00006";
+    }
+
+    public static class CostAccounting
+    {
+        public const string CostTypeNotFound = Prefix + ":CostAccounting:00001";
+        public const string AllocationSharesZero = Prefix + ":CostAccounting:00002";
+        public const string AllocationSourceMissing = Prefix + ":CostAccounting:00003";
+        public const string CostTypeHasEntries = Prefix + ":CostAccounting:00004";
+        public const string CostCenterDimensionMissing = Prefix + ":CostAccounting:00005";
+        public const string CostTypeNoExists = Prefix + ":CostAccounting:00006";
+    }
+
+    public static class ResponsibilityCenters
+    {
+        public const string DocumentOfOtherCenter = Prefix + ":ResponsibilityCenters:00001";
+    }
+
+    public static class StandardCodes
+    {
+        public const string StandardCodeNotFound = Prefix + ":StandardCodes:00001";
+        public const string StandardCodeHasNoLines = Prefix + ":StandardCodes:00002";
+    }
+
+    public static class Subscriptions
+    {
+        public const string PlanNotFound = Prefix + ":Subscriptions:00001";
+        public const string SubscriptionStatusInvalid = Prefix + ":Subscriptions:00002";
+        public const string PlanLineMissing = Prefix + ":Subscriptions:00003";
+    }
+
+    public static class PointOfSale
+    {
+        public const string TerminalNotFound = Prefix + ":PointOfSale:00001";
+        public const string SessionAlreadyOpen = Prefix + ":PointOfSale:00002";
+        public const string SessionNotOpen = Prefix + ":PointOfSale:00003";
+        public const string OrderNotOpen = Prefix + ":PointOfSale:00004";
+        public const string OrderHasNoLines = Prefix + ":PointOfSale:00005";
+        public const string PaymentTooSmall = Prefix + ":PointOfSale:00006";
+        public const string TerminalSetupMissing = Prefix + ":PointOfSale:00007";
+    }
+
+    public static class Maintenance
+    {
+        public const string StageInvalid = Prefix + ":Maintenance:00001";
+        public const string EquipmentScrapped = Prefix + ":Maintenance:00002";
+        public const string EquipmentNotFound = Prefix + ":Maintenance:00003";
+    }
+
+    public static class Quality
+    {
+        public const string CheckAlreadyRecorded = Prefix + ":Quality:00001";
+        public const string MeasureRequired = Prefix + ":Quality:00002";
+        public const string ControlPointNotFound = Prefix + ":Quality:00003";
+    }
+
+    public static class Fleet
+    {
+        public const string OdometerBackwards = Prefix + ":Fleet:00001";
+        public const string VehicleNotFound = Prefix + ":Fleet:00002";
+        public const string ContractDates = Prefix + ":Fleet:00003";
     }
 }

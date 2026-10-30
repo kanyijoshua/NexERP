@@ -55,6 +55,27 @@ public static class ErpSequenceNames
     public const string ResourceLedgerEntry = "RESLEDG";
     public const string LeaveLedgerEntry = "LEAVELEDG";
     public const string ChangeLogEntry = "CHANGELOG";
+    public const string WarehouseEntry = "WHSEENTRY";
+    public const string PutAwayNo = "WHSEPUTAWAY";
+    public const string PickNo = "WHSEPICK";
+    public const string MovementNo = "WHSEMOVEMENT";
+    public const string PhysInvtOrderNo = "PHYSINVTORDER";
+    public const string AssemblyOrderNo = "ASSEMBLYORDER";
+    public const string ICOutboxTransaction = "ICOUTBOX";
+    public const string ICInboxTransaction = "ICINBOX";
+    public const string CostEntry = "COSTENTRY";
+    public const string CostRegister = "COSTREGISTER";
+    public const string SubscriptionNo = "SUBSCRIPTION";
+    public const string PosSessionNo = "POSSESSION";
+    public const string PosOrderNo = "POSORDER";
+    public const string MaintenanceRequestNo = "MAINTREQUEST";
+    public const string EquipmentNo = "EQUIPMENT";
+    public const string QualityCheckNo = "QUALITYCHECK";
+    public const string VacancyNo = "VACANCY";
+    public const string ApplicantNo = "APPLICANT";
+    public const string AppraisalNo = "APPRAISAL";
+    public const string SegmentNo = "SEGMENT";
+    public const string VehicleNo = "VEHICLE";
 
     /// <summary>
     /// Groups the entries written by one posting run,

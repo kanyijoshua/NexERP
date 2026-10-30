@@ -20,13 +20,16 @@ import {
   StandardJournalService,
 } from '@proxy/finance';
 import { DimensionService, ShortcutDimensionSlotDto } from '@proxy/dimensions';
-import { BankAccountService } from '@proxy/cash-management';
+import { BankAccountService, BankFileDto, ExportPaymentsInput, PaymentFileFormat, PaymentJournalService, SuggestVendorPaymentsInput, paymentFileFormatOptions } from '@proxy/cash-management';
 import { EmployeeService } from '@proxy/human-resources';
 import { VendorService } from '@proxy/purchasing';
 import { CustomerService } from '@proxy/sales';
 import { Observable, forkJoin, map, of } from 'rxjs';
 import { DocumentLineChange, DocumentLineColumn, JournalBatch, LookupItem } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
+import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
+import { saveBlob } from '../../erp-shared/report-page/save-blob';
+import { enumOptions, runWithInput } from '../../master-data/entity-helpers';
 
 /** Marks which list a looked-up account came from, so the line's account type can follow it. */
 const ACCOUNT_KIND: Record<string, GenJournalAccountType> = {
@@ -90,9 +93,12 @@ export class GeneralJournalComponent implements OnInit {
   private readonly vendors = inject(VendorService);
   private readonly bankAccounts = inject(BankAccountService);
   private readonly employees = inject(EmployeeService);
+  private readonly payments = inject(PaymentJournalService);
+  private readonly dialogs = inject(RecordDialogService);
 
   readonly savePermission = 'Erp.Journals.Create';
   readonly postPermission = 'Erp.Journals.Post';
+  readonly paymentPermission = 'Erp.PaymentExport';
 
   templates: GenJournalTemplateDto[] = [];
   batchList: GenJournalBatchDto[] = [];
@@ -447,6 +453,60 @@ export class GeneralJournalComponent implements OnInit {
       .subscribe(result => {
         this.batchList = result.items ?? [];
         this.selectedBatchId = this.batchList[0]?.id ?? null;
+        this.loadLines();
+      });
+  }
+
+  /** Adds a payment line, applied to the invoice, for every vendor invoice due by the date asked for. */
+  suggestVendorPayments(): void {
+    const batchId = this.selectedBatchId;
+    if (!batchId) {
+      return;
+    }
+
+    const today = new Date().toISOString().substring(0, 10);
+    runWithInput<SuggestVendorPaymentsInput, { linesAdded: number }>(this.dialogs, {
+      titleKey: 'Erp::SuggestVendorPayments',
+      icon: 'fas fa-hand-holding-dollar',
+      permission: this.paymentPermission,
+      fields: [
+        { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
+        { field: 'lastDueDate', labelKey: 'Erp::LastDueDate', type: 'date', required: true },
+        { field: 'bankAccountNo', labelKey: 'Erp::BankAccountNo', type: 'lookup', lookupEntity: 'bankAccount', required: true },
+        { field: 'documentNo', labelKey: 'Erp::DocumentNo', type: 'text', maxLength: 20 },
+        { field: 'vendorNos', labelKey: 'Erp::VendorNos', type: 'text', maxLength: 1000, helpKey: 'Erp::VendorNosHelp' },
+        { field: 'usePaymentDiscounts', labelKey: 'Erp::UsePaymentDiscounts', type: 'checkbox' },
+      ],
+      values: { postingDate: today, lastDueDate: today, usePaymentDiscounts: false },
+      submit: input => this.payments.suggestVendorPayments(batchId, input),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => {
+        this.toaster.success('Erp::PaymentLinesSuggested', undefined, { messageLocalizationParams: [String(result?.linesAdded ?? 0)] });
+        this.loadLines();
+      });
+  }
+
+  /** Writes the payments not exported yet to a file for the bank and downloads it. */
+  exportPayments(): void {
+    const batchId = this.selectedBatchId;
+    if (!batchId) {
+      return;
+    }
+
+    runWithInput<ExportPaymentsInput, BankFileDto>(this.dialogs, {
+      titleKey: 'Erp::ExportPayments',
+      icon: 'fas fa-file-export',
+      permission: this.paymentPermission,
+      fields: [{ field: 'format', labelKey: 'Erp::FileFormat', type: 'select', options: enumOptions(paymentFileFormatOptions, 'PaymentFileFormat'), required: true }],
+      values: { format: PaymentFileFormat.Iso20022CreditTransfer },
+      submit: input => this.payments.export(batchId, input),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(file => {
+        if (file?.content) {
+          saveBlob(new Blob([file.content], { type: file.contentType ?? 'text/plain' }), file.fileName ?? 'payments.txt');
+        }
         this.loadLines();
       });
   }

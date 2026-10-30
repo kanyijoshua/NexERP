@@ -1,17 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   CustomerService,
+  DropShipmentOrderResultDto,
+  InsertStandardLinesInput,
+  MakeDropShipmentOrderInput,
   SalesDocumentService,
   SalesDocumentType,
   SalesHeaderDto,
   SalesLineDto,
 } from '@proxy/sales';
 import { Observable, map } from 'rxjs';
-import { DocumentLineType } from '@proxy/documents';
-import { ItemChargeSourceType, ItemTrackingSourceType } from '@proxy/inventory';
+import { DocumentLineType, DocumentStatus } from '@proxy/documents';
+import { ItemChargeSourceType, ItemTrackingSourceType, ReservationEntryService } from '@proxy/inventory';
 import { EmailDocumentType } from '@proxy/emailing';
-import { ErpTableQuery, LookupItem } from '../../erp-shared';
+import { DocumentAction as CardAction, ErpTableQuery, LookupItem } from '../../erp-shared';
+import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
+import { runWithInput } from '../../master-data/entity-helpers';
 import {
   DocumentAction,
   DocumentCardData,
@@ -68,6 +73,8 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
   readonly externalDocumentNoLabelKey = 'Erp::ExternalDocumentNo';
   readonly itemAmountField = 'unitPrice' as const;
   readonly cardFields: DocumentCardField[];
+  private readonly reservations = inject(ReservationEntryService);
+  private readonly recordDialogs = inject(RecordDialogService);
 
   constructor(
     private readonly documents: SalesDocumentService,
@@ -84,6 +91,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
     this.mode = page.mode;
     this.emailDocumentType = EMAIL_TYPES[this.documentType] ?? null;
     this.supportsPrepayment = this.documentType === SalesDocumentType.Order;
+    this.supportsDropShipment = this.documentType === SalesDocumentType.Order;
 
     const isReturn = this.documentType === SalesDocumentType.ReturnOrder || this.documentType === SalesDocumentType.CreditMemo;
     this.shipLabelKey = isReturn ? 'Erp::ReceiveReturn' : 'Erp::Ship';
@@ -101,6 +109,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
       { field: 'locationCode', labelKey: 'Erp::LocationCode', type: 'lookup', entity: 'location' },
       { field: 'paymentTermsCode', labelKey: 'Erp::PaymentTermsCode', type: 'lookup', entity: 'paymentTerms' },
       { field: 'currencyCode', labelKey: 'Erp::CurrencyCode', type: 'lookup', entity: 'currency' },
+      { field: 'responsibilityCenter', labelKey: 'Erp::ResponsibilityCenter', type: 'lookup', entity: 'responsibilityCenter' },
       ...(this.supportsPrepayment ? PREPAYMENT_FIELDS : []),
     ];
   }
@@ -131,6 +140,7 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
       quantityShipped: l.quantityShipped,
       qtyToInvoice: l.qtyToInvoice,
       quantityInvoiced: l.quantityInvoiced,
+      dropShipment: l.dropShipment,
     };
   }
 
@@ -152,8 +162,57 @@ export class SalesDocumentsComponent extends DocumentListBase<SalesHeaderDto> {
       prepaymentPct: undefined,
       qtyToShip: undefined,
       qtyToInvoice: undefined,
+      dropShipment: !!l.dropShipment,
       ...toPost,
     };
+  }
+
+  /** On an order: order the drop shipment lines from a vendor, and reserve stock for the rest. */
+  protected override extraCardActions(card: DocumentCardData): CardAction[] {
+    const actions: CardAction[] = [];
+    if (card.status === DocumentStatus.Open) {
+      actions.push({ key: 'insertStandardLines', labelKey: 'Erp::GetStandardLines', icon: 'fas fa-repeat', cssClass: 'btn-outline-secondary', permission: 'Erp.SalesDocuments.Update' });
+    }
+    if (this.documentType !== SalesDocumentType.Order || card.status === DocumentStatus.PendingApproval) {
+      return actions;
+    }
+
+    const lines = (card.lines ?? []) as unknown as SalesLineDto[];
+    if (lines.some(l => l.dropShipment && !l.purchaseOrderNo && l.quantity > l.quantityShipped)) {
+      actions.push({ key: 'makeDropShipmentOrder', labelKey: 'Erp::OrderDropShipment', icon: 'fas fa-truck-fast', cssClass: 'btn-outline-info', permission: 'Erp.SalesDocuments.Update' });
+    }
+    if (lines.some(l => l.type === DocumentLineType.Item && !l.dropShipment && l.quantity > l.quantityShipped)) {
+      actions.push({ key: 'reserve', labelKey: 'Erp::Reserve', icon: 'fas fa-lock', cssClass: 'btn-outline-secondary', permission: 'Erp.Reservations.Reserve' });
+    }
+    return actions;
+  }
+
+  protected override runExtraCardAction(key: string, row: SalesHeaderDto): Observable<string> {
+    if (key === 'insertStandardLines') {
+      return runWithInput<InsertStandardLinesInput>(this.recordDialogs, {
+        titleKey: 'Erp::GetStandardLines',
+        icon: 'fas fa-repeat',
+        permission: 'Erp.SalesDocuments.Update',
+        fields: [{ field: 'code', labelKey: 'Erp::StandardCode', type: 'lookup', lookupEntity: 'standardSalesCode', required: true }],
+        submit: input => this.documents.insertStandardLines(row.id!, input),
+      }).pipe(map(() => 'Erp::StandardLinesInserted'));
+    }
+
+    if (key === 'reserve') {
+      return this.reservations.reserveSalesOrder({ documentNo: row.no ?? '' }).pipe(map(() => 'Erp::StockReserved'));
+    }
+
+    return runWithInput<MakeDropShipmentOrderInput, DropShipmentOrderResultDto>(this.recordDialogs, {
+      titleKey: 'Erp::OrderDropShipment',
+      icon: 'fas fa-truck-fast',
+      permission: 'Erp.SalesDocuments.Update',
+      fields: [
+        { field: 'vendorNo', labelKey: 'Erp::VendorNo', type: 'lookup', lookupEntity: 'vendor', required: true },
+        { field: 'orderDate', labelKey: 'Erp::OrderDate', type: 'date' },
+      ],
+      values: { orderDate: new Date().toISOString().substring(0, 10) },
+      submit: input => this.documents.makeDropShipmentOrder(row.id!, input),
+    }).pipe(map(() => 'Erp::DropShipmentOrdered'));
   }
 
   protected getList = (query: ErpTableQuery) =>

@@ -54,6 +54,24 @@ public sealed class ItemPostingRequest
     /// and the invoice later turns it into actual cost through <see cref="ItemJnlPostLine.PostInvoicedCostAsync"/>.
     /// </summary>
     public bool ExpectedCost { get; init; }
+
+    /// <summary>The bin at a location with bins; null takes the location's receipt, shipment or default bin.</summary>
+    public string BinCode { get; init; }
+
+    /// <summary>The document line the stock may have been reserved for: it can use its own reservation, and uses it up.</summary>
+    public Guid? ReservationSourceId { get; init; }
+
+    /// <summary>
+    /// Goods that go straight from the vendor to the customer: they never enter a bin and are not
+    /// held back by reservations.
+    /// </summary>
+    public bool DropShipment { get; init; }
+
+    /// <summary>
+    /// The caller posts the cost to the G/L itself, whatever the setup says (a project or production
+    /// order). Left out, the cost counts as posted when automatic cost posting is on.
+    /// </summary>
+    public bool? CostPostedToGL { get; init; }
 }
 
 /// <summary>
@@ -84,6 +102,8 @@ public class ItemJnlPostLine : DomainService
     private IRepository<ItemApplicationEntry, Guid> ApplicationRepository => LazyServiceProvider.LazyGetRequiredService<IRepository<ItemApplicationEntry, Guid>>();
     private ItemTrackingManager TrackingManager => LazyServiceProvider.LazyGetRequiredService<ItemTrackingManager>();
     private ItemUnitOfMeasureManager UnitManager => LazyServiceProvider.LazyGetRequiredService<ItemUnitOfMeasureManager>();
+    private WarehouseManager WarehouseManager => LazyServiceProvider.LazyGetRequiredService<WarehouseManager>();
+    private ReservationManager ReservationManager => LazyServiceProvider.LazyGetRequiredService<ReservationManager>();
 
     public ItemJnlPostLine(
         IRepository<Item, Guid> itemRepository,
@@ -149,7 +169,7 @@ public class ItemJnlPostLine : DomainService
 
         // Signed quantity based on entry type. A correction (a credit memo) moves the stock back:
         // a sales return comes in, a purchase return goes out.
-        var outbound = request.EntryType is ItemLedgerEntryType.Sale or ItemLedgerEntryType.NegativeAdjmt or ItemLedgerEntryType.Consumption;
+        var outbound = request.EntryType is ItemLedgerEntryType.Sale or ItemLedgerEntryType.NegativeAdjmt or ItemLedgerEntryType.Consumption or ItemLedgerEntryType.AssemblyConsumption;
         if (request.Correction)
         {
             outbound = !outbound;
@@ -159,7 +179,13 @@ public class ItemJnlPostLine : DomainService
         var quantity = Math.Abs(request.Quantity);
 
         var parts = await TrackingPartsAsync(item, request, quantity);
+        var costPosted = request.CostPostedToGL ?? (request.EntryType is ItemLedgerEntryType.Purchase or ItemLedgerEntryType.Consumption or ItemLedgerEntryType.Output
+            || (await _setupManager.GetAsync()).AutomaticCostPosting);
         await CheckRulesAsync(item, sign * quantity, locationCode, variantCode);
+        if (outbound && !request.DropShipment && item.Type == ItemType.Inventory)
+        {
+            await ReservationManager.CheckOutboundAsync(item, locationCode, variantCode, quantity, request.ReservationSourceId);
+        }
 
         var entries = new List<ItemLedgerEntry>();
         foreach (var part in parts)
@@ -215,10 +241,21 @@ public class ItemJnlPostLine : DomainService
                 costAmountExpected: request.ExpectedCost ? costAmount : 0m,
                 invoicedQuantity: request.ExpectedCost ? 0m : signedQty
             ) { EntryNo = await EntryNos.NextAsync(ErpSequenceNames.ValueEntry) }
-                .WithDetails(ValueEntryType.DirectCost, locationCode, variantCode));
+                .WithDetails(ValueEntryType.DirectCost, locationCode, variantCode)
+                .PostedToGL(costPosted));
 
             item.AdjustInventory(signedQty);
             entries.Add(entry);
+
+            if (!request.DropShipment && item.Type == ItemType.Inventory)
+            {
+                await WarehouseManager.RecordItemEntryAsync(entry, request.BinCode, request.Description);
+            }
+        }
+
+        if (outbound && request.ReservationSourceId.HasValue)
+        {
+            await ReservationManager.ConsumeAsync(request.ReservationSourceId.Value, quantity);
         }
 
         await _itemRepository.UpdateAsync(item, autoSave: true);
@@ -258,7 +295,8 @@ public class ItemJnlPostLine : DomainService
             costAmountExpected: -expected,
             invoicedQuantity: signedQty
         ) { EntryNo = await EntryNos.NextAsync(ErpSequenceNames.ValueEntry) }
-            .WithDetails(ValueEntryType.DirectCost, entry.LocationCode, entry.VariantCode));
+            .WithDetails(ValueEntryType.DirectCost, entry.LocationCode, entry.VariantCode)
+            .PostedToGL(entry.EntryType is ItemLedgerEntryType.Purchase || (await _setupManager.GetAsync()).AutomaticCostPosting));
 
         entry.AddInvoiced(signedQty, actual);
         await _itemLedgerEntryRepository.UpdateAsync(entry, autoSave: true);
@@ -302,7 +340,8 @@ public class ItemJnlPostLine : DomainService
             costAmountExpected: 0m,
             invoicedQuantity: 0m
         ) { EntryNo = await EntryNos.NextAsync(ErpSequenceNames.ValueEntry) }
-            .WithDetails(ValueEntryType.ItemCharge, entry.LocationCode, entry.VariantCode);
+            .WithDetails(ValueEntryType.ItemCharge, entry.LocationCode, entry.VariantCode)
+            .PostedToGL(true);
 
         await _valueEntryRepository.InsertAsync(valueEntry, autoSave: true);
 
@@ -356,7 +395,8 @@ public class ItemJnlPostLine : DomainService
                     change,
                     invoicedQuantity: 0m
                 ) { EntryNo = await EntryNos.NextAsync(ErpSequenceNames.ValueEntry) }
-                    .WithDetails(ValueEntryType.Revaluation, entry.LocationCode, entry.VariantCode));
+                    .WithDetails(ValueEntryType.Revaluation, entry.LocationCode, entry.VariantCode)
+                    .PostedToGL((await _setupManager.GetAsync()).AutomaticCostPosting));
             }
 
             entry.Revalue(newUnitCost);

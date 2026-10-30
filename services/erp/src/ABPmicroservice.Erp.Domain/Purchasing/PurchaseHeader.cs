@@ -433,6 +433,9 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         TaxLiable = taxLiable;
     }
 
+    public void SetResponsibilityCenter(string responsibilityCenter) =>
+        ResponsibilityCenter = CodeTableEntity.NormalizeCode(Check.Length(responsibilityCenter, nameof(responsibilityCenter), 10));
+
     public void SetPrepayment(decimal prepaymentPct)
     {
         EnsureNotPosted();

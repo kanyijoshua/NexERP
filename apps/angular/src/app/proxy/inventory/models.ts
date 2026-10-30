@@ -38,6 +38,8 @@ export interface CreateUpdateItemDto {
   vendorNo?: string;
   netWeight?: number;
   unitVolume?: number;
+  physInvtCountingPeriodCode?: string;
+  nextCountingDate?: string;
 }
 
 export interface CreateUpdateUnitOfMeasureDto {
@@ -113,6 +115,9 @@ export interface ItemDto extends FullAuditedEntityDto<string> {
   netWeight?: number;
   unitVolume?: number;
   lastDirectCost: number;
+  physInvtCountingPeriodCode?: string;
+  lastCountingDate?: string;
+  nextCountingDate?: string;
 }
 
 export interface ItemLedgerEntryDto extends EntityDto<string> {
@@ -149,6 +154,12 @@ export interface LocationDto extends CodeTableDto {
   phoneNo?: string;
   contact?: string;
   useAsInTransit: boolean;
+  binMandatory: boolean;
+  requirePutAway: boolean;
+  requirePick: boolean;
+  receiptBinCode?: string;
+  shipmentBinCode?: string;
+  defaultBinCode?: string;
 }
 
 export interface CreateUpdateLocationDto extends CreateUpdateCodeTableDto {
@@ -159,6 +170,12 @@ export interface CreateUpdateLocationDto extends CreateUpdateCodeTableDto {
   phoneNo?: string;
   contact?: string;
   useAsInTransit: boolean;
+  binMandatory: boolean;
+  requirePutAway: boolean;
+  requirePick: boolean;
+  receiptBinCode?: string;
+  shipmentBinCode?: string;
+  defaultBinCode?: string;
 }
 
 export interface InventorySetupDto {

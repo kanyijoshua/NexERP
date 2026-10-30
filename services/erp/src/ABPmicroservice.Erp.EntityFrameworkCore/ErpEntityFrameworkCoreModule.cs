@@ -74,6 +74,17 @@ public class ErpEntityFrameworkCoreModule : AbpModule
                 e.DefaultWithDetailsFunc = q => q.Include(x => x.Tables).ThenInclude(t => t.Fields)
             );
             options.Entity<ConfigTemplate>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<WarehouseActivityHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<PhysInvtOrderHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<AssemblyHeader>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<CashManagement.DirectDebitCollection>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Entries));
+            options.Entity<Intercompany.ICInboxTransaction>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<CostAccounting.CostAllocationSource>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Targets));
+            options.Entity<StandardSalesCode>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<StandardPurchaseCode>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<HumanResources.Appraisal>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<PointOfSale.PosOrder>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
+            options.Entity<Crm.Segment>(e => e.DefaultWithDetailsFunc = q => q.Include(x => x.Lines));
         });
     }
 }

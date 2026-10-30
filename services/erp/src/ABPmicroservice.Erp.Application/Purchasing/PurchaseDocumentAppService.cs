@@ -87,6 +87,7 @@ public class PurchaseDocumentAppService
 
         await ApplyHeaderAsync(header, input, vendor);
         await UpsertLinesAsync(header, input);
+        await AddAutomaticStandardLinesAsync(header);
         await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, vendor);
         ApplyQuantitiesToPost(header, input);
 
@@ -126,6 +127,7 @@ public class PurchaseDocumentAppService
             throw new DocumentAlreadyPostedException(header.No);
         }
 
+        await LazyServiceProvider.LazyGetRequiredService<DropShipmentManager>().UnlinkAsync(header.Lines);
         await Repository.DeleteAsync(header, autoSave: true);
     }
 
@@ -295,6 +297,25 @@ public class PurchaseDocumentAppService
     }
 
     [Authorize(ErpPermissions.PurchaseDocuments.Post)]
+    [Authorize(ErpPermissions.PurchaseDocuments.Update)]
+    public async Task<PurchaseHeaderDto> InsertStandardLinesAsync(Guid id, Sales.InsertStandardLinesInput input)
+    {
+        var header = await GetEntityByIdAsync(id);
+        if (header.Status != DocumentStatus.Open)
+        {
+            throw new DocumentNotOpenException(header.No);
+        }
+
+        var normalized = CodeTableEntity.NormalizeCode(input.Code);
+        var codes = LazyServiceProvider.LazyGetRequiredService<IRepository<StandardPurchaseCode, Guid>>();
+        var found = await codes.FirstOrDefaultAsync(c => c.Code == normalized)
+            ?? throw new BusinessException(ErpErrorCodes.StandardCodes.StandardCodeNotFound).WithData("code", normalized ?? "");
+        await AddStandardLinesAsync(header, await codes.GetAsync(found.Id, includeDetails: true));
+        await LazyServiceProvider.LazyGetRequiredService<DocumentVatCalculator>().ApplyAsync(header, await _vendorRepository.GetAsync(header.VendorId));
+        await Repository.UpdateAsync(header, autoSave: true);
+        return await MapToGetOutputDtoAsync(header);
+    }
+
     public async Task<PurchasePostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id)
     {
         var crMemo = await _purchasePostingEngine.PostPrepaymentAsync(id, creditMemo: true);
@@ -314,13 +335,67 @@ public class PurchaseDocumentAppService
 
     protected override async Task<PurchaseHeader> GetEntityByIdAsync(Guid id)
     {
-        return await Repository.GetAsync(id, includeDetails: true);
+        var header = await Repository.GetAsync(id, includeDetails: true);
+        await Centers.EnsureAllowedAsync(header.No, header.ResponsibilityCenter, sales: false);
+        return header;
+    }
+
+    private ResponsibilityCenterManager Centers => LazyServiceProvider.LazyGetRequiredService<ResponsibilityCenterManager>();
+
+    /// <summary>Adds the lines of a standard code, each priced as a line typed in would be.</summary>
+    private async Task AddStandardLinesAsync(PurchaseHeader header, StandardPurchaseCode code)
+    {
+        if (code.Lines.Count == 0)
+        {
+            throw new BusinessException(ErpErrorCodes.StandardCodes.StandardCodeHasNoLines).WithData("code", code.Code);
+        }
+
+        var items = LazyServiceProvider.LazyGetRequiredService<IRepository<Item, Guid>>();
+        foreach (var standard in code.Lines.OrderBy(l => l.LineNo))
+        {
+            var input = new PurchaseLineInputDto { Type = standard.Type, No = standard.No, Description = standard.Description, Quantity = standard.Quantity, DirectUnitCost = standard.UnitAmount, UnitOfMeasureCode = standard.UnitOfMeasureCode };
+            var (amount, discount) = await CostOfAsync(header, input);
+            var description = standard.Description;
+            if (description == null && standard.Type == DocumentLineType.Item && standard.No != null)
+            {
+                description = (await items.FirstOrDefaultAsync(i => i.No == standard.No))?.Description;
+            }
+
+            var line = header.AddLine(GuidGenerator.Create(), standard.Type, standard.No, description, standard.Quantity, amount, discount, standard.UnitOfMeasureCode);
+            await SetVariantAndUnitAsync(line, null);
+        }
+
+        header.RecalculateTotals();
+    }
+
+    /// <summary>A new quote, order or invoice gets the lines of the vendor's standard codes that go on automatically.</summary>
+    private async Task AddAutomaticStandardLinesAsync(PurchaseHeader header)
+    {
+        var partyNo = header.BuyFromVendorNo;
+        var assigned = (await LazyServiceProvider.LazyGetRequiredService<IRepository<StandardVendorPurchaseCode, Guid>>().GetListAsync(c => c.VendorNo == partyNo))
+            .Where(c => c.InsertsAutomaticallyOn(header.DocumentType))
+            .OrderBy(c => c.Code)
+            .ToList();
+        foreach (var standard in assigned)
+        {
+            var code = standard.Code;
+            var standardCode = await LazyServiceProvider.LazyGetRequiredService<IRepository<StandardPurchaseCode, Guid>>().FirstOrDefaultAsync(c => c.Code == code);
+            if (standardCode != null)
+            {
+                standardCode = await LazyServiceProvider.LazyGetRequiredService<IRepository<StandardPurchaseCode, Guid>>().GetAsync(standardCode.Id, includeDetails: true);
+                if (standardCode.Lines.Count > 0)
+                {
+                    await AddStandardLinesAsync(header, standardCode);
+                }
+            }
+        }
     }
 
     protected override async Task<IQueryable<PurchaseHeader>> CreateFilteredQueryAsync(GetPurchaseDocumentListInput input)
     {
         // Lists show headers only; lines are loaded when a document is opened.
         var query = await Repository.GetQueryableAsync();
+        var center = await Centers.GetUserCenterAsync(sales: false);
 
         return query
             .WhereIf(
@@ -329,7 +404,8 @@ public class PurchaseDocumentAppService
             )
             .WhereIf(input.DocumentType.HasValue, x => x.DocumentType == input.DocumentType.Value)
             .WhereIf(input.Status.HasValue, x => x.Status == input.Status.Value)
-            .WhereIf(input.VendorId.HasValue, x => x.VendorId == input.VendorId.Value);
+            .WhereIf(input.VendorId.HasValue, x => x.VendorId == input.VendorId.Value)
+            .WhereIf(center != null, x => x.ResponsibilityCenter == center);
     }
 
     protected override IQueryable<PurchaseHeader> ApplyDefaultSorting(IQueryable<PurchaseHeader> query)
@@ -358,6 +434,7 @@ public class PurchaseDocumentAppService
         await codes.EnsureExistsAsync<PaymentTerms>(input.PaymentTermsCode);
         await codes.EnsureExistsAsync<Currency>(input.CurrencyCode);
         await codes.EnsureExistsAsync<Location>(input.LocationCode);
+        await codes.EnsureExistsAsync<ResponsibilityCenter>(input.ResponsibilityCenter);
 
         var paymentTermsCode = CodeTableEntity.NormalizeCode(input.PaymentTermsCode) ?? vendor.PaymentTermsCode;
         var dueDate = input.DueDate
@@ -400,6 +477,7 @@ public class PurchaseDocumentAppService
         header.SetAppliesTo(input.AppliesToDocType, input.AppliesToDocNo, input.AppliesToId);
         header.SetTax(input.TaxAreaCode ?? vendor.TaxAreaCode, input.TaxLiable || vendor.TaxLiable);
         header.SetPrepayment(input.PrepaymentPct != 0 ? input.PrepaymentPct : vendor.PrepaymentPct);
+        var center = await Centers.DefaultCenterAsync(input.ResponsibilityCenter ?? header.ResponsibilityCenter, vendor.ResponsibilityCenter, sales: false);
         header.SetAdditionalFields(
             input.PostingDescription,
             input.DocumentDate,
@@ -443,6 +521,8 @@ public class PurchaseDocumentAppService
             input.ContractCommencementDate,
             input.ContractCompletionDate
         );
+        header.SetResponsibilityCenter(center);
+        await Centers.EnsureAllowedAsync(header.No, header.ResponsibilityCenter, sales: false);
     }
 
     /// <summary>
@@ -453,7 +533,9 @@ public class PurchaseDocumentAppService
     private async Task UpsertLinesAsync(PurchaseHeader header, CreateUpdatePurchaseHeaderDto input)
     {
         var sent = input.Lines.Where(l => l.Id.HasValue).Select(l => l.Id!.Value).ToHashSet();
-        foreach (var removed in header.Lines.Where(l => !sent.Contains(l.Id)).Select(l => l.Id).ToList())
+        var removedLines = header.Lines.Where(l => !sent.Contains(l.Id)).ToList();
+        await LazyServiceProvider.LazyGetRequiredService<DropShipmentManager>().UnlinkAsync(removedLines);
+        foreach (var removed in removedLines.Select(l => l.Id))
         {
             header.RemoveLine(removed);
         }

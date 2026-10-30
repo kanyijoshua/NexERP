@@ -218,6 +218,12 @@ public class GenJournalLine : CompanyEntity
     /// <summary>Spreads the G/L account side of the line over later periods.</summary>
     public string DeferralCode { get; private set; }
 
+    /// <summary>The vendor bank account a payment goes to; blank takes the vendor's preferred account.</summary>
+    public string RecipientBankAccount { get; private set; }
+
+    /// <summary>The line is in a payment file sent to the bank, so it is not exported twice.</summary>
+    public bool ExportedToPaymentFile { get; private set; }
+
     protected GenJournalLine() { }
 
     public GenJournalLine(
@@ -334,6 +340,11 @@ public class GenJournalLine : CompanyEntity
 
     public void SetDeferralCode(string deferralCode) =>
         DeferralCode = CodeTableEntity.NormalizeCode(Check.Length(deferralCode, nameof(deferralCode), ErpDomainConsts.MaxCodeLength));
+
+    public void SetRecipientBankAccount(string bankAccountCode) =>
+        RecipientBankAccount = CodeTableEntity.NormalizeCode(Check.Length(bankAccountCode, nameof(bankAccountCode), ErpDomainConsts.MaxCodeLength));
+
+    public void MarkExportedToPaymentFile(bool exported) => ExportedToPaymentFile = exported;
 
     /// <summary>Sets the currency and its factor, and the LCY amount with them.</summary>
     public void SetCurrency(string currencyCode, decimal currencyFactor)

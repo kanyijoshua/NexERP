@@ -58,6 +58,7 @@ public class ItemAppService
         item.SetItemTrackingCode(input.ItemTrackingCode);
         item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
         item.SetMeasures(input.NetWeight, input.UnitVolume);
+        await SetCountingPeriodAsync(item, input);
 
         await Repository.InsertAsync(item, autoSave: true);
         return await MapToGetOutputDtoAsync(item);
@@ -109,6 +110,15 @@ public class ItemAppService
         item.SetItemTrackingCode(input.ItemTrackingCode);
         item.SetPlanning(input.ReplenishmentSystem, input.ProductionBomNo, input.RoutingNo, input.ReorderPolicy, input.ReorderPoint, input.ReorderQuantity, input.MaximumInventory, input.SafetyStock, input.LeadTimeCalculation, input.StandardCost, input.VendorNo);
         item.SetMeasures(input.NetWeight, input.UnitVolume);
+        await SetCountingPeriodAsync(item, input);
+    }
+
+    /// <summary>An item given a counting period is due for its first count today, unless the card says otherwise.</summary>
+    private async Task SetCountingPeriodAsync(Item item, CreateUpdateItemDto input)
+    {
+        await LazyServiceProvider.LazyGetRequiredService<CodeTableChecker>().EnsureExistsAsync<PhysInvtCountingPeriod>(input.PhysInvtCountingPeriodCode);
+        var changed = !string.Equals(item.PhysInvtCountingPeriodCode, input.PhysInvtCountingPeriodCode?.Trim(), StringComparison.OrdinalIgnoreCase);
+        item.SetCountingPeriod(input.PhysInvtCountingPeriodCode, input.NextCountingDate ?? (changed ? Clock.Now.Date : item.NextCountingDate));
     }
 
     /// <summary>A posting group on the card must exist; blank means none.</summary>

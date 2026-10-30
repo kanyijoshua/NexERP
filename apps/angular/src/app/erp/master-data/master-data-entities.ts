@@ -63,7 +63,9 @@ import {
   SalesDocumentType,
 } from '@proxy/sales';
 import { Observable, forkJoin, map, of } from 'rxjs';
-import { accountField, blockActions, codeField, codeOf, enumOptions, postingGroupEntity } from './entity-helpers';
+import { accountField, blockActions, codeField, codeOf, enumOptions, postingGroupEntity, runWithInput } from './entity-helpers';
+import { AdjustCostInput, CostAdjustmentService, PostInventoryCostInput } from '@proxy/inventory';
+import { RecordDialogService } from '../erp-shared/record/record-dialog.service';
 import { BaseTableEntities } from './base-entities';
 import { PensionEntities } from './pension-entities';
 import { AcademicEntities } from './academic-entities';
@@ -83,6 +85,9 @@ import { ProjectEntities } from './project-entities';
 import { ManufacturingEntities } from './manufacturing-entities';
 import { ServiceEntities } from './service-entities';
 import { EverydayOperationsEntities } from './everyday-operations-entities';
+import { WarehouseManagementEntities } from './warehouse-management-entities';
+import { FinanceCompletionEntities } from './finance-completion-entities';
+import { OperationsAppsEntities } from './operations-apps-entities';
 import { reorderPolicyOptions, replenishmentSystemOptions } from '@proxy/manufacturing';
 import { ItemUnitOfMeasureService, ItemVariantService, costingMethodOptions, CostingMethod } from '@proxy/inventory';
 import { ProcurementEntities } from './procurement-entities';
@@ -206,7 +211,12 @@ export class MasterDataEntities {
   private readonly manufacturingEntities = inject(ManufacturingEntities);
   private readonly serviceEntities = inject(ServiceEntities);
   private readonly everydayOperations = inject(EverydayOperationsEntities);
+  private readonly warehouseManagement = inject(WarehouseManagementEntities);
+  private readonly financeCompletion = inject(FinanceCompletionEntities);
+  private readonly operationsApps = inject(OperationsAppsEntities);
   private readonly itemVariants = inject(ItemVariantService);
+  private readonly costAdjustment = inject(CostAdjustmentService);
+  private readonly recordDialogs = inject(RecordDialogService);
   private readonly itemUnits = inject(ItemUnitOfMeasureService);
   private readonly customerLedgerEntries = inject(CustomerLedgerEntryService);
 
@@ -411,6 +421,7 @@ export class MasterDataEntities {
       { key: 'prices', labelKey: 'Erp::PricesAndSales' },
       { key: 'costs', labelKey: 'Erp::CostsAndPosting', collapsed: true },
       { key: 'planning', labelKey: 'Erp::Replenishment', collapsed: true },
+      { key: 'counting', labelKey: 'Erp::PhysicalInventory', collapsed: true },
     ],
     fields: [
       SERIES_NO_FIELD,
@@ -447,6 +458,9 @@ export class MasterDataEntities {
         cardOnly: true,
       },
       codeField('vendorNo', 'Erp::VendorNo', 'vendor', 'planning', { cardOnly: true }),
+      codeField('physInvtCountingPeriodCode', 'Erp::PhysInvtCountingPeriod', 'physInvtCountingPeriod', 'counting', { cardOnly: true }),
+      { field: 'nextCountingDate', labelKey: 'Erp::NextCountingDate', type: 'date', section: 'counting', cardOnly: true },
+      { field: 'lastCountingDate', labelKey: 'Erp::LastCountingDate', type: 'readonly', section: 'counting', cardOnly: true },
       codeField('productionBomNo', 'Erp::ProductionBomNo', 'productionBom', 'planning', { cardOnly: true }),
       codeField('routingNo', 'Erp::RoutingNo', 'routing', 'planning', { cardOnly: true }),
       { field: 'reorderPolicy', labelKey: 'Erp::ReorderPolicy', type: 'select', options: enumOptions(reorderPolicyOptions, 'ReorderPolicy'), section: 'planning', cardOnly: true },
@@ -464,6 +478,45 @@ export class MasterDataEntities {
     toItem: dto => ({ id: dto.id, code: dto.no ?? '', name: dto.description ?? undefined }),
     // An item needs a number and a unit of measure, so there is no one-click "Create 'term'".
     newRecord: term => ({ description: term ?? '', type: ItemType.Inventory, unitPrice: 0, unitCost: 0, netWeight: 0, unitVolume: 0, costingMethod: CostingMethod.Fifo }),
+    listActions: [
+      {
+        // Re-costs stock that left before the cost of what it took was final.
+        key: 'adjustCost',
+        labelKey: 'Erp::AdjustCostItemEntries',
+        icon: 'fas fa-scale-balanced',
+        permission: 'Erp.InventoryCosting',
+        run: () =>
+          runWithInput<AdjustCostInput>(this.recordDialogs, {
+            titleKey: 'Erp::AdjustCostItemEntries',
+            icon: 'fas fa-scale-balanced',
+            permission: 'Erp.InventoryCosting',
+            fields: [
+              { field: 'itemNos', labelKey: 'Erp::ItemNos', type: 'text', maxLength: 1000, helpKey: 'Erp::ItemNosHelp' },
+              { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
+            ],
+            values: { postingDate: new Date().toISOString().substring(0, 10) },
+            submit: input => this.costAdjustment.adjustCost(input),
+          }),
+      },
+      {
+        key: 'postInventoryCost',
+        labelKey: 'Erp::PostInventoryCostToGL',
+        icon: 'fas fa-book',
+        permission: 'Erp.InventoryCosting',
+        run: () =>
+          runWithInput<PostInventoryCostInput>(this.recordDialogs, {
+            titleKey: 'Erp::PostInventoryCostToGL',
+            icon: 'fas fa-book',
+            permission: 'Erp.InventoryCosting',
+            fields: [
+              { field: 'postingDate', labelKey: 'Erp::PostingDate', type: 'date', required: true },
+              { field: 'documentNo', labelKey: 'Erp::DocumentNo', type: 'text', maxLength: 20 },
+            ],
+            values: { postingDate: new Date().toISOString().substring(0, 10) },
+            submit: input => this.costAdjustment.runInventoryCostPosting(input),
+          }),
+      },
+    ],
     related: dto =>
       of([
         {
@@ -983,6 +1036,9 @@ export class MasterDataEntities {
       ...this.manufacturingEntities.all,
       ...this.serviceEntities.all,
       ...this.everydayOperations.all,
+      ...this.warehouseManagement.all,
+      ...this.financeCompletion.all,
+      ...this.operationsApps.all,
     ];
   }
 }

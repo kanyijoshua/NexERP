@@ -81,6 +81,9 @@ public interface IPurchaseDocumentAppService
 
     /// <summary>Posts a Prepayment Credit Memo from a Purchase Order. Routed as POST .../{id}/run-prepayment-credit-memo-posting.</summary>
     Task<PurchasePostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id);
+
+    /// <summary>Adds the lines of a standard purchase code to the document.</summary>
+    Task<PurchaseHeaderDto> InsertStandardLinesAsync(Guid id, Sales.InsertStandardLinesInput input);
 }
 
 public interface IPostedPurchaseReceiptAppService

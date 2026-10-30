@@ -11,6 +11,7 @@ import type {
   PurchasePostingResultDto,
 } from './orders.models';
 import type { CopyDocumentLinesInput, MakeOrderInput } from '../sales/orders.models';
+import type { InsertStandardLinesInput } from '../sales/standard-codes.models';
 import { RestService, Rest } from '@abp/ng.core';
 
 import type { PagedResultDto } from '@abp/ng.core';
@@ -110,6 +111,14 @@ export class PurchaseDocumentService {
     this.restService.request<any, PurchasePostingResultDto>({
       method: 'POST',
       url: `/api/erp/purchase-document/${id}/run-order-posting`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  insertStandardLines = (id: string, input: InsertStandardLinesInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PurchaseHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/purchase-document/${id}/insert-standard-lines`,
       body: input,
     },
     { apiName: this.apiName,...config });

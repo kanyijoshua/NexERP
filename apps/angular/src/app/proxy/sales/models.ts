@@ -68,6 +68,7 @@ export interface CreateUpdateSalesHeaderDto {
   paymentTermsCode?: string;
   locationCode?: string;
   externalDocumentNo?: string;
+  responsibilityCenter?: string;
   shipToCode?: string;
   shipToName?: string;
   shipToAddress?: string;
@@ -164,6 +165,7 @@ export interface SalesHeaderDto extends FullAuditedEntityDto<string> {
   paymentTermsCode?: string;
   locationCode?: string;
   externalDocumentNo?: string;
+  responsibilityCenter?: string;
   totalAmount: number;
   totalAmountIncludingVat: number;
   posted: boolean;
@@ -227,6 +229,8 @@ export interface SalesLineDto extends EntityDto<string> {
   prepmtLineAmount: number;
   prepmtAmtInv: number;
   prepmtAmtDeducted: number;
+  dropShipment: boolean;
+  purchaseOrderNo?: string;
 }
 
 export interface SalesLineInputDto {
@@ -247,6 +251,7 @@ export interface SalesLineInputDto {
   projectNo?: string;
   projectTaskNo?: string;
   prepaymentPct?: number;
+  dropShipment?: boolean;
 }
 
 export interface SalesReceivablesSetupDto {

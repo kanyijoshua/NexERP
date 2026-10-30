@@ -1061,5 +1061,8 @@ public static class ErpDbContextModelCreatingExtensions
         builder.ConfigureErpManufacturing();
         builder.ConfigureErpServiceManagement();
         builder.ConfigureErpEverydayOperations();
+        builder.ConfigureErpWarehouse();
+        builder.ConfigureErpFinanceCompletion();
+        builder.ConfigureErpOperationsApps();
     }
 }

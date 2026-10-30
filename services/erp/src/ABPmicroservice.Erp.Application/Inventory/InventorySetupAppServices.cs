@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ABPmicroservice.Erp.Companies;
 using ABPmicroservice.Erp.Numbering;
@@ -18,12 +19,19 @@ public class LocationAppService : CodeTableAppServiceBase<Location, LocationDto,
     protected override Location NewEntity(Guid id, CreateUpdateLocationDto input) =>
         new(id, input.Code, input.Description);
 
-    protected override Task ApplyAsync(Location entity, CreateUpdateLocationDto input)
+    protected override async Task ApplyAsync(Location entity, CreateUpdateLocationDto input)
     {
         entity.SetAddress(input.Address, input.City, input.PostCode, input.CountryRegionCode);
         entity.SetContact(input.Contact, input.PhoneNo);
         entity.SetUseAsInTransit(input.UseAsInTransit);
-        return Task.CompletedTask;
+        entity.SetWarehouse(input.BinMandatory, input.RequirePutAway, input.RequirePick, input.ReceiptBinCode, input.ShipmentBinCode, input.DefaultBinCode);
+
+        // The bins are made after the location, so they are checked only once they are named.
+        var warehouse = LazyServiceProvider.LazyGetRequiredService<WarehouseManager>();
+        foreach (var bin in new[] { entity.ReceiptBinCode, entity.ShipmentBinCode, entity.DefaultBinCode }.Where(b => b != null).Distinct())
+        {
+            await warehouse.GetBinAsync(entity.Code, bin);
+        }
     }
 }
 

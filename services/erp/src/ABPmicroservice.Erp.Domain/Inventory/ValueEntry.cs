@@ -30,6 +30,12 @@ public class ValueEntry : LedgerEntryBase
     public string LocationCode { get; private set; }
     public string VariantCode { get; private set; }
 
+    /// <summary>How much of the actual cost is in the G/L; "Post Inventory Cost to G/L" posts the rest.</summary>
+    public decimal CostPostedToGL { get; private set; }
+
+    /// <summary>Made by the cost adjustment, which re-costs stock that left before its cost changed.</summary>
+    public bool Adjustment { get; private set; }
+
     protected ValueEntry() { }
 
     public ValueEntry(
@@ -66,4 +72,19 @@ public class ValueEntry : LedgerEntryBase
         VariantCode = variantCode;
         return this;
     }
+
+    /// <summary>Whether whoever made the entry posts its cost to the G/L at the same time.</summary>
+    internal ValueEntry PostedToGL(bool posted)
+    {
+        CostPostedToGL = posted ? CostAmountActual : 0m;
+        return this;
+    }
+
+    internal ValueEntry AsAdjustment()
+    {
+        Adjustment = true;
+        return this;
+    }
+
+    internal void MarkCostPostedToGL() => CostPostedToGL = CostAmountActual;
 }

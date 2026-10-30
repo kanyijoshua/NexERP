@@ -89,6 +89,13 @@ public static class ErpModuleRegistry
     public const string Projects = "Projects";
     public const string Manufacturing = "Manufacturing";
     public const string Service = "Service";
+    public const string CostAccounting = "CostAccounting";
+    public const string Intercompany = "Intercompany";
+    public const string Subscriptions = "Subscriptions";
+    public const string PointOfSale = "PointOfSale";
+    public const string Maintenance = "Maintenance";
+    public const string Quality = "Quality";
+    public const string Fleet = "Fleet";
 
     private static readonly List<ErpModuleDefinition> Definitions =
     [
@@ -122,6 +129,13 @@ public static class ErpModuleRegistry
         new(Manufacturing, GroupOperations, "fas fa-industry", "/erp/production-orders", false, [Purchasing], ["Manufacturing"]),
         new(Projects, GroupOperations, "fas fa-diagram-project", "/erp/projects", false, [Sales, Purchasing, HumanResources], ["Projects"]),
         new(Crm, GroupOperations, "fas fa-handshake", "/erp/crm/pipeline", false, [Sales], ["Crm"]),
+        new(CostAccounting, GroupFinance, "fas fa-chart-pie", "/erp/cost-types", false, [Finance], ["CostAccounting"]),
+        new(Intercompany, GroupFinance, "fas fa-arrows-left-right", "/erp/ic-partners", false, [Sales, Purchasing], ["Intercompany"]),
+        new(Subscriptions, GroupOperations, "fas fa-arrows-rotate", "/erp/customer-subscriptions", false, [Sales], ["Subscriptions"]),
+        new(PointOfSale, GroupOperations, "fas fa-cash-register", "/erp/pos-orders", false, [Sales], ["PointOfSale"]),
+        new(Maintenance, GroupOperations, "fas fa-wrench", "/erp/maintenance-requests", false, [], ["MaintenanceManagement"]),
+        new(Quality, GroupOperations, "fas fa-clipboard-check", "/erp/quality-checks", false, [], ["Quality"]),
+        new(Fleet, GroupOperations, "fas fa-car", "/erp/vehicles", false, [], ["Fleet"]),
         new(Procurement, GroupOperations, "fas fa-file-contract", "/erp/purchase-requisitions", false, [Purchasing, Approvals], ["Procurement"]),
         new(Reporting, GroupFinance, "fas fa-chart-line", "/erp/reports/financial", false, [Finance], ["Reporting"]),
         new(Approvals, GroupCollaboration, "fas fa-user-check", "/erp/approvals", false, [], ["Workflows"]),

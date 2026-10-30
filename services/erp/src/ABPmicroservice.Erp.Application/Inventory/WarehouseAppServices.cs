@@ -490,6 +490,11 @@ public class ItemJournalLineAppService
         var unitCode = input.UnitOfMeasureCode ?? item.BaseUnitOfMeasureCode;
 
         line.SetLocations(input.LocationCode, input.NewLocationCode);
+        if (!input.BinCode.IsNullOrWhiteSpace())
+        {
+            await LazyServiceProvider.LazyGetRequiredService<WarehouseManager>().GetBinAsync(input.LocationCode, input.BinCode);
+        }
+        line.SetBin(input.BinCode);
         line.SetVariantAndUnit(input.VariantCode, unitCode, await units.GetQtyPerAsync(item, unitCode));
         line.SetTracking(input.LotNo, input.SerialNo, input.ExpirationDate);
 

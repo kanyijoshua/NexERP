@@ -11,7 +11,7 @@ import {
   ApprovalRequestResultDto,
   ApprovalStatus,
 } from '@proxy/workflows';
-import { Observable, Subscription, finalize } from 'rxjs';
+import { EMPTY, Observable, Subscription, finalize } from 'rxjs';
 import { ChatterWidgetComponent } from '../../components/chatter-widget/chatter-widget.component';
 import {
   DocumentAction as CardAction,
@@ -178,6 +178,8 @@ export interface DocumentCardLine {
   quantityShipped: number;
   qtyToInvoice: number;
   quantityInvoiced: number;
+  /** Sales orders only: the vendor delivers the line to the customer directly. */
+  dropShipment?: boolean;
 }
 
 /**
@@ -292,6 +294,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected emailDocumentType: EmailDocumentType | null = null;
   /** Orders can invoice a prepayment before anything ships. */
   protected supportsPrepayment = false;
+  /** Order lines can be drop shipments, shown as a checkbox column on the card. */
+  protected supportsDropShipment = false;
 
   get canTrack(): boolean {
     return this.trackingSourceType !== null;
@@ -503,6 +507,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         actions.push({ key: 'runPrepaymentCreditMemoPosting', labelKey: 'Erp::PostPrepaymentCreditMemo', icon: 'fas fa-file-circle-minus', cssClass: 'btn-outline-secondary', permission: post });
       }
     }
+    actions.push(...this.extraCardActions(card));
     if (this.emailDocumentType !== null) {
       actions.push({ key: 'sendEmail', labelKey: 'Erp::SendByEmail', icon: 'fas fa-envelope', cssClass: 'btn-outline-primary', permission: 'Erp.DocumentEmailing.Send' });
     }
@@ -660,8 +665,15 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     }
 
     const row = card as unknown as TRow;
+    const extra = this.extraCardActions(card).some(a => a.key === key);
     const run = () =>
-      key === 'getSourceLines' ? this.openSource(row) : key === 'sendEmail' ? this.sendEmail(row) : this.act(key as DocumentAction, row);
+      extra
+        ? this.runExtra(key, row)
+        : key === 'getSourceLines'
+          ? this.openSource(row)
+          : key === 'sendEmail'
+            ? this.sendEmail(row)
+            : this.act(key as DocumentAction, row);
     if (key !== 'delete' && this.cardEditable && this.cardDirty) {
       this.saveCard(run);
     } else {
@@ -745,6 +757,7 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
       quantityShipped: 0,
       qtyToInvoice: 0,
       quantityInvoiced: 0,
+      dropShipment: false,
     };
     return this.fb.group({
       ...v,
@@ -779,6 +792,9 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         { field: 'qtyToInvoice', labelKey: 'Erp::QtyToInvoice', type: 'number', width: '100px', step: 1 },
         { field: 'quantityInvoiced', labelKey: 'Erp::QuantityInvoiced', type: 'number', width: '100px', readonly: true },
       );
+      if (this.supportsDropShipment) {
+        columns.push({ field: 'dropShipment', labelKey: 'Erp::DropShipment', type: 'checkbox', width: '90px' });
+      }
     } else if (this.mode === 'blanket') {
       columns.push({ field: 'quantityShipped', labelKey: 'Erp::QuantityOrdered', type: 'number', width: '100px', readonly: true });
     }
@@ -1184,6 +1200,28 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         } else {
           this.refreshCard(id);
         }
+        this.table?.reload();
+        this.chatter?.load();
+      });
+  }
+
+  /** Card actions a kind of document adds to the shared ones, e.g. ordering drop shipments. */
+  protected extraCardActions(_card: DocumentCardData): CardAction[] {
+    return [];
+  }
+
+  /** Runs one of `extraCardActions`; emits what to say once done, or nothing when cancelled. */
+  protected runExtraCardAction(_key: string, _row: TRow): Observable<string> {
+    return EMPTY;
+  }
+
+  private runExtra(key: string, row: TRow): void {
+    const id = row.id as string;
+    this.runExtraCardAction(key, row)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(message => {
+        this.toaster.success(message);
+        this.refreshCard(id);
         this.table?.reload();
         this.chatter?.load();
       });

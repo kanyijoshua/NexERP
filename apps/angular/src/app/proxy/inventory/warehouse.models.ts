@@ -151,6 +151,7 @@ export interface ItemJournalLineDto extends FullAuditedEntityDto<string> {
   description?: string;
   locationCode?: string;
   newLocationCode?: string;
+  binCode?: string;
   variantCode?: string;
   unitOfMeasureCode?: string;
   quantity: number;
@@ -174,6 +175,7 @@ export interface CreateUpdateItemJournalLineDto {
   description?: string;
   locationCode?: string;
   newLocationCode?: string;
+  binCode?: string;
   variantCode?: string;
   unitOfMeasureCode?: string;
   quantity: number;

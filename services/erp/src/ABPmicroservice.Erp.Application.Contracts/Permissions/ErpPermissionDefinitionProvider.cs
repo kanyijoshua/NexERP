@@ -318,6 +318,9 @@ public partial class ErpPermissionDefinitionProvider : PermissionDefinitionProvi
 
         DefineBaseTables(erpGroup);
         DefineFinanceOperations(erpGroup);
+        DefineWarehouse(erpGroup);
+        DefineFinanceCompletion(erpGroup);
+        DefineOperationsApps(erpGroup);
 
         AddCrud(erpGroup, ErpPermissions.Pensions.Default, ErpPermissions.Pensions.Create, ErpPermissions.Pensions.Update, ErpPermissions.Pensions.Delete, "Pensions");
         erpGroup.GetPermissionOrNull(ErpPermissions.Pensions.Default).AddChild(ErpPermissions.Pensions.Post, L("Permission:Erp:Pensions:Post"));

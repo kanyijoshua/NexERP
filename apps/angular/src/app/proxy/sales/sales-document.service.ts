@@ -1,7 +1,10 @@
 import type { CreateUpdateSalesHeaderDto, GetSalesDocumentListInput, SalesHeaderDto } from './models';
+import type { InsertStandardLinesInput } from './standard-codes.models';
 import type {
   CopyDocumentLinesInput,
+  DropShipmentOrderResultDto,
   GetShipmentLinesInput,
+  MakeDropShipmentOrderInput,
   MakeOrderInput,
   OpenShipmentLineDto,
   SalesOrderPostingInput,
@@ -120,6 +123,22 @@ export class SalesDocumentService {
     this.restService.request<any, SalesPostingResultDto>({
       method: 'POST',
       url: `/api/erp/sales-document/${id}/run-prepayment-posting`,
+    },
+    { apiName: this.apiName,...config });
+
+  insertStandardLines = (id: string, input: InsertStandardLinesInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, SalesHeaderDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/insert-standard-lines`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+
+  makeDropShipmentOrder = (id: string, input: MakeDropShipmentOrderInput, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, DropShipmentOrderResultDto>({
+      method: 'POST',
+      url: `/api/erp/sales-document/${id}/make-drop-shipment-order`,
+      body: input,
     },
     { apiName: this.apiName,...config });
 

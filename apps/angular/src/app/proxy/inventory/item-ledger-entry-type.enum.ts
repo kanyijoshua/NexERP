@@ -8,6 +8,8 @@ export enum ItemLedgerEntryType {
   Transfer = 4,
   Consumption = 5,
   Output = 6,
+  AssemblyConsumption = 7,
+  AssemblyOutput = 8,
 }
 
 export const itemLedgerEntryTypeOptions = mapEnumToOptions(ItemLedgerEntryType);

@@ -22,3 +22,8 @@ export * from './payment-method.service';
 export * from './payment-type.service';
 export * from './payment-voucher-line.service';
 export * from './payment-voucher.service';
+export * from './payment-export.models';
+export * from './payment-journal.service';
+export * from './direct-debit-mandate.service';
+export * from './direct-debit-collection.service';
+export * from './direct-debit-collection-entry.service';

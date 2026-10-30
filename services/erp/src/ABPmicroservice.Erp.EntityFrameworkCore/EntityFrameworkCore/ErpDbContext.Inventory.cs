@@ -68,6 +68,7 @@ public static class ErpInventoryModelCreatingExtensions
             b.Property(x => x.Description).HasMaxLength(ErpDomainConsts.MaxDescriptionLength);
             b.Property(x => x.LocationCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
             b.Property(x => x.NewLocationCode).HasMaxLength(ErpDomainConsts.MaxLocationCodeLength);
+            b.Property(x => x.BinCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
             b.Property(x => x.VariantCode).HasMaxLength(ErpDomainConsts.MaxCodeLength);
             b.Property(x => x.UnitOfMeasureCode).HasMaxLength(ErpDomainConsts.MaxUnitOfMeasureCodeLength);
             b.Property(x => x.LotNo).HasMaxLength(ErpDomainConsts.MaxLotNoLength);

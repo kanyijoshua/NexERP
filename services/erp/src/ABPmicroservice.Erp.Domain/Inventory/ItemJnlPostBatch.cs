@@ -221,6 +221,7 @@ public class ItemJnlPostBatch : DomainService
             UnitCost = line.QtyPerUnitOfMeasure == 0m ? 0m : line.UnitCost / line.QtyPerUnitOfMeasure,
             UseItemCost = line.UnitCost == 0m,
             LocationCode = line.LocationCode,
+            BinCode = line.BinCode,
             VariantCode = line.VariantCode,
             Tracking = await TrackingOfAsync(item, line, baseQty),
             DimensionSetId = line.DimensionSetId,

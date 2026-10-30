@@ -67,6 +67,12 @@ public class SalesPostingEngine : DomainService
     private DeferralPoster DeferralPoster => LazyServiceProvider.LazyGetRequiredService<DeferralPoster>();
     private FixedAssets.FAJnlPostLine FAPostLine => LazyServiceProvider.LazyGetRequiredService<FixedAssets.FAJnlPostLine>();
 
+    /// <summary>
+    /// Set only while a purchase receipt ships its drop shipment lines: the item ledger entries the
+    /// receipt posted, by sales line. Drop shipment lines ship from these and from nothing else.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, List<ItemLedgerEntry>> _dropShipmentEntries;
+
     public SalesPostingEngine(
         IRepository<SalesHeader, Guid> salesHeaderRepository,
         IRepository<PostedSalesHeader, Guid> postedSalesHeaderRepository,
@@ -123,6 +129,16 @@ public class SalesPostingEngine : DomainService
             foreach (var line in header.Lines)
             {
                 line.ResetQuantitiesToPost();
+            }
+        }
+
+        // A drop shipment line ships with its purchase receipt, never by itself; it can be invoiced
+        // once it has shipped.
+        if (_dropShipmentEntries == null)
+        {
+            foreach (var line in header.Lines.Where(l => l.DropShipment))
+            {
+                line.SetQuantitiesToPost(header.No, 0m, Math.Min(line.QtyToInvoice, line.QtyShippedNotInvoiced));
             }
         }
 
@@ -225,6 +241,9 @@ public class SalesPostingEngine : DomainService
             await LazyServiceProvider
                 .LazyGetRequiredService<DocumentAttachmentManager>()
                 .FlowToPostedDocumentAsync(nameof(SalesHeader), header.Id, nameof(PostedSalesHeader), postedHeader.Id, postedHeader.No, purchase: false);
+
+            // An invoice to a group company goes to its intercompany outbox.
+            await LazyServiceProvider.LazyGetRequiredService<Intercompany.IntercompanyManager>().QueueSalesAsync(postedHeader, customer.No);
         }
 
         return new SalesPostingResult { Invoice = postedHeader, Shipment = shipped.Shipment };
@@ -460,6 +479,79 @@ public class SalesPostingEngine : DomainService
         }
     }
 
+    /// <summary>
+    /// Ships the drop shipment lines of a sales order that a purchase receipt has just received, in
+    /// the quantities it received and from the entries it posted. The other lines of the order keep
+    /// the quantities to post they had.
+    /// </summary>
+    public async Task<SalesPostingResult> ShipDropShipmentAsync(Guid salesHeaderId, IReadOnlyDictionary<Guid, List<ItemLedgerEntry>> receivedEntries)
+    {
+        var header = await _salesHeaderRepository.GetAsync(salesHeaderId);
+        var kept = header.Lines.Where(l => !receivedEntries.ContainsKey(l.Id)).ToDictionary(l => l.Id, l => (l.QtyToShip, l.QtyToInvoice));
+        foreach (var line in header.Lines)
+        {
+            var quantity = receivedEntries.TryGetValue(line.Id, out var entries)
+                ? entries.Sum(e => Math.Abs(e.Quantity)) / line.QtyPerUnitOfMeasure
+                : 0m;
+            line.SetQuantitiesToPost(header.No, quantity, 0m);
+        }
+
+        SalesPostingResult result;
+        _dropShipmentEntries = receivedEntries;
+        try
+        {
+            result = await PostAsync(salesHeaderId, ship: true, invoice: false);
+        }
+        finally
+        {
+            _dropShipmentEntries = null;
+        }
+
+        foreach (var line in header.Lines.Where(l => kept.ContainsKey(l.Id)))
+        {
+            var toShip = Math.Min(kept[line.Id].QtyToShip, line.OutstandingQuantity);
+            line.SetQuantitiesToPost(header.No, toShip, Math.Min(kept[line.Id].QtyToInvoice, line.QtyShippedNotInvoiced + toShip));
+        }
+
+        await _salesHeaderRepository.UpdateAsync(header, autoSave: true);
+        return result;
+    }
+
+    /// <summary>A drop shipment line leaves from the entries its purchase receipt posted, lot by lot and at their cost.</summary>
+    private async Task<List<ItemLedgerEntry>> ShipDropShipmentLineAsync(SalesHeader header, SalesLine line, Item item, string documentNo, Guid documentLineId)
+    {
+        if (_dropShipmentEntries == null || !_dropShipmentEntries.TryGetValue(line.Id, out var received))
+        {
+            throw new BusinessException(ErpErrorCodes.Inventory.DropShipmentShipsWithPurchase)
+                .WithData("documentNo", header.No)
+                .WithData("lineNo", line.LineNo);
+        }
+
+        var entries = new List<ItemLedgerEntry>();
+        foreach (var from in received)
+        {
+            entries.AddRange(await _itemJnlPostLine.PostAllAsync(new ItemPostingRequest
+            {
+                ItemId = item.Id,
+                ItemNo = item.No,
+                PostingDate = header.PostingDate,
+                EntryType = ItemLedgerEntryType.Sale,
+                DocumentNo = documentNo,
+                Description = line.Description,
+                Quantity = Math.Abs(from.Quantity),
+                LocationCode = from.LocationCode,
+                VariantCode = from.VariantCode,
+                Tracking = TrackingOf(from),
+                DocumentLineId = documentLineId,
+                AppliesToEntryId = from.Id,
+                ExpectedCost = true,
+                DropShipment = true,
+            }));
+        }
+
+        return entries;
+    }
+
     private sealed class ShippedParts
     {
         public PostedSalesShipment Shipment { get; init; }
@@ -485,7 +577,11 @@ public class SalesPostingEngine : DomainService
             var locationCode = line.LocationCode ?? header.LocationCode;
             var shipmentLineId = shipment != null && !line.No.IsNullOrWhiteSpace() ? GuidGenerator.Create() : (Guid?)null;
             var entries = new List<ItemLedgerEntry>();
-            if (plans.TryGetValue(line.Id, out var plan) && plan.Item != null)
+            if (plans.TryGetValue(line.Id, out var plan) && plan.Item != null && line.DropShipment)
+            {
+                entries = await ShipDropShipmentLineAsync(header, line, plan.Item, entryDocumentNo, shipmentLineId ?? line.Id);
+            }
+            else if (plan?.Item != null)
             {
                 var baseQty = line.QtyToShip * line.QtyPerUnitOfMeasure;
                 entries = await _itemJnlPostLine.PostAllAsync(new ItemPostingRequest
@@ -504,6 +600,7 @@ public class SalesPostingEngine : DomainService
                     DocumentLineId = shipmentLineId ?? line.Id,
                     Correction = isReturn,
                     ExpectedCost = true,
+                    ReservationSourceId = isReturn ? null : line.Id,
                 });
             }
 

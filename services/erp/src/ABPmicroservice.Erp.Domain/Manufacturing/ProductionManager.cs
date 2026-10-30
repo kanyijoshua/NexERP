@@ -228,6 +228,7 @@ public class ProductionManager : DomainService
                 LocationCode = order.LocationCode,
             });
             order.AddOutput(quantity, outputCost);
+            await Repo<Quality.QualityManager>().CreateForOutputAsync(item.No, order.No, quantity);
 
             if (outputCost != 0m)
             {

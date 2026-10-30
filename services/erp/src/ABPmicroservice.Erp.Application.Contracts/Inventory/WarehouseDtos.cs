@@ -231,6 +231,7 @@ public class ItemJournalLineDto : FullAuditedEntityDto<Guid>
     public string Description { get; set; }
     public string LocationCode { get; set; }
     public string NewLocationCode { get; set; }
+    public string BinCode { get; set; }
     public string VariantCode { get; set; }
     public string UnitOfMeasureCode { get; set; }
     public decimal Quantity { get; set; }
@@ -267,6 +268,9 @@ public class CreateUpdateItemJournalLineDto
 
     [StringLength(ErpDomainConsts.MaxLocationCodeLength)]
     public string NewLocationCode { get; set; }
+
+    [StringLength(ErpDomainConsts.MaxCodeLength)]
+    public string BinCode { get; set; }
 
     [StringLength(ErpDomainConsts.MaxCodeLength)]
     public string VariantCode { get; set; }

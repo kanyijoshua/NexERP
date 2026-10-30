@@ -85,6 +85,9 @@ public class ItemJournalLine : CompanyEntity
     /// <summary>Where a transfer journal line moves the stock to.</summary>
     public string NewLocationCode { get; private set; }
 
+    /// <summary>The bin the stock comes into or leaves, at a location with bins.</summary>
+    public string BinCode { get; private set; }
+
     public string VariantCode { get; private set; }
     public string UnitOfMeasureCode { get; private set; }
     public decimal QtyPerUnitOfMeasure { get; private set; } = 1m;
@@ -166,6 +169,8 @@ public class ItemJournalLine : CompanyEntity
         LocationCode = CodeTableEntity.NormalizeCode(Check.Length(locationCode, nameof(locationCode), ErpDomainConsts.MaxLocationCodeLength));
         NewLocationCode = CodeTableEntity.NormalizeCode(Check.Length(newLocationCode, nameof(newLocationCode), ErpDomainConsts.MaxLocationCodeLength));
     }
+
+    public void SetBin(string binCode) => BinCode = Bin.NormalizeCode(Check.Length(binCode, nameof(binCode), ErpDomainConsts.MaxCodeLength));
 
     public void SetVariantAndUnit(string variantCode, string unitOfMeasureCode, decimal qtyPerUnitOfMeasure)
     {

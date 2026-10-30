@@ -191,6 +191,7 @@ public class SalesHeaderDto : FullAuditedEntityDto<Guid>
     public string PaymentTermsCode { get; set; }
     public string LocationCode { get; set; }
     public string ExternalDocumentNo { get; set; }
+    public string ResponsibilityCenter { get; set; }
     public decimal TotalAmount { get; set; }
     public decimal TotalAmountIncludingVat { get; set; }
     public bool Posted { get; set; }
@@ -255,6 +256,8 @@ public class SalesLineDto : EntityDto<Guid>
     public decimal PrepmtLineAmount { get; set; }
     public decimal PrepmtAmtInv { get; set; }
     public decimal PrepmtAmtDeducted { get; set; }
+    public bool DropShipment { get; set; }
+    public string PurchaseOrderNo { get; set; }
 }
 
 public class CreateUpdateSalesHeaderDto
@@ -268,6 +271,11 @@ public class CreateUpdateSalesHeaderDto
     public string PaymentTermsCode { get; set; }
     public string LocationCode { get; set; }
     public string ExternalDocumentNo { get; set; }
+
+    /// <summary>Blank takes the user's responsibility center, else the customer's.</summary>
+    [StringLength(10)]
+    public string ResponsibilityCenter { get; set; }
+
     public string ShipToCode { get; set; }
     public string ShipToName { get; set; }
     public string ShipToAddress { get; set; }
@@ -310,6 +318,9 @@ public class SalesLineInputDto
     public decimal? QtyToInvoice { get; set; }
 
     public decimal? PrepaymentPct { get; set; }
+
+    /// <summary>On an order: the vendor delivers the line to the customer directly.</summary>
+    public bool DropShipment { get; set; }
 }
 
 public class GetSalesDocumentListInput : ErpPagedListInput

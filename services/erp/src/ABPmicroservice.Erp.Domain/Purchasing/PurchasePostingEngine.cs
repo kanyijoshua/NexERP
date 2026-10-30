@@ -216,12 +216,25 @@ public class PurchasePostingEngine : DomainService
         header.RecordPosting(received.Receipt?.No, postedDocNo);
         await _purchaseHeaderRepository.UpdateAsync(header);
 
+        // 4. Drop shipment lines that came in go straight on to the customer of their sales order.
+        var dropShipped = toReceive
+            .Where(l => l.DropShipment && !isReturn && received.Lines.ContainsKey(l.Id))
+            .Select(l => (l, received.Lines[l.Id].Entries))
+            .ToList();
+        if (dropShipped.Count > 0)
+        {
+            await LazyServiceProvider.LazyGetRequiredService<DropShipmentManager>().ShipReceivedAsync(dropShipped);
+        }
+
         if (postedHeader != null)
         {
             // Attachments marked to flow follow the document onto the posted document.
             await LazyServiceProvider
                 .LazyGetRequiredService<DocumentAttachmentManager>()
                 .FlowToPostedDocumentAsync(nameof(PurchaseHeader), header.Id, nameof(PostedPurchaseHeader), postedHeader.Id, postedHeader.No, purchase: true);
+
+            // An invoice from a group company goes to its intercompany outbox.
+            await LazyServiceProvider.LazyGetRequiredService<Intercompany.IntercompanyManager>().QueuePurchaseAsync(postedHeader);
         }
 
         return new PurchasePostingResult { Invoice = postedHeader, Receipt = received.Receipt };
@@ -504,6 +517,7 @@ public class PurchasePostingEngine : DomainService
                     DocumentLineId = receiptLineId ?? line.Id,
                     Correction = isReturn,
                     ExpectedCost = true,
+                    DropShipment = line.DropShipment && !isReturn,
                 });
             }
 
@@ -521,6 +535,9 @@ public class PurchasePostingEngine : DomainService
         if (receipt != null)
         {
             await ReceiptRepository.InsertAsync(receipt);
+
+            // Goods a control point tests wait for their quality checks.
+            await LazyServiceProvider.LazyGetRequiredService<Quality.QualityManager>().CreateForReceiptAsync(receipt);
         }
 
         return parts;

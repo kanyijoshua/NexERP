@@ -74,6 +74,12 @@ public interface ISalesDocumentAppService
 
     /// <summary>Posts a Prepayment Credit Memo from a Sales Order. Routed as POST .../{id}/run-prepayment-credit-memo-posting.</summary>
     Task<SalesPostingResultDto> RunPrepaymentCreditMemoPostingAsync(Guid id);
+
+    /// <summary>Orders the drop shipment lines of a sales order from a vendor on a new purchase order.</summary>
+    Task<DropShipmentOrderResultDto> MakeDropShipmentOrderAsync(Guid id, MakeDropShipmentOrderInput input);
+
+    /// <summary>Adds the lines of a standard sales code to the document.</summary>
+    Task<SalesHeaderDto> InsertStandardLinesAsync(Guid id, InsertStandardLinesInput input);
 }
 
 public interface IPostedSalesShipmentAppService

@@ -20,6 +20,17 @@ export interface SalesPostingResultDto {
   shipmentNo?: string;
 }
 
+export interface MakeDropShipmentOrderInput {
+  vendorNo: string;
+  orderDate?: string;
+}
+
+export interface DropShipmentOrderResultDto {
+  purchaseOrderId?: string;
+  purchaseOrderNo?: string;
+  lineCount: number;
+}
+
 export interface MakeOrderInput {
   postingDate?: string;
 }
