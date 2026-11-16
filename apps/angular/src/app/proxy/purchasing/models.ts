@@ -86,6 +86,21 @@ export interface CreateUpdatePurchaseHeaderDto {
   tenderNo?: string;
   contractCommencementDate?: string;
   contractCompletionDate?: string;
+  orderDate?: string;
+  campaignNo?: string;
+  vatReportingDate?: string;
+  transactionType?: string;
+  transactionSpecification?: string;
+  transportMethod?: string;
+  entryPoint?: string;
+  area?: string;
+  compressPrepayment?: boolean;
+  prepmtPaymentTermsCode?: string;
+  prepaymentDueDate?: string;
+  prepmtPaymentDiscountPct?: number;
+  prepmtPmtDiscountDate?: string;
+  leadTimeCalculation?: string;
+  inboundWhseHandlingTime?: string;
 }
 
 
@@ -202,6 +217,20 @@ export interface PurchaseHeaderDto extends FullAuditedEntityDto<string> {
   prepmtDeductedAmount: number;
   lastPrepmtInvoiceNo?: string;
   lastPrepmtCrMemoNo?: string;
+  campaignNo?: string;
+  vatReportingDate?: string;
+  transactionType?: string;
+  transactionSpecification?: string;
+  transportMethod?: string;
+  entryPoint?: string;
+  area?: string;
+  compressPrepayment: boolean;
+  prepmtPaymentTermsCode?: string;
+  prepaymentDueDate?: string;
+  prepmtPaymentDiscountPct: number;
+  prepmtPmtDiscountDate?: string;
+  leadTimeCalculation?: string;
+  inboundWhseHandlingTime?: string;
   yourReference?: string;
   vendorInvoiceNo?: string;
   totalAmount: number;

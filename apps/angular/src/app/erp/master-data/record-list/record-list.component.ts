@@ -18,6 +18,7 @@ import {
   RecordEntityRegistry,
   RecordListAction,
   recordPermission,
+  recordReportCodes,
   toRecordTableColumns,
 } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
@@ -62,6 +63,11 @@ export class RecordListComponent implements OnInit {
   viewMode: 'table' | 'card' = this.readViewMode();
   isIndenting = false;
   runningListAction = false;
+
+  /** Standard reports of the table, on the toolbar's "Report" menu, run for every record. */
+  get reportCodes(): readonly string[] {
+    return this.entity ? recordReportCodes(this.entity) : [];
+  }
 
   /** Runs an action of the whole table, asking first when it says to, and reloads the list. */
   runListAction(action: RecordListAction): void {

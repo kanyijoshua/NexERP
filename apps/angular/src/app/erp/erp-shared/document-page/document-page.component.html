@@ -27,6 +27,8 @@
           <i [class]="item.icon + ' me-1'"></i>{{ item.labelKey | abpLocalization }}
         </button>
       }
+      <!-- Menus beside the actions, e.g. the "Report" menu. -->
+      <ng-content select="[toolbar]"></ng-content>
     </div>
   </div>
 

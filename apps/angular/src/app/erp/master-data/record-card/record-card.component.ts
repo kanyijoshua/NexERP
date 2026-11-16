@@ -14,6 +14,7 @@ import {
   SmartButton,
   buildRecordForm,
   patchRecordForm,
+  recordReportCodes,
   recordPermission,
   recordToInput,
 } from '../../erp-shared';
@@ -51,6 +52,10 @@ export class RecordCardComponent implements OnInit {
   title = '';
   facts: RecordFact[] = [];
   actions: RecordAction<any>[] = [];
+  /** Standard reports of the card's "Report" menu. */
+  reportCodes: readonly string[] = [];
+  /** The record's number, which the reports filter on. */
+  recordNo: string | null = null;
 
   isBusy = false;
   canEdit = false;
@@ -163,6 +168,37 @@ export class RecordCardComponent implements OnInit {
     this.router.navigate([...this.listRoute, NEW_RECORD_ID]);
   }
 
+  /**
+   * Opens a new card filled with this record's values, without its id and number, so a similar
+   * record is quick to set up. Nothing is saved until the user saves the new card.
+   */
+  copyRecord(): void {
+    const record = this.record;
+    if (!record) {
+      return;
+    }
+    const code = this.entity.toItem(record).code;
+    const copy: Record<string, any> = {};
+    for (const [field, value] of Object.entries(record)) {
+      if (field === 'id' || field === 'concurrencyStamp' || (code && value === code)) {
+        continue;
+      }
+      copy[field] = value;
+    }
+    this.router.navigate([...this.listRoute, NEW_RECORD_ID], { state: { copyOf: copy } });
+  }
+
+  /** Puts the address of this card on the clipboard, to share the record. */
+  copyLink(): void {
+    const url = window.location.href;
+    const done = () => this.toaster.success('Erp::LinkCopied');
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(done, () => this.toaster.error(url));
+    } else {
+      this.toaster.info(url);
+    }
+  }
+
   remove(): void {
     const id = this.id;
     if (!id) {
@@ -260,17 +296,22 @@ export class RecordCardComponent implements OnInit {
       this.title = '';
       this.facts = [];
       this.actions = [];
+      this.reportCodes = [];
+      this.recordNo = null;
       return;
     }
     const item = this.entity.toItem(this.record);
     this.title = [item.code, item.name].filter(Boolean).join(' · ');
+    this.recordNo = item.code || null;
+    this.reportCodes = recordReportCodes(this.entity);
     this.facts = this.entity.facts ? this.entity.facts(this.record) : [];
     this.actions = (this.entity.actions ?? []).filter(a => !a.visible || a.visible(this.record));
   }
 
   private load(): Observable<Record<string, any> | null> {
     if (!this.id) {
-      return of(this.entity.newRecord());
+      const copyOf = typeof history !== 'undefined' ? (history.state?.copyOf as Record<string, any> | undefined) : undefined;
+      return of(copyOf ? { ...this.entity.newRecord(), ...copyOf } : this.entity.newRecord());
     }
     return this.entity.get(this.id).pipe(
       catchError(() => {

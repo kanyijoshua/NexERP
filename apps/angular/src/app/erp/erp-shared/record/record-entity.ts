@@ -241,6 +241,11 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
   actions?: RecordAction<TDto>[];
   /** Actions of the whole table, on the list page's toolbar. */
   listActions?: RecordListAction[];
+  /**
+   * Codes of the standard reports on the card's and list's "Report" menu, run for the record's
+   * number. Defaults to the shared map `RECORD_REPORTS`.
+   */
+  reports?: readonly string[];
   /** Smart buttons of the card page. */
   related?(dto: TDto): Observable<SmartButton[]>;
   /** Line tables of the card page, under the fields. */

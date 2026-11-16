@@ -523,6 +523,30 @@ public class PurchaseDocumentAppService
         );
         header.SetResponsibilityCenter(center);
         await Centers.EnsureAllowedAsync(header.No, header.ResponsibilityCenter, sales: false);
+
+        header.SetOrderDate(input.OrderDate);
+        header.SetCampaign(input.CampaignNo, input.VatReportingDate);
+        header.SetForeignTrade(
+            input.TransactionType,
+            input.TransactionSpecification,
+            input.TransportMethod,
+            input.EntryPoint,
+            input.Area);
+
+        // A blank prepayment due date follows from the prepayment terms, as the due date does from the payment terms.
+        await codes.EnsureExistsAsync<PaymentTerms>(input.PrepmtPaymentTermsCode);
+        var prepmtTermsCode = CodeTableEntity.NormalizeCode(input.PrepmtPaymentTermsCode);
+        var prepaymentDueDate = input.PrepaymentDueDate
+            ?? (prepmtTermsCode == null
+                ? null
+                : await LazyServiceProvider.LazyGetRequiredService<PaymentTermsManager>().CalculateDueDateAsync(prepmtTermsCode, input.PostingDate));
+        header.SetPrepaymentTerms(
+            input.CompressPrepayment,
+            prepmtTermsCode,
+            prepaymentDueDate,
+            input.PrepmtPaymentDiscountPct,
+            input.PrepmtPmtDiscountDate);
+        header.SetReceiptTimes(input.LeadTimeCalculation, input.InboundWhseHandlingTime);
     }
 
     /// <summary>

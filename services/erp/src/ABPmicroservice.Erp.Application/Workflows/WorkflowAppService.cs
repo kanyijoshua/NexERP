@@ -101,6 +101,20 @@ public class WorkflowAppService : ErpAppService, IWorkflowAppService
         await _workflowRepository.UpdateAsync(workflow);
     }
 
+    public Task<ListResultDto<WorkflowConditionFieldDto>> GetConditionFieldsAsync(ApprovalDocumentKind kind)
+    {
+        var fields = WorkflowConditions.FieldsOf(kind)
+            .Select(f => new WorkflowConditionFieldDto
+            {
+                Field = f.Field,
+                Label = f.Label,
+                Type = f.Type,
+                Options = f.Options.ToList(),
+            })
+            .ToList();
+        return Task.FromResult(new ListResultDto<WorkflowConditionFieldDto>(fields));
+    }
+
     public Task<ListResultDto<WorkflowTemplateDto>> GetTemplatesAsync()
     {
         var templates = WorkflowTemplates.All

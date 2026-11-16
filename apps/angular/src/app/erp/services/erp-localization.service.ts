@@ -62,15 +62,27 @@ export function extractDimensionSlot(key: string): number | null {
 @Injectable()
 export class ErpLocalizationService extends LocalizationService {
   private dimensionState?: DimensionStateService;
+  private dimensionStateRequested = false;
   private readonly ngInjector = inject(Injector);
 
+  /**
+   * The dimension state, once it exists. It is never created inside a translation call: this
+   * service is asked for texts while it (or the services the dimension state needs, such as the
+   * REST client) is still being constructed, and a construction that fails there leaves Angular's
+   * record of the dimension state "under construction" for good, so every later request for it
+   * (e.g. the ERP module's) throws NG0200 and the router shows its 404 page. It is created on the
+   * next tick instead, outside any construction.
+   */
   private getDimensionState(): DimensionStateService | null {
-    if (!this.dimensionState) {
-      try {
-        this.dimensionState = this.ngInjector.get(DimensionStateService, null) ?? undefined;
-      } catch {
-        // Ignored during early initialization if injector is not ready
-      }
+    if (!this.dimensionState && !this.dimensionStateRequested) {
+      this.dimensionStateRequested = true;
+      setTimeout(() => {
+        try {
+          this.dimensionState = this.ngInjector.get(DimensionStateService);
+        } catch {
+          this.dimensionStateRequested = false;
+        }
+      });
     }
     return this.dimensionState ?? null;
   }

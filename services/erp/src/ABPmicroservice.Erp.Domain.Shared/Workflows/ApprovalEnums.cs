@@ -55,3 +55,13 @@ public enum WorkflowApproverType
     /// </summary>
     WorkflowUserGroup = 1,
 }
+
+/// <summary>How a condition field is entered and compared.</summary>
+public enum WorkflowConditionFieldType
+{
+    Text = 0,
+    Number = 1,
+    Date = 2,
+    Boolean = 3,
+    Option = 4,
+}

@@ -237,6 +237,49 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
     /// <summary>The last invoice (or credit memo) posted from this order.</summary>
     public string LastPostingNo { get; private set; }
 
+    public const int MaxForeignTradeCodeLength = 10;
+    public const int MaxDateFormulaLength = ErpDomainConsts.MaxDateFormulaLength;
+
+    /// <summary>The marketing campaign the purchase belongs to.</summary>
+    public string CampaignNo { get; private set; }
+
+    /// <summary>The date the document's VAT is reported on; blank reports it on the posting date.</summary>
+    public DateTime? VatReportingDate { get; private set; }
+
+    /// <summary>Foreign trade: the kind of transaction, as statistics declarations classify it.</summary>
+    public string TransactionType { get; private set; }
+
+    /// <summary>Foreign trade: further detail of the transaction type.</summary>
+    public string TransactionSpecification { get; private set; }
+
+    /// <summary>Foreign trade: how the goods are carried.</summary>
+    public string TransportMethod { get; private set; }
+
+    /// <summary>Foreign trade: where the goods enter the country.</summary>
+    public string EntryPoint { get; private set; }
+
+    /// <summary>Foreign trade: the area the goods are received in.</summary>
+    public string Area { get; private set; }
+
+    /// <summary>Prepayment invoices put every line on one line per prepayment account.</summary>
+    public bool CompressPrepayment { get; private set; } = true;
+
+    /// <summary>Payment terms of the prepayment invoices; blank uses the document's own.</summary>
+    public string PrepmtPaymentTermsCode { get; private set; }
+
+    /// <summary>When the prepayment invoices fall due; blank uses the document's due date.</summary>
+    public DateTime? PrepaymentDueDate { get; private set; }
+
+    public decimal PrepmtPaymentDiscountPct { get; private set; }
+
+    public DateTime? PrepmtPmtDiscountDate { get; private set; }
+
+    /// <summary>How long the vendor takes to deliver, as a date formula such as <c>5D</c> or <c>1W</c>.</summary>
+    public string LeadTimeCalculation { get; private set; }
+
+    /// <summary>Days the warehouse needs to make received goods available, as a date formula.</summary>
+    public string InboundWhseHandlingTime { get; private set; }
+
     /// <summary>An order or return order: received and invoiced in parts rather than in one go.</summary>
     public bool IsOrderType => DocumentType is PurchaseDocumentType.Order or PurchaseDocumentType.ReturnOrder;
 
@@ -775,6 +818,75 @@ public class PurchaseHeader : CompanyAggregateRoot, IApprovalDocument
         TenderNo = CodeTableEntity.NormalizeCode(Check.Length(tenderNo, nameof(tenderNo), 30));
         ContractCommencementDate = commencementDate?.Date;
         ContractCompletionDate = completionDate?.Date;
+    }
+
+    /// <summary>The order date; blank keeps the current one.</summary>
+    public void SetOrderDate(DateTime? orderDate)
+    {
+        EnsureNotPosted();
+        if (orderDate.HasValue)
+        {
+            OrderDate = orderDate.Value.Date;
+        }
+    }
+
+    public void SetCampaign(string campaignNo, DateTime? vatReportingDate)
+    {
+        EnsureNotPosted();
+        CampaignNo = CodeTableEntity.NormalizeCode(Check.Length(campaignNo, nameof(campaignNo), ErpDomainConsts.MaxNoLength));
+        VatReportingDate = vatReportingDate?.Date;
+    }
+
+    public void SetForeignTrade(
+        string transactionType,
+        string transactionSpecification,
+        string transportMethod,
+        string entryPoint,
+        string area)
+    {
+        EnsureNotPosted();
+        TransactionType = CodeTableEntity.NormalizeCode(Check.Length(transactionType, nameof(transactionType), MaxForeignTradeCodeLength));
+        TransactionSpecification = CodeTableEntity.NormalizeCode(Check.Length(transactionSpecification, nameof(transactionSpecification), MaxForeignTradeCodeLength));
+        TransportMethod = CodeTableEntity.NormalizeCode(Check.Length(transportMethod, nameof(transportMethod), MaxForeignTradeCodeLength));
+        EntryPoint = CodeTableEntity.NormalizeCode(Check.Length(entryPoint, nameof(entryPoint), MaxForeignTradeCodeLength));
+        Area = CodeTableEntity.NormalizeCode(Check.Length(area, nameof(area), MaxForeignTradeCodeLength));
+    }
+
+    public void SetPrepaymentTerms(
+        bool compressPrepayment,
+        string prepmtPaymentTermsCode,
+        DateTime? prepaymentDueDate,
+        decimal prepmtPaymentDiscountPct,
+        DateTime? prepmtPmtDiscountDate)
+    {
+        EnsureNotPosted();
+        CompressPrepayment = compressPrepayment;
+        PrepmtPaymentTermsCode = CodeTableEntity.NormalizeCode(Check.Length(prepmtPaymentTermsCode, nameof(prepmtPaymentTermsCode), ErpDomainConsts.MaxPaymentTermsCodeLength));
+        PrepaymentDueDate = prepaymentDueDate?.Date;
+        PrepmtPaymentDiscountPct = Math.Clamp(prepmtPaymentDiscountPct, 0m, 100m);
+        PrepmtPmtDiscountDate = prepmtPmtDiscountDate?.Date;
+    }
+
+    public void SetReceiptTimes(string leadTimeCalculation, string inboundWhseHandlingTime)
+    {
+        EnsureNotPosted();
+        LeadTimeCalculation = NormalizeFormula(Check.Length(leadTimeCalculation, nameof(leadTimeCalculation), MaxDateFormulaLength));
+        InboundWhseHandlingTime = NormalizeFormula(Check.Length(inboundWhseHandlingTime, nameof(inboundWhseHandlingTime), MaxDateFormulaLength));
+    }
+
+    private static string NormalizeFormula(string formula)
+    {
+        if (string.IsNullOrWhiteSpace(formula))
+        {
+            return null;
+        }
+
+        formula = formula.Trim().ToUpperInvariant();
+        if (!ABPmicroservice.Erp.Finance.DateFormula.TryParse(formula, out _))
+        {
+            throw new BusinessException(ErpErrorCodes.Journals.InvalidDateFormula).WithData("formula", formula);
+        }
+        return formula;
     }
 
     public void SetOrderStage(ABPmicroservice.Erp.Procurement.PurchaseOrderStage stage)

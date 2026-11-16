@@ -27,6 +27,7 @@ import {
   ErpTableSource,
   LookupItem,
   calculateDocumentTotals,
+  RECORD_REPORTS,
 } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 import { RecordDialogService } from '../../erp-shared/record/record-dialog.service';
@@ -138,23 +139,63 @@ interface PrepaymentResult {
   invoiceNo?: string;
 }
 
-/** A header field on the document card's General section. */
+/** The sections of the document card's header, in the order they are shown. */
+export type DocumentCardSectionKey = 'general' | 'invoice' | 'shipping' | 'foreignTrade' | 'prepayment';
+
+export const DOCUMENT_CARD_SECTIONS: { key: DocumentCardSectionKey; labelKey: string; collapsed: boolean }[] = [
+  { key: 'general', labelKey: 'Erp::General', collapsed: false },
+  { key: 'invoice', labelKey: 'Erp::InvoiceDetails', collapsed: false },
+  { key: 'shipping', labelKey: 'Erp::ShippingAndPayment', collapsed: true },
+  { key: 'foreignTrade', labelKey: 'Erp::ForeignTrade', collapsed: true },
+  { key: 'prepayment', labelKey: 'Erp::Prepayment', collapsed: true },
+];
+
+/** A header field on the document card. */
 export interface DocumentCardField {
   field: string;
   labelKey: string;
-  type: 'text' | 'date' | 'lookup' | 'readonly' | 'number';
+  type: 'text' | 'date' | 'lookup' | 'readonly' | 'number' | 'checkbox';
   /** `lookup` only: the record entity looked up, e.g. `location`. */
   entity?: string;
+  /** `lookup` only: a value that is not in the looked-up table is kept as typed. */
+  allowFreeText?: boolean;
   maxLength?: number;
+  /** The card section the field is shown in; General when blank. */
+  section?: DocumentCardSectionKey;
+  /** A heading the field is shown under within its section, e.g. "Ship-to". */
+  groupKey?: string;
+}
+
+/** One section of the card's header with its fields, split by their group heading. */
+export interface DocumentCardSection {
+  key: DocumentCardSectionKey;
+  labelKey: string;
+  groups: { labelKey?: string; fields: DocumentCardField[] }[];
 }
 
 /** The prepayment fields on an order's card: the percentage and what has been prepaid. */
 export const PREPAYMENT_FIELDS: DocumentCardField[] = [
-  { field: 'prepaymentPct', labelKey: 'Erp::PrepaymentPct', type: 'number' },
-  { field: 'prepmtInvoicedAmount', labelKey: 'Erp::PrepmtInvoicedAmount', type: 'readonly' },
-  { field: 'prepmtDeductedAmount', labelKey: 'Erp::PrepmtDeductedAmount', type: 'readonly' },
-  { field: 'lastPrepmtInvoiceNo', labelKey: 'Erp::LastPrepmtInvoiceNo', type: 'readonly' },
+  { field: 'prepaymentPct', labelKey: 'Erp::PrepaymentPct', type: 'number', section: 'prepayment' },
+  { field: 'prepmtInvoicedAmount', labelKey: 'Erp::PrepmtInvoicedAmount', type: 'readonly', section: 'prepayment' },
+  { field: 'prepmtDeductedAmount', labelKey: 'Erp::PrepmtDeductedAmount', type: 'readonly', section: 'prepayment' },
+  { field: 'lastPrepmtInvoiceNo', labelKey: 'Erp::LastPrepmtInvoiceNo', type: 'readonly', section: 'prepayment' },
 ];
+
+/** Splits the card's fields into its sections; sections without fields are left out. */
+export function toCardSections(fields: DocumentCardField[]): DocumentCardSection[] {
+  return DOCUMENT_CARD_SECTIONS.map(s => {
+    const groups: DocumentCardSection['groups'] = [];
+    for (const f of fields.filter(x => (x.section ?? 'general') === s.key)) {
+      const last = groups[groups.length - 1];
+      if (last && last.labelKey === f.groupKey) {
+        last.fields.push(f);
+      } else {
+        groups.push({ labelKey: f.groupKey, fields: [f] });
+      }
+    }
+    return { key: s.key, labelKey: s.labelKey, groups };
+  }).filter(s => s.groups.length > 0);
+}
 
 /** A sales or purchase header as the card loads it: every field, with its lines. */
 export type DocumentCardData = Record<string, unknown> & DocumentRow & { lines?: Record<string, unknown>[] };
@@ -268,6 +309,11 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   abstract readonly partyNameField: string;
   /** Record entity of the party lookup: `customer` / `vendor`. */
   abstract readonly partyEntity: string;
+
+  /** The party's standard reports, on the card's "Report" menu, run for the document's party. */
+  get partyReportCodes(): readonly string[] {
+    return RECORD_REPORTS[this.partyEntity] ?? [];
+  }
   /** Label of the party's own reference: External Document No. or Vendor Invoice No. */
   abstract readonly externalDocumentNoLabelKey: string;
   /** What an item line takes as its unit amount: the item's price on sales, its cost on purchases. */
@@ -426,8 +472,21 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
   protected abstract createDocument(input: NewDocumentInput): Observable<TRow>;
   protected abstract run(action: DocumentAction, id: string): Observable<unknown>;
 
-  /** The header fields of the card's General section. */
+  /** The header fields of the card, each in its section. */
   abstract readonly cardFields: DocumentCardField[];
+
+  /** The card's header sections, built from `cardFields` when a card opens. */
+  cardSections: DocumentCardSection[] = [];
+  /** Sections folded away; the first ones start open, the rest folded. */
+  readonly collapsedSections = new Set<DocumentCardSectionKey>(DOCUMENT_CARD_SECTIONS.filter(s => s.collapsed).map(s => s.key));
+
+  toggleSection(key: DocumentCardSectionKey): void {
+    if (this.collapsedSections.has(key)) {
+      this.collapsedSections.delete(key);
+    } else {
+      this.collapsedSections.add(key);
+    }
+  }
   /** The whole document, header and lines. */
   protected abstract loadDocument(id: string): Observable<DocumentCardData>;
   /** Saves the whole document; lines missing from `input.lines` are deleted. */
@@ -579,11 +638,18 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     for (const f of this.cardFields) {
       const value = document[f.field];
       header[f.field] = [
-        f.type === 'date' ? toDateInput(value) : f.type === 'number' ? Number(value) || 0 : (value ?? null),
+        f.type === 'date'
+          ? toDateInput(value)
+          : f.type === 'number'
+            ? Number(value) || 0
+            : f.type === 'checkbox'
+              ? !!value
+              : (value ?? null),
         f.maxLength ? Validators.maxLength(f.maxLength) : [],
       ];
     }
     this.cardForm = this.fb.group(header);
+    this.cardSections = toCardSections(this.cardFields);
 
     this.cardOriginalLines = new Map();
     const lines = (document.lines ?? [])
@@ -686,6 +752,12 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
     if (!card?.id || this.cardBusy || this.cardForm.invalid || this.cardLines.invalid) {
       this.cardForm.markAllAsTouched();
       this.cardLines.markAllAsTouched();
+      // Unfold the sections holding a field that stops the save, so it can be seen.
+      for (const f of this.cardFields) {
+        if (this.cardForm.get(f.field)?.invalid) {
+          this.collapsedSections.delete(f.section ?? 'general');
+        }
+      }
       return;
     }
 
@@ -695,6 +767,8 @@ export abstract class DocumentListBase<TRow extends DocumentRow> implements OnIn
         delete header[f.field];
       } else if (f.type === 'number') {
         header[f.field] = Number(header[f.field]) || 0;
+      } else if (f.type === 'checkbox') {
+        header[f.field] = !!header[f.field];
       } else if (f.type === 'date' || header[f.field] === '') {
         header[f.field] = header[f.field] || null;
       }

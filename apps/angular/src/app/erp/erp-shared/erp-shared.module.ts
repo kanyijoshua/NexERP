@@ -23,6 +23,7 @@ import { RecordListDialogComponent } from './record/record-list-dialog.component
 import { RecordPartComponent } from './record/record-part.component';
 import { ErpAmountPipe } from './pipes/erp-amount.pipe';
 import { ReportPageComponent } from './report-page/report-page.component';
+import { ReportMenuComponent } from './report-menu/report-menu.component';
 import { SmartButtonsComponent } from './smart-buttons/smart-buttons.component';
 
 import { ErpCardComponent } from './card/erp-card.component';
@@ -72,6 +73,7 @@ const DECLARATIONS = [
   ErpButtonGroupComponent,
   ErpDynamicTableComponent,
   ErpBadgeComponent,
+  ReportMenuComponent,
 ];
 
 const MODULES = [

@@ -244,6 +244,20 @@ public class PurchaseHeaderDto : FullAuditedEntityDto<Guid>
     public decimal PrepmtDeductedAmount { get; set; }
     public string LastPrepmtInvoiceNo { get; set; }
     public string LastPrepmtCrMemoNo { get; set; }
+    public string CampaignNo { get; set; }
+    public DateTime? VatReportingDate { get; set; }
+    public string TransactionType { get; set; }
+    public string TransactionSpecification { get; set; }
+    public string TransportMethod { get; set; }
+    public string EntryPoint { get; set; }
+    public string Area { get; set; }
+    public bool CompressPrepayment { get; set; }
+    public string PrepmtPaymentTermsCode { get; set; }
+    public DateTime? PrepaymentDueDate { get; set; }
+    public decimal PrepmtPaymentDiscountPct { get; set; }
+    public DateTime? PrepmtPmtDiscountDate { get; set; }
+    public string LeadTimeCalculation { get; set; }
+    public string InboundWhseHandlingTime { get; set; }
 }
 
 public class PurchaseLineDto : EntityDto<Guid>
@@ -446,6 +460,48 @@ public class CreateUpdatePurchaseHeaderDto
 
     public DateTime? ContractCommencementDate { get; set; }
     public DateTime? ContractCompletionDate { get; set; }
+
+    /// <summary>Blank keeps the order date the document has.</summary>
+    public DateTime? OrderDate { get; set; }
+
+    [StringLength(20)]
+    public string CampaignNo { get; set; }
+
+    public DateTime? VatReportingDate { get; set; }
+
+    [StringLength(10)]
+    public string TransactionType { get; set; }
+
+    [StringLength(10)]
+    public string TransactionSpecification { get; set; }
+
+    [StringLength(10)]
+    public string TransportMethod { get; set; }
+
+    [StringLength(10)]
+    public string EntryPoint { get; set; }
+
+    [StringLength(10)]
+    public string Area { get; set; }
+
+    public bool CompressPrepayment { get; set; } = true;
+
+    [StringLength(10)]
+    public string PrepmtPaymentTermsCode { get; set; }
+
+    /// <summary>Blank follows from the prepayment payment terms, else the document's due date.</summary>
+    public DateTime? PrepaymentDueDate { get; set; }
+
+    public decimal PrepmtPaymentDiscountPct { get; set; }
+
+    public DateTime? PrepmtPmtDiscountDate { get; set; }
+
+    /// <summary>A date formula such as <c>5D</c>, <c>2W</c> or <c>1M</c>.</summary>
+    [StringLength(32)]
+    public string LeadTimeCalculation { get; set; }
+
+    [StringLength(32)]
+    public string InboundWhseHandlingTime { get; set; }
 }
 
 

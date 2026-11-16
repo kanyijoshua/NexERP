@@ -89,6 +89,16 @@ public static class ErpEverydayOperationsModelCreatingExtensions
         {
             b.Property(x => x.LastPrepmtInvoiceNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
             b.Property(x => x.LastPrepmtCrMemoNo).HasMaxLength(ErpDomainConsts.MaxDocumentNoLength);
+            b.Property(x => x.CampaignNo).HasMaxLength(ErpDomainConsts.MaxNoLength);
+            b.Property(x => x.TransactionType).HasMaxLength(PurchaseHeader.MaxForeignTradeCodeLength);
+            b.Property(x => x.TransactionSpecification).HasMaxLength(PurchaseHeader.MaxForeignTradeCodeLength);
+            b.Property(x => x.TransportMethod).HasMaxLength(PurchaseHeader.MaxForeignTradeCodeLength);
+            b.Property(x => x.EntryPoint).HasMaxLength(PurchaseHeader.MaxForeignTradeCodeLength);
+            b.Property(x => x.Area).HasMaxLength(PurchaseHeader.MaxForeignTradeCodeLength);
+            b.Property(x => x.PrepmtPaymentTermsCode).HasMaxLength(ErpDomainConsts.MaxPaymentTermsCodeLength);
+            b.Property(x => x.PrepmtPaymentDiscountPct).HasPrecision(18, 5);
+            b.Property(x => x.LeadTimeCalculation).HasMaxLength(ErpDomainConsts.MaxDateFormulaLength);
+            b.Property(x => x.InboundWhseHandlingTime).HasMaxLength(ErpDomainConsts.MaxDateFormulaLength);
         });
 
         // Item charges

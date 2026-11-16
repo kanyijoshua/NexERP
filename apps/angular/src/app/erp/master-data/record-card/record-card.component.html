@@ -42,6 +42,45 @@
         <i class="fas fa-trash"></i>
       </button>
     }
+    @if (!isNew && record) {
+      <div ngbDropdown class="d-inline-block" placement="bottom-end" container="body">
+        <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle [disabled]="isBusy">
+          <i class="fas fa-bolt me-1"></i>{{ 'Erp::Actions' | abpLocalization }}
+        </button>
+        <div ngbDropdownMenu class="dropdown-menu-end shadow-sm small">
+          @if (actions.length) {
+            <h6 class="dropdown-header text-uppercase">{{ entity.titleKey | abpLocalization }}</h6>
+            @for (action of actions; track action.key) {
+              <button *abpPermission="action.permission" ngbDropdownItem type="button" (click)="run(action)">
+                <i [class]="action.icon + ' fa-fw me-2 text-muted'"></i>{{ action.labelKey | abpLocalization }}
+              </button>
+            }
+            <div class="dropdown-divider"></div>
+          }
+          @if (canEdit) {
+            <button ngbDropdownItem type="button" [disabled]="!form?.valid" (click)="save()">
+              <i class="fas fa-check fa-fw me-2 text-muted"></i>{{ 'Erp::Save' | abpLocalization }}
+            </button>
+          }
+          <button ngbDropdownItem type="button" (click)="refreshRecord()">
+            <i class="fas fa-rotate fa-fw me-2 text-muted"></i>{{ 'Erp::Refresh' | abpLocalization }}
+          </button>
+          <button *abpPermission="createPermission" ngbDropdownItem type="button" (click)="copyRecord()">
+            <i class="fas fa-copy fa-fw me-2 text-muted"></i>{{ 'Erp::CopyRecord' | abpLocalization }}
+          </button>
+          <button ngbDropdownItem type="button" (click)="copyLink()">
+            <i class="fas fa-link fa-fw me-2 text-muted"></i>{{ 'Erp::CopyLink' | abpLocalization }}
+          </button>
+          @if (canDelete) {
+            <div class="dropdown-divider"></div>
+            <button ngbDropdownItem type="button" class="text-danger" (click)="remove()">
+              <i class="fas fa-trash fa-fw me-2"></i>{{ 'Erp::Delete' | abpLocalization }}
+            </button>
+          }
+        </div>
+      </div>
+      <erp-report-menu [codes]="reportCodes" [no]="recordNo" [showPrint]="true"></erp-report-menu>
+    }
   </div>
 </div>
 

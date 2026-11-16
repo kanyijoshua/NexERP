@@ -11,6 +11,8 @@ import {
   CreateUpdateWorkflowDto,
   CreateUpdateWorkflowStepDto,
   WorkflowApproverType,
+  WorkflowConditionFieldDto,
+  WorkflowConditionFieldType,
   WorkflowDto,
   WorkflowService,
   WorkflowTemplateDto,
@@ -20,7 +22,7 @@ import {
   workflowApproverTypeOptions,
 } from '@proxy/workflows';
 import { CodeTableDto } from '@proxy/companies';
-import { finalize } from 'rxjs';
+import { Observable, finalize, map, of, tap } from 'rxjs';
 import { CompanyService } from '../../services/company.service';
 
 export interface WorkflowCondition {
@@ -39,34 +41,28 @@ export interface FormWorkflowStep {
 export interface ConditionColumnOption {
   field: string;
   label: string;
-  type: 'number' | 'text' | 'select';
+  type: 'number' | 'text' | 'select' | 'date';
   options?: string[];
 }
 
-const PURCHASE_COLUMNS: ConditionColumnOption[] = [
-  { field: 'Amount', label: 'Amount (Excl. VAT)', type: 'number' },
-  { field: 'TotalAmountIncludingVat', label: 'Amount Incl. VAT', type: 'number' },
-  { field: 'DocumentType', label: 'Document Type', type: 'select', options: ['Order', 'Invoice', 'CreditMemo', 'Quote'] },
-  { field: 'BuyFromVendorNo', label: 'Buy-From Vendor No.', type: 'text' },
-  { field: 'PayToVendorNo', label: 'Pay-To Vendor No.', type: 'text' },
-  { field: 'CurrencyCode', label: 'Currency Code', type: 'text' },
-  { field: 'PaymentTermsCode', label: 'Payment Terms Code', type: 'text' },
-  { field: 'LocationCode', label: 'Location Code', type: 'text' },
-];
-
-const SALES_COLUMNS: ConditionColumnOption[] = [
-  { field: 'Amount', label: 'Amount (Excl. VAT)', type: 'number' },
-  { field: 'TotalAmountIncludingVat', label: 'Amount Incl. VAT', type: 'number' },
-  { field: 'DocumentType', label: 'Document Type', type: 'select', options: ['Order', 'Invoice', 'CreditMemo', 'Quote'] },
-  { field: 'SellToCustomerNo', label: 'Sell-To Customer No.', type: 'text' },
-  { field: 'BillToCustomerNo', label: 'Bill-To Customer No.', type: 'text' },
-  { field: 'CurrencyCode', label: 'Currency Code', type: 'text' },
-  { field: 'PaymentTermsCode', label: 'Payment Terms Code', type: 'text' },
-  { field: 'LocationCode', label: 'Location Code', type: 'text' },
-];
-
-/** Voucher, requisition and tender conditions are evaluated on the amount only. */
+/** Shown until the server has said which fields a document kind has. */
 const AMOUNT_COLUMNS: ConditionColumnOption[] = [{ field: 'Amount', label: 'Amount (Excl. VAT)', type: 'number' }];
+
+/** A document field from the server as a condition column. */
+function toConditionColumn(field: WorkflowConditionFieldDto): ConditionColumnOption {
+  switch (field.type) {
+    case WorkflowConditionFieldType.Number:
+      return { field: field.field ?? '', label: field.label ?? '', type: 'number' };
+    case WorkflowConditionFieldType.Date:
+      return { field: field.field ?? '', label: field.label ?? '', type: 'date' };
+    case WorkflowConditionFieldType.Boolean:
+      return { field: field.field ?? '', label: field.label ?? '', type: 'select', options: ['Yes', 'No'] };
+    case WorkflowConditionFieldType.Option:
+      return { field: field.field ?? '', label: field.label ?? '', type: 'select', options: field.options ?? [] };
+    default:
+      return { field: field.field ?? '', label: field.label ?? '', type: 'text' };
+  }
+}
 
 const DOCUMENT_LABELS: Record<ApprovalDocumentKind, string> = {
   [ApprovalDocumentKind.SalesDocument]: 'sales document',
@@ -133,6 +129,8 @@ export class WorkflowsComponent implements OnInit {
 
   workflows: WorkflowDto[] = [];
   expandedId: string | null = null;
+  /** Condition fields per document kind, read from the server on first use. */
+  private readonly conditionColumns = new Map<ApprovalDocumentKind, ConditionColumnOption[]>();
   loading = false;
 
   isModalOpen = false;
@@ -358,12 +356,23 @@ export class WorkflowsComponent implements OnInit {
       });
   }
 
+  /** Every field of the form's document kind, as the server lists them. */
   get availableColumns(): ConditionColumnOption[] {
-    const kind = this.form?.get('documentKind')?.value;
-    if (kind === ApprovalDocumentKind.PurchaseDocument) {
-      return PURCHASE_COLUMNS;
+    const kind = this.form?.get('documentKind')?.value as ApprovalDocumentKind | undefined;
+    return (kind !== undefined && this.conditionColumns.get(kind)) || AMOUNT_COLUMNS;
+  }
+
+  /** Reads the condition fields of a document kind once; later calls answer from the cache. */
+  private ensureConditionColumns(kind: ApprovalDocumentKind): Observable<ConditionColumnOption[]> {
+    const cached = this.conditionColumns.get(kind);
+    if (cached) {
+      return of(cached);
     }
-    return kind === ApprovalDocumentKind.SalesDocument ? SALES_COLUMNS : AMOUNT_COLUMNS;
+    return this.service.getConditionFields(kind).pipe(
+      map(result => (result.items ?? []).map(toConditionColumn)),
+      tap(columns => this.conditionColumns.set(kind, columns.length ? columns : AMOUNT_COLUMNS)),
+      takeUntilDestroyed(this.destroyRef),
+    );
   }
 
   openCreate(): void {
@@ -374,6 +383,7 @@ export class WorkflowsComponent implements OnInit {
     this.initConditions([]);
     this.initDefaultSteps(ApprovalDocumentKind.PurchaseDocument);
     this.isModalOpen = true;
+    this.ensureConditionColumns(this.form.get('documentKind')?.value).subscribe();
   }
 
   openEdit(workflow: WorkflowDto): void {
@@ -381,9 +391,14 @@ export class WorkflowsComponent implements OnInit {
     this.activeModalTab = 'general';
     this.editingStepIndex = null;
     this.form = this.buildForm(workflow);
-    this.initConditionsFromWorkflow(workflow);
+    this.conditions = [];
     this.initStepsFromWorkflow(workflow);
     this.isModalOpen = true;
+    // The rule's fields are matched against the kind's fields, so those must be known first.
+    this.ensureConditionColumns(workflow.documentKind).subscribe({
+      next: () => this.initConditionsFromWorkflow(workflow),
+      error: () => this.initConditionsFromWorkflow(workflow),
+    });
   }
 
   onDocumentKindChange(kind: ApprovalDocumentKind): void {
@@ -391,9 +406,12 @@ export class WorkflowsComponent implements OnInit {
     if (this.formSteps.length > 0 && /^Approval of an? .* is requested\.$/.test(this.formSteps[0].eventName)) {
       this.formSteps[0].eventName = requestedEventName(kind);
     }
-    // Filter conditions whose field is not in available columns
-    const allowed = new Set(this.availableColumns.map(c => c.field));
-    this.conditions = this.conditions.filter(c => allowed.has(c.field));
+    // Drop conditions on fields the new kind does not have, once its fields are known.
+    this.ensureConditionColumns(kind).subscribe(() => {
+      const allowed = new Set(this.availableColumns.map(c => c.field));
+      this.conditions = this.conditions.filter(c => allowed.has(c.field));
+      this.syncConditionsToForm();
+    });
   }
 
   // --- Dynamic Conditions ---

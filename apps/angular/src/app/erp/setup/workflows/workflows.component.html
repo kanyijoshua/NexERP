@@ -444,6 +444,14 @@
                                 <option [value]="opt">{{ opt }}</option>
                               }
                             </select>
+                          } @else if (getColumnOption(cond.field)?.type === 'date') {
+                            <input
+                              type="date"
+                              class="form-control form-control-sm"
+                              [(ngModel)]="cond.value"
+                              [ngModelOptions]="{standalone: true}"
+                              (ngModelChange)="onConditionValueChange()"
+                            />
                           } @else if (getColumnOption(cond.field)?.type === 'number') {
                             <input
                               type="number"
@@ -462,7 +470,7 @@
                               [(ngModel)]="cond.value"
                               [ngModelOptions]="{standalone: true}"
                               (ngModelChange)="onConditionValueChange()"
-                              placeholder="e.g. V00100"
+                              placeholder="Value"
                             />
                           }
                         </td>

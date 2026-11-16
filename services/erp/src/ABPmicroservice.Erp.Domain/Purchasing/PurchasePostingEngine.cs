@@ -320,6 +320,9 @@ public class PurchasePostingEngine : DomainService
         var register = await _registerManager.OpenAsync(header.PostingDate, SourceCode, postedDocNo);
         var context = new GLPostingContext(register, SourceCode);
 
+        // The prepayment invoice has its own due date and discount when the order sets them.
+        var prepmtDueDate = header.PrepaymentDueDate ?? header.DueDate;
+
         var postedHeader = new PostedPurchaseHeader(
             GuidGenerator.Create(),
             postedDocNo,
@@ -328,7 +331,7 @@ public class PurchasePostingEngine : DomainService
             header.BuyFromVendorNo,
             header.BuyFromVendorName,
             header.PostingDate,
-            header.DueDate ?? header.PostingDate.AddDays(ErpDomainConsts.DefaultPaymentDueDays),
+            prepmtDueDate ?? header.PostingDate.AddDays(ErpDomainConsts.DefaultPaymentDueDays),
             totalAmount,
             totalAmountIncludingVat
         );
@@ -372,7 +375,12 @@ public class PurchasePostingEngine : DomainService
             vendorLine.SetAmountLcy(-sign * vendorLcy);
         }
 
-        await _genJnlPostLine.PostLineAsync(vendorLine, context, header.DueDate);
+        if (!creditMemo && header.PrepmtPaymentDiscountPct > 0m && header.PrepmtPmtDiscountDate.HasValue)
+        {
+            vendorLine.SetPaymentDiscount(header.PrepmtPmtDiscountDate, header.PrepmtPaymentDiscountPct);
+        }
+
+        await _genJnlPostLine.PostLineAsync(vendorLine, context, prepmtDueDate);
 
         foreach (var (line, amount, vat, prepmtAccountNo, vatSetup) in lineItems)
         {

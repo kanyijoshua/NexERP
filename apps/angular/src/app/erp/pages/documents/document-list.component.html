@@ -20,6 +20,7 @@
     (openLine)="openCardLine($event)"
     (action)="onCardAction($event)"
   >
+    <erp-report-menu toolbar [codes]="partyReportCodes" [no]="$any(card)[partyNoField]" [showPrint]="true"></erp-report-menu>
     <div smartButtons class="d-flex align-items-center gap-2">
       <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeCard()">
         <i class="fas fa-arrow-left me-1"></i>{{ titleKey | abpLocalization }}
@@ -32,31 +33,60 @@
     </div>
 
     <div header [formGroup]="cardForm">
-      <div class="small fw-bold text-uppercase text-secondary mb-2">{{ 'Erp::General' | abpLocalization }}</div>
-      <div class="row g-3">
-        @for (f of cardFields; track f.field) {
-          <div class="col-sm-6 col-lg-4">
-            <label class="form-label small mb-1" [for]="'card-' + f.field">{{ f.labelKey | abpLocalization }}</label>
-            @switch (f.type) {
-              @case ('readonly') {
-                <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [value]="cardForm.get(f.field)?.value ?? ''" readonly tabindex="-1" />
+      @for (section of cardSections; track section.key; let first = $first) {
+        <div [class.border-top]="!first" [class.pt-3]="!first" [class.mt-3]="!first">
+          <button
+            type="button"
+            class="btn btn-link p-0 text-decoration-none small fw-bold text-uppercase text-secondary d-flex align-items-center gap-2"
+            [attr.aria-expanded]="!collapsedSections.has(section.key)"
+            [attr.aria-controls]="'card-section-' + section.key"
+            (click)="toggleSection(section.key)"
+          >
+            <i class="fas fa-fw" [class.fa-chevron-down]="!collapsedSections.has(section.key)" [class.fa-chevron-right]="collapsedSections.has(section.key)"></i>
+            {{ section.labelKey | abpLocalization }}
+          </button>
+          @if (!collapsedSections.has(section.key)) {
+            <div [id]="'card-section-' + section.key" class="mt-2">
+              @for (group of section.groups; track $index) {
+                @if (group.labelKey) {
+                  <div class="small fw-semibold text-body-secondary mt-3 mb-1">{{ group.labelKey | abpLocalization }}</div>
+                }
+                <div class="row g-3">
+                  @for (f of group.fields; track f.field) {
+                    <div class="col-sm-6 col-lg-4">
+                      @if (f.type === 'checkbox') {
+                        <div class="form-check form-switch mt-4">
+                          <input [id]="'card-' + f.field" type="checkbox" role="switch" class="form-check-input" [formControlName]="f.field" />
+                          <label class="form-check-label small" [for]="'card-' + f.field">{{ f.labelKey | abpLocalization }}</label>
+                        </div>
+                      } @else {
+                        <label class="form-label small mb-1" [for]="'card-' + f.field">{{ f.labelKey | abpLocalization }}</label>
+                        @switch (f.type) {
+                          @case ('readonly') {
+                            <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [value]="cardForm.get(f.field)?.value ?? ''" readonly tabindex="-1" />
+                          }
+                          @case ('date') {
+                            <input [id]="'card-' + f.field" type="date" class="form-control form-control-sm" [formControlName]="f.field" />
+                          }
+                          @case ('number') {
+                            <input [id]="'card-' + f.field" type="number" min="0" step="0.01" class="form-control form-control-sm" [formControlName]="f.field" />
+                          }
+                          @case ('lookup') {
+                            <erp-lookup [inputId]="'card-' + f.field" [formControlName]="f.field" [entity]="f.entity!" [allowFreeText]="!!f.allowFreeText"></erp-lookup>
+                          }
+                          @default {
+                            <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [formControlName]="f.field" [attr.maxlength]="f.maxLength ?? null" />
+                          }
+                        }
+                      }
+                    </div>
+                  }
+                </div>
               }
-              @case ('date') {
-                <input [id]="'card-' + f.field" type="date" class="form-control form-control-sm" [formControlName]="f.field" />
-              }
-              @case ('number') {
-                <input [id]="'card-' + f.field" type="number" min="0" step="0.01" class="form-control form-control-sm" [formControlName]="f.field" />
-              }
-              @case ('lookup') {
-                <erp-lookup [inputId]="'card-' + f.field" [formControlName]="f.field" [entity]="f.entity!"></erp-lookup>
-              }
-              @default {
-                <input [id]="'card-' + f.field" type="text" class="form-control form-control-sm" [formControlName]="f.field" [attr.maxlength]="f.maxLength ?? null" />
-              }
-            }
-          </div>
-        }
-      </div>
+            </div>
+          }
+        </div>
+      }
     </div>
 
     <div side>

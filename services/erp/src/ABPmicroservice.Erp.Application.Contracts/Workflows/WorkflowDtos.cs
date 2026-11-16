@@ -37,6 +37,20 @@ public class WorkflowTemplateDto
     public int DelegateAfterDays { get; set; }
 }
 
+/// <summary>A document field a workflow condition can test.</summary>
+public class WorkflowConditionFieldDto
+{
+    /// <summary>The name written in the condition rule, e.g. "BuyFromVendorNo".</summary>
+    public string Field { get; set; }
+
+    public string Label { get; set; }
+
+    public WorkflowConditionFieldType Type { get; set; }
+
+    /// <summary>The values of an option field.</summary>
+    public List<string> Options { get; set; } = new();
+}
+
 public class NewWorkflowFromTemplateDto
 {
     [Required]
@@ -197,6 +211,11 @@ public interface IWorkflowAppService : IApplicationService
 
     /// <summary>The built-in templates. Routed as GET /api/erp/workflow/templates.</summary>
     Task<ListResultDto<WorkflowTemplateDto>> GetTemplatesAsync();
+
+    /// <summary>
+    /// Every field of the document kind a condition can test. Routed as GET /api/erp/workflow/condition-fields?kind=.
+    /// </summary>
+    Task<ListResultDto<WorkflowConditionFieldDto>> GetConditionFieldsAsync(ApprovalDocumentKind kind);
 
     /// <summary>A new, disabled workflow from a template. Routed as POST /api/erp/workflow/new-from-template.</summary>
     Task<WorkflowDto> NewFromTemplateAsync(NewWorkflowFromTemplateDto input);

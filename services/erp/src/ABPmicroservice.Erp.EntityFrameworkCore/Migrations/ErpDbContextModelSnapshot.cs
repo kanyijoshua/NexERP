@@ -27926,6 +27926,10 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Area")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("AssignedUserId")
                         .HasColumnType("text");
 
@@ -27962,6 +27966,10 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("CampaignNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("CancelComments")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -27980,6 +27988,9 @@ namespace ABPmicroservice.Erp.Migrations
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("CompressPrepayment")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -28026,6 +28037,10 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("EntryPoint")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<DateTime?>("ExpectedReceiptDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -28037,6 +28052,10 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("GenBusPostingGroup")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("InboundWhseHandlingTime")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<DateTime?>("InvoiceReceivedDate")
                         .HasColumnType("timestamp with time zone");
@@ -28073,6 +28092,10 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("LastReceivingNo")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LeadTimeCalculation")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("LocationCode")
                         .HasMaxLength(10)
@@ -28167,6 +28190,9 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<string>("PostingDescription")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("PrepaymentDueDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("PrepaymentPct")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
@@ -28178,6 +28204,17 @@ namespace ABPmicroservice.Erp.Migrations
                     b.Property<decimal>("PrepmtInvoicedAmount")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
+
+                    b.Property<decimal>("PrepmtPaymentDiscountPct")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("numeric(18,5)");
+
+                    b.Property<string>("PrepmtPaymentTermsCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("PrepmtPmtDiscountDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("PricesIncludingVat")
                         .HasColumnType("boolean");
@@ -28279,6 +28316,18 @@ namespace ABPmicroservice.Erp.Migrations
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
+                    b.Property<string>("TransactionSpecification")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("TransactionType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("TransportMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<decimal>("VatBaseDiscountPct")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
@@ -28289,6 +28338,9 @@ namespace ABPmicroservice.Erp.Migrations
 
                     b.Property<string>("VatRegistrationNo")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("VatReportingDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("VendorCrMemoNo")
                         .HasColumnType("text");

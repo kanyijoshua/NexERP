@@ -1,4 +1,5 @@
-import type { CopyWorkflowDto, CreateUpdateWorkflowDto, NewWorkflowFromTemplateDto, WorkflowDto, WorkflowTemplateDto } from './models';
+import type { CopyWorkflowDto, CreateUpdateWorkflowDto, NewWorkflowFromTemplateDto, WorkflowConditionFieldDto, WorkflowDto, WorkflowTemplateDto } from './models';
+import type { ApprovalDocumentKind } from './approval-document-kind.enum';
 import { RestService, Rest } from '@abp/ng.core';
 import type { ListResultDto } from '@abp/ng.core';
 import { Injectable } from '@angular/core';
@@ -67,6 +68,15 @@ export class WorkflowService {
     },
     { apiName: this.apiName,...config });
   
+
+  getConditionFields = (kind: ApprovalDocumentKind, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, ListResultDto<WorkflowConditionFieldDto>>({
+      method: 'GET',
+      url: '/api/erp/workflow/condition-fields',
+      params: { kind },
+    },
+    { apiName: this.apiName,...config });
+
 
   getTemplates = (config?: Partial<Rest.Config>) =>
     this.restService.request<any, ListResultDto<WorkflowTemplateDto>>({

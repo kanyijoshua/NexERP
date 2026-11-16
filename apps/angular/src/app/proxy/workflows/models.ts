@@ -1,3 +1,4 @@
+import type { WorkflowConditionFieldType } from './workflow-condition-field-type.enum';
 import type { EntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { ApprovalDocumentKind } from './approval-document-kind.enum';
 import type { ApprovalStatus } from './approval-status.enum';
@@ -84,6 +85,13 @@ export interface NewWorkflowFromTemplateDto {
   code: string;
   description?: string;
   workflowUserGroupCode?: string;
+}
+
+export interface WorkflowConditionFieldDto {
+  field?: string;
+  label?: string;
+  type: WorkflowConditionFieldType;
+  options: string[];
 }
 
 export interface WorkflowTemplateDto {

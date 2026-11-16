@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 import { ExportFormat } from '@proxy/exporting';
 import { ReportResultDto, RunStandardReportInput, StandardReportDto, StandardReportService } from '@proxy/reporting';
 import { finalize } from 'rxjs';
@@ -72,6 +72,26 @@ export class StandardReportsComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.companyService.companyChanged$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.clear());
+  }
+
+  /**
+   * Follows the address: `?report=` picks the report and `?no=` (from a card's "Report" menu)
+   * fills its No. Filter and runs it for that record straight away.
+   */
+  private applyQuery(reports: StandardReportDto[], params: ParamMap): void {
+    const wanted = params.get('report');
+    const match = wanted ? reports.find(r => r.code?.toLowerCase() === wanted.toLowerCase() || String(r.id) === wanted) : null;
+    const report = match ?? this.selected() ?? reports[0] ?? null;
+    if (report !== this.selected()) {
+      this.selected.set(report);
+      this.clear();
+    }
+
+    const no = params.get('no');
+    if (report && no && report.hasNoFilter) {
+      this.noFilter = no;
+      this.run();
+    }
   }
 
   select(report: StandardReportDto): void {
@@ -175,10 +195,11 @@ export class StandardReportsComponent implements OnInit {
       .subscribe(reports => {
         this.reports.set(reports ?? []);
 
-        // A link from another page, or from Report Selections, can name the report to open.
-        const wanted = this.route.snapshot.queryParamMap.get('report');
-        const match = wanted ? reports.find(r => r.code?.toLowerCase() === wanted.toLowerCase() || String(r.id) === wanted) : null;
-        this.selected.set(match ?? reports[0] ?? null);
+        // A link from another page, a card's "Report" menu or Report Selections can name the
+        // report to open; the page stays open while the menu opens another report.
+        this.route.queryParamMap
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(params => this.applyQuery(reports ?? [], params));
       });
   }
 
