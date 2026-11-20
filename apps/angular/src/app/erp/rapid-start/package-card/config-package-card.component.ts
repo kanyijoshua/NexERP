@@ -19,7 +19,7 @@ import {
 } from '@proxy/rapid-start';
 import { Observable } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
-import { ErpFactBoxGroup, readUploadFile, saveBlob } from '../../erp-shared';
+import { ErpFactBoxGroup, FactBoxVisibilityService, readUploadFile, saveBlob } from '../../erp-shared';
 import { CompanyService } from '../../services/company.service';
 import { MAX_IMPORT_FILE_BYTES, TableArea, groupTablesByArea, sortFieldsByProcessingOrder } from '../rapid-start.helpers';
 
@@ -78,7 +78,7 @@ export class ConfigPackageCardComponent implements OnInit {
   packageId = '';
   pkg: ConfigPackageDetailDto | null = null;
   loading = false;
-  showFactBox = true;
+  showFactBox = inject(FactBoxVisibilityService).visible();
 
   get factBoxGroups(): ErpFactBoxGroup[] {
     if (!this.pkg) return [];

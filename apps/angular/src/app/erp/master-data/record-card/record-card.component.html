@@ -16,72 +16,41 @@
     </h4>
   </div>
 
-  <div class="d-flex flex-wrap gap-2" role="toolbar">
-    @if (canEdit) {
-      <button type="button" class="btn btn-sm btn-primary" [disabled]="isBusy || !form || (!isNew && !form.dirty)" (click)="save()" [title]="'Erp::SaveShortcut' | abpLocalization">
-        <i class="fas me-1" [ngClass]="isBusy ? 'fa-spinner fa-spin' : 'fa-check'"></i>{{ 'Erp::Save' | abpLocalization }}
-      </button>
-      @if (form?.dirty) {
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="discard()">
-          <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::Discard' | abpLocalization }}
+  <erp-action-bar [actions]="barActions" [busy]="isBusy" (run)="runBarAction($event)">
+    <ng-container leading>
+      @if (canEdit) {
+        <button type="button" class="btn btn-sm btn-primary" [disabled]="isBusy || !form || (!isNew && !form.dirty)" (click)="save()" [title]="'Erp::SaveShortcut' | abpLocalization">
+          <i class="fas me-1" [ngClass]="isBusy ? 'fa-spinner fa-spin' : 'fa-check'"></i>{{ 'Erp::Save' | abpLocalization }}
+        </button>
+        @if (form?.dirty) {
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="discard()">
+            <i class="fas fa-rotate-left me-1"></i>{{ 'Erp::Discard' | abpLocalization }}
+          </button>
+        }
+      }
+      @if (!isNew) {
+        <button *abpPermission="createPermission" type="button" class="btn btn-sm btn-outline-primary" (click)="newRecord()">
+          <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
         </button>
       }
-    }
-    @for (action of actions; track action.key) {
-      <button *abpPermission="action.permission" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isBusy" (click)="run(action)">
-        <i [class]="action.icon + ' me-1'"></i>{{ action.labelKey | abpLocalization }}
+    </ng-container>
+    <ng-container trailing>
+      @if (!isNew && record) {
+        <erp-report-menu [codes]="reportCodes" [no]="recordNo" [showPrint]="true"></erp-report-menu>
+      }
+      <button
+        type="button"
+        class="btn btn-sm"
+        [ngClass]="showFactBox() ? 'btn-primary' : 'btn-outline-secondary'"
+        [title]="'Erp::ToggleFactBox' | abpLocalization"
+        [attr.aria-label]="'Erp::ToggleFactBox' | abpLocalization"
+        [attr.aria-pressed]="showFactBox()"
+        (click)="toggleFactBox()"
+      >
+        <i class="fas fa-table-columns"></i>
       </button>
-    }
-    @if (!isNew) {
-      <button *abpPermission="createPermission" type="button" class="btn btn-sm btn-outline-primary" (click)="newRecord()">
-        <i class="fas fa-plus me-1"></i>{{ 'Erp::New' | abpLocalization }}
-      </button>
-    }
-    @if (canDelete) {
-      <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="isBusy" (click)="remove()" [title]="'Erp::Delete' | abpLocalization">
-        <i class="fas fa-trash"></i>
-      </button>
-    }
-    @if (!isNew && record) {
-      <div ngbDropdown class="d-inline-block" placement="bottom-end" container="body">
-        <button type="button" class="btn btn-sm btn-outline-secondary" ngbDropdownToggle [disabled]="isBusy">
-          <i class="fas fa-bolt me-1"></i>{{ 'Erp::Actions' | abpLocalization }}
-        </button>
-        <div ngbDropdownMenu class="dropdown-menu-end shadow-sm small">
-          @if (actions.length) {
-            <h6 class="dropdown-header text-uppercase">{{ entity.titleKey | abpLocalization }}</h6>
-            @for (action of actions; track action.key) {
-              <button *abpPermission="action.permission" ngbDropdownItem type="button" (click)="run(action)">
-                <i [class]="action.icon + ' fa-fw me-2 text-muted'"></i>{{ action.labelKey | abpLocalization }}
-              </button>
-            }
-            <div class="dropdown-divider"></div>
-          }
-          @if (canEdit) {
-            <button ngbDropdownItem type="button" [disabled]="!form?.valid" (click)="save()">
-              <i class="fas fa-check fa-fw me-2 text-muted"></i>{{ 'Erp::Save' | abpLocalization }}
-            </button>
-          }
-          <button ngbDropdownItem type="button" (click)="refreshRecord()">
-            <i class="fas fa-rotate fa-fw me-2 text-muted"></i>{{ 'Erp::Refresh' | abpLocalization }}
-          </button>
-          <button *abpPermission="createPermission" ngbDropdownItem type="button" (click)="copyRecord()">
-            <i class="fas fa-copy fa-fw me-2 text-muted"></i>{{ 'Erp::CopyRecord' | abpLocalization }}
-          </button>
-          <button ngbDropdownItem type="button" (click)="copyLink()">
-            <i class="fas fa-link fa-fw me-2 text-muted"></i>{{ 'Erp::CopyLink' | abpLocalization }}
-          </button>
-          @if (canDelete) {
-            <div class="dropdown-divider"></div>
-            <button ngbDropdownItem type="button" class="text-danger" (click)="remove()">
-              <i class="fas fa-trash fa-fw me-2"></i>{{ 'Erp::Delete' | abpLocalization }}
-            </button>
-          }
-        </div>
-      </div>
-      <erp-report-menu [codes]="reportCodes" [no]="recordNo" [showPrint]="true"></erp-report-menu>
-    }
-  </div>
+    </ng-container>
+  </erp-action-bar>
 </div>
 
 @if (related.length) {
@@ -96,7 +65,7 @@
 
 @if (form) {
   <div class="row g-3">
-    <div class="col-xl-9">
+    <div [ngClass]="showFactBox() ? 'col-xl-9' : 'col-12'">
       <form (ngSubmit)="save()">
         <erp-record-form idPrefix="card" [entity]="entity" [form]="form" [record]="record" [collapsible]="true"></erp-record-form>
         <button type="submit" class="d-none" tabindex="-1" aria-hidden="true"></button>
@@ -112,49 +81,60 @@
         </div>
       }
     </div>
-    <aside class="col-xl-3">
-      @if (facts.length) {
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-header bg-light fw-bold text-secondary small text-uppercase">
-            {{ 'Erp::Statistics' | abpLocalization }}
+    @if (showFactBox()) {
+      <aside class="col-xl-3">
+        @if (!isNew && record && pictureEntityType) {
+          <erp-picture-factbox
+            *abpPermission="'Erp.Attachments'"
+            [entityType]="pictureEntityType"
+            [entityId]="record['id']"
+            [name]="pictureName"
+            [editable]="canEdit"
+          ></erp-picture-factbox>
+        }
+        @if (facts.length) {
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-light fw-bold text-secondary small text-uppercase">
+              {{ 'Erp::Statistics' | abpLocalization }}
+            </div>
+            <dl class="list-group list-group-flush mb-0 small">
+              @for (fact of facts; track fact.labelKey) {
+                <div class="list-group-item d-flex justify-content-between">
+                  <dt class="fw-normal text-muted">{{ fact.labelKey | abpLocalization }}</dt>
+                  <dd class="mb-0 fw-bold" [class.text-danger]="fact.warnWhenTrue && fact.value === true">
+                    @switch (fact.type) {
+                      @case ('currency') {
+                        {{ $any(fact.value) ?? 0 | erpAmount }}
+                      }
+                      @case ('boolean') {
+                        {{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}
+                      }
+                      @default {
+                        {{ fact.value }}
+                      }
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
           </div>
-          <dl class="list-group list-group-flush mb-0 small">
-            @for (fact of facts; track fact.labelKey) {
-              <div class="list-group-item d-flex justify-content-between">
-                <dt class="fw-normal text-muted">{{ fact.labelKey | abpLocalization }}</dt>
-                <dd class="mb-0 fw-bold" [class.text-danger]="fact.warnWhenTrue && fact.value === true">
-                  @switch (fact.type) {
-                    @case ('currency') {
-                      {{ $any(fact.value) ?? 0 | erpAmount }}
-                    }
-                    @case ('boolean') {
-                      {{ (fact.value ? 'Erp::Yes' : 'Erp::No_Answer') | abpLocalization }}
-                    }
-                    @default {
-                      {{ fact.value }}
-                    }
-                  }
-                </dd>
-              </div>
-            }
-          </dl>
-        </div>
-      }
-      @if (!isNew && (entity.attachmentEntityType ?? entity.chatterEntityType) && record) {
-        <app-attachments-widget
-          *abpPermission="'Erp.Attachments'"
-          [entityType]="(entity.attachmentEntityType ?? entity.chatterEntityType)!"
-          [entityId]="record['id']"
-        ></app-attachments-widget>
-      }
-      @if (!isNew && entity.chatterEntityType && record) {
-        <app-chatter-widget
-          *abpPermission="'Erp.Chatter'"
-          [entityType]="entity.chatterEntityType"
-          [entityId]="record['id']"
-          [entityNo]="title"
-        ></app-chatter-widget>
-      }
-    </aside>
+        }
+        @if (!isNew && (entity.attachmentEntityType ?? entity.chatterEntityType) && record) {
+          <app-attachments-widget
+            *abpPermission="'Erp.Attachments'"
+            [entityType]="(entity.attachmentEntityType ?? entity.chatterEntityType)!"
+            [entityId]="record['id']"
+          ></app-attachments-widget>
+        }
+        @if (!isNew && entity.chatterEntityType && record) {
+          <app-chatter-widget
+            *abpPermission="'Erp.Chatter'"
+            [entityType]="entity.chatterEntityType"
+            [entityId]="record['id']"
+            [entityNo]="title"
+          ></app-chatter-widget>
+        }
+      </aside>
+    }
   </div>
 }

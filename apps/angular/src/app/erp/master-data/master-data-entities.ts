@@ -230,6 +230,7 @@ export class MasterDataEntities {
     permission: 'Erp.Customers',
     listRoute: ['/erp/customers'],
     chatterEntityType: 'Customer',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 110 },
       { field: 'name', labelKey: 'Erp::Name', width: 220 },
@@ -305,6 +306,7 @@ export class MasterDataEntities {
     permission: 'Erp.Vendors',
     listRoute: ['/erp/vendors'],
     chatterEntityType: 'Vendor',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 110 },
       { field: 'name', labelKey: 'Erp::Name', width: 220 },
@@ -406,6 +408,7 @@ export class MasterDataEntities {
     permission: 'Erp.Items',
     listRoute: ['/erp/items'],
     chatterEntityType: 'Item',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 110 },
       { field: 'description', labelKey: 'Erp::Description', width: 240 },

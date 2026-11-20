@@ -56,6 +56,7 @@ export class PensionPayrollEntities {
     permission: PERMISSION,
     listRoute: ['/erp/pensioners'],
     attachmentEntityType: 'Pensioner',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 110 },
       { field: 'name', labelKey: 'Erp::Name', width: 220 },

@@ -533,6 +533,8 @@ public static class ErpErrorCodes
         public const string FileTooLarge = Prefix + ":Attachments:00002";
         public const string FileTypeNotAllowed = Prefix + ":Attachments:00003";
         public const string RecordNotFound = Prefix + ":Attachments:00004";
+        public const string PictureNotAnImage = Prefix + ":Attachments:00005";
+        public const string PictureTooLarge = Prefix + ":Attachments:00006";
     }
 
     /// <summary>The plain base tables: setup, sub-ledgers and registers.</summary>

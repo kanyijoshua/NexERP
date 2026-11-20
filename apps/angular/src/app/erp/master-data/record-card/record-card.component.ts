@@ -7,6 +7,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subscription, of } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 import {
+  ErpBarAction,
+  FactBoxVisibilityService,
   RecordAction,
   RecordEntity,
   RecordEntityRegistry,
@@ -28,6 +30,12 @@ export const NEW_RECORD_ID = 'new';
  * `entity`: FastTabs of fields, a FactBox of figures, actions (Block, Delete, New), smart buttons
  * to related documents and the record's chatter. `/new` opens an empty card.
  */
+/** Keys of the record's own actions on the bar; prefixed so they never meet an entity action's key. */
+const MANAGE_REFRESH = '$refresh';
+const MANAGE_COPY = '$copy';
+const MANAGE_LINK = '$link';
+const MANAGE_DELETE = '$delete';
+
 @Component({
   selector: 'app-record-card',
   templateUrl: './record-card.component.html',
@@ -42,6 +50,10 @@ export class RecordCardComponent implements OnInit {
   private readonly confirmation = inject(ConfirmationService);
   private readonly companyService = inject(CompanyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly factBoxVisibility = inject(FactBoxVisibilityService);
+
+  /** Whether the side FactBox pane is shown; one remembered choice for every card. */
+  readonly showFactBox = this.factBoxVisibility.visible;
 
   entity!: RecordEntity;
   id: string | null = null;
@@ -50,8 +62,12 @@ export class RecordCardComponent implements OnInit {
   related: SmartButton[] = [];
 
   title = '';
+  /** The record's name alone, for the avatar's initials. */
+  pictureName = '';
   facts: RecordFact[] = [];
   actions: RecordAction<any>[] = [];
+  /** The action bar: the entity's actions in their groups, then the record's own (refresh, copy, link, delete). */
+  barActions: ErpBarAction[] = [];
   /** Standard reports of the card's "Report" menu. */
   reportCodes: readonly string[] = [];
   /** The record's number, which the reports filter on. */
@@ -70,6 +86,11 @@ export class RecordCardComponent implements OnInit {
 
   get isNew(): boolean {
     return !this.id;
+  }
+
+  /** The table the record's picture is stored against, or null when the card shows no picture. */
+  get pictureEntityType(): string | null {
+    return this.entity.picture ? (this.entity.attachmentEntityType ?? this.entity.chatterEntityType ?? null) : null;
   }
 
   get listRoute(): string[] {
@@ -128,6 +149,19 @@ export class RecordCardComponent implements OnInit {
   onSaveShortcut(event: Event): void {
     event.preventDefault();
     this.save();
+  }
+
+  /** Alt+F2 shows or hides the FactBox pane. */
+  @HostListener('document:keydown', ['$event'])
+  onFactBoxShortcut(event: KeyboardEvent): void {
+    if (FactBoxVisibilityService.isToggleShortcut(event)) {
+      event.preventDefault();
+      this.toggleFactBox();
+    }
+  }
+
+  toggleFactBox(): void {
+    this.factBoxVisibility.toggle();
   }
 
   save(): void {
@@ -226,6 +260,28 @@ export class RecordCardComponent implements OnInit {
       });
   }
 
+  /** Runs an action picked on the action bar. */
+  runBarAction(action: ErpBarAction): void {
+    switch (action.key) {
+      case MANAGE_REFRESH:
+        this.refreshRecord();
+        return;
+      case MANAGE_COPY:
+        this.copyRecord();
+        return;
+      case MANAGE_LINK:
+        this.copyLink();
+        return;
+      case MANAGE_DELETE:
+        this.remove();
+        return;
+    }
+    const recordAction = this.actions.find(a => a.key === action.key);
+    if (recordAction) {
+      this.run(recordAction);
+    }
+  }
+
   run(action: RecordAction<any>): void {
     const record = this.record;
     if (!record || this.isBusy) {
@@ -294,18 +350,37 @@ export class RecordCardComponent implements OnInit {
   private updateComputedProperties(): void {
     if (!this.record || this.isNew) {
       this.title = '';
+      this.pictureName = '';
       this.facts = [];
       this.actions = [];
+      this.barActions = [];
       this.reportCodes = [];
       this.recordNo = null;
       return;
     }
     const item = this.entity.toItem(this.record);
     this.title = [item.code, item.name].filter(Boolean).join(' · ');
+    this.pictureName = item.name || item.code || '';
     this.recordNo = item.code || null;
     this.reportCodes = recordReportCodes(this.entity);
     this.facts = this.entity.facts ? this.entity.facts(this.record) : [];
     this.actions = (this.entity.actions ?? []).filter(a => !a.visible || a.visible(this.record));
+    this.barActions = [
+      ...this.actions.map(a => ({
+        key: a.key,
+        labelKey: a.labelKey,
+        icon: a.icon,
+        permission: a.permission,
+        category: a.category,
+        promoted: a.promoted,
+      })),
+      { key: MANAGE_REFRESH, labelKey: 'Erp::Refresh', icon: 'fas fa-rotate', category: 'manage', promoted: false },
+      { key: MANAGE_COPY, labelKey: 'Erp::CopyRecord', icon: 'fas fa-copy', category: 'manage', promoted: false, permission: this.createPermission },
+      { key: MANAGE_LINK, labelKey: 'Erp::CopyLink', icon: 'fas fa-link', category: 'manage', promoted: false },
+      ...(this.canDelete
+        ? [{ key: MANAGE_DELETE, labelKey: 'Erp::Delete', icon: 'fas fa-trash', category: 'manage' as const, promoted: false, danger: true }]
+        : []),
+    ];
   }
 
   private load(): Observable<Record<string, any> | null> {

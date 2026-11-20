@@ -8,6 +8,7 @@ public partial class ErpDbContext
 {
     public DbSet<DocumentAttachment> DocumentAttachments { get; set; }
     public DbSet<DocumentAttachmentContent> DocumentAttachmentContents { get; set; }
+    public DbSet<RecordPicture> RecordPictures { get; set; }
 }
 
 public static class ErpAttachmentsModelCreatingExtensions
@@ -33,6 +34,17 @@ public static class ErpAttachmentsModelCreatingExtensions
         {
             b.ToTable(ErpDbProperties.DbTablePrefix + "DocumentAttachmentContents", ErpDbProperties.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.Content).IsRequired();
+        });
+
+        // Not unique: a removed picture is soft deleted and stays beside its replacement.
+        builder.Entity<RecordPicture>(b =>
+        {
+            b.ToTable(ErpDbProperties.DbTablePrefix + "RecordPictures", ErpDbProperties.DbSchema);
+            b.ConfigureByConvention();
+            b.HasIndex(x => new { x.CompanyId, x.EntityName, x.RecordId });
+            b.Property(x => x.EntityName).IsRequired().HasMaxLength(ErpDomainConsts.MaxEntityNameLength);
+            b.Property(x => x.ContentType).IsRequired().HasMaxLength(ErpDomainConsts.MaxContentTypeLength);
             b.Property(x => x.Content).IsRequired();
         });
     }

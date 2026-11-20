@@ -98,13 +98,23 @@
       <div class="col-12 col-xl-4 erp-factbox-pane">
         <!-- Built-in FactBox groups -->
         @for (group of factBoxGroups; track group.id) {
-          <erp-factbox
-            [titleKey]="group.titleKey"
-            [icon]="group.icon || 'fas fa-info-circle'"
-            [collapsed]="group.collapsed || false"
-            [tiles]="group.tiles || []"
-            [facts]="group.facts || []"
-          ></erp-factbox>
+          @if (group.picture; as pic) {
+            <erp-picture-factbox
+              [titleKey]="group.titleKey"
+              [entityType]="pic.entityType"
+              [entityId]="pic.entityId"
+              [name]="pic.name || ''"
+              [editable]="pic.editable !== false"
+            ></erp-picture-factbox>
+          } @else {
+            <erp-factbox
+              [titleKey]="group.titleKey"
+              [icon]="group.icon || 'fas fa-info-circle'"
+              [collapsed]="group.collapsed || false"
+              [tiles]="group.tiles || []"
+              [facts]="group.facts || []"
+            ></erp-factbox>
+          }
         }
 
         <!-- Custom projected FactBoxes -->

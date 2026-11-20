@@ -37,3 +37,20 @@ export interface UpdateDocumentAttachmentDto {
   documentFlowPurchase: boolean;
   documentFlowSales: boolean;
 }
+
+export interface GetRecordPictureInput {
+  entityName: string;
+  recordId?: string;
+}
+
+export interface UploadRecordPictureInput extends GetRecordPictureInput {
+  contentBase64: string;
+}
+
+export interface RecordPictureDto {
+  hasPicture: boolean;
+  contentType?: string;
+  contentBase64?: string;
+  size: number;
+  changedTime?: string;
+}

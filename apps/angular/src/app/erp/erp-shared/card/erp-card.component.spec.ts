@@ -20,8 +20,12 @@ describe('ErpCard, ErpFastTab, ErpFactBox & ErpCardBase', () => {
     let card: ErpCardComponent;
 
     beforeEach(() => {
-      card = new ErpCardComponent();
+      // The card remembers the pane choice in localStorage; start every test from the default.
+      localStorage.removeItem('erp.factbox.visible');
+      card = TestBed.runInInjectionContext(() => new ErpCardComponent());
     });
+
+    afterEach(() => localStorage.removeItem('erp.factbox.visible'));
 
     it('should initialize with FactBox enabled by default', () => {
       expect(card.showFactBox).toBeTrue();

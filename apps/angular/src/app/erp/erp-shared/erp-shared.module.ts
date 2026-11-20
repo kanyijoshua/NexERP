@@ -24,10 +24,12 @@ import { RecordPartComponent } from './record/record-part.component';
 import { ErpAmountPipe } from './pipes/erp-amount.pipe';
 import { ReportPageComponent } from './report-page/report-page.component';
 import { ReportMenuComponent } from './report-menu/report-menu.component';
+import { ErpActionBarComponent } from './action-bar/action-bar.component';
 import { SmartButtonsComponent } from './smart-buttons/smart-buttons.component';
 
 import { ErpCardComponent } from './card/erp-card.component';
 import { ErpFactBoxComponent } from './card/erp-factbox.component';
+import { ErpPictureFactBoxComponent } from './card/erp-picture-factbox.component';
 import { ErpFastTabComponent } from './card/erp-fasttab.component';
 import { ErpTableActionsDirective, ErpTableCardDirective, ErpTableColDirective } from './table/erp-table-col.directive';
 import { ErpTableComponent } from './table/erp-table.component';
@@ -64,6 +66,7 @@ const DECLARATIONS = [
   ErpCardComponent,
   ErpFastTabComponent,
   ErpFactBoxComponent,
+  ErpPictureFactBoxComponent,
   ErpAmountPipe,
   // Dynamic Reusable Components
   ErpDropdownComponent,
@@ -74,6 +77,7 @@ const DECLARATIONS = [
   ErpDynamicTableComponent,
   ErpBadgeComponent,
   ReportMenuComponent,
+  ErpActionBarComponent,
 ];
 
 const MODULES = [

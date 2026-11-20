@@ -48,4 +48,16 @@ export interface ErpFactBoxGroup {
   collapsed?: boolean;
   tiles?: ErpFactBoxTile[];
   facts?: ErpFactBoxItem[];
+  /** Renders the group as a picture (avatar) FactBox instead of tiles and facts. */
+  picture?: ErpFactBoxPicture;
+}
+
+export interface ErpFactBoxPicture {
+  /** The table's name in the server's entity registry, e.g. `Customer`. */
+  entityType: string;
+  entityId: string;
+  /** The record's name, for the initials shown while there is no picture. */
+  name?: string;
+  /** Shows upload and remove; defaults to true. */
+  editable?: boolean;
 }

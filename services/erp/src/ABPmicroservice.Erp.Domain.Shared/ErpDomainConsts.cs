@@ -80,6 +80,12 @@ public static class ErpDomainConsts
     /// in the database, so the cap bounds both the request and the row.
     /// </summary>
     public const int MaxAttachmentBytes = 10 * 1024 * 1024;
+
+    /// <summary>
+    /// Largest picture of a record (a customer's logo, an employee's photo). The card loads it
+    /// with the record, so it is kept far smaller than an attachment.
+    /// </summary>
+    public const int MaxRecordPictureBytes = 2 * 1024 * 1024;
     public const int MaxHomePageLength = 80;
     public const int MaxCustomLayoutCodeLength = 20;
 

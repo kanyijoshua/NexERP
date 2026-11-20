@@ -4,8 +4,10 @@ import {
   HostListener,
   Input,
   Output,
+  inject,
 } from '@angular/core';
 import { ErpCardAction, ErpFactBoxGroup } from './erp-card.models';
+import { FactBoxVisibilityService } from './factbox-visibility.service';
 
 @Component({
   selector: 'erp-card',
@@ -24,7 +26,10 @@ export class ErpCardComponent {
   @Input() busy = false;
   @Input() actions: ErpCardAction[] = [];
   @Input() factBoxGroups: ErpFactBoxGroup[] = [];
-  @Input() showFactBox = true;
+  private readonly visibility = inject(FactBoxVisibilityService);
+
+  /** Defaults to the user's remembered choice; a toggle here updates that choice. */
+  @Input() showFactBox = this.visibility.visible();
   @Input() showFactBoxToggle = true;
   @Input() hasFactBoxSlot = false;
 
@@ -36,7 +41,7 @@ export class ErpCardComponent {
    */
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    if (event.altKey && event.key === 'F2') {
+    if (FactBoxVisibilityService.isToggleShortcut(event)) {
       event.preventDefault();
       this.toggleFactBox();
     }
@@ -44,6 +49,7 @@ export class ErpCardComponent {
 
   toggleFactBox(): void {
     this.showFactBox = !this.showFactBox;
+    this.visibility.set(this.showFactBox);
     this.showFactBoxChange.emit(this.showFactBox);
   }
 

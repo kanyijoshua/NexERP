@@ -325,6 +325,24 @@ public class DocumentAttachmentManager : DomainService
         }
     }
 
+    /// <summary>
+    /// The registry name of the table a record belongs to, after checking the record exists.
+    /// Throws <see cref="ErpErrorCodes.Attachments.RecordNotFound"/> when it does not.
+    /// </summary>
+    public async Task<string> CheckRecordAsync(string entityName, Guid recordId)
+    {
+        var definition = _registry.Get(entityName);
+        if (await FindAsync(definition, recordId) == null)
+        {
+            throw new BusinessException(ErpErrorCodes.Attachments.RecordNotFound).WithData("entityName", definition.Name);
+        }
+
+        return definition.Name;
+    }
+
+    /// <summary>The registry name of a table, e.g. "vendor" becomes "Vendor".</summary>
+    public string TableNameOf(string entityName) => _registry.Get(entityName).Name;
+
     public static BusinessException TooLarge()
     {
         return new BusinessException(ErpErrorCodes.Attachments.FileTooLarge)

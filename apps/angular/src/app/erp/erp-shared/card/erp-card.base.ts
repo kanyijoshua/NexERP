@@ -9,6 +9,7 @@ import {
   ErpFactBoxTile,
   ErpFastTab,
 } from './erp-card.models';
+import { FactBoxVisibilityService } from './factbox-visibility.service';
 
 /**
  * Base class for Card pages (e.g. Customer Card,
@@ -36,6 +37,7 @@ export abstract class ErpCardBase<TRecord = any> {
   protected readonly companyService = inject(CompanyService);
   protected readonly destroyRef = inject(DestroyRef);
   protected readonly cdr = inject(ChangeDetectorRef, { optional: true });
+  private readonly factBoxVisibility = inject(FactBoxVisibilityService);
 
   data: TRecord | null = null;
   form!: FormGroup;
@@ -62,13 +64,14 @@ export abstract class ErpCardBase<TRecord = any> {
   actions: ErpCardAction[] = [];
 
   /** Whether the FactBox right-hand pane is open (toggled with Alt+F2 or icon) */
-  showFactBox = true;
+  showFactBox = this.factBoxVisibility.visible();
 
   /**
    * Toggles the right-side FactBox pane visibility.
    */
   toggleFactBox(): void {
     this.showFactBox = !this.showFactBox;
+    this.factBoxVisibility.set(this.showFactBox);
     this.cdr?.markForCheck();
   }
 

@@ -65,6 +65,7 @@ export class CrmEntities {
     permission: CRM,
     listRoute: ['/erp/contacts'],
     chatterEntityType: 'Contact',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
       { field: 'name', labelKey: 'Erp::Name' },

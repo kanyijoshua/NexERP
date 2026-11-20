@@ -583,6 +583,7 @@ export class AcademicEntities {
     permission: PERMISSION,
     listRoute: ['/erp/students'],
     attachmentEntityType: 'Student',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 120 },
       { field: 'fullName', labelKey: 'Erp::FullName', width: 220 },

@@ -4,12 +4,15 @@ import {
   DestroyRef,
   EventEmitter,
   HostBinding,
+  HostListener,
   Input,
   Output,
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormGroup } from '@angular/forms';
+import { ErpBarAction } from '../action-bar/action-bar';
+import { FactBoxVisibilityService } from '../card/factbox-visibility.service';
 import { DocumentAction, DocumentLineChange, DocumentLineColumn, DocumentTotal } from '../models';
 
 export const DEFAULT_STATUS_COLORS: Record<string, string> = {
@@ -77,6 +80,27 @@ export class DocumentPageComponent {
 
   private readonly confirmation = inject(ConfirmationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly factBoxVisibility = inject(FactBoxVisibilityService);
+
+  /** The user's remembered choice to show the `[side]` FactBox pane (button or Alt+F2). */
+  readonly sideVisible = this.factBoxVisibility.visible;
+
+  /** The `[side]` pane is there and the user has not hidden it. */
+  get sideShown(): boolean {
+    return this.showSide && this.sideVisible();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onFactBoxShortcut(event: KeyboardEvent): void {
+    if (this.showSide && FactBoxVisibilityService.isToggleShortcut(event)) {
+      event.preventDefault();
+      this.toggleSide();
+    }
+  }
+
+  toggleSide(): void {
+    this.factBoxVisibility.toggle();
+  }
 
   get statusClass(): string {
     const status = this.status ?? '';
@@ -90,6 +114,42 @@ export class DocumentPageComponent {
 
   isActionDisabled(item: DocumentAction): boolean {
     return this.busy || !!item.disabled || (!!item.requiresValid && this.isInvalid);
+  }
+
+  private barCache: { signature: string; actions: ErpBarAction[] } | null = null;
+
+  /**
+   * The actions as the action bar takes them. Rebuilt only when an action or its enabled state
+   * changes, so open menus survive change detection.
+   */
+  get barActions(): ErpBarAction[] {
+    const actions = this.actions.map(item => {
+      const isSave = item.key === 'save';
+      const isDelete = item.key === 'delete';
+      return {
+        key: item.key,
+        labelKey: item.labelKey,
+        icon: item.icon,
+        permission: item.permission,
+        cssClass: item.cssClass,
+        disabled: this.isActionDisabled(item),
+        category: item.category ?? (isSave || isDelete ? 'manage' : undefined),
+        promoted: item.promoted ?? (isSave ? true : isDelete ? false : undefined),
+        danger: isDelete,
+      } as ErpBarAction;
+    });
+    const signature = actions.map(a => `${a.key}:${a.disabled ? 1 : 0}:${a.labelKey}`).join('|');
+    if (this.barCache?.signature !== signature) {
+      this.barCache = { signature, actions };
+    }
+    return this.barCache.actions;
+  }
+
+  runBarAction(action: ErpBarAction): void {
+    const item = this.actions.find(a => a.key === action.key);
+    if (item) {
+      this.runAction(item);
+    }
   }
 
   runAction(item: DocumentAction): void {

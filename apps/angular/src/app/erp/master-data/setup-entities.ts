@@ -601,6 +601,7 @@ export class SetupEntities {
     permission: 'Erp.Employees',
     listRoute: ['/erp/employees'],
     chatterEntityType: 'Employee',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No', width: 110 },
       { field: 'fullName', labelKey: 'Erp::FullName', width: 220, sortable: false, filterable: false },

@@ -1,5 +1,6 @@
 import { FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
+import type { ErpActionCategory } from './action-bar/action-bar';
 
 /** An item shown by `erp-lookup`. `code` is what the user sees in the input. */
 export interface LookupItem {
@@ -76,6 +77,10 @@ export interface DocumentAction {
   confirmKey?: string;
   /** Disables the action while the header form or the lines are invalid. */
   requiresValid?: boolean;
+  /** The action bar group it is listed under; worked out from the key when omitted. */
+  category?: ErpActionCategory;
+  /** Also a button at the front of the action bar; worked out from the key when omitted. */
+  promoted?: boolean;
 }
 
 export interface JournalBatch {

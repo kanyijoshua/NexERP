@@ -1492,6 +1492,7 @@ export class BaseTableEntities {
     permission: 'Erp.FixedAssets',
     listRoute: ['/erp/fixed-assets'],
     attachmentEntityType: 'FixedAsset',
+    picture: true,
     columns: [
       { field: 'no', labelKey: 'Erp::No' },
       { field: 'description', labelKey: 'Erp::Description' },

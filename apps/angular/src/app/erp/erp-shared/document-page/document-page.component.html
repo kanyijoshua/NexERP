@@ -14,22 +14,25 @@
       }
     </div>
 
-    <div class="d-flex flex-wrap gap-2" role="toolbar">
-      @for (item of actions; track trackByKey($index, item)) {
-        <button
-          *abpPermission="item.permission"
-          type="button"
-          class="btn btn-sm"
-          [ngClass]="item.cssClass || 'btn-outline-primary'"
-          [disabled]="isActionDisabled(item)"
-          (click)="runAction(item)"
+    <erp-action-bar [actions]="barActions" [busy]="busy" (run)="runBarAction($event)">
+      <ng-container trailing>
+        <!-- Menus beside the actions, e.g. the "Report" menu. -->
+        <ng-content select="[toolbar]"></ng-content>
+        @if (showSide) {
+          <button
+            type="button"
+            class="btn btn-sm"
+            [ngClass]="sideVisible() ? 'btn-primary' : 'btn-outline-secondary'"
+            [title]="'Erp::ToggleFactBox' | abpLocalization"
+            [attr.aria-label]="'Erp::ToggleFactBox' | abpLocalization"
+            [attr.aria-pressed]="sideVisible()"
+            (click)="toggleSide()"
           >
-          <i [class]="item.icon + ' me-1'"></i>{{ item.labelKey | abpLocalization }}
-        </button>
-      }
-      <!-- Menus beside the actions, e.g. the "Report" menu. -->
-      <ng-content select="[toolbar]"></ng-content>
-    </div>
+            <i class="fas fa-table-columns"></i>
+          </button>
+        }
+      </ng-container>
+    </erp-action-bar>
   </div>
 
   <div class="mb-3">
@@ -37,7 +40,7 @@
   </div>
 
   <div class="row g-3">
-    <div [ngClass]="showSide ? 'col-12 col-xl-8' : 'col-12'">
+    <div [ngClass]="sideShown ? 'col-12 col-xl-8' : 'col-12'">
       <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
           <ng-content select="[header]"></ng-content>
@@ -80,7 +83,7 @@
       <ng-content></ng-content>
     </div>
 
-    @if (showSide) {
+    @if (sideShown) {
       <div class="col-12 col-xl-4">
         <ng-content select="[side]"></ng-content>
       </div>

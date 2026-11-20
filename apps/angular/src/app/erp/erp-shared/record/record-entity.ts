@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { finalize, map, shareReplay } from 'rxjs/operators';
 import { DocumentLineOption, LookupItem, SmartButton } from '../models';
 import { ErpTableColumn } from '../table/erp-table.models';
+import type { ErpActionCategory } from '../action-bar/action-bar';
 
 /** The page query every record list sends: ABP's paged, sorted, filtered request. */
 export interface RecordQuery {
@@ -145,6 +146,10 @@ export interface RecordAction<TDto> {
   permission?: string;
   visible?: (dto: TDto) => boolean;
   confirmKey?: string;
+  /** The action bar group it is listed under; worked out from the key when omitted. */
+  category?: ErpActionCategory;
+  /** Also a button at the front of the action bar; worked out from the key when omitted. */
+  promoted?: boolean;
   run: (dto: TDto) => Observable<unknown>;
 }
 
@@ -206,6 +211,11 @@ export interface RecordEntity<TDto extends { id?: string } = any, TInput = any> 
    * the files attached to the record. Defaults to `chatterEntityType`.
    */
   attachmentEntityType?: string;
+  /**
+   * Shows a picture (avatar) FactBox on the card: a logo, photo or portrait the user can upload.
+   * Stored against `attachmentEntityType ?? chatterEntityType`, so one of those must be set.
+   */
+  picture?: boolean;
   /** A table only posting writes (ledger entries, posted statements): no New, Edit or Delete. */
   readOnly?: boolean;
   /** Records come only from an action (a worksheet's suggestions): Edit and Delete, but no New. */
